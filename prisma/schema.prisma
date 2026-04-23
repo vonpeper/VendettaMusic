@@ -1,13 +1,420 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
+}
+
+model User {
+  id              String           @id @default(uuid())
+  name            String?
+  email           String?          @unique
+  emailVerified   DateTime?
+  image           String?
+  password        String?
+  role            String           @default("CLIENT")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  clientProfile   ClientProfile?
+  musicianProfile MusicianProfile?
+}
+
+model ClientProfile {
+  id       String  @id @default(uuid())
+  userId   String  @unique
+  phone    String?
+  type     String?
+  company  String?
+  rfc      String?
+  notes    String?
+  city     String?
+  state    String?
+  whatsapp String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events   Event[]
+  quotes   Quote[]
+  bookings BookingRequest[]
+}
+
+model MusicianProfile {
+  id                 String              @id @default(uuid())
+  userId             String              @unique
+  instrument         String?
+  phone              String?
+  notes              String?
+  role               String?
+  whatsapp           String?
+  status             String              @default("active")
+  availability       String              @default("Disponible")
+  eventMusicians     EventMusician[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @default(now()) @updatedAt
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rehearsalMusicians RehearsalMusician[]
+  substitutes        Substitute[]
+}
+
+model Substitute {
+  id                String          @id @default(uuid())
+  musicianProfileId String
+  name              String
+  whatsapp          String
+  notes             String?
+  status            String          @default("active")
+  availability      String          @default("Disponible")
+  rating            Int             @default(3)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @default(now()) @updatedAt
+  musician          MusicianProfile @relation(fields: [musicianProfileId], references: [id], onDelete: Cascade)
+}
+
+model Location {
+  id             String      @id @default(uuid())
+  name           String
+  address        String
+  references     String?
+  spaceType      String?
+  logisticsNotes String?
+  city           String?
+  state          String?
+  mapsLink       String?
+  phone          String?     // Reservaciones
+  active         Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @default(now()) @updatedAt
+  events         Event[]
+  rehearsals     Rehearsal[]
+}
+
+model Provider {
+  id          String   @id @default(uuid())
+  name        String
+  company     String?
+  address     String?
+  whatsapp    String?
+  serviceType String
+  contactInfo String?
+  services    String?
+  cost        Float?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+
+model Package {
+  id              String           @id @default(uuid())
+  name            String
+  baseCostPerHour Float
+  minDuration     Int
+  description     String?
+  includes        String?
+  active          Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @default(now()) @updatedAt
+  events          Event[]
+  services        PackageService[]
+}
+
+model PackageService {
+  id          String  @id @default(uuid())
+  packageId   String
+  name        String
+  description String?
+  setupCost   Float   @default(0)
+  hourlyCost  Float   @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  package     Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+}
+
+model Song {
+  id              String          @id @default(uuid())
+  title           String
+  artist          String
+  language        String?
+  genre           String?
+  durationMinutes Float?
+  key             String?
+  status          String          @default("active")
+  tags            String?
+  rehearsalSongs  RehearsalSong[]
+}
+
+model BandEvent {
+  id            String   @id @default(uuid())
+  eventDate     DateTime
+  eventMonth    String
+  eventYear     Int
+  clientName    String
+  baseIncome    Float    @default(0)
+  ivaAmount     Float    @default(0)
+  totalIncome   Float    @default(0)
+  eventType     String   @default("show")
+  status        String   @default("completado")
+  location      String?
+  paymentMethod String?
+  paymentRef    String?
+  invoice       Boolean  @default(false)
+  notes         String?
+  source        String   @default("manual")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+}
+
+model SiteMedia {
+  id        String   @id @default(uuid())
+  section   String
+  type      String   @default("image") // "image" o "video"
+  url       String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  name      String
+  stars     Int      @default(5)
+  text      String
+  status    String   @default("approved")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model PublicBandMember {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  emoji     String
+  img       String
+  shortBio  String
+  fullBio   String
+  ig        String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Quote {
+  id             String        @id @default(uuid())
+  clientId       String
+  status         String        @default("pending")
+  totalEstimated Float         @default(0)
+  guestCount     Int           @default(0)
+  ceremonyType   String?
+  notes          String?
+  eventDate      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @default(now()) @updatedAt
+  event          Event?
+  client         ClientProfile @relation(fields: [clientId], references: [id])
+  items          QuoteItem[]
+}
+
+model QuoteItem {
+  id          String @id @default(uuid())
+  quoteId     String
+  description String
+  quantity    Int    @default(1)
+  unitCost    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  quote       Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id               String          @id @default(uuid())
+  quoteId          String?         @unique
+  clientId         String?         // Opcional para consolidación
+  locationId       String?
+  date             DateTime
+  startTime        String?
+  packageId        String?
+  amount           Float           @default(0)
+  deposit          Float           @default(0)
+  balance          Float           @default(0)
+  ivaAmount        Float           @default(0) // Nuevo: para consolidación
+  totalIncome      Float           @default(0) // Nuevo: monto final cobrado
+  depositMethod    String?
+  paymentMethod    String?         // Nuevo: para eventualidades
+  paymentRef       String?         // Nuevo: para eventualidades
+  invoice          Boolean         @default(false)
+  totalWithTax     Float?
+  guestCount       Int             @default(0)
+  ceremonyType     String?
+  dressCode        String?
+  performanceStart String?
+  performanceEnd   String?
+  logisticalNotes  String?
+  arrivalTime      String?
+  setupTime        String?
+  musicianNotes    String?
+  bitacora         String?         // Nuevo: Observaciones y highlights del show
+  audioEngineer    String?         // Nuevo: Ingeniero en audio asignado
+  status           String          @default("scheduled")
+  googleCalendarId String?
+  bandEventId      String?
+  notificationSent Boolean         @default(false)
+  customName       String?
+  mapsLink         String?
+  venueType        String?
+  isPublic         Boolean         @default(false)
+  clientProvidesAudio Boolean      @default(false)
+  source           String          @default("manual") // manual, eventualidad, funnel
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @default(now()) @updatedAt
+  contracts        Contract[]
+  package          Package?        @relation(fields: [packageId], references: [id])
+  location         Location?       @relation(fields: [locationId], references: [id])
+  client           ClientProfile?  @relation(fields: [clientId], references: [id])
+  quote            Quote?          @relation(fields: [quoteId], references: [id])
+  musicians        EventMusician[]
+  payments         Payment[]
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  eventId   String
+  amount    Float
+  method    String
+  status    String   @default("pending")
+  reference String?
+  proofUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Contract {
+  id        String    @id @default(uuid())
+  eventId   String
+  url       String?
+  status    String    @default("pending")
+  signedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  eventId   String?
+  type      String
+  channel   String
+  recipient String?
+  message   String
+  status    String   @default("pending")
+  twilioSid String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model BookingRequest {
+  id                String   @id @default(uuid())
+  shortId           String?  @unique
+  packageId         String?
+  packageName       String
+  guestCount        Int      @default(0)
+  venueType         String
+  calle             String?
+  numero            String?
+  colonia           String?
+  municipio         String?
+  address           String
+  city              String
+  state             String   @default("México")
+  isOutsideZone     Boolean  @default(false)
+  viaticosAmount    Float    @default(0)
+  mapsLink          String?
+  requestedDate     DateTime
+  startTime         String
+  endTime           String
+  baseAmount        Float
+  depositAmount     Float
+  paymentMethod     String
+  paymentStatus     String   @default("pending")
+  paymentRef        String?
+  clientName        String
+  clientPhone       String
+  clientEmail       String
+  clientUserId      String?
+  status            String   @default("pending")
+  adminNote         String?
+  notifiedAdmin     Boolean  @default(false)
+  notifiedMusicians Boolean  @default(false)
+  eventId           String?
+  clientId          String?
+  client            ClientProfile? @relation(fields: [clientId], references: [id])
+  isPublic          Boolean  @default(false)
+  clientProvidesAudio Boolean @default(false)
+  source            String   @default("web")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+}
+
+model Rehearsal {
+  id         String              @id @default(uuid())
+  datetime   DateTime
+  locationId String?
+  notes      String?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @default(now()) @updatedAt
+  location   Location?           @relation(fields: [locationId], references: [id])
+  musicians  RehearsalMusician[]
+  songs      RehearsalSong[]
+}
+
+model RehearsalSong {
+  id          String    @id @default(uuid())
+  rehearsalId String
+  songId      String
+  song        Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+  rehearsal   Rehearsal @relation(fields: [rehearsalId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+}
+
+model RehearsalMusician {
+  id          String          @id @default(uuid())
+  rehearsalId String
+  musicianId  String
+  status      String          @default("pending")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @default(now()) @updatedAt
+  musician    MusicianProfile @relation(fields: [musicianId], references: [id], onDelete: Cascade)
+  rehearsal   Rehearsal       @relation(fields: [rehearsalId], references: [id], onDelete: Cascade)
+}
+
+model EventMusician {
+  id         String          @id @default(uuid())
+  eventId    String
+  musicianId String
+  status     String          @default("pending")
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @default(now()) @updatedAt
+  musician   MusicianProfile @relation(fields: [musicianId], references: [id], onDelete: Cascade)
+  event      Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model GlobalConfig {
+  id                 String    @id @default("singleton")
+  twilioSid          String?
+  twilioToken        String?
+  twilioNumber       String?
+  googleClientId     String?
+  googleClientSecret String?
+  googleRefreshToken String?
+  googleCalendarId   String?
+  lastCalendarSync   DateTime?
+
+  // Evolution API — WhatsApp
+  evolutionUrl       String?
+  evolutionApiKey    String?
+  evolutionInstance  String?    @default("vendetta_admin")
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }

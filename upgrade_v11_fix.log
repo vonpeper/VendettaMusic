@@ -1,0 +1,125 @@
+
+> vendetta-app@0.1.0 dev
+> next dev -p 3005 -p 3005
+
+▲ Next.js 16.2.2 (Turbopack)
+- Local:         http://localhost:3005
+- Network:       http://192.168.100.34:3005
+- Environments: .env
+✓ Ready in 761ms
+⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+⚠ Invalid next.config.ts options detected: 
+⚠     Unrecognized key(s) in object: 'eslint'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+
+○ Compiling /admin/eventualidades ...
+Error: Failed to find Server Action "6025555a8cc818bc7ec5d19dbbf0558c8ff7dabf14". This request might be from an older or newer deployment.
+Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
+    at ignore-listed frames
+ POST /admin/eventualidades 404 in 6.8s (next.js: 6.0s, proxy.ts: 323ms, application-code: 391ms)
+[browser] Uncaught UnrecognizedActionError: Server Action "6025555a8cc818bc7ec5d19dbbf0558c8ff7dabf14" was not found on the server. 
+Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
+    at BandEventsClient (file:///Users/vonpeper/Documents/Antigravity/Vendetta/.next/dev/static/chunks/src_034ujq.._.js:1315:240)
+    at EventualidadesPage (src/app/admin/eventualidades/page.tsx:23:7)
+  21 |       </div>
+  22 |
+> 23 |       <BandEventsClient events={events} />
+     |       ^
+  24 |     </div>
+  25 |   )
+  26 | }
+ GET /admin/eventualidades 200 in 7.8s (next.js: 6.4s, proxy.ts: 284ms, application-code: 1111ms)
+ GET /admin/ventas 200 in 7.9s (next.js: 5.9s, proxy.ts: 284ms, application-code: 1649ms)
+ GET /admin/clientes 200 in 925ms (next.js: 682ms, proxy.ts: 14ms, application-code: 230ms)
+ GET /admin/ventas 200 in 196ms (next.js: 8ms, proxy.ts: 44ms, application-code: 143ms)
+ GET /admin/eventos 200 in 1156ms (next.js: 741ms, proxy.ts: 15ms, application-code: 401ms)
+ GET /admin/eventualidades 200 in 89ms (next.js: 18ms, proxy.ts: 27ms, application-code: 43ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations 200 in 526ms (next.js: 381ms, application-code: 145ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations 200 in 18ms (next.js: 4ms, application-code: 14ms)
+ POST /admin/eventualidades 200 in 118ms (next.js: 6ms, proxy.ts: 16ms, application-code: 96ms)
+  └─ ƒ updateBandEventAction(null, {}) in 5ms src/actions/band-events.ts
+ GET /admin/ventas 200 in 78ms (next.js: 7ms, proxy.ts: 24ms, application-code: 47ms)
+ GET /admin/eventualidades 200 in 49ms (next.js: 10ms, proxy.ts: 18ms, application-code: 22ms)
+ GET /admin/eventos 200 in 42ms (next.js: 4ms, proxy.ts: 10ms, application-code: 29ms)
+ GET /admin/clientes 200 in 38ms (next.js: 6ms, proxy.ts: 5ms, application-code: 28ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776187661380 200 in 15ms (next.js: 8ms, application-code: 7ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776187661382 200 in 18ms (next.js: 15ms, application-code: 3ms)
+[browser] React does not recognize the `asChild` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `aschild` instead. If you accidentally passed it from a parent component, remove it from the DOM element. 
+✓ Compiled in 664ms
+ GET /admin/ventas 200 in 321ms (next.js: 23ms, proxy.ts: 47ms, application-code: 251ms)
+ GET /admin/clientes 200 in 335ms (next.js: 207ms, proxy.ts: 56ms, application-code: 72ms)
+ GET /admin/clientes 200 in 624ms (next.js: 17ms, proxy.ts: 55ms, application-code: 552ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776187755479 200 in 111ms (next.js: 70ms, application-code: 41ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776187755481 200 in 103ms (next.js: 82ms, application-code: 22ms)
+ GET /admin/clientes 200 in 575ms (next.js: 21ms, proxy.ts: 22ms, application-code: 532ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776187810861 200 in 65ms (next.js: 16ms, application-code: 50ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776187810859 200 in 78ms (next.js: 71ms, application-code: 7ms)
+VENDETTA_DB_DIAG: Iniciando fetch de datos para el dashboard...
+ GET /admin 200 in 1269ms (next.js: 1068ms, proxy.ts: 15ms, application-code: 186ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /admin/clientes 200 in 213ms (next.js: 6ms, proxy.ts: 14ms, application-code: 194ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776188022901 200 in 71ms (next.js: 21ms, application-code: 49ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776188022903 200 in 78ms (next.js: 71ms, application-code: 8ms)
+✓ Compiled in 229ms
+ GET /admin/clientes 200 in 221ms (next.js: 17ms, proxy.ts: 61ms, application-code: 142ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776188204285 200 in 36ms (next.js: 17ms, application-code: 18ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776188204284 200 in 48ms (next.js: 41ms, application-code: 8ms)
+ GET /admin/ventas 200 in 169ms (next.js: 28ms, proxy.ts: 23ms, application-code: 118ms)
+VENDETTA_DB_DIAG: Iniciando fetch de datos para el dashboard...
+ GET /admin 200 in 465ms (next.js: 32ms, proxy.ts: 75ms, application-code: 358ms)
+❌ [DB findMany Error Event]: SQLITE_ERROR: near "in": syntax error
+ GET / 200 in 3.5s (next.js: 2.5s, proxy.ts: 80ms, application-code: 935ms)
+[browser] Image with src "/images/shows/mentiras.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+❌ [DB findMany Error Event]: SQLITE_ERROR: near "in": syntax error
+ GET / 200 in 437ms (next.js: 72ms, proxy.ts: 120ms, application-code: 245ms)
+[browser] Image with src "/images/shows/mentiras.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+VENDETTA_DB_DIAG: Iniciando fetch de datos para el dashboard...
+ GET /admin 200 in 70ms (next.js: 13ms, proxy.ts: 9ms, application-code: 47ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /admin/eventos 200 in 85ms (next.js: 43ms, proxy.ts: 10ms, application-code: 32ms)
+ GET /admin/eventos 200 in 41ms (next.js: 4ms, proxy.ts: 9ms, application-code: 28ms)
+ GET /admin/ventas 200 in 51ms (next.js: 13ms, proxy.ts: 9ms, application-code: 28ms)
+ GET /admin/clientes 200 in 68ms (next.js: 15ms, proxy.ts: 8ms, application-code: 44ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776226066067 200 in 23ms (next.js: 8ms, application-code: 15ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776226066069 200 in 26ms (next.js: 23ms, application-code: 3ms)
+ POST /api/admin/locations 200 in 90ms (next.js: 36ms, application-code: 54ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776226176056 200 in 8ms (next.js: 1378µs, application-code: 7ms)
+ POST /api/admin/locations 200 in 64ms (next.js: 36ms, application-code: 28ms)
+🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.
+ GET /api/admin/locations?t=1776226267583 200 in 12ms (next.js: 1790µs, application-code: 10ms)
+ GET /admin/clientes 200 in 172ms (next.js: 6ms, proxy.ts: 31ms, application-code: 135ms)
+✓ Compiled in 1209ms
+ GET /admin/clientes 200 in 729ms (next.js: 58ms, proxy.ts: 100ms, application-code: 571ms)
+ GET /admin/clientes 200 in 428ms (next.js: 8ms, proxy.ts: 46ms, application-code: 375ms)
+ GET /admin/clientes 200 in 754ms (next.js: 5ms, proxy.ts: 38ms, application-code: 711ms)
+ GET / 200 in 1499ms (next.js: 292ms, proxy.ts: 116ms, application-code: 1090ms)
+ GET /admin/clientes 200 in 858ms (next.js: 48ms, proxy.ts: 119ms, application-code: 691ms)
+ GET / 200 in 1333ms (next.js: 55ms, proxy.ts: 32ms, application-code: 1246ms)
+ GET / 200 in 1308ms (next.js: 48ms, proxy.ts: 37ms, application-code: 1223ms)
+ GET /admin/clientes 200 in 558ms (next.js: 4ms, proxy.ts: 79ms, application-code: 475ms)
+ GET /admin/clientes 200 in 333ms (next.js: 6ms, proxy.ts: 129ms, application-code: 197ms)
+ GET / 200 in 1166ms (next.js: 8ms, proxy.ts: 231ms, application-code: 928ms)
+ GET /admin/clientes 200 in 211ms (next.js: 4ms, proxy.ts: 17ms, application-code: 189ms)
+ GET / 200 in 740ms (next.js: 12ms, proxy.ts: 258ms, application-code: 470ms)
+ GET /admin/clientes 200 in 330ms (next.js: 4ms, proxy.ts: 34ms, application-code: 293ms)
+ GET / 200 in 563ms (next.js: 5ms, proxy.ts: 81ms, application-code: 477ms)
+ GET /admin/clientes 200 in 550ms (next.js: 14ms, proxy.ts: 81ms, application-code: 454ms)
+ GET /admin/clientes 200 in 436ms (next.js: 6ms, proxy.ts: 39ms, application-code: 391ms)
+ GET /admin/clientes 200 in 238ms (next.js: 12ms, proxy.ts: 85ms, application-code: 142ms)
+ GET /admin/clientes 200 in 87ms (next.js: 3ms, proxy.ts: 17ms, application-code: 68ms)

@@ -1,0 +1,5 @@
+
+> vendetta-app@0.1.0 dev
+> next dev -p 3005 -p 3005
+
+env: node: No such file or directory

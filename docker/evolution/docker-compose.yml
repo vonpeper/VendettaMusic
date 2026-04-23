@@ -1,0 +1,22 @@
+services:
+  evolution-api:
+    image: atendai/evolution-api:v1.8.2
+    container_name: evolution_api
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - DOCKER_RESTART_POLICY=always
+      - AUTHENTICATION_TYPE=apikey
+      - AUTHENTICATION_API_KEY=vendetta_secure_key_2026
+      - DATABASE_ENABLED=false
+      - CACHE_REDIS_ENABLED=false
+      - CACHE_LOCAL_ENABLED=true
+      - LOG_LEVEL=error,warn,info
+      - BROWSER_NAME=Chrome
+    networks:
+      - evolution-net
+
+networks:
+  evolution-net:
+    driver: bridge

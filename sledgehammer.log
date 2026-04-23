@@ -1,0 +1,47 @@
+
+> vendetta-app@0.1.0 dev
+> next dev -p 3005 -p 3005
+
+▲ Next.js 16.2.2 (Turbopack)
+- Local:         http://localhost:3005
+- Network:       http://192.168.100.132:3005
+- Environments: .env
+✓ Ready in 357ms
+⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+⚠ Invalid next.config.ts options detected: 
+⚠     Unrecognized key(s) in object: 'eslint'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+
+ GET /auth/login 200 in 3.2s (next.js: 2.8s, proxy.ts: 142ms, application-code: 343ms)
+VENDETTA_DB_DIAG: Iniciando fetch de datos para el dashboard...
+⨯ TypeError: Cannot read properties of undefined (reading 'findMany')
+    at AdminDashboardPage (src/app/admin/page.tsx:51:21)
+  49 |       orderBy: [{ eventYear: "asc" }, { eventDate: "asc" }]
+  50 |     }),
+> 51 |     db.notification.findMany({
+     |                     ^
+  52 |       orderBy: { createdAt: "desc" },
+  53 |       take: 4,
+  54 |     }), {
+  digest: '691953623'
+}
+ GET /admin 500 in 3.9s (next.js: 2.6s, proxy.ts: 181ms, application-code: 1060ms)
+ GET /admin/eventualidades 200 in 3.8s (next.js: 3.0s, proxy.ts: 160ms, application-code: 691ms)
+[browser] Uncaught TypeError: Cannot read properties of undefined (reading 'findMany')
+    at AdminDashboardPage (src/app/admin/page.tsx:51:21)
+  49 |       orderBy: [{ eventYear: "asc" }, { eventDate: "asc" }]
+  50 |     }),
+> 51 |     db.notification.findMany({
+     |                     ^
+  52 |       orderBy: { createdAt: "desc" },
+  53 |       take: 4,
+  54 |     }),
+✓ Compiled in 355ms
+VENDETTA_DB_DIAG: Iniciando fetch de datos para el dashboard...
+ GET /auth/login 200 in 592ms (next.js: 37ms, proxy.ts: 120ms, application-code: 434ms)
+ GET /auth/login 200 in 446ms (next.js: 17ms, proxy.ts: 8ms, application-code: 421ms)
+ GET /admin/eventualidades 200 in 590ms (next.js: 270ms, proxy.ts: 160ms, application-code: 160ms)
+ GET /auth/login 200 in 274ms (next.js: 19ms, proxy.ts: 74ms, application-code: 181ms)
+ GET /admin 200 in 781ms (next.js: 52ms, proxy.ts: 181ms, application-code: 547ms)
+ GET /admin/eventualidades 200 in 235ms (next.js: 23ms, proxy.ts: 119ms, application-code: 93ms)
+ GET /admin/eventualidades 200 in 140ms (next.js: 5ms, proxy.ts: 40ms, application-code: 95ms)
