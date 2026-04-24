@@ -1,12 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   // Configuración forzada para estabilización
   // Este cambio debería obligar a Turbopack a recargar la configuración del servidor
   // 🚀 AGENTE ANTIGRAVITY - ESTABILIZACIÓN TOTAL VENDETTA
   env: {
-    DATABASE_URL: "file:/Users/vonpeper/Documents/Antigravity/Vendetta/prisma/dev.db",
-    PORT: "3005"
+    PORT: process.env.PORT || "3005"
   },
   typescript: {
     ignoreBuildErrors: true,

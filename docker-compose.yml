@@ -1,0 +1,20 @@
+services:
+  vendetta:
+    build: .
+    container_name: vendetta-app
+    restart: always
+    ports:
+      - "3005:3000"
+    environment:
+      - DATABASE_URL=file:/app/prisma/prod.db
+      - AUTH_SECRET=${AUTH_SECRET}
+      - EVOLUTION_BASE_URL=${EVOLUTION_BASE_URL}
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
+      - EVOLUTION_INSTANCE=${EVOLUTION_INSTANCE}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN}
+      - GOOGLE_CALENDAR_ID=${GOOGLE_CALENDAR_ID}
+    volumes:
+      - ./prisma:/app/prisma
+      - ./public/assets:/app/public/assets
