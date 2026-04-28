@@ -68,8 +68,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
   const [loading, setLoading] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const totalContratos = (client: ClientListItem) =>
-    client.events.reduce((acc, ev) => acc + ev.contracts.length, 0)
+
 
   const toggleSelectAll = () => {
     if (selectedIds.size === items.length) {
@@ -121,24 +120,24 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="destructive" className="gap-2 font-bold h-11 px-6 rounded-xl shadow-xl shadow-red-500/10 hover:scale-105 transition-transform">
+              <Button variant="destructive" className="gap-2 font-bold h-11 px-6 rounded-xl shadow-xl shadow-red-500/10 hover:scale-105 transition-transform text-white">
                 <Trash2 className="w-4 h-4" /> Eliminar permanentemente
               </Button>
             </DialogTrigger>
-            <DialogContent showCloseButton={false} className="bg-card border-border/40 backdrop-blur-2xl">
+            <DialogContent showCloseButton={false} className="bg-black border-border/20 backdrop-blur-2xl sm:max-w-[500px] text-white">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-red-500 text-xl font-black">
                   <AlertTriangle className="w-6 h-6" /> ¿ESTÁS SEGURO?
                 </DialogTitle>
-                <DialogDescription className="text-muted-foreground pt-4 text-base leading-relaxed">
+                <DialogDescription className="text-gray-400 pt-4 text-base leading-relaxed">
                   Estás por eliminar <strong>{selectedIds.size}</strong> perfiles de cliente definitivamente. 
-                  <span className="block mt-4 p-4 bg-red-900/20 border border-red-500/20 rounded-xl text-red-300 font-medium">
+                  <span className="block mt-4 p-4 bg-red-950/40 border border-red-500/30 rounded-xl text-red-200 font-medium">
                     Esto también borrará sus cuentas de usuario (email/password) y todo su historial de logs. No se podrán recuperar.
                   </span>
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="mt-8 gap-3">
-                <DialogClose render={<Button variant="ghost" className="rounded-xl border border-white/5 h-12 px-6" />}>
+                <DialogClose render={<Button variant="ghost" className="rounded-xl border border-white/10 h-12 px-6 text-white hover:bg-white/10" />}>
                   Cancelar operación
                 </DialogClose>
                 <Button 
@@ -155,14 +154,14 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
         </div>
       )}
 
-      <div className="border border-border/40 rounded-2xl bg-card/20 overflow-x-auto shadow-2xl">
+      <div className="border border-border/40 rounded-2xl bg-card overflow-x-auto shadow-2xl">
         <Table className="min-w-[900px]">
           <TableHeader>
             <TableRow className="border-border/40 hover:bg-transparent bg-white/[0.02]">
               <TableHead className="w-12 text-center">
                 <button 
                   onClick={toggleSelectAll}
-                  className="w-5 h-5 rounded-md border border-white/20 flex items-center justify-center hover:border-primary/50 transition-all mx-auto"
+                  className="w-5 h-5 rounded-md border border-border/40 flex items-center justify-center hover:border-primary/50 transition-all mx-auto"
                 >
                   {selectedIds.size === items.length && items.length > 0 ? (
                     <CheckSquare className="w-4 h-4 text-primary fill-primary/10" />
@@ -178,14 +177,13 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
               <TableHead className="text-[10px] uppercase tracking-widest italic font-bold">Ubicación</TableHead>
               <TableHead className="text-center text-[10px] uppercase tracking-widest italic font-bold">Gigs</TableHead>
               <TableHead className="text-[10px] uppercase tracking-widest italic font-bold">Historial</TableHead>
-              <TableHead className="text-center text-[10px] uppercase tracking-widest italic font-bold">Contratos</TableHead>
               <TableHead className="text-right text-[10px] uppercase tracking-widest italic font-bold">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-20 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
                   <Users className="w-12 h-12 mx-auto mb-4 opacity-10" />
                   <p className="font-medium">No hay registros de clientes.</p>
                 </TableCell>
@@ -203,7 +201,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                   <TableCell className="py-6 text-center">
                     <button 
                       onClick={() => toggleSelect(client.id)}
-                      className="w-5 h-5 rounded-md border border-white/10 flex items-center justify-center hover:border-primary/50 transition-all mx-auto"
+                      className="w-5 h-5 rounded-md border border-border/40 flex items-center justify-center hover:border-primary/50 transition-all mx-auto"
                     >
                       {selectedIds.has(client.id) ? (
                         <CheckSquare className="w-4 h-4 text-primary fill-primary/10" />
@@ -213,9 +211,9 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                     </button>
                   </TableCell>
                   <TableCell className="py-6" onClick={() => toggleSelect(client.id)}>
-                    <div className="font-black text-white text-base leading-tight tracking-tight uppercase">{client.user.name}</div>
+                    <div className="font-black text-foreground text-base leading-tight tracking-tight uppercase">{client.user.name}</div>
                     {client.type === "corporate" ? (
-                      <Badge className="mt-2 bg-blue-900/30 text-blue-300 border-blue-500/20 hover:bg-blue-900/40 text-[9px] font-black tracking-widest">
+                      <Badge className="mt-2 bg-blue-900/30 text-blue-300 border-blue-200 hover:bg-blue-900/40 text-[9px] font-black tracking-widest">
                         CORPORATIVO
                       </Badge>
                     ) : (
@@ -228,7 +226,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                   <TableCell className="py-6">
                     <div className="space-y-2">
                       {client.user.email && (
-                        <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
                           <Mail className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
                           <span className="truncate max-w-[140px] lowercase">{client.user.email}</span>
                         </div>
@@ -244,10 +242,10 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
 
                   <TableCell className="py-6">
                     {client.state || client.city ? (
-                      <div className="flex items-start gap-2 text-xs text-gray-300">
+                      <div className="flex items-start gap-2 text-xs text-muted-foreground">
                         <MapPin className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-0.5" />
                         <div>
-                           {client.city && <div className="font-black text-white/80">{client.city}</div>}
+                           {client.city && <div className="font-black text-muted-foreground">{client.city}</div>}
                            {client.state && <div className="text-muted-foreground text-[10px] font-bold uppercase">{client.state}</div>}
                         </div>
                       </div>
@@ -267,9 +265,9 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                     {client.events.length > 0 ? (
                       <div className="space-y-2">
                         {client.events.map(ev => (
-                          <div key={ev.id} className="flex items-center gap-2 text-[10px] font-bold px-2 py-1 bg-white/5 rounded-md border border-white/5">
+                          <div key={ev.id} className="flex items-center gap-2 text-[10px] font-bold px-2 py-1 bg-primary/10 rounded-md border border-border/40">
                             <Calendar className="w-3 h-3 text-primary shrink-0" />
-                            <span className="text-gray-400 group-hover:text-white transition-colors">
+                            <span className="text-muted-foreground group-hover:text-foreground transition-colors">
                               {formatDateMX(ev.date, "dd MMM yyyy")}
                             </span>
                           </div>
@@ -280,12 +278,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                     )}
                   </TableCell>
 
-                  <TableCell className="text-center py-6">
-                    <div className="inline-flex flex-col items-center opacity-60">
-                      <span className="text-xl font-black text-muted-foreground">{totalContratos(client)}</span>
-                      <span className="text-[8px] font-black uppercase tracking-widest">Digitales</span>
-                    </div>
-                  </TableCell>
+
 
                   <TableCell className="py-6 text-right">
                     <ClienteActions

@@ -54,7 +54,7 @@ export function CancelBookingButton({ bookingId, shortId, hasEvent = false }: Ca
           <Button 
             {...triggerProps}
             variant="outline" 
-            className="w-full border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-all rounded-xl h-11 gap-2 font-bold"
+            className="w-full border-red-500/30 text-red-500 hover:bg-red-500 hover:text-foreground transition-all rounded-xl h-11 gap-2 font-bold"
           >
             <Trash2 className="w-4 h-4" /> 
             {hasEvent ? "Cancelar Evento y Borrar" : "Eliminar Cotización"}
@@ -69,7 +69,7 @@ export function CancelBookingButton({ bookingId, shortId, hasEvent = false }: Ca
           <DialogDescription className="text-muted-foreground pt-2">
             Esta acción es irreversible. Se eliminará el registro <strong>{shortId}</strong> permanentemente. 
             {hasEvent && (
-              <span className="block mt-2 font-bold text-red-400">
+              <span className="block mt-2 font-bold text-red-700">
                 ADVERTENCIA: Esto también eliminará el evento de la agenda vinculada, pagos registrados y la sincronización con Google Calendar.
               </span>
             )}
@@ -84,7 +84,7 @@ export function CancelBookingButton({ bookingId, shortId, hasEvent = false }: Ca
               e.preventDefault()
               handleCancel()
             }}
-            className="bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold"
+            className="bg-red-600 hover:bg-red-500 text-foreground rounded-xl font-bold"
             disabled={loading}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}

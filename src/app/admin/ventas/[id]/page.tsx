@@ -46,7 +46,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-heading font-black text-white tracking-tight">Solicitud {booking.shortId}</h1>
+              <h1 className="text-3xl font-heading font-black text-foreground tracking-tight">Solicitud {booking.shortId}</h1>
               <StatusBadge status={booking.status} />
             </div>
             <p className="text-muted-foreground mt-1">Registrado el {formatDateMX(booking.createdAt, "PPPP")}</p>
@@ -71,8 +71,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           <div className="lg:col-span-2 space-y-8">
             
             {/* Detalles del Evento */}
-            <Card className="bg-card/40 border-border/20 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="bg-white/5 border-b border-white/5">
+            <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="bg-primary/10 border-b border-border/40">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Package className="w-5 h-5 text-primary" /> Detalles del Evento
                 </CardTitle>
@@ -82,14 +82,14 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   <div>
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Paquete Solicitado</div>
                     <div className="flex items-center gap-2">
-                      <div className="text-lg font-black text-white">{booking.packageName}</div>
+                      <div className="text-lg font-black text-foreground">{booking.packageName}</div>
                       <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 uppercase text-[9px] font-black tracking-tighter">
                         {booking.venueType || 'Salón'}
                       </Badge>
                     </div>
                     <div className="text-sm text-primary font-medium mt-1">{booking.guestCount} invitados aproximados</div>
                   </div>
-                  <div className="pt-4 border-t border-white/5">
+                  <div className="pt-4 border-t border-border/40">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Fecha y Horario</div>
                     <div className="text-base text-gray-200 flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-primary" /> {formatDateMX(booking.requestedDate, "EEEE, d 'de' MMMM")}
@@ -131,19 +131,19 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             </Card>
 
             {/* Desglose Financiero */}
-            <Card className="bg-card/40 border-border/20 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="bg-white/5 border-b border-white/5">
+            <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="bg-primary/10 border-b border-border/40">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-primary" /> Información Financiera
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <div className="p-4 rounded-2xl bg-primary/10 border border-border/40">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Subtotal Servicio</div>
-                    <div className="text-xl font-black text-white">{MXN(booking.baseAmount)}</div>
+                    <div className="text-xl font-black text-foreground">{MXN(booking.baseAmount)}</div>
                   </div>
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <div className="p-4 rounded-2xl bg-primary/10 border border-border/40">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Anticipo Pactado</div>
                     <div className="text-xl font-black text-primary">{MXN(booking.depositAmount)}</div>
                   </div>
@@ -164,7 +164,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           {/* Columna Derecha: Cliente y Acciones Administrativas */}
           <div className="space-y-8">
             {/* Tarjeta del Cliente */}
-            <Card className="bg-card/60 border-primary/20 backdrop-blur-md">
+            <Card className="bg-card border-primary/20 backdrop-blur-md">
               <CardHeader>
                 <CardTitle className="text-sm font-bold text-primary uppercase tracking-widest">Datos del Solicitante</CardTitle>
               </CardHeader>
@@ -174,16 +174,16 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                     <User className="text-primary w-6 h-6" />
                   </div>
                   <div>
-                    <div className="text-lg font-black text-white">{booking.clientName}</div>
+                    <div className="text-lg font-black text-foreground">{booking.clientName}</div>
                     <div className="text-xs text-muted-foreground">Origen: <span className="text-primary font-bold uppercase">{booking.source || 'WEB'}</span></div>
                   </div>
                 </div>
-                <div className="space-y-3 pt-2 border-t border-white/5">
-                  <div className="flex items-center gap-3 text-sm text-gray-300 hover:text-primary transition-colors group">
+                <div className="space-y-3 pt-2 border-t border-border/40">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group">
                     <Phone className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     <a href={`tel:${booking.clientPhone}`}>{booking.clientPhone}</a>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-300 hover:text-primary transition-colors group">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group">
                     <Mail className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     <a href={`mailto:${booking.clientEmail}`}>{booking.clientEmail}</a>
                   </div>
@@ -191,7 +191,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 <div className="pt-2">
                   <Button 
                     variant="outline" 
-                    className="w-full border-primary/30 text-primary hover:bg-primary hover:text-white transition-all rounded-xl h-11 gap-2 font-bold group" 
+                    className="w-full border-primary/30 text-primary hover:bg-primary hover:text-foreground transition-all rounded-xl h-11 gap-2 font-bold group" 
                     render={
                       <a href={`https://wa.me/${booking.clientPhone.replace(/\D/g,'')}`} target="_blank">
                         Contactar por WhatsApp <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100" />
@@ -204,7 +204,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
 
             {/* Acciones de Control */}
             {booking.status === "pendiente" && (
-              <Card className="bg-card/40 border-yellow-500/20 shadow-2xl shadow-yellow-500/5">
+              <Card className="bg-card border-yellow-500/20 shadow-2xl shadow-yellow-500/5">
                 <CardHeader>
                   <CardTitle className="text-sm font-bold text-yellow-400 uppercase tracking-widest">Acciones Administrativas</CardTitle>
                 </CardHeader>
@@ -255,16 +255,16 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             )}
 
             {booking.adminNote && (
-              <div className="p-4 bg-white/5 border border-white/5 rounded-2xl">
+              <div className="p-4 bg-primary/10 border border-border/40 rounded-2xl">
                 <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5">
                   <div className="w-1 h-1 rounded-full bg-primary" /> Bitácora Administrativa
                 </div>
-                <p className="text-sm text-gray-300 italic">"{booking.adminNote}"</p>
+                <p className="text-sm text-muted-foreground italic">"{booking.adminNote}"</p>
               </div>
             )}
 
             {/* Gestión del Registro (Editar/Eliminar) */}
-            <Card className="bg-card/40 border-border/20">
+            <Card className="bg-card border-border/20">
               <CardHeader>
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Gestión de Registro</CardTitle>
               </CardHeader>
@@ -284,7 +284,7 @@ function StatusBadge({ status }: { status: string }) {
     pendiente: { color: "text-yellow-400 border-yellow-700/40 bg-yellow-900/20", label: "PENDIENTE" },
     agendado:  { color: "text-green-400 border-green-700/40 bg-green-900/20", label: "AGENDADO" },
     cancelado: { color: "text-red-400 border-red-700/40 bg-red-900/20", label: "CANCELADO" },
-    EXPIRED:   { color: "text-gray-500 border-gray-700 bg-gray-800/50", label: "EXPIRADO" },
+    EXPIRED:   { color: "text-muted-foreground border-gray-700 bg-gray-800/50", label: "EXPIRADO" },
   }
   const cfg = configs[status] || configs.pendiente
   return (

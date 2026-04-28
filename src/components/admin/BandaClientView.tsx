@@ -22,7 +22,7 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
     <div>
       <Tabs defaultValue="tarjetas" className="w-full">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <TabsList className="bg-black/40 border border-white/10">
+          <TabsList className="bg-card border border-border/40">
             <TabsTrigger value="tarjetas">Vista Tarjetas</TabsTrigger>
             <TabsTrigger value="matriz">Matriz de Cobertura</TabsTrigger>
           </TabsList>
@@ -33,7 +33,7 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
               <input 
                 type="text" 
                 placeholder="Buscar músico o instrumento..." 
-                className="w-full pl-9 pr-4 py-2 bg-black/40 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-primary"
+                className="w-full pl-9 pr-4 py-2 bg-card border border-border/40 rounded-md text-sm text-foreground focus:outline-none focus:border-primary"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -52,7 +52,7 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
               />
             ))}
             {filteredMusicians.length === 0 && (
-              <div className="col-span-full p-8 text-center border border-dashed border-white/20 rounded-xl bg-card/20">
+              <div className="col-span-full p-8 text-center border border-dashed border-border/40 rounded-xl bg-card">
                 <p className="text-muted-foreground">No se encontraron músicos con esa búsqueda.</p>
               </div>
             )}
@@ -60,7 +60,7 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
         </TabsContent>
 
         <TabsContent value="matriz" className="mt-0">
-          <div className="bg-card border border-white/10 rounded-xl overflow-hidden">
+          <div className="bg-card border border-border/40 rounded-xl overflow-hidden">
             <CoverageMatrix musicians={filteredMusicians} onViewDetails={setSelectedMusician} />
           </div>
         </TabsContent>

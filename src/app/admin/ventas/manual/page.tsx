@@ -24,12 +24,12 @@ export default async function ManualBookingPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Link href="/admin/ventas">
-              <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
+              <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10">
                 <ChevronLeft className="w-6 h-6" />
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-heading font-black text-white flex items-center gap-3">
+              <h1 className="text-3xl font-heading font-black text-foreground flex items-center gap-3">
                 <ShieldCheck className="text-primary w-8 h-8" /> Cotización Manual
               </h1>
               <p className="text-muted-foreground text-sm">Registra un evento captado por fuera del sitio web.</p>

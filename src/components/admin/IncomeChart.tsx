@@ -65,7 +65,7 @@ export function IncomeChart({ data }: { data: MonthData[] }) {
               <line
                 x1={PADDING_LEFT} y1={y}
                 x2={totalW - PADDING_RIGHT} y2={y}
-                stroke="rgba(255,255,255,0.06)"
+                stroke="rgba(0,0,0,0.08)"
                 strokeWidth={1}
               />
               <text
@@ -73,8 +73,8 @@ export function IncomeChart({ data }: { data: MonthData[] }) {
                 y={y + 3.5}
                 textAnchor="end"
                 fontSize={9}
-                fill="rgba(255,255,255,0.32)"
-                fontFamily="monospace"
+                fill="rgba(0,0,0,0.4)"
+                fontFamily="sans-serif"
               >
                 {MXN(pct * maxTotal)}
               </text>
@@ -86,7 +86,7 @@ export function IncomeChart({ data }: { data: MonthData[] }) {
         <line
           x1={PADDING_LEFT} y1={PADDING_TOP + CHART_H}
           x2={totalW - PADDING_RIGHT} y2={PADDING_TOP + CHART_H}
-          stroke="rgba(255,255,255,0.15)"
+          stroke="rgba(0,0,0,0.12)"
           strokeWidth={1}
         />
 
@@ -116,13 +116,13 @@ export function IncomeChart({ data }: { data: MonthData[] }) {
                 fill={isMax ? "url(#barRedHi)" : "url(#barRed)"}
               />
 
-              {/* Value label — caja semitransparente para legibilidad */}
+              {/* Value label — caja semitransparente para legibilidad si es necesario */}
               <rect
                 x={barX + BAR_W / 2 - 24}
                 y={valY - 10}
                 width={48} height={13}
                 rx={3}
-                fill="rgba(0,0,0,0.55)"
+                fill="rgba(0,0,0,0.04)"
               />
               <text
                 x={barX + BAR_W / 2}
@@ -130,7 +130,7 @@ export function IncomeChart({ data }: { data: MonthData[] }) {
                 textAnchor="middle"
                 fontSize={8.5}
                 fontWeight="bold"
-                fill={isMax ? "rgb(252,165,165)" : "rgba(255,255,255,0.8)"}
+                fill={isMax ? "rgb(220,38,38)" : "rgba(0,0,0,0.7)"}
               >
                 {MXN(d.total)}
               </text>
@@ -138,10 +138,11 @@ export function IncomeChart({ data }: { data: MonthData[] }) {
               {/* Label mes */}
               <text
                 x={barX + BAR_W / 2}
-                y={PADDING_TOP + CHART_H + 15}
+                y={PADDING_TOP + CHART_H + 18}
                 textAnchor="middle"
-                fontSize={9}
-                fill="rgba(255,255,255,0.75)"
+                fontSize={10}
+                fontWeight="bold"
+                fill="rgba(0,0,0,0.85)"
               >
                 {d.month.slice(0, 3)}
               </text>
@@ -149,10 +150,10 @@ export function IncomeChart({ data }: { data: MonthData[] }) {
               {/* Count */}
               <text
                 x={barX + BAR_W / 2}
-                y={PADDING_TOP + CHART_H + 30}
+                y={PADDING_TOP + CHART_H + 32}
                 textAnchor="middle"
                 fontSize={8}
-                fill="rgba(255,255,255,0.3)"
+                fill="rgba(0,0,0,0.4)"
               >
                 {d.count} show{d.count !== 1 ? "s" : ""}
               </text>

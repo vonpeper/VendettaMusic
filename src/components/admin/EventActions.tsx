@@ -25,7 +25,7 @@ export function NuevoEventoButton({ clients, locations, packages, staff }: {
           staff={staff}
         />
       )}
-      <Button onClick={() => setShowForm(true)} className="font-bold">
+      <Button onClick={() => setShowForm(true)} className="font-bold text-white">
         + Nuevo Evento
       </Button>
     </>
@@ -58,7 +58,7 @@ export function EditEventoButton({ event, clients, locations, packages, staff, s
         variant="ghost" 
         size={showText ? "sm" : "icon"} 
         onClick={() => setShowForm(true)}
-        className={`${showText ? "px-3 gap-2" : "h-8 w-8"} text-gray-400 hover:text-white hover:bg-white/10`}
+        className={`${showText ? "px-3 gap-2" : "h-8 w-8"} text-muted-foreground hover:text-foreground hover:bg-primary/10`}
         title="Editar evento"
       >
         <Edit2 className="w-3.5 h-3.5" />
@@ -90,13 +90,13 @@ export function DeleteEventoButton({ eventId, showText }: { eventId: string; sho
           size="sm" 
           onClick={handleDelete}
           disabled={loading}
-          className="h-7 text-[10px] font-bold"
+          className="h-7 text-[10px] font-bold text-white"
         >
           {loading ? "..." : "Confirmar"}
         </Button>
         <button 
           onClick={() => setConfirm(false)}
-          className="text-[10px] text-gray-400 hover:text-white transition-colors uppercase font-bold"
+          className="text-[10px] text-muted-foreground hover:text-foreground transition-colors uppercase font-bold"
         >
           Cancelar
         </button>
@@ -135,7 +135,7 @@ export function NotifyEventButton({ eventId, alreadySent }: { eventId: string; a
       size="icon"
       onClick={handleNotify}
       disabled={loading}
-      className={`h-7 w-7 ${sent ? "text-green-400 hover:text-green-300" : "hover:text-primary hover:bg-primary/10"}`}
+      className={`h-7 w-7 ${sent ? "text-green-700 hover:text-green-300" : "hover:text-primary hover:bg-primary/10"}`}
       title={sent ? "Músicos notificados" : "Enviar aviso a músicos"}
     >
       {sent ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}

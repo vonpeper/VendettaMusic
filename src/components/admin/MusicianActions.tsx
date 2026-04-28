@@ -66,7 +66,7 @@ export function AddMusicianForm() {
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           
           <div className="flex flex-col items-center gap-2">
-            <div className="w-24 h-24 rounded-full border-2 border-dashed border-white/20 bg-white/5 flex items-center justify-center overflow-hidden relative group">
+            <div className="w-24 h-24 rounded-full border-2 border-dashed border-border/40 bg-primary/10 flex items-center justify-center overflow-hidden relative group">
               {preview ? (
                 <img src={preview} alt="Preview" className="w-full h-full object-cover" />
               ) : (
@@ -99,8 +99,10 @@ export function AddMusicianForm() {
                 <SelectItem value="Bajo">Bajo</SelectItem>
                 <SelectItem value="Batería">Batería</SelectItem>
                 <SelectItem value="Piano">Piano</SelectItem>
-                <SelectItem value="Ingeniero en Audio">Ingeniero en Audio</SelectItem>
-                <SelectItem value="Staff">Staff</SelectItem>
+                <SelectItem value="Saxofón">Saxofón</SelectItem>
+                <SelectItem value="Ingeniero de Audio">Ingeniero de Audio</SelectItem>
+                <SelectItem value="Técnico">Técnico</SelectItem>
+                <SelectItem value="Staff">Staff General</SelectItem>
                 <SelectItem value="Proveedor">Proveedor / Externo</SelectItem>
               </SelectContent>
             </Select>
@@ -118,7 +120,7 @@ export function AddMusicianForm() {
             />
           </div>
           <div className="pt-2 flex justify-end">
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button type="submit" disabled={loading} className="w-full text-white">
               {loading ? "Guardando..." : "Guardar Personal"}
             </Button>
           </div>

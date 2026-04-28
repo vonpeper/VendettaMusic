@@ -86,6 +86,17 @@ const RELATIONS: Record<string, Record<string, { table: string, localField: stri
   },
   "Substitute": {
     "musician": { table: "MusicianProfile", localField: "musicianProfileId", remoteField: "id", type: "one" }
+  },
+  "Setlist": {
+    "songs": { table: "SetlistSong", localField: "id", remoteField: "setlistId", type: "many" }
+  },
+  "SetlistSong": {
+    "setlist": { table: "Setlist", localField: "setlistId", remoteField: "id", type: "one" },
+    "song": { table: "Song", localField: "songId", remoteField: "id", type: "one" }
+  },
+  "Song": {
+    "rehearsalSongs": { table: "RehearsalSong", localField: "id", remoteField: "songId", type: "many" },
+    "setlistSongs": { table: "SetlistSong", localField: "id", remoteField: "songId", type: "many" }
   }
 }
 
@@ -179,37 +190,55 @@ const buildWhereClause = (where: any): { sql: string, args: any[] } => {
       }
 
       if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+        let matched = false;
         if (val.not !== undefined) {
            clauses.push(`"${fullKey}" != ?`);
            args.push(val.not);
-        } else if (val.gte !== undefined) {
+           matched = true;
+        }
+        if (val.gte !== undefined) {
            clauses.push(`"${fullKey}" >= ?`);
            args.push(val.gte instanceof Date ? val.gte.toISOString() : val.gte);
-        } else if (val.gt !== undefined) {
+           matched = true;
+        }
+        if (val.gt !== undefined) {
            clauses.push(`"${fullKey}" > ?`);
            args.push(val.gt instanceof Date ? val.gt.toISOString() : val.gt);
-        } else if (val.lte !== undefined) {
+           matched = true;
+        }
+        if (val.lte !== undefined) {
            clauses.push(`"${fullKey}" <= ?`);
            args.push(val.lte instanceof Date ? val.lte.toISOString() : val.lte);
-        } else if (val.lt !== undefined) {
+           matched = true;
+        }
+        if (val.lt !== undefined) {
            clauses.push(`"${fullKey}" < ?`);
            args.push(val.lt instanceof Date ? val.lt.toISOString() : val.lt);
-        } else if (val.in !== undefined && Array.isArray(val.in)) {
+           matched = true;
+        }
+        if (val.in !== undefined && Array.isArray(val.in)) {
            if (val.in.length > 0) {
              clauses.push(`"${fullKey}" IN (${val.in.map(() => "?").join(", ")})`);
              args.push(...val.in);
            } else {
              clauses.push("1 = 0");
            }
-        } else if (val.notIn !== undefined && Array.isArray(val.notIn)) {
+           matched = true;
+        }
+        if (val.notIn !== undefined && Array.isArray(val.notIn)) {
            if (val.notIn.length > 0) {
              clauses.push(`"${fullKey}" NOT IN (${val.notIn.map(() => "?").join(", ")})`);
              args.push(...val.notIn);
            }
-        } else if (val.contains !== undefined) {
+           matched = true;
+        }
+        if (val.contains !== undefined) {
            clauses.push(`"${fullKey}" LIKE ?`);
            args.push(`%${val.contains}%`);
-        } else {
+           matched = true;
+        }
+        
+        if (!matched) {
            processObject(val, fullKey);
         }
       } else {
@@ -494,6 +523,8 @@ export const db = {
   rehearsalMusician: createModel("RehearsalMusician"),
   rehearsalSong: createModel("RehearsalSong"),
   substitute: createModel("Substitute"),
+  setlist: createModel("Setlist"),
+  setlistSong: createModel("SetlistSong"),
   
   $queryRawUnsafe: async (query: string, ...args: any[]) => {
     try {

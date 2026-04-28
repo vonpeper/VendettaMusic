@@ -88,21 +88,19 @@ export function BandEventsClient({ events = [], currentAnticipos = 0 }: { events
   // KPIs sobre datos filtrados (Solo eventos que ya sucedieron para ingresos reales)
   const kpis = useMemo(() => {
     const now = new Date()
-    const happened = filtered.filter(e => {
-        const d = new Date(e.eventDate)
-        const isPast = d <= now
-        // Solo sumamos ingresos si ya pasó Y no está cancelado (o si es completado)
-        return isPast && e.status !== "cancelado" && e.status !== "pendiente"
+    const confirmed = filtered.filter(e => {
+        // Excluimos estrictamente cancelados y pendientes para el acumulado real
+        return e.status !== "cancelado" && e.status !== "pendiente" && e.status !== "cancelled"
     })
 
-    const total    = happened.reduce((s,e) => s+e.totalIncome, 0)
-    const base     = happened.reduce((s,e) => s+e.baseIncome, 0)
-    const iva      = happened.reduce((s,e) => s+e.ivaAmount, 0)
-    const count    = happened.length
+    const total    = confirmed.reduce((s,e) => s+e.totalIncome, 0)
+    const base     = confirmed.reduce((s,e) => s+e.baseIncome, 0)
+    const iva      = confirmed.reduce((s,e) => s+e.ivaAmount, 0)
+    const count    = confirmed.length
     const avg      = count ? total/count : 0
     
-    // De los que ya sucedieron, buscar los de este mes
-    const thisMonth = happened.filter(e => e.eventYear===now.getFullYear() && e.eventMonth===MONTHS[now.getMonth()])
+    // De los confirmados, buscar los de este mes
+    const thisMonth = confirmed.filter(e => e.eventYear===now.getFullYear() && e.eventMonth===MONTHS[now.getMonth()])
     const monthTotal = thisMonth.reduce((s,e) => s+e.totalIncome, 0)
     
     return { total, base, iva, count, avg, monthTotal }
@@ -145,10 +143,10 @@ export function BandEventsClient({ events = [], currentAnticipos = 0 }: { events
       {/* Anticipos (Standalone) */}
       <div className="mb-6 rounded-xl border border-blue-500/30 bg-blue-500/10 p-5 flex items-center justify-between">
          <div>
-            <span className="text-xs uppercase tracking-[0.2em] text-blue-400 font-bold">Reserva en Banco (Eventos Próximos)</span>
-            <p className="text-sm text-blue-200/70 mt-1">Suma exclusiva de anticipos cobrados para shows que aún no suceden.</p>
+            <span className="text-xs uppercase tracking-[0.2em] text-blue-800 font-bold">Reserva en Banco (Eventos Próximos)</span>
+            <p className="text-sm text-blue-700 mt-1">Suma exclusiva de anticipos cobrados para shows que aún no suceden.</p>
          </div>
-         <div className="text-3xl font-black text-blue-400">
+         <div className="text-3xl font-black text-blue-800">
             {MXN(currentAnticipos)}
          </div>
       </div>
@@ -163,44 +161,44 @@ export function BandEventsClient({ events = [], currentAnticipos = 0 }: { events
           { label: "Total IVA",             value: MXN(kpis.iva),        highlight: false },
           { label: "Total Base (sin IVA)",  value: MXN(kpis.base),       highlight: false },
         ].map(k => (
-          <div key={k.label} className={`rounded-xl border p-4 flex flex-col gap-1 ${k.highlight ? "border-primary/40 bg-primary/10" : "border-white/10 bg-card/30"}`}>
+          <div key={k.label} className={`rounded-xl border p-4 flex flex-col gap-1 ${k.highlight ? "border-green-600/40 bg-green-100" : "border-border/40 bg-card"}`}>
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{k.label}</span>
-            <span className={`text-lg font-black leading-tight ${k.highlight ? "text-primary" : "text-white"}`}>{k.value}</span>
+            <span className={`text-lg font-black leading-tight ${k.highlight ? "text-green-700" : "text-foreground"}`}>{k.value}</span>
           </div>
         ))}
       </div>
 
       {/* Filtros */}
-      <div className="bg-card/30 border border-white/10 rounded-xl p-4 mb-6 grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="bg-card border border-border/40 rounded-xl p-4 mb-6 grid grid-cols-2 md:grid-cols-5 gap-3">
         <Input placeholder="🔍 Buscar cliente..." value={search} onChange={e => setSearch(e.target.value)}
-          className="bg-background border-white/10 text-white placeholder:text-muted-foreground" />
+          className="bg-background border-border/40 text-foreground placeholder:text-muted-foreground" />
         <select value={monthFilter} onChange={e => setMonth(e.target.value)}
-          className="flex h-10 w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <option value="">Todos los meses</option>
           {availableMonths.map(m => <option key={m} value={m}>{m}</option>)}
         </select>
         <select value={yearFilter} onChange={e => setYear(e.target.value)}
-          className="flex h-10 w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <option value="">Todos los años</option>
           {years.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
         <select value={statusFilter} onChange={e => setStatus(e.target.value)}
-          className="flex h-10 w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <option value="">Todos los estatus</option>
           {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
         <select value={typeFilter} onChange={e => setType(e.target.value)}
-          className="flex h-10 w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <option value="">Todos los tipos</option>
           {["show","eventualidad","corporativo","social","festival","privado"].map(t => <option key={t} value={t} className="capitalize">{t}</option>)}
         </select>
       </div>
 
       {/* Tabla */}
-      <div className="border border-border/40 rounded-xl bg-card/20 overflow-x-auto">
+      <div className="border border-border/40 rounded-xl bg-card overflow-x-auto">
         <table className="w-full text-sm min-w-[1100px]">
           <thead>
-            <tr className="border-b border-white/10 text-left">
+            <tr className="border-b border-border/40 text-left">
               <th className="px-4 py-3 text-primary font-bold text-xs uppercase tracking-wider">Fecha</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Mes</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Cliente</th>
@@ -219,18 +217,18 @@ export function BandEventsClient({ events = [], currentAnticipos = 0 }: { events
                 No hay eventos que coincidan con los filtros aplicados.
               </td></tr>
             ) : filtered.map(ev => (
-              <tr key={ev.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                <td className="px-4 py-3 text-white font-medium">
+              <tr key={ev.id} className="border-b border-border/40 hover:bg-white/[0.02] transition-colors">
+                <td className="px-4 py-3 text-foreground font-medium">
                   {formatDateMX(new Date(ev.eventDate), "dd MMM yyyy")}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{ev.eventMonth} {ev.eventYear}</td>
                 <td className="px-4 py-3">
-                  <div className="font-medium text-white">{ev.clientName}</div>
+                  <div className="font-medium text-foreground">{ev.clientName}</div>
                   {ev.location && <div className="text-xs text-muted-foreground">📍 {ev.location}</div>}
                 </td>
-                <td className="px-4 py-3 text-right text-gray-300">{MXN(ev.baseIncome)}</td>
-                <td className="px-4 py-3 text-right text-gray-300">{ev.ivaAmount > 0 ? MXN(ev.ivaAmount) : <span className="text-muted-foreground/50">—</span>}</td>
-                <td className="px-4 py-3 text-right font-bold text-white">{MXN(ev.totalIncome)}</td>
+                <td className="px-4 py-3 text-right text-muted-foreground">{MXN(ev.baseIncome)}</td>
+                <td className="px-4 py-3 text-right text-muted-foreground">{ev.ivaAmount > 0 ? MXN(ev.ivaAmount) : <span className="text-muted-foreground/50">—</span>}</td>
+                <td className="px-4 py-3 text-right font-bold text-foreground">{MXN(ev.totalIncome)}</td>
                 <td className="px-4 py-3">
                   <StatusSelector 
                     eventId={ev.id} 
@@ -238,9 +236,9 @@ export function BandEventsClient({ events = [], currentAnticipos = 0 }: { events
                     isNewModel={ev.isNewModel}
                   />
                 </td>
-                <td className="px-4 py-3 capitalize text-gray-300 text-xs">{ev.eventType}</td>
+                <td className="px-4 py-3 capitalize text-muted-foreground text-xs">{ev.eventType}</td>
                 <td className="px-4 py-3">
-                  <Badge variant="outline" className={`text-[10px] ${ev.source==="excel_import" ? "border-blue-500/40 text-blue-400" : "border-white/10 text-muted-foreground"}`}>
+                  <Badge variant="outline" className={`text-[10px] ${ev.source==="excel_import" ? "border-blue-500/40 text-blue-800" : "border-border/40 text-muted-foreground"}`}>
                     {ev.source === "excel_import" ? "Excel" : "Manual"}
                   </Badge>
                 </td>
@@ -261,12 +259,12 @@ export function BandEventsClient({ events = [], currentAnticipos = 0 }: { events
           </tbody>
           {filtered.length > 0 && (
             <tfoot>
-              <tr className="border-t border-white/20 bg-white/[0.03]">
+              <tr className="border-t border-border/40 bg-white/[0.03]">
                 <td colSpan={3} className="px-4 py-3 text-xs text-muted-foreground font-bold uppercase tracking-wider">
                   Subtotales ({filtered.length} eventos)
                 </td>
-                <td className="px-4 py-3 text-right font-bold text-gray-300">{MXN(kpis.base)}</td>
-                <td className="px-4 py-3 text-right font-bold text-gray-300">{MXN(kpis.iva)}</td>
+                <td className="px-4 py-3 text-right font-bold text-muted-foreground">{MXN(kpis.base)}</td>
+                <td className="px-4 py-3 text-right font-bold text-muted-foreground">{MXN(kpis.iva)}</td>
                 <td className="px-4 py-3 text-right font-black text-primary text-base">{MXN(kpis.total)}</td>
                 <td colSpan={4}></td>
               </tr>
@@ -278,7 +276,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0 }: { events
       {/* FAB / Botón flotante */}
       <button
         onClick={() => setShowForm(true)}
-        className="fixed bottom-8 right-8 bg-primary hover:bg-primary/90 text-white font-bold px-6 py-3 rounded-full shadow-2xl shadow-primary/30 transition-all hover:scale-105 flex items-center gap-2 z-40"
+        className="fixed bottom-8 right-8 bg-primary hover:bg-primary/90 text-foreground font-bold px-6 py-3 rounded-full shadow-2xl shadow-primary/30 transition-all hover:scale-105 flex items-center gap-2 z-40"
       >
         <span className="text-lg leading-none">+</span> Agregar Evento
       </button>
@@ -312,11 +310,11 @@ function StatusSelector({ eventId, currentStatus, isNewModel }: { eventId: strin
         value={currentStatus}
         disabled={loading}
         onChange={(e) => handleStatusChange(e.target.value)}
-        className={`text-[10px] font-bold py-1 px-2 rounded-full border border-white/10 bg-transparent cursor-pointer hover:border-white/30 transition-all outline-none appearance-none text-center ${STATUS_COLORS[currentStatus] || "text-gray-400"}`}
+        className={`text-[10px] font-bold py-1 px-2 rounded-full border border-border/40 bg-transparent cursor-pointer hover:border-border/40 transition-all outline-none appearance-none text-center ${STATUS_COLORS[currentStatus] || "text-muted-foreground"}`}
         style={{ minWidth: '94px' }}
       >
         {STATUS_OPTIONS.map(opt => (
-          <option key={opt.value} value={opt.value} className="bg-slate-900 text-white capitalize">
+          <option key={opt.value} value={opt.value} className="bg-slate-900 text-foreground capitalize">
             {opt.label}
           </option>
         ))}

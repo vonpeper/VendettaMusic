@@ -30,6 +30,7 @@ export interface FunnelData {
   street:       string
   houseNumber:  string
   colonia:      string
+  zipCode?:     string
   municipio:    string
   address:      string // Legacy or full
   city:         string // Legacy
@@ -81,9 +82,14 @@ interface WizardProps {
   initialStep?:  number
   initialPkgId?: string
   initialCity?:  string
+  viaticosConfig?: {
+    gasPrice?: number
+    tollsDefault?: number
+    vehicleCount?: number
+  }
 }
 
-export default function FunnelWizard({ packages, initialStep = 0, initialPkgId, initialCity }: WizardProps) {
+export default function FunnelWizard({ packages, initialStep = 0, initialPkgId, initialCity, viaticosConfig }: WizardProps) {
   // If coming from "Show Personalizado" we pre-select the package and jump to step
   const preselectedPkg = initialPkgId
     ? packages.find(p => p.id === initialPkgId)
@@ -100,6 +106,7 @@ export default function FunnelWizard({ packages, initialStep = 0, initialPkgId, 
     hasRobot: false,
     hasPantalla: false,
     state: "Estado de México",
+    zipCode: "",
     city: initialCity ?? "",
     ...(preselectedPkg ? {
       packageId:   preselectedPkg.id,
@@ -174,6 +181,7 @@ export default function FunnelWizard({ packages, initialStep = 0, initialPkgId, 
                 data={data}
                 onNext={next}
                 onBack={back}
+                viaticosConfig={viaticosConfig}
               />
             )}
             {step === 2 && (

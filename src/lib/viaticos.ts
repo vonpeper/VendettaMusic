@@ -4,13 +4,30 @@
  * Fuera de zona: se cobran viáticos por distancia estimada
  */
 
-// Ciudades y colonias dentro de la zona sin viáticos
+// ZONA 1: Ciudades y colonias dentro de la zona sin viáticos (Valle de Toluca)
 const ZONA_LOCAL = [
-  "toluca", "metepec", "zinacantepec", "ocoyoacac", "san mateo atenco", "lerma",
+  "toluca", "toluca de lerdo", "metepec", "zinacantepec", "zinaca", "ocoyoacac", "san mateo atenco", "lerma",
   "santiago tianguistenco", "tianguistenco", "capulhuac", "xonacatlan",
   "almoloya de juarez", "temoaya", "otzolotepec", "mexicaltzingo", "calimaya",
   "tenango del valle", "san antonio la isla", "rayon", "chapultepec",
   "almoloya del rio", "santa cruz atizapan", "texcalyacac", "joquicingo"
+]
+
+// ZONA 2: Media Distancia
+const ZONA_2 = [
+  "valle de bravo", "avandaro", "malinalco", "ixtapan de la sal", "tonatico",
+  "ciudad de mexico", "cdmx", "df", "distrito federal", "naucalpan", "tlalnepantla", 
+  "huixquilucan", "interlomas", "santa fe", "cuajimalpa", "alvaro obregon", "coyoacan", "tlalpan",
+  "tepotzotlan", "atizapan", "izcalli"
+]
+
+// ZONA 3: Larga Distancia (Por Estado/Ciudad)
+const ZONA_3 = [
+  "cuernavaca", "tepoztlan", "jiutepec", "morelos", // Morelos
+  "queretaro", "san juan del rio", "juriquilla",    // Querétaro
+  "puebla", "cholula", "atlixco",                   // Puebla
+  "pachuca", "hidalgo",                             // Hidalgo
+  "tlaxcala"
 ]
 
 export interface ViaticosResult {
@@ -28,13 +45,50 @@ function normalize(str: string): string {
     .trim()
 }
 
-export function calcularViatcos(city: string, state?: string): ViaticosResult {
-  // Deshabilitado temporalmente a petición del usuario.
-  // Siempre devuelve 0 como si estuviera en la zona local.
+export interface ViaticosConfig {
+  zona2Rate?: number
+  zona3Rate?: number
+}
+
+export function calcularViatcos(city: string, state?: string, config?: ViaticosConfig): ViaticosResult {
+  const normCity = normalize(city)
+  const normState = state ? normalize(state) : ""
+
+  const isLocal = ZONA_LOCAL.some(z => normalize(z) === normCity)
+  if (isLocal) {
+    return {
+      isOutsideZone: false,
+      amount: 0,
+      label: "Zona 1 (Local - Sin viáticos)",
+      description: "El evento se encuentra dentro de la zona de cobertura base (Toluca/Metepec)."
+    }
+  }
+
+  const isZona2 = ZONA_2.some(z => normalize(z) === normCity || (normState && normalize(z) === normState))
+  if (isZona2) {
+    return {
+      isOutsideZone: true,
+      amount: config?.zona2Rate || 1500,
+      label: "Zona 2 (Media Distancia)",
+      description: "Aplica tarifa de viáticos para CDMX, Valle de Bravo, Ixtapan, etc."
+    }
+  }
+
+  const isZona3 = ZONA_3.some(z => normalize(z) === normCity || (normState && normalize(z) === normState))
+  if (isZona3) {
+    return {
+      isOutsideZone: true,
+      amount: config?.zona3Rate || 3000,
+      label: "Zona 3 (Larga Distancia)",
+      description: "Aplica tarifa foránea para Estados colindantes (Querétaro, Puebla, Morelos, etc)."
+    }
+  }
+
+  // Zona 4: Resto del país o desconocido
   return {
-    isOutsideZone: false,
-    amount: 0,
-    label:  "Zona Local (Sin viáticos)",
-    description: "Ubicación en radio de cobertura (calculador deshabilitado temporalmente)."
+    isOutsideZone: true,
+    amount: 0, // No se cobra automáticamente
+    label: "Zona 4 (Cotización Manual)",
+    description: "Destino foráneo. Un asesor calculará la logística exacta en la llamada."
   }
 }

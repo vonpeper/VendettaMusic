@@ -14,7 +14,7 @@ export default async function AdminProveedoresPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-white tracking-tight">
+          <h1 className="text-3xl font-heading font-bold text-foreground tracking-tight">
             Proveedores
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -24,10 +24,10 @@ export default async function AdminProveedoresPage() {
         <NuevoProveedorButton />
       </div>
 
-      <div className="border border-border/40 rounded-xl bg-card/20 overflow-hidden">
+      <div className="border border-border/40 rounded-xl bg-card overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-border/40 hover:bg-transparent bg-black/40">
+            <TableRow className="border-border/40 hover:bg-transparent bg-card">
               <TableHead className="text-primary font-bold w-[250px]">Nombre y Empresa</TableHead>
               <TableHead className="text-primary font-bold">Contacto</TableHead>
               <TableHead className="text-primary font-bold">Rubro</TableHead>
@@ -52,7 +52,7 @@ export default async function AdminProveedoresPage() {
                       <Briefcase className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <div className="font-bold text-white">{provider.name}</div>
+                      <div className="font-bold text-foreground">{provider.name}</div>
                       {provider.company && (
                         <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                           <Building2 className="w-3 h-3" /> {provider.company}

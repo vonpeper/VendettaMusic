@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -136,11 +137,36 @@ model Song {
   artist          String
   language        String?
   genre           String?
+  era             String?         // Ej. 80s, 90s, Actual
   durationMinutes Float?
   key             String?
   status          String          @default("active")
   tags            String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
   rehearsalSongs  RehearsalSong[]
+  setlistSongs    SetlistSong[]
+}
+
+model Setlist {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  isTemplate  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  songs       SetlistSong[]
+}
+
+model SetlistSong {
+  id        String @id @default(uuid())
+  setlistId String
+  songId    String
+  order     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  setlist   Setlist @relation(fields: [setlistId], references: [id], onDelete: Cascade)
+  song      Song    @relation(fields: [songId], references: [id], onDelete: Cascade)
 }
 
 model BandEvent {
@@ -209,6 +235,7 @@ model Quote {
   eventDate      DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @default(now()) @updatedAt
+  followUpCount  Int           @default(0)
   event          Event?
   client         ClientProfile @relation(fields: [clientId], references: [id])
   items          QuoteItem[]
@@ -322,6 +349,7 @@ model BookingRequest {
   calle             String?
   numero            String?
   colonia           String?
+  zipCode           String?
   municipio         String?
   address           String
   city              String
@@ -339,7 +367,7 @@ model BookingRequest {
   paymentRef        String?
   clientName        String
   clientPhone       String
-  clientEmail       String
+  clientEmail       String?
   clientUserId      String?
   status            String   @default("pending")
   adminNote         String?
@@ -351,6 +379,7 @@ model BookingRequest {
   isPublic          Boolean  @default(false)
   clientProvidesAudio Boolean @default(false)
   source            String   @default("web")
+  followUpCount     Int      @default(0)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @default(now()) @updatedAt
 }
@@ -414,6 +443,22 @@ model GlobalConfig {
   evolutionUrl       String?
   evolutionApiKey    String?
   evolutionInstance  String?    @default("vendetta_admin")
+
+  // Redes Sociales
+  facebookUrl        String?
+  instagramUrl       String?
+  tiktokUrl          String?
+  whatsappUrl        String?
+
+  // Plantillas de Notificación WhatsApp
+  msgTemplateGig        String?
+  msgTemplateQuote      String?
+  msgTemplateEventClose String?
+  msgTemplateFollowUp   String?
+
+  // Viáticos por Zonas
+  zona2Rate          Float?     @default(1500.0) // CDMX, Valle de Bravo, Cuernavaca
+  zona3Rate          Float?     @default(3000.0) // Querétaro, Puebla, Pachuca
 
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt

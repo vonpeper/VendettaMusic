@@ -1,17 +1,43 @@
 import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
-import { buildGigMessage, sendWhatsApp } from "@/lib/notifications"
+import { notifyWhatsApp, notifyClientBookingClosed } from "@/lib/notifications"
 import { calcularViatcos } from "@/lib/viaticos"
 import { findOrCreateClient } from "@/lib/clients"
 import { formatDateMX } from "@/lib/utils"
 
+// --- 🛡️ IN-MEMORY RATE LIMITER (Anti-Spam) ---
+const bookingAttempts = new Map<string, { count: number; firstAttempt: number }>()
+const MAX_BOOKINGS = 3
+const BOOKING_LOCKOUT_MS = 10 * 60 * 1000 // 10 minutos
+
 export async function POST(req: NextRequest) {
   try {
+    // 1. Rate Limiting Check por IP
+    // En Vercel / Cloudflare usamos headers, si no, intentamos sacar la IP
+    const ip = req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown-ip"
+    const now = Date.now()
+    const record = bookingAttempts.get(ip)
+
+    if (record) {
+      if (now - record.firstAttempt < BOOKING_LOCKOUT_MS) {
+        if (record.count >= MAX_BOOKINGS) {
+          console.warn(`🛑 Spam bloqueado para IP: ${ip}`)
+          return NextResponse.json({ success: false, error: "Demasiadas cotizaciones recientes. Por favor, intenta de nuevo en unos minutos o contáctanos por WhatsApp." }, { status: 429 })
+        }
+        record.count += 1
+        bookingAttempts.set(ip, record)
+      } else {
+        bookingAttempts.set(ip, { count: 1, firstAttempt: now })
+      }
+    } else {
+      bookingAttempts.set(ip, { count: 1, firstAttempt: now })
+    }
+
     const body = await req.json()
 
     const {
       packageId, packageName, guestCount, venueType,
-      address, city, state, mapsLink,
+      address, city, state, zipCode, mapsLink,
       requestedDate, startTime, endTime,
       baseAmount, depositAmount, paymentMethod,
       clientName, clientPhone, clientEmail,
@@ -22,7 +48,11 @@ export async function POST(req: NextRequest) {
     const shortId = `VND-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
 
     // Calcular viáticos
-    const viaticos = calcularViatcos(city, state)
+    const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+    const viaticos = calcularViatcos(city, state, {
+      zona2Rate: config?.zona2Rate || 1500,
+      zona3Rate: config?.zona3Rate || 3000
+    })
 
     console.log("📝 Intentando crear booking con data:", {
       packageName, clientName, shortId, city
@@ -53,6 +83,7 @@ export async function POST(req: NextRequest) {
         calle:         body.street || null,
         numero:        body.houseNumber || null,
         colonia:       body.colonia || null,
+        zipCode:       zipCode || body.zipCode || null,
         municipio:     body.municipio || city,
         address:       address || "No especificada",
         city:          city || "No especificada",
@@ -79,41 +110,36 @@ export async function POST(req: NextRequest) {
 
     console.log("✅ Booking creado exitosamente:", booking.id, "shortId:", shortId)
 
-    // 4. Intentar enviar WhatsApp al admin (pero NO bloquear la respuesta si falla)
-    const adminMessage = `🎸 *NUEVO PEDIDO — VENDETTA* 🎸
-ID Seguimiento: ${shortId}
-
-👤 *Cliente:* ${clientName}
-📞 *Tel:* ${clientPhone}
-📧 ${clientEmail}
-
-📅 *Fecha:* ${formatDateMX(cleanDate, "EEEE, d 'de' MMMM")}
-⏰ *Horario:* ${startTime} — ${endTime} hrs
-📦 *Paquete:* ${packageName}
-📍 *Ubicación:* ${body.street || ""} ${body.houseNumber || ""}, ${body.colonia || ""}, ${city}
-
-✅ Verifica en: http://localhost:3005/admin/bookings/${booking.id}`
-
     try {
       const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER
       if (adminPhone) {
-        const sid = await sendWhatsApp(adminPhone, adminMessage)
-        if (sid) {
-          await db.bookingRequest.update({
-            where: { id: booking.id },
-            data: { notifiedAdmin: true }
-          }).catch(() => {})
-        }
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3005"
+        const adminLink = `${baseUrl}/admin/bookings/${booking.id}`
+        
+        await notifyWhatsApp({
+          to: adminPhone,
+          type: "admin_booking",
+          data: {
+            folio:       shortId,
+            clientName:  clientName,
+            clientPhone: clientPhone,
+            clientEmail: clientEmail || "N/A",
+            date:        formatDateMX(cleanDate, "EEEE, d 'de' MMMM"),
+            time:        `${startTime} — ${endTime} hrs`,
+            package:     packageName,
+            location:    `${body.street || ""} ${body.houseNumber || ""}, ${body.colonia || ""}, CP ${zipCode || ""}, ${city}`,
+            adminLink:   adminLink
+          }
+        })
       }
     } catch (notifyErr) {
-      console.error("⚠️ Error silencioso enviando notificación:", notifyErr)
+      console.error("⚠️ Error silencioso enviando notificación admin:", notifyErr)
     }
 
     return NextResponse.json({
       success:   true,
       bookingId: booking.id,
-      shortId:   shortId,
-      adminWhatsappUrl: `https://wa.me/${(process.env.ADMIN_WHATSAPP_NUMBER_RAW ?? "521XXXXXXXXXX").replace(/\D/g, "")}?text=${encodeURIComponent(adminMessage)}`
+      shortId:   shortId
     })
   } catch (error) {
     console.error("POST /api/booking:", error)
@@ -190,6 +216,9 @@ export async function PATCH(req: NextRequest) {
         isPublic:         booking.isPublic,
       }
       await notifyMusiciansFunnel(event.id, gig)
+      
+      // 6. Notificar al CLIENTE (Cierre de venta)
+      await notifyClientBookingClosed(booking).catch(e => console.error("Error notificado cliente closure:", e))
 
       return NextResponse.json({ success: true, eventId: event.id })
     }
@@ -319,22 +348,27 @@ async function notifyMusiciansFunnel(eventId: string, gig: any) {
     include: { user: true }
   })
 
-  const message = buildGigMessage(gig)
+  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const template = config?.msgTemplateGig || `🎸 *NUEVO GIG — VENDETTA* 🎸\n\n📅 *Fecha:* {{date}}\n👤 *Cliente:* {{clientName}}\n🎉 *Tipo de evento:* {{ceremony}}\n📍 *Ubicación:* {{location}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n📝 *Notas:* {{notes}}\n\n{{confirmLink}}\n— Administración Vendetta`
 
   for (const m of musicians) {
     const phone = m.whatsapp ?? m.phone
     if (!phone) continue
-    const sid = await sendWhatsApp(phone, message)
-    await db.notification.create({
+    
+    await notifyWhatsApp({
+      to: phone,
+      type: "gig_created",
       data: {
-        eventId,
-        type:      "gig_created",
-        channel:   "whatsapp",
-        recipient: phone,
-        message,
-        status:    sid ? "sent" : "pendiente",
-        twilioSid: sid,
-      }
+        clientName:       gig.clientName,
+        date:             formatDateMX(gig.date, "EEEE, d 'de' MMMM, yyyy"),
+        ceremony:         gig.isPublic ? "Evento Público" : "Evento Privado",
+        location:         gig.locationAddress || gig.locationName || "Por confirmar",
+        time:             `${gig.performanceStart} — ${gig.performanceEnd} hrs`,
+        package:          gig.packageName || "Por confirmar",
+        notes:            "Nuevas fechas disponibles.",
+        confirmLink:      ""
+      },
+      eventId
     })
   }
 }

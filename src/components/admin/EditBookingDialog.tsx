@@ -69,7 +69,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
           <Button 
             {...triggerProps}
             variant="outline" 
-            className="w-full border-primary/30 text-primary hover:bg-primary hover:text-white transition-all rounded-xl h-11 gap-2 font-bold"
+            className="w-full border-primary/30 text-primary hover:bg-primary hover:text-foreground transition-all rounded-xl h-11 gap-2 font-bold"
           >
             <Edit3 className="w-4 h-4" /> Editar Información
           </Button>
@@ -93,7 +93,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
                 id="packageName" 
                 value={formData.packageName} 
                 onChange={e => setFormData({...formData, packageName: e.target.value})}
-                className="bg-background/50"
+                className="bg-background"
               />
             </div>
             <div className="space-y-2">
@@ -102,7 +102,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
                 id="venueType" 
                 value={formData.venueType} 
                 onChange={e => setFormData({...formData, venueType: e.target.value})}
-                className="bg-background/50"
+                className="bg-background"
               />
             </div>
           </div>
@@ -115,7 +115,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
                 type="date"
                 value={formData.requestedDate} 
                 onChange={e => setFormData({...formData, requestedDate: e.target.value})}
-                className="bg-background/50"
+                className="bg-background"
               />
             </div>
             <div className="space-y-2">
@@ -125,7 +125,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
                 type="number"
                 value={formData.guestCount} 
                 onChange={e => setFormData({...formData, guestCount: parseInt(e.target.value)})}
-                className="bg-background/50"
+                className="bg-background"
               />
             </div>
           </div>
@@ -137,7 +137,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
                 id="startTime" 
                 value={formData.startTime} 
                 onChange={e => setFormData({...formData, startTime: e.target.value})}
-                className="bg-background/50"
+                className="bg-background"
               />
             </div>
             <div className="space-y-2">
@@ -146,7 +146,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
                 id="endTime" 
                 value={formData.endTime} 
                 onChange={e => setFormData({...formData, endTime: e.target.value})}
-                className="bg-background/50"
+                className="bg-background"
               />
             </div>
           </div>
@@ -157,7 +157,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
               id="city" 
               value={formData.city} 
               onChange={e => setFormData({...formData, city: e.target.value})}
-              className="bg-background/50"
+              className="bg-background"
             />
           </div>
 
@@ -167,7 +167,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
               id="address" 
               value={formData.address} 
               onChange={e => setFormData({...formData, address: e.target.value})}
-              className="bg-background/50"
+              className="bg-background"
             />
           </div>
 
@@ -179,7 +179,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
                 type="number"
                 value={formData.baseAmount} 
                 onChange={e => setFormData({...formData, baseAmount: parseFloat(e.target.value)})}
-                className="bg-background/50"
+                className="bg-background"
               />
             </div>
             <div className="space-y-2">
@@ -189,7 +189,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
                 type="number"
                 value={formData.depositAmount} 
                 onChange={e => setFormData({...formData, depositAmount: parseFloat(e.target.value)})}
-                className="bg-background/50"
+                className="bg-background"
               />
             </div>
           </div>
@@ -225,7 +225,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
                   value={formData.mapsLink} 
                   onChange={e => setFormData({...formData, mapsLink: e.target.value})}
                   placeholder="https://maps.app.goo.gl/..."
-                  className="bg-background/50 h-8 text-xs border-primary/20"
+                  className="bg-background h-8 text-xs border-primary/20"
                 />
               </div>
             )}
@@ -235,7 +235,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-black font-bold rounded-xl px-8" disabled={loading}>
+            <Button type="submit" className="bg-primary hover:bg-primary/90 text-black font-bold rounded-xl px-8 text-white" disabled={loading}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Guardar Cambios
             </Button>

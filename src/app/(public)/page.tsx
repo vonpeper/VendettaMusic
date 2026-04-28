@@ -15,6 +15,13 @@ import { Suspense } from "react"
 import Image from "next/image"
 import { db } from "@/lib/db"
 import { ReviewModal } from "@/components/public/ReviewModal"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Música en Vivo para Bodas y Eventos | Vendetta Live Music",
+  description: "Grupo musical versátil para eventos sociales, bodas y eventos corporativos en Toluca, CDMX y Valle de Bravo. Show en vivo de alto nivel.",
+  keywords: ["música en vivo bodas", "grupo musical eventos", "banda versátil toluca", "show musical cdmx", "música para eventos valle de bravo"],
+}
 
 // --- Animación arcoiris pasteles ---------------------------------------------
 const BADGES = [
@@ -102,9 +109,10 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-background z-10" />
           <Image
             src={mediaMap.hero}
-            alt="Vendetta en vivo"
+            alt="Grupo musical Vendetta en vivo para eventos sociales y bodas"
             fill
             priority
+            sizes="100vw"
             className="object-cover opacity-90 blur-[2px]"
           />
         </div>
@@ -113,17 +121,17 @@ export default async function HomePage() {
           <div className="inline-block relative mb-4 z-30 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-black text-[10px] uppercase tracking-[0.3em] backdrop-blur-md -translate-y-2">
             ✦ Agendando fechas 2026
           </div>
-          <h1 className="animated-title font-heading font-black text-6xl md:text-8xl lg:text-9xl tracking-tighter mb-6 uppercase drop-shadow-2xl leading-[0.85] relative">
-            Tu Evento<br />Inolvidable
+          <h1 className="animated-title font-heading font-black text-5xl md:text-8xl lg:text-9xl tracking-tighter mb-6 uppercase drop-shadow-2xl leading-[0.85] relative">
+            MÚSICA en Vivo<br />Inolvidable
           </h1>
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
-            Música en vivo de alto nivel para bodas, eventos corporativos y festivales.
-            Energía real. Talento real. Recuerdos de por vida.
+            Show de épocas de pop y rock en inglés desde los 80's de alto nivel para bodas, eventos corporativos y festivales.
+            Energía real en Toluca, CDMX y Valle de Bravo.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
              <a href="#paquetes">
                 <Button size="lg" className="font-black text-lg px-10 h-16 rounded-2xl shadow-xl shadow-primary/25 gap-2">
-                  Ver Paquetes <ChevronRight className="w-5 h-5" />
+                   Ver Paquetes <ChevronRight className="w-5 h-5" />
                 </Button>
               </a>
               <a href="#nosotros" className="text-sm font-black text-white hover:text-primary transition-colors tracking-widest uppercase">
@@ -173,8 +181,9 @@ export default async function HomePage() {
                <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
                   <Image 
                     src={mediaMap.mentiras}
-                    alt="Tributo Mentiras"
+                    alt="Show Tributo Mentiras por Vendetta - Música de los 80s"
                     fill
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
@@ -190,7 +199,7 @@ export default async function HomePage() {
                   <span className="animated-title italic pr-4">Mentiras</span>
                </h2>
                <p className="text-gray-400 text-lg mb-8 leading-relaxed max-w-xl italic">
-                  Revive la época dorada del pop en español con nuestro show homenaje a "Mentiras". Una producción teatral y musical que pondrá a todos a cantar.
+                  Revive la época dorada del pop en español con nuestro show homenaje a "Mentiras". Un concierto en vivo que pondrá a todos a cantar.
                </p>
                <a href="https://wa.me/527222417045?text=Hola!%20Me%20interesa%20contratar%20el%20Tributo%20Mentiras" target="_blank" rel="noopener noreferrer">
                   <Button size="lg" className="h-14 px-8 font-black gap-2 text-base">
@@ -212,10 +221,10 @@ export default async function HomePage() {
               ⚡ Estándar Vendetta
             </div>
             <h2 className="font-heading font-black text-5xl md:text-7xl tracking-tighter mb-4 leading-none uppercase">
-              Calidad que <br /> <span className="animated-title italic">rompe el molde</span>
+              Show de Épocas <br /> <span className="animated-title italic">Pop & Rock</span>
             </h2>
             <p className="text-muted-foreground max-w-lg mx-auto font-medium">
-              No somos una banda de covers aburrida. Somos una experiencia sensorial completa.
+              No somos la típica banda aburrida. Somos una experiencia sensorial completa.
             </p>
           </div>
 
@@ -275,7 +284,7 @@ export default async function HomePage() {
                Trusted By
              </div>
              <h2 className="text-4xl md:text-5xl font-heading font-black text-white uppercase tracking-tight leading-none">
-               Han Confiado en <span className="animated-title italic pr-4">Vendetta</span>
+               Clientes que <span className="animated-title italic pr-4">Nos Recomiendan</span>
              </h2>
           </div>
           
@@ -351,8 +360,9 @@ export default async function HomePage() {
         <div className="absolute inset-0 z-0">
           <Image
             src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1600&auto=format&fit=crop"
-            alt=""
+            alt="Concierto en vivo Vendetta - La mejor energía para tu fiesta"
             fill
+            sizes="100vw"
             className="object-cover opacity-10"
           />
         </div>

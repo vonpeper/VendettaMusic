@@ -56,9 +56,14 @@ export default function Step5_Registro({ data, onNext, onBack }: Props) {
           packageName:  data.packageName,
           guestCount:   data.guestCount,
           venueType:    data.venueType,
+          street:       data.street,
+          houseNumber:  data.houseNumber,
+          colonia:      data.colonia,
+          zipCode:      data.zipCode,
           address:      data.address,
           city:         data.city,
           state:        data.state,
+          mapsLink:     data.mapsLink,
           requestedDate: data.requestedDate,
           startTime:    data.startTime,
           endTime:      data.endTime,
@@ -68,6 +73,8 @@ export default function Step5_Registro({ data, onNext, onBack }: Props) {
           clientName:   name,
           clientPhone:  phone,
           clientEmail:  email,
+          isPublic:     data.isPublic,
+          clientProvidesAudio: data.clientProvidesAudio,
         })
       })
       const json = await res.json()
@@ -127,6 +134,7 @@ export default function Step5_Registro({ data, onNext, onBack }: Props) {
             <div className="text-white">
               <span className="font-bold">{data.street} {data.houseNumber}</span>, 
               <span> Col. {data.colonia}</span>, 
+              <span> CP {data.zipCode}</span>, 
               <span className="block text-[10px] text-gray-500 uppercase tracking-wider">{data.city}, {data.state}</span>
             </div>
           </div>
@@ -195,20 +203,24 @@ export default function Step5_Registro({ data, onNext, onBack }: Props) {
         </p>
       </div>
 
-      {/* Términos */}
-      <label className="flex items-start gap-3 cursor-pointer mb-6 p-4 rounded-xl border border-white/10 bg-white/5 hover:border-white/20 transition-colors">
-        <input
-          type="checkbox"
-          checked={agreed}
-          onChange={e => setAgreed(e.target.checked)}
-          className="mt-0.5 w-4 h-4 accent-red-600"
-        />
-        <span className="text-sm text-gray-300">
-          Acepto los <span className="text-primary underline">términos y condiciones</span> de contratación.
-          Entiendo que el anticipo es el {Math.round((deposit/base)*100)}% del total y que la reserva quedará confirmada
-          una vez verificado el pago por el equipo de Vendetta.
-        </span>
-      </label>
+      {/* Términos y Privacidad */}
+      <div className="mb-6 p-4 rounded-xl border border-white/10 bg-white/5 hover:border-white/20 transition-colors">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={e => setAgreed(e.target.checked)}
+            className="mt-0.5 w-4 h-4 accent-red-600"
+          />
+          <span className="text-sm text-gray-300">
+            Acepto los <a href="/terminos-condiciones" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">términos y condiciones</a> y el <a href="/aviso-privacidad" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">aviso de privacidad</a>.
+            <span className="block mt-1 text-xs text-muted-foreground">
+              Entiendo que el anticipo es el {Math.round((deposit/base)*100)}% del total y que la reserva quedará confirmada
+              una vez verificado el pago por el equipo de Vendetta.
+            </span>
+          </span>
+        </label>
+      </div>
 
       {error && (
         <p className="text-sm text-destructive mb-4 bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-2">

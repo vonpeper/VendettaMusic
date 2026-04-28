@@ -56,7 +56,7 @@ export function EditProveedorButton({ provider, showText = false }: { provider: 
         variant="ghost" 
         size={showText ? "sm" : "icon"} 
         onClick={() => setShowForm(true)}
-        className={`${showText ? "px-3 gap-2" : "h-8 w-8"} text-gray-400 hover:text-white hover:bg-white/10`}
+        className={`${showText ? "px-3 gap-2" : "h-8 w-8"} text-muted-foreground hover:text-foreground hover:bg-primary/10`}
       >
         <Edit2 className="w-3.5 h-3.5" />
         {showText && <span>Editar</span>}
@@ -87,7 +87,7 @@ export function DeleteProveedorButton({ providerId }: { providerId: string }) {
           size="sm" 
           onClick={handleDelete}
           disabled={loading}
-          className="h-8 text-xs font-bold px-2"
+          className="h-8 text-xs font-bold px-2 text-white"
         >
           {loading ? "..." : "Confirmar"}
         </Button>
@@ -95,7 +95,7 @@ export function DeleteProveedorButton({ providerId }: { providerId: string }) {
           variant="ghost"
           size="sm"
           onClick={() => setConfirm(false)}
-          className="h-8 text-xs px-2 text-gray-400 hover:text-white uppercase"
+          className="h-8 text-xs px-2 text-muted-foreground hover:text-foreground uppercase"
         >
           Cancelar
         </Button>

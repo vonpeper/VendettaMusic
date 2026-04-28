@@ -24,8 +24,8 @@ export function AddSubstituteForm({ musicianProfileId }: { musicianProfileId: st
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 items-center mt-2">
-      <Input name="name" placeholder="Nombre del suplente" required className="h-8 text-xs bg-black/40 border-white/10" />
-      <Input name="whatsapp" placeholder="WhatsApp (10 dígitos)" required className="h-8 text-xs bg-black/40 border-white/10" />
+      <Input name="name" placeholder="Nombre del suplente" required className="h-8 text-xs bg-card border-border/40" />
+      <Input name="whatsapp" placeholder="WhatsApp (10 dígitos)" required className="h-8 text-xs bg-card border-border/40" />
       <Button type="submit" disabled={loading} size="sm" className="h-8 px-2" variant="secondary">
         <UserPlus className="w-3.5 h-3.5" />
       </Button>

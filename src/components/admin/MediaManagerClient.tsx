@@ -77,7 +77,7 @@ export function MediaManagerClient({ initialData }: { initialData: MediaGroup })
 
     return (
       <div className="flex flex-col gap-3">
-        <label className="text-sm font-semibold text-white/80">{label}</label>
+        <label className="text-sm font-semibold text-muted-foreground">{label}</label>
         <div className="flex items-center gap-4">
           <input 
              type="file" 
@@ -90,7 +90,7 @@ export function MediaManagerClient({ initialData }: { initialData: MediaGroup })
             variant="outline" 
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="w-full bg-white/5 hover:bg-white/10 text-white/70 border-white/10"
+            className="w-full bg-primary/10 hover:bg-primary/10 text-muted-foreground border-border/40"
           >
             {isUploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <UploadCloud className="w-4 h-4 mr-2" />}
             Seleccionar archivo...
@@ -101,11 +101,11 @@ export function MediaManagerClient({ initialData }: { initialData: MediaGroup })
   }
 
   const PreviewImage = ({ media }: { media: any }) => {
-    if (!media) return <div className="h-32 w-full border border-dashed border-white/20 rounded-xl flex items-center justify-center text-white/30"><ImageIcon className="w-6 h-6" /></div>
+    if (!media) return <div className="h-32 w-full border border-dashed border-border/40 rounded-xl flex items-center justify-center text-muted-foreground"><ImageIcon className="w-6 h-6" /></div>
     return (
-      <div className="relative group w-full h-32 rounded-xl overflow-hidden border border-white/10">
+      <div className="relative group w-full h-32 rounded-xl overflow-hidden border border-border/40">
         <Image src={media.url} alt="preview" fill className="object-cover" />
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+        <div className="absolute inset-0 bg-card opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
           <Button variant="destructive" size="sm" onClick={() => handleDelete(media.id)} disabled={loading === "delete_"+media.id}>
             <Trash2 className="w-4 h-4" />
           </Button>
@@ -116,7 +116,7 @@ export function MediaManagerClient({ initialData }: { initialData: MediaGroup })
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20">
-      <Card className="bg-white/5 border-white/10">
+      <Card className="bg-primary/10 border-border/40">
         <CardHeader><CardTitle className="text-primary flex items-center gap-2"><ImageIcon className="w-5 h-5"/> Banners Dinámicos</CardTitle></CardHeader>
         <CardContent className="space-y-8">
            <div className="grid grid-cols-2 gap-4 items-end">
@@ -134,16 +134,16 @@ export function MediaManagerClient({ initialData }: { initialData: MediaGroup })
         </CardContent>
       </Card>
 
-      <Card className="bg-white/5 border-white/10">
+      <Card className="bg-primary/10 border-border/40">
         <CardHeader><CardTitle className="text-primary flex items-center gap-2"><Video className="w-5 h-5"/> Video Promocional</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-gray-400">Ingresa el enlace a tu video de YouTube para el botón del Home.</p>
+          <p className="text-sm text-muted-foreground">Ingresa el enlace a tu video de YouTube para el botón del Home.</p>
           <div className="flex gap-2">
             <Input 
               placeholder="Ej. https://www.youtube.com/watch?v=..." 
               value={videoUrl} 
               onChange={(e) => setVideoUrl(e.target.value)} 
-              className="bg-black/50 border-white/20 text-white"
+              className="bg-card border-border/40 text-foreground"
             />
             <Button onClick={handleSaveVideo} disabled={loading === "video"}>
               {loading === "video" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
@@ -157,7 +157,7 @@ export function MediaManagerClient({ initialData }: { initialData: MediaGroup })
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-2 bg-white/5 border-white/10">
+      <Card className="lg:col-span-2 bg-primary/10 border-border/40">
         <CardHeader><CardTitle className="text-primary flex items-center gap-2"><ImageIcon className="w-5 h-5"/> Galería de Experiencias</CardTitle></CardHeader>
         <CardContent className="space-y-6">
           <div className="max-w-xs">
@@ -168,7 +168,7 @@ export function MediaManagerClient({ initialData }: { initialData: MediaGroup })
               <PreviewImage key={media.id} media={media} />
             ))}
             {data.galeria.length === 0 && (
-               <p className="text-white/40 text-sm col-span-full">La galería está vacía.</p>
+               <p className="text-muted-foreground text-sm col-span-full">La galería está vacía.</p>
             )}
           </div>
         </CardContent>

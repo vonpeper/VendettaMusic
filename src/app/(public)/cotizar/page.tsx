@@ -18,6 +18,7 @@ export default async function CotizarPage({ searchParams }: Props) {
   })
 
   const initialStep = params.step ? parseInt(params.step, 10) : 0
+  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
 
   return (
     <FunnelWizard
@@ -25,6 +26,11 @@ export default async function CotizarPage({ searchParams }: Props) {
       initialStep={initialStep}
       initialPkgId={params.pkg}
       initialCity={params.city}
+      viaticosConfig={{
+        gasPrice: config?.gasPrice || undefined,
+        tollsDefault: config?.tollsDefault || undefined,
+        vehicleCount: config?.vehicleCount || undefined
+      }}
     />
   )
 }

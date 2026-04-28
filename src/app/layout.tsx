@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, Montserrat } from "next/font/google";
+import { Inter, Montserrat, Advent_Pro } from "next/font/google";
 import "./globals.css";
+import { SchemaMarkup } from "@/components/public/SchemaMarkup"
+import { Toaster } from "sonner"
 
 const inter = Inter({
   variable: "--font-sans",
@@ -10,6 +12,12 @@ const inter = Inter({
 const montserrat = Montserrat({
   variable: "--font-heading",
   subsets: ["latin"],
+});
+
+const advent = Advent_Pro({
+  variable: "--font-advent",
+  subsets: ["latin"],
+  weight: ["500"], // Medium
 });
 
 export const metadata: Metadata = {
@@ -26,9 +34,13 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${inter.variable} ${montserrat.variable} dark antialiased scroll-smooth`}
+      className={`${inter.variable} ${montserrat.variable} ${advent.variable} dark antialiased scroll-smooth`}
     >
-      <body className="min-h-screen bg-background text-foreground flex flex-col">{children}</body>
+      <body className="min-h-screen bg-background text-foreground flex flex-col">
+        <Toaster theme="dark" position="bottom-right" richColors />
+        <SchemaMarkup />
+        {children}
+      </body>
     </html>
   );
 }

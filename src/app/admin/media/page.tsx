@@ -28,16 +28,16 @@ export default async function AdminMediaPage() {
   return (
     <div className="p-4 sm:p-8 space-y-8 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-3xl font-black text-white uppercase tracking-tight">Medios & Galería</h1>
-        <p className="text-sm text-gray-400 mt-1">Sube tus fotos o videos y actualiza el Home en tiempo real.</p>
+        <h1 className="text-3xl font-black text-foreground uppercase tracking-tight">Medios & Galería</h1>
+        <p className="text-sm text-muted-foreground mt-1">Sube tus fotos o videos y actualiza el Home en tiempo real.</p>
       </div>
       
       <MediaManagerClient initialData={groupedMedia} />
 
-      <div className="pt-12 border-t border-white/10 mt-12">
+      <div className="pt-12 border-t border-border/40 mt-12">
         <div>
-          <h2 className="text-3xl font-black text-white uppercase tracking-tight">Alineación de la Banda</h2>
-          <p className="text-sm text-gray-400 mt-1">Edita los textos públicos e imágenes de los Músicos del Home.</p>
+          <h2 className="text-3xl font-black text-foreground uppercase tracking-tight">Alineación de la Banda</h2>
+          <p className="text-sm text-muted-foreground mt-1">Edita los textos públicos e imágenes de los Músicos del Home.</p>
         </div>
         <div className="mt-8">
           <BandMembersManagerClient members={bandMembers} />

@@ -46,7 +46,7 @@ export function BookingActions({
   }
 
   if (done) return (
-    <div className="text-xs text-green-400 font-bold flex items-center gap-1.5 p-4 bg-green-900/10 border border-green-500/20 rounded-xl">
+    <div className="text-xs text-green-700 font-bold flex items-center gap-1.5 p-4 bg-green-900/10 border border-green-500/20 rounded-xl">
       <Check className="w-3.5 h-3.5" /> Acción realizada. Recargando datos...
     </div>
   )
@@ -76,7 +76,7 @@ export function BookingActions({
           onChange={e => setNote(e.target.value)}
           placeholder="Ej: Ya hablé con el cliente por WA, todo listo para el montaje."
           rows={3}
-          className="w-full text-sm bg-background border border-border/40 rounded-xl px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none transition-all"
+          className="w-full text-sm bg-background border border-border/40 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none transition-all"
         />
       </div>
       <div className="flex gap-3">
@@ -95,7 +95,7 @@ export function BookingActions({
           onClick={() => handleAction("reject")}
           disabled={loading !== null}
           variant="outline"
-          className="flex-1 border-red-900/50 text-red-400 hover:bg-red-900/30 h-11 gap-2 font-bold rounded-xl"
+          className="flex-1 border-red-900/50 text-red-700 hover:bg-red-900/30 h-11 gap-2 font-bold rounded-xl"
         >
           {loading === "reject"
             ? <Loader2 className="w-4 h-4 animate-spin" />

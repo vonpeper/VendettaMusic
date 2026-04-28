@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
 import { formatDateMX } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { NuevoEnsayoButton, DeleteRehearsalButton } from "@/components/admin/RehearsalActions"
+import { NuevoEnsayoButton, DeleteRehearsalButton, EditRehearsalButton } from "@/components/admin/RehearsalActions"
 import { AddSubstituteForm, DeleteSubstituteButton } from "@/components/admin/SubstituteActions"
 import { AddMusicianForm } from "@/components/admin/MusicianActions"
 import { Music, MapPin, Calendar as CalendarIcon, Users } from "lucide-react"
@@ -36,7 +36,7 @@ export default async function AdminEnsayosPage() {
     <div className="p-8 bg-background min-h-full">
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-white tracking-tight">Agenda de Ensayos</h1>
+          <h1 className="text-3xl font-heading font-bold text-foreground tracking-tight">Agenda de Ensayos</h1>
           <p className="text-muted-foreground mt-1 text-sm">Organiza reuniones, reparte material y notifica a los músicos.</p>
         </div>
         <NuevoEnsayoButton locations={locations} musicians={musicians} songs={songs} />
@@ -46,17 +46,17 @@ export default async function AdminEnsayosPage() {
         {/* Left Column: Rehearsals */}
         <div className="space-y-8">
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-primary" /> Próximos Ensayos
             </h2>
             {upcomingRehearsals.length === 0 ? (
-              <div className="p-8 text-center border border-dashed border-white/20 rounded-xl bg-card/20">
+              <div className="p-8 text-center border border-dashed border-border/40 rounded-xl bg-card">
                 <p className="text-muted-foreground">No hay ensayos programados.</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {upcomingRehearsals.map(rehearsal => (
-                  <div key={rehearsal.id} className="bg-card border border-white/10 rounded-xl p-6 shadow-sm">
+                  <div key={rehearsal.id} className="bg-card border border-border/40 rounded-xl p-6 shadow-sm">
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <p className="text-lg font-bold text-primary">{formatDateMX(rehearsal.datetime, "EEEE, d 'de' MMMM, yyyy - HH:mm 'hrs'")}</p>
@@ -64,12 +64,15 @@ export default async function AdminEnsayosPage() {
                           <MapPin className="w-4 h-4" /> {rehearsal.location?.name || "Sin ubicación"}
                         </p>
                       </div>
-                      <DeleteRehearsalButton rehearsalId={rehearsal.id} />
+                      <div className="flex gap-2">
+                        <EditRehearsalButton rehearsal={rehearsal} locations={locations} musicians={musicians} songs={songs} />
+                        <DeleteRehearsalButton rehearsalId={rehearsal.id} />
+                      </div>
                     </div>
 
                     {rehearsal.notes && (
-                      <div className="mb-4 p-3 bg-black/20 rounded-lg text-sm text-gray-300 border border-white/5">
-                        <span className="font-bold text-white block mb-1">Notas / Tarea:</span>
+                      <div className="mb-4 p-3 bg-card rounded-lg text-sm text-muted-foreground border border-border/40">
+                        <span className="font-bold text-foreground block mb-1">Notas / Tarea:</span>
                         {rehearsal.notes}
                       </div>
                     )}
@@ -80,14 +83,14 @@ export default async function AdminEnsayosPage() {
                         {rehearsal.songs.length > 0 ? (
                           <ul className="text-sm space-y-1">
                             {rehearsal.songs.map(rs => (
-                              <li key={rs.id} className="flex items-start gap-2 text-gray-300">
-                                <Music className="w-4 h-4 mt-0.5 shrink-0 text-white/50" /> 
-                                <span><span className="text-white">{rs.song.title}</span> <span className="text-white/50 text-xs">({rs.song.artist})</span></span>
+                              <li key={rs.id} className="flex items-start gap-2 text-muted-foreground">
+                                <Music className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" /> 
+                                <span><span className="text-foreground">{rs.song.title}</span> <span className="text-muted-foreground text-xs">({rs.song.artist})</span></span>
                               </li>
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-sm text-white/40 italic">Ninguno especificado</p>
+                          <p className="text-sm text-muted-foreground italic">Ninguno especificado</p>
                         )}
                       </div>
                       
@@ -96,13 +99,13 @@ export default async function AdminEnsayosPage() {
                         {rehearsal.musicians.length > 0 ? (
                           <div className="flex flex-wrap gap-2">
                             {rehearsal.musicians.map(rm => (
-                              <span key={rm.id} className="px-2 py-1 bg-white/10 text-xs rounded-md text-white border border-white/5">
+                              <span key={rm.id} className="px-2 py-1 bg-primary/10 text-xs rounded-md text-foreground border border-border/40">
                                 {rm.musician.user.name}
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <p className="text-sm text-white/40 italic">Asistencia libre / No especificada</p>
+                          <p className="text-sm text-muted-foreground italic">Asistencia libre / No especificada</p>
                         )}
                       </div>
                     </div>

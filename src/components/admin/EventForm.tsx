@@ -50,7 +50,7 @@ function SelectField({ id, name, label, options, defaultValue, required }: {
     <div className="space-y-2">
       <Label htmlFor={id}>{label}{required && " *"}</Label>
       <select id={id} name={name} defaultValue={defaultValue ?? ""}
-        className="flex h-10 w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <option value="" disabled>Seleccionar...</option>
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
@@ -75,11 +75,11 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
   // Success screen
   if (state?.success) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-card backdrop-blur-sm p-4">
         <div className="bg-card border border-green-500/30 rounded-2xl shadow-2xl w-full max-w-lg">
-          <div className="p-6 text-center border-b border-white/10">
-            <CheckCircle2 className="w-14 h-14 text-green-400 mx-auto mb-3" />
-            <h3 className="text-xl font-bold text-white">{initialData ? "¡Evento actualizado!" : "¡Evento creado!"}</h3>
+          <div className="p-6 text-center border-b border-border/40">
+            <CheckCircle2 className="w-14 h-14 text-green-700 mx-auto mb-3" />
+            <h3 className="text-xl font-bold text-foreground">{initialData ? "¡Evento actualizado!" : "¡Evento creado!"}</h3>
             <p className="text-muted-foreground text-sm mt-1">{state.message}</p>
           </div>
 
@@ -91,12 +91,12 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
                   Mensaje de WhatsApp para los músicos
                 </div>
                 <button onClick={copyGigMessage}
-                  className="flex items-center gap-1.5 text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">
-                  {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+                  className="flex items-center gap-1.5 text-xs bg-primary/10 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors">
+                  {copied ? <Check className="w-3 h-3 text-green-700" /> : <Copy className="w-3 h-3" />}
                   {copied ? "¡Copiado!" : "Copiar"}
                 </button>
               </div>
-              <pre className="text-xs text-gray-300 bg-black/50 rounded-xl p-4 whitespace-pre-wrap font-mono border border-white/5 max-h-64 overflow-y-auto">
+              <pre className="text-xs text-muted-foreground bg-card rounded-xl p-4 whitespace-pre-wrap font-mono border border-border/40 max-h-64 overflow-y-auto">
                 {state.gigMessage}
               </pre>
               <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1">
@@ -109,7 +109,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
           )}
 
           <div className="p-6 pt-0">
-            <Button onClick={onClose} className="w-full font-bold">Cerrar</Button>
+            <Button onClick={onClose} className="w-full font-bold text-white">Cerrar</Button>
           </div>
         </div>
       </div>
@@ -117,18 +117,18 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-card border border-white/10 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[94vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-card backdrop-blur-sm p-4">
+      <div className="bg-card border border-border/40 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[94vh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10 sticky top-0 bg-card z-10">
+        <div className="flex items-center justify-between p-6 border-b border-border/40 sticky top-0 bg-card z-10">
           <div>
-            <h2 className="text-2xl font-heading font-bold text-white">
+            <h2 className="text-2xl font-heading font-bold text-foreground">
               {initialData ? `Editando Evento: ${initialData.client?.user?.name || ''}` : "Nuevo Show / Evento"}
             </h2>
             <p className="text-muted-foreground text-sm mt-0.5">El evento se sincronizará automáticamente con Eventualidades.</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-white">
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -149,7 +149,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
               <div className="space-y-2">
                 <Label htmlFor="clientId">Cliente (Opcional)</Label>
                 <select id="clientId" name="clientId" defaultValue={initialData?.clientId || ""}
-                  className="flex h-10 w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <option value="">(Sin cliente asignado)</option>
                   {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -158,14 +158,14 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
                 <Label htmlFor="customName">Nombre del Show / Evento (Opcional)</Label>
                 <Input id="customName" name="customName" placeholder="Ej. Tributo Mentiras, Show Alquimia..."
                   defaultValue={initialData?.customName || ""}
-                  className="bg-background border-white/10 text-white" />
+                  className="bg-background border-border/40 text-foreground" />
                 <p className="text-[10px] text-muted-foreground italic">Este nombre es el que aparecerá en la Gira Artística pública.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="date">Fecha *</Label>
                 <Input id="date" name="date" type="date" required 
                   defaultValue={initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : ""}
-                  className="bg-background border-white/10 text-white" />
+                  className="bg-background border-border/40 text-foreground" />
               </div>
               <SelectField id="ceremonyType" name="ceremonyType" label="Tipo de Evento"
                 defaultValue={initialData?.ceremonyType}
@@ -174,7 +174,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
                 <Label htmlFor="guestCount">Número de Invitados</Label>
                 <Input id="guestCount" name="guestCount" type="number" min="0" placeholder="Ej. 200"
                   defaultValue={initialData?.guestCount}
-                  className="bg-background border-white/10 text-white" />
+                  className="bg-background border-border/40 text-foreground" />
               </div>
 
               {/* Nuevos controles de visibilidad pública */}
@@ -188,7 +188,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" name="isPublic" id="isPublic" defaultChecked={initialData?.isPublic} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div className="w-11 h-6 bg-primary/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-border/40 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
                 </div>
                 
@@ -198,20 +198,20 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
                   </Label>
                   <Input id="mapsLink" name="mapsLink" defaultValue={initialData?.mapsLink || ""}
                     placeholder="https://maps.app.goo.gl/..."
-                    className="bg-background/50 h-9 text-xs border-primary/20" />
+                    className="bg-background h-9 text-xs border-primary/20" />
                 </div>
               </div>
             </div>
           </fieldset>
 
           {/* Logística */}
-          <fieldset className="border-t border-white/10 pt-4">
+          <fieldset className="border-t border-border/40 pt-4">
             <legend className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Logística y Ejecución</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="locationId">Ubicación (catálogo)</Label>
                 <select id="locationId" name="locationId" defaultValue={initialData?.locationId || ""}
-                  className="flex h-10 w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <option value="">Sin ubicación en catálogo</option>
                   {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                 </select>
@@ -219,31 +219,31 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
               <div className="space-y-2">
                 <Label htmlFor="locationFree">Dirección libre (si no está en catálogo)</Label>
                 <Input id="locationFree" name="locationFree" placeholder="Ej. Hacienda San José, Querétaro"
-                  className="bg-background border-white/10" />
+                  className="bg-background border-border/40" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="performanceStart">Inicio de Ejecución</Label>
                 <Input id="performanceStart" name="performanceStart" type="time"
                   defaultValue={initialData?.performanceStart || ""}
-                  className="bg-background border-white/10 text-white" />
+                  className="bg-background border-border/40 text-foreground" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="performanceEnd">Fin de Ejecución</Label>
                 <Input id="performanceEnd" name="performanceEnd" type="time"
                   defaultValue={initialData?.performanceEnd || ""}
-                  className="bg-background border-white/10 text-white" />
+                  className="bg-background border-border/40 text-foreground" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="arrivalTime">Hora de llegada Musicians</Label>
                 <Input id="arrivalTime" name="arrivalTime" type="time"
                   defaultValue={initialData?.arrivalTime || ""}
-                  className="bg-background border-white/10 text-white" />
+                  className="bg-background border-border/40 text-foreground" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="setupTime">Hora de montaje</Label>
                 <Input id="setupTime" name="setupTime" type="time"
                   defaultValue={initialData?.setupTime || ""}
-                  className="bg-background border-white/10 text-white" />
+                  className="bg-background border-border/40 text-foreground" />
               </div>
               <SelectField id="dressCode" name="dressCode" label="Vestimenta"
                 defaultValue={initialData?.dressCode}
@@ -256,7 +256,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
               <textarea id="musicianNotes" name="musicianNotes" rows={2}
                 placeholder="Instrucciones específicas del show..."
                 defaultValue={initialData?.musicianNotes || ""}
-                className="flex w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                className="flex w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
             </div>
             
             <div className="space-y-2 mt-4 p-4 border border-primary/20 bg-primary/5 rounded-xl">
@@ -267,7 +267,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
               <textarea id="bitacora" name="bitacora" rows={4}
                 placeholder="Ej. El vocalista llegó 15 mins tarde, el audio falló al inicio pero se solucionó..."
                 defaultValue={initialData?.bitacora || ""}
-                className="flex w-full rounded-md border border-white/10 bg-background/50 px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                className="flex w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
             </div>
             
             <div className="space-y-2 mt-4">
@@ -278,13 +278,13 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
           </fieldset>
 
           {/* Finanzas */}
-          <fieldset className="border-t border-white/10 pt-4">
+          <fieldset className="border-t border-border/40 pt-4">
             <legend className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Paquete y Finanzas</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="packageId">Paquete</Label>
                 <select id="packageId" name="packageId" defaultValue={initialData?.packageId || ""}
-                  className="flex h-10 w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <option value="">Personalizado</option>
                   {packages.map(p => (
                     <option key={p.id} value={p.id}>
@@ -297,18 +297,18 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
                 <Label htmlFor="amount">Total del Paquete (MXN)</Label>
                 <Input id="amount" name="amount" type="number" step="0.01" min="0"
                   defaultValue={initialData?.amount}
-                  className="bg-background border-white/10 text-white" />
+                  className="bg-background border-border/40 text-foreground" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="deposit">Anticipo recibido (MXN)</Label>
                 <Input id="deposit" name="deposit" type="number" step="0.01" min="0"
                   defaultValue={initialData?.deposit}
-                  className="bg-background border-white/10 text-white" />
+                  className="bg-background border-border/40 text-foreground" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="depositMethod">Método de pago anticipo / ingreso</Label>
                 <select id="depositMethod" name="depositMethod" defaultValue={initialData?.depositMethod || initialData?.paymentMethod || ""}
-                  className="flex h-10 w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <option value="">Sin especificar</option>
                   <option value="Transferencia">Transferencia</option>
                   <option value="Efectivo">Efectivo</option>
@@ -322,33 +322,33 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
                 <Label htmlFor="ivaAmount">IVA (Opcional)</Label>
                 <Input id="ivaAmount" name="ivaAmount" type="number" step="0.01" min="0"
                   defaultValue={initialData?.ivaAmount || 0}
-                  className="bg-background border-white/10 text-white" />
+                  className="bg-background border-border/40 text-foreground" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="totalIncome">Total Cobrado (Neto)</Label>
                 <Input id="totalIncome" name="totalIncome" type="number" step="0.01" min="0" placeholder="Ej. 15000"
                   defaultValue={initialData?.totalIncome || initialData?.amount}
-                  className="bg-background border-white/10 text-white font-bold text-primary" />
+                  className="bg-background border-border/40 text-foreground font-bold text-primary" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="paymentRef">Referencia de Pago</Label>
                 <Input id="paymentRef" name="paymentRef" defaultValue={initialData?.paymentRef || ""}
-                  placeholder="Nº transferencia, folio, etc." className="bg-background border-white/10" />
+                  placeholder="Nº transferencia, folio, etc." className="bg-background border-border/40" />
               </div>
               <input type="hidden" name="source" value={initialData?.source || "manual"} />
               <input type="hidden" name="paymentMethod" value={initialData?.depositMethod || ""} />
             </div>
             <label className="flex items-center gap-3 cursor-pointer mt-4">
               <input type="checkbox" name="invoice" className="sr-only peer" id="invoice" defaultChecked={initialData?.invoice} />
-              <div className="relative w-10 h-5 bg-white/10 rounded-full peer-checked:bg-primary transition-colors">
+              <div className="relative w-10 h-5 bg-primary/10 rounded-full peer-checked:bg-primary transition-colors">
                 <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
               </div>
-              <span className="text-sm text-gray-300">Requiere Factura (se aplica IVA 16%)</span>
+              <span className="text-sm text-muted-foreground">Requiere Factura (se aplica IVA 16%)</span>
             </label>
           </fieldset>
 
           {/* Notificación */}
-          <fieldset className="border-t border-white/10 pt-4 bg-white/[0.02] rounded-xl p-4">
+          <fieldset className="border-t border-border/40 pt-4 bg-white/[0.02] rounded-xl p-4">
             <legend className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
               <MessageCircle className="w-3.5 h-3.5" /> Notificación a Músicos
             </legend>
@@ -356,10 +356,10 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
               <input type="checkbox" name="sendNotification" id="sendNotification"
                 checked={sendNotif} onChange={e => setSendNotif(e.target.checked)}
                 className="sr-only peer" />
-              <div className="relative w-10 h-5 bg-white/10 rounded-full peer-checked:bg-primary transition-colors">
+              <div className="relative w-10 h-5 bg-primary/10 rounded-full peer-checked:bg-primary transition-colors">
                 <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
               </div>
-              <span className="text-sm text-gray-300">
+              <span className="text-sm text-muted-foreground">
                 Enviar aviso de Gig por WhatsApp al guardar
               </span>
             </label>
@@ -371,8 +371,8 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
           </fieldset>
 
           <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-white/10">Cancelar</Button>
-            <Button type="submit" disabled={isPending} className="flex-1 font-bold">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-border/40">Cancelar</Button>
+            <Button type="submit" disabled={isPending} className="flex-1 font-bold text-white">
               {isPending 
                 ? (initialData ? "Actualizando..." : "Creando y sincronizando...") 
                 : (initialData ? "Guardar Cambios" : "Crear Evento")}

@@ -72,10 +72,10 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="bg-background border-l border-white/10 sm:max-w-xl w-full overflow-y-auto p-0">
-        <div className="p-6 bg-black/60 border-b border-white/10">
+      <SheetContent className="bg-background border-l border-border/40 sm:max-w-xl w-full overflow-y-auto p-0">
+        <div className="p-6 bg-card border-b border-border/40">
           <SheetHeader>
-            <SheetTitle className="text-2xl font-bold text-white">{musician.user.name}</SheetTitle>
+            <SheetTitle className="text-2xl font-bold text-foreground">{musician.user.name}</SheetTitle>
             <SheetDescription className="text-primary font-medium tracking-widest uppercase text-xs">
               {musician.instrument || "General"}
             </SheetDescription>
@@ -85,54 +85,54 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
         <div className="p-6 space-y-8">
           {/* Musician Settings */}
           <section>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Configuración del Titular</h3>
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4 border-b border-border/40 pb-2">Configuración del Titular</h3>
             <form action={handleMusicianUpdate} className="space-y-4">
               
               {/* Photo Update */}
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 overflow-hidden relative group">
+                <div className="w-20 h-20 rounded-full bg-primary/10 border border-border/40 overflow-hidden relative group">
                   <img 
                     src={preview || musician.user.image || `https://ui-avatars.com/api/?name=${musician.user.name}&background=random`} 
                     alt={musician.user.name} 
                     className="w-full h-full object-cover"
                   />
-                  <label className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                    <Camera className="w-6 h-6 text-white" />
+                  <label className="absolute inset-0 bg-card flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <Camera className="w-6 h-6 text-foreground" />
                     <input type="file" name="image" accept="image/*" onChange={handleImageChange} className="hidden" />
                   </label>
                 </div>
                 <div>
-                  <h4 className="text-white font-bold">{musician.user.name}</h4>
+                  <h4 className="text-foreground font-bold">{musician.user.name}</h4>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Haz clic en la foto para cambiarla</p>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs text-muted-foreground">Nombre Completo</label>
-                <input name="name" defaultValue={musician.user.name} required className="w-full bg-black/40 border border-white/10 rounded-md p-2 text-sm text-white" />
+                <input name="name" defaultValue={musician.user.name} required className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground" />
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs text-muted-foreground">Instrumento / Rol</label>
-                <input name="instrument" defaultValue={musician.instrument} className="w-full bg-black/40 border border-white/10 rounded-md p-2 text-sm text-white" />
+                <input name="instrument" defaultValue={musician.instrument} className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground" />
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs text-muted-foreground">WhatsApp (Contacto Principal)</label>
-                <input name="whatsapp" defaultValue={musician.whatsapp} required className="w-full bg-black/40 border border-white/10 rounded-md p-2 text-sm text-white" />
+                <input name="whatsapp" defaultValue={musician.whatsapp} required className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">Estatus</label>
-                  <select name="status" defaultValue={musician.status} className="w-full bg-black/40 border border-white/10 rounded-md p-2 text-sm text-white">
+                  <select name="status" defaultValue={musician.status} className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground">
                     <option value="active">Activo</option>
                     <option value="inactive">Inactivo</option>
                   </select>
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">Disponibilidad</label>
-                  <select name="availability" defaultValue={musician.availability} className="w-full bg-black/40 border border-white/10 rounded-md p-2 text-sm text-white">
+                  <select name="availability" defaultValue={musician.availability} className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground">
                     <option value="Disponible">Disponible</option>
                     <option value="Ocupado">Ocupado</option>
                     <option value="Vacaciones">Vacaciones</option>
@@ -143,19 +143,19 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
 
               <div className="space-y-2">
                 <label className="text-xs text-muted-foreground">Observaciones / Notas</label>
-                <textarea name="notes" defaultValue={musician.notes} rows={3} className="w-full bg-black/40 border border-white/10 rounded-md p-2 text-sm text-white" />
+                <textarea name="notes" defaultValue={musician.notes} rows={3} className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground" />
               </div>
 
-              <div className="flex justify-between items-center pt-4 border-t border-white/5">
+              <div className="flex justify-between items-center pt-4 border-t border-border/40">
                 <button 
                   type="button" 
                   onClick={handleMusicianDelete}
-                  className="text-red-500 hover:text-red-400 text-xs font-bold flex items-center gap-2 px-2"
+                  className="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-2 px-2"
                 >
                   <Trash className="w-3 h-3" /> Borrar Músico
                 </button>
                 
-                <button type="submit" disabled={isPending} className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-md text-sm font-bold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+                <button type="submit" disabled={isPending} className="bg-primary hover:bg-primary/90 text-foreground px-6 py-2 rounded-md text-sm font-bold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
                   <Save className="w-4 h-4" /> {isPending ? "Guardando..." : "Actualizar Información"}
                 </button>
               </div>
@@ -164,21 +164,21 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
 
           {/* Substitutes List */}
           <section>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Suplentes Asignados ({musician.substitutes.length})</h3>
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4 border-b border-border/40 pb-2">Suplentes Asignados ({musician.substitutes.length})</h3>
             
             <div className="space-y-4 mb-6">
               {musician.substitutes.map((sub: any) => (
-                <div key={sub.id} className="bg-card border border-white/10 rounded-xl p-4 relative overflow-hidden">
+                <div key={sub.id} className="bg-card border border-border/40 rounded-xl p-4 relative overflow-hidden">
                   <form action={(fd) => handleSubstituteUpdate(sub.id, fd)} className="space-y-3">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-1">
-                        <input name="name" defaultValue={sub.name} className="bg-transparent border-none text-white font-bold p-0 focus:ring-0 w-full" />
+                        <input name="name" defaultValue={sub.name} className="bg-transparent border-none text-foreground font-bold p-0 focus:ring-0 w-full" />
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <MessageCircle className="w-3 h-3 text-green-500" />
                           <input name="whatsapp" defaultValue={sub.whatsapp} placeholder="WhatsApp" className="bg-transparent border-none p-0 focus:ring-0 w-48" />
                         </div>
                       </div>
-                      <button type="button" onClick={() => handleSubstituteDelete(sub.id)} className="text-red-400 hover:text-red-300 p-2 bg-red-400/10 rounded-md">
+                      <button type="button" onClick={() => handleSubstituteDelete(sub.id)} className="text-red-700 hover:text-red-300 p-2 bg-red-400/10 rounded-md">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -186,7 +186,7 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div className="space-y-1">
                         <label className="text-[10px] uppercase text-muted-foreground">Disponibilidad</label>
-                        <select name="availability" defaultValue={sub.availability} className="w-full bg-black/40 border border-white/10 rounded-md p-1.5 text-xs text-white">
+                        <select name="availability" defaultValue={sub.availability} className="w-full bg-card border border-border/40 rounded-md p-1.5 text-xs text-foreground">
                           <option value="Disponible">Disponible</option>
                           <option value="Ocupado">Ocupado</option>
                           <option value="Vacaciones">Vacaciones</option>
@@ -195,7 +195,7 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] uppercase text-muted-foreground">Rating (1-5)</label>
-                        <select name="rating" defaultValue={sub.rating || 3} className="w-full bg-black/40 border border-white/10 rounded-md p-1.5 text-xs text-white">
+                        <select name="rating" defaultValue={sub.rating || 3} className="w-full bg-card border border-border/40 rounded-md p-1.5 text-xs text-foreground">
                           {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n} Estrellas</option>)}
                         </select>
                       </div>
@@ -211,29 +211,29 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
               ))}
               
               {musician.substitutes.length === 0 && (
-                <div className="p-4 bg-black/20 border border-white/5 rounded-lg text-center text-sm text-muted-foreground">
+                <div className="p-4 bg-card border border-border/40 rounded-lg text-center text-sm text-muted-foreground">
                   No hay suplentes asignados.
                 </div>
               )}
             </div>
 
             {/* Add New Substitute */}
-            <div className="bg-black/40 border border-white/10 rounded-xl p-4">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+            <div className="bg-card border border-border/40 rounded-xl p-4">
+              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-primary" /> Agregar Nuevo Suplente
               </h4>
               <form id="add-sub-form" action={handleAddSubstitute} className="space-y-3">
-                <input type="text" name="name" placeholder="Nombre completo" required className="w-full bg-background border border-white/10 rounded-md p-2 text-sm text-white" />
-                <input type="text" name="whatsapp" placeholder="WhatsApp (10 dígitos)" required className="w-full bg-background border border-white/10 rounded-md p-2 text-sm text-white" />
+                <input type="text" name="name" placeholder="Nombre completo" required className="w-full bg-background border border-border/40 rounded-md p-2 text-sm text-foreground" />
+                <input type="text" name="whatsapp" placeholder="WhatsApp (10 dígitos)" required className="w-full bg-background border border-border/40 rounded-md p-2 text-sm text-foreground" />
                 <div className="grid grid-cols-2 gap-3">
-                  <select name="rating" defaultValue={3} className="w-full bg-background border border-white/10 rounded-md p-2 text-sm text-white">
+                  <select name="rating" defaultValue={3} className="w-full bg-background border border-border/40 rounded-md p-2 text-sm text-foreground">
                     <option value={1}>1 Estrella</option>
                     <option value={2}>2 Estrellas</option>
                     <option value={3}>3 Estrellas</option>
                     <option value={4}>4 Estrellas</option>
                     <option value={5}>5 Estrellas</option>
                   </select>
-                  <button type="submit" disabled={isPending} className="w-full bg-primary hover:bg-primary/90 text-white rounded-md p-2 text-sm font-bold transition-colors">
+                  <button type="submit" disabled={isPending} className="w-full bg-primary hover:bg-primary/90 text-foreground rounded-md p-2 text-sm font-bold transition-colors">
                     {isPending ? "Agregando..." : "Agregar"}
                   </button>
                 </div>

@@ -150,8 +150,16 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
                   </div>
                 </div>
                 <div className="text-right">
-                   <div className="text-xl font-black text-white">${basePrice.toLocaleString()}</div>
-                   <div className="text-[10px] text-muted-foreground uppercase tracking-widest">Desde</div>
+                   <div className="text-xl font-black text-white">
+                     {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") 
+                       ? "CUSTOM" 
+                       : `$${basePrice.toLocaleString()}`}
+                   </div>
+                   <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                     {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") 
+                       ? "Personaliza" 
+                       : "Desde"}
+                   </div>
                 </div>
               </div>
             </button>
@@ -301,7 +309,9 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
       {/* Footer del Paso */}
       <div className="sticky bottom-4 z-20 bg-black/80 backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] shadow-2xl flex items-center justify-between gap-4">
         <div>
-          <div className="text-2xl font-black text-white">${currentTotal.toLocaleString()}</div>
+          <div className="text-2xl font-black text-white">
+            {currentTotal === 0 ? "SIN COSTO" : `$${currentTotal.toLocaleString()}`}
+          </div>
           <div className="text-[9px] text-primary font-black uppercase tracking-widest">Total Estimado</div>
         </div>
         <Button onClick={handleNext} className="h-14 px-8 font-black text-base rounded-2xl flex-1 max-w-[200px]">

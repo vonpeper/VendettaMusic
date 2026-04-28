@@ -8,7 +8,16 @@ const publicRoutes = ["/", "/nosotros", "/servicios", "/paquetes", "/repertorio"
 const authRoutes = ["/auth/login", "/auth/registro"]
 
 export default auth((req) => {
-  const { nextUrl } = req
+  const { nextUrl, headers } = req
+
+  // -- 🌍 GEO-BLOCKING: Solo permitir tráfico de México --
+  const country = headers.get("cf-ipcountry") || headers.get("x-vercel-ip-country")
+  
+  // Si tenemos el dato del país y no es MX, bloqueamos.
+  if (country && country !== "MX") {
+    return new NextResponse("Access Denied: This service is only available in Mexico.", { status: 403 })
+  }
+
   const isLoggedIn = !!req.auth
   const role = req.auth?.user?.role as string | undefined
 

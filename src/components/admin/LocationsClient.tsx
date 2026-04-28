@@ -122,13 +122,13 @@ export default function LocationsManager() {
   return (
     <div className="space-y-8">
       {/* Formulario de Creación/Edición */}
-      <div className="bg-card/30 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+      <div className="bg-card border border-border/40 rounded-2xl p-6 backdrop-blur-sm">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
             {editingId ? <Save className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">
+            <h2 className="text-xl font-bold text-foreground">
               {editingId ? "Editar Establecimiento" : "Registrar Nuevo Lugar"}
             </h2>
             <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">
@@ -144,7 +144,7 @@ export default function LocationsManager() {
               value={formData.name}
               onChange={e => setFormData({...formData, name: e.target.value})}
               placeholder="Ej. Alquimia 73, Salon Imperial..."
-              className="bg-black/50 border-white/10"
+              className="bg-card border-border/40"
             />
           </div>
           <div className="space-y-2">
@@ -153,7 +153,7 @@ export default function LocationsManager() {
               value={formData.phone || ""}
               onChange={e => setFormData({...formData, phone: e.target.value})}
               placeholder="Ej. +52 55 1234 5678"
-              className="bg-black/50 border-white/10"
+              className="bg-card border-border/40"
             />
           </div>
           <div className="space-y-2 md:col-span-2">
@@ -162,7 +162,7 @@ export default function LocationsManager() {
               value={formData.address}
               onChange={e => setFormData({...formData, address: e.target.value})}
               placeholder="Calle, Número, Colonia, Ciudad..."
-              className="bg-black/50 border-white/10"
+              className="bg-card border-border/40"
             />
           </div>
           <div className="space-y-2">
@@ -171,7 +171,7 @@ export default function LocationsManager() {
               value={formData.mapsLink || ""}
               onChange={e => setFormData({...formData, mapsLink: e.target.value})}
               placeholder="https://goo.gl/maps/..."
-              className="bg-black/50 border-white/10"
+              className="bg-card border-border/40"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -181,7 +181,7 @@ export default function LocationsManager() {
                  value={formData.city || ""}
                  onChange={e => setFormData({...formData, city: e.target.value})}
                  placeholder="Ej. CDMX"
-                 className="bg-black/50 border-white/10"
+                 className="bg-card border-border/40"
                />
              </div>
              <div className="space-y-2">
@@ -190,7 +190,7 @@ export default function LocationsManager() {
                  value={formData.state || ""}
                  onChange={e => setFormData({...formData, state: e.target.value})}
                  placeholder="Ej. México"
-                 className="bg-black/50 border-white/10"
+                 className="bg-card border-border/40"
                />
              </div>
           </div>
@@ -198,14 +198,14 @@ export default function LocationsManager() {
 
         <div className="flex gap-3 mt-6">
           {editingId && (
-            <Button variant="outline" onClick={resetForm} className="flex-1 border-white/10">
+            <Button variant="outline" onClick={resetForm} className="flex-1 border-border/40">
               Cancelar
             </Button>
           )}
           <Button 
             onClick={handleSave} 
             disabled={saving || !formData.name || !formData.address}
-            className="flex-1 bg-primary hover:bg-primary/90 font-bold"
+            className="flex-1 bg-primary hover:bg-primary/90 font-bold text-white"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             {editingId ? "Guardar Cambios" : "Registrar Establecimiento"}
@@ -216,10 +216,10 @@ export default function LocationsManager() {
       {/* Listado / Buscador */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-gray-500" />
+          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-muted-foreground" />
             Catálogo de Lugares
-            <span className="text-xs bg-white/5 text-gray-400 px-2 py-0.5 rounded-full font-mono">
+            <span className="text-xs bg-primary/10 text-muted-foreground px-2 py-0.5 rounded-full font-mono">
               {locations.length}
             </span>
           </h3>
@@ -229,7 +229,7 @@ export default function LocationsManager() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Buscar lugar..."
-              className="pl-9 bg-black/30 border-white/5 h-9 text-xs"
+              className="pl-9 bg-card border-border/40 h-9 text-xs"
             />
           </div>
         </div>
@@ -239,24 +239,24 @@ export default function LocationsManager() {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl">
+          <div className="text-center py-12 border border-dashed border-border/40 rounded-2xl">
             <AlertCircle className="w-8 h-8 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">No se encontraron lugares en el catálogo.</p>
+            <p className="text-muted-foreground text-sm">No se encontraron lugares en el catálogo.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filtered.map(loc => (
               <div 
                 key={loc.id}
-                className="group bg-white/[0.03] border border-white/5 rounded-xl p-5 hover:border-primary/30 transition-all"
+                className="group bg-white/[0.03] border border-border/40 rounded-xl p-5 hover:border-primary/30 transition-all"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                      <MapPin className="w-4 h-4 text-gray-400 group-hover:text-primary" />
+                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                      <MapPin className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white group-hover:text-primary transition-colors">{loc.name}</h4>
+                      <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">{loc.name}</h4>
                       <p className="text-[10px] text-muted-foreground uppercase tracking-widest leading-none mt-0.5">
                         {loc.city}, {loc.state}
                       </p>
@@ -287,12 +287,12 @@ export default function LocationsManager() {
                 </div>
 
                 <div className="space-y-2 mt-4">
-                  <div className="flex items-start gap-2 text-xs text-gray-400 leading-tight">
-                    <span className="font-bold text-white/40 shrink-0">DIR:</span>
+                  <div className="flex items-start gap-2 text-xs text-muted-foreground leading-tight">
+                    <span className="font-bold text-muted-foreground shrink-0">DIR:</span>
                     <span>{loc.address}</span>
                   </div>
                   {loc.phone && (
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Phone className="w-3 h-3 text-green-500/60" />
                       <span>{loc.phone}</span>
                     </div>

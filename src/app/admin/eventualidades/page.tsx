@@ -76,7 +76,7 @@ export default async function EventualidadesPage() {
     <div className="p-8 bg-background min-h-full">
       <div className="flex justify-between items-start mb-10">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-white tracking-tight">
+          <h1 className="text-3xl font-heading font-bold text-foreground tracking-tight">
             Eventualidades e Ingresos
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">

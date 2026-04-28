@@ -154,7 +154,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Datos del Cliente */}
-        <Card className="bg-card/50 border-border/40">
+        <Card className="bg-card border-border/40">
           <CardContent className="pt-6 space-y-4">
             <h3 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2 mb-4">
               <User className="w-4 h-4" /> Información del Cliente
@@ -192,7 +192,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
         </Card>
 
         {/* Logística de Fecha */}
-        <Card className="bg-card/50 border-border/40">
+        <Card className="bg-card border-border/40">
           <CardContent className="pt-6 space-y-4">
             <h3 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2 mb-4">
               <CalendarIcon className="w-4 h-4" /> Fecha y Horario
@@ -228,7 +228,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
         </Card>
 
         {/* Ubicación */}
-        <Card className="bg-card/50 border-border/40 md:col-span-2">
+        <Card className="bg-card border-border/40 md:col-span-2">
           <CardContent className="pt-6 space-y-4">
             <h3 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2 mb-4">
             <MapPin className="w-4 h-4" /> Ubicación del Evento
@@ -300,7 +300,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
         </Card>
 
         {/* Paquete y Costos */}
-        <Card className="bg-card/50 border-border/40 md:col-span-2">
+        <Card className="bg-card border-border/40 md:col-span-2">
           <CardContent className="pt-6 space-y-4">
             <h3 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2 mb-4">
               <CreditCard className="w-4 h-4" /> Inversión y Paquete
@@ -358,7 +358,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
                     onChange={e => setFormData({...formData, isPublic: e.target.checked})}
                     className="w-4 h-4 accent-primary rounded"
                   />
-                  <span className="text-sm font-bold text-white group-hover:text-primary transition-colors">¿Evento Público?</span>
+                  <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">¿Evento Público?</span>
                 </label>
               </div>
               <div className="space-y-4 flex flex-col justify-end pb-1.5">
@@ -369,7 +369,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
                     onChange={e => setFormData({...formData, clientProvidesAudio: e.target.checked})}
                     className="w-4 h-4 accent-primary rounded"
                   />
-                  <span className="text-sm font-bold text-white group-hover:text-primary transition-colors">Cliente provee audio</span>
+                  <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">Cliente provee audio</span>
                 </label>
               </div>
               <div className="space-y-2">
@@ -403,7 +403,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="md:col-span-3 space-y-4 pt-4 border-t border-white/5">
+              <div className="md:col-span-3 space-y-4 pt-4 border-t border-border/40">
                 <label className="flex items-center gap-4 cursor-pointer p-4 bg-primary/5 border border-primary/20 rounded-2xl group transition-all hover:bg-primary/10">
                   <input 
                     type="checkbox" 
@@ -412,7 +412,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
                     className="w-6 h-6 accent-primary rounded-lg"
                   />
                   <div>
-                    <span className="text-base font-black text-white block">¿Anticipo ya recibido/confirmado en banco?</span>
+                    <span className="text-base font-black text-foreground block">¿Anticipo ya recibido/confirmado en banco?</span>
                     <span className="text-xs text-muted-foreground">Si se marca, el evento se publicará inmediatamente en la agenda y Shows.</span>
                   </div>
                 </label>
@@ -440,7 +440,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
         </Button>
         <Button 
           type="submit" 
-          className="bg-primary hover:bg-primary/90 min-w-[200px] h-12 rounded-xl font-bold shadow-lg shadow-primary/20"
+          className="bg-primary hover:bg-primary/90 min-w-[200px] h-12 rounded-xl font-bold shadow-lg shadow-primary/20 text-white"
           disabled={loading}
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}

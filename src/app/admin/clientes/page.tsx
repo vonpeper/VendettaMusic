@@ -32,7 +32,7 @@ export default async function AdminClientesPage() {
           <Users className="w-6 h-6" />
           <span className="text-sm font-bold uppercase tracking-widest">Base de Datos Administrativa</span>
         </div>
-        <h1 className="text-4xl font-heading font-bold text-white tracking-tight">
+        <h1 className="text-4xl font-heading font-bold text-foreground tracking-tight">
           Contactos y Logística
         </h1>
         <p className="text-muted-foreground mt-2 max-w-2xl">
@@ -41,11 +41,11 @@ export default async function AdminClientesPage() {
       </div>
 
       <Tabs defaultValue="clientes" className="space-y-8">
-        <TabsList className="bg-card/20 border border-white/10 p-1 rounded-xl">
-          <TabsTrigger value="clientes" className="gap-2 px-6 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+        <TabsList className="bg-card border border-border/40 p-1 rounded-xl">
+          <TabsTrigger value="clientes" className="gap-2 px-6 rounded-lg text-primary font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
             <Users className="w-4 h-4" /> Directorio de Clientes
           </TabsTrigger>
-          <TabsTrigger value="lugares" className="gap-2 px-6 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+          <TabsTrigger value="lugares" className="gap-2 px-6 rounded-lg text-primary font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
             <Building2 className="w-4 h-4" /> Ubicaciones y Venues
           </TabsTrigger>
         </TabsList>
@@ -74,12 +74,12 @@ export default async function AdminClientesPage() {
                 color: "text-yellow-400"
               },
             ].map(stat => (
-              <div key={stat.label} className="bg-card/40 border border-white/10 rounded-xl p-4 flex items-center gap-4">
-                <div className={`p-2 rounded-lg bg-white/5 ${stat.color}`}>
+              <div key={stat.label} className="bg-card border border-border/40 rounded-xl p-4 flex items-center gap-4">
+                <div className={`p-2 rounded-lg bg-primary/10 ${stat.color}`}>
                   <stat.icon className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-white">{stat.value}</div>
+                  <div className="text-2xl font-black text-foreground">{stat.value}</div>
                   <div className="text-xs text-muted-foreground">{stat.label}</div>
                 </div>
               </div>

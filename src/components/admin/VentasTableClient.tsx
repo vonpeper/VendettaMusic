@@ -16,6 +16,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { formatDateMX, formatCurrency } from "@/lib/utils"
+import { FollowUpButton } from "@/components/admin/FollowUpButton"
 import {
   Dialog,
   DialogContent,
@@ -37,15 +38,17 @@ interface Booking {
   viaticosAmount: number
   depositAmount: number
   status: string
+  clientPhone: string
+  followUpCount: number
 }
 
-export function VentasTableClient({ items }: { items: Booking[] }) {
+export function VentasTableClient({ items, followUpTemplate }: { items: Booking[], followUpTemplate?: string }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   if (items.length === 0) return (
-    <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-3xl">
+    <div className="py-20 text-center border-2 border-dashed border-border/40 rounded-3xl">
       <p className="text-muted-foreground">No hay solicitudes en esta categoría.</p>
     </div>
   )
@@ -99,7 +102,7 @@ export function VentasTableClient({ items }: { items: Booking[] }) {
           
           <Dialog>
             <DialogTrigger render={
-              <Button variant="destructive" size="sm" className="gap-2 font-bold h-9 px-4 rounded-lg shadow-lg shadow-red-500/10">
+              <Button variant="destructive" size="sm" className="gap-2 font-bold h-9 px-4 rounded-lg shadow-lg shadow-red-500/10 text-white">
                 <Trash2 className="w-4 h-4" /> Eliminar Selección
               </Button>
             } />
@@ -111,7 +114,7 @@ export function VentasTableClient({ items }: { items: Booking[] }) {
                 <DialogDescription className="text-muted-foreground pt-2">
                   Estás por eliminar <strong>{selectedIds.size}</strong> registros permanentemente. 
                   Esto incluye eventos vinculados, pagos y sincronización con Google Calendar para cada uno de ellos.
-                  <span className="block mt-2 font-bold text-red-400">Esta acción no se puede deshacer.</span>
+                  <span className="block mt-2 font-bold text-red-700">Esta acción no se puede deshacer.</span>
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="mt-4">
@@ -131,14 +134,14 @@ export function VentasTableClient({ items }: { items: Booking[] }) {
         </div>
       )}
 
-      <div className="bg-card/30 border border-white/5 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border/40 rounded-2xl overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-white/5 border-b border-white/10">
+            <tr className="bg-primary/10 border-b border-border/40">
               <th className="px-6 py-4 w-12">
                 <button 
                   onClick={toggleSelectAll}
-                  className="w-5 h-5 rounded border border-white/20 flex items-center justify-center hover:border-primary/50 transition-colors"
+                  className="w-5 h-5 rounded border border-border/40 flex items-center justify-center hover:border-primary/50 transition-colors"
                 >
                   {selectedIds.size === items.length ? (
                     <CheckSquare className="w-4 h-4 text-primary fill-primary/10" />
@@ -160,12 +163,12 @@ export function VentasTableClient({ items }: { items: Booking[] }) {
             {items.map(reserva => (
               <tr 
                 key={reserva.id} 
-                className={`hover:bg-white/5 transition-colors group ${selectedIds.has(reserva.id) ? 'bg-primary/5' : ''}`}
+                className={`hover:bg-primary/10 transition-colors group ${selectedIds.has(reserva.id) ? 'bg-primary/5' : ''}`}
               >
                 <td className="px-6 py-4">
                   <button 
                     onClick={() => toggleSelect(reserva.id)}
-                    className="w-5 h-5 rounded border border-white/20 flex items-center justify-center hover:border-primary/50 transition-colors"
+                    className="w-5 h-5 rounded border border-border/40 flex items-center justify-center hover:border-primary/50 transition-colors"
                   >
                     {selectedIds.has(reserva.id) ? (
                       <CheckSquare className="w-4 h-4 text-primary fill-primary/10" />
@@ -175,31 +178,43 @@ export function VentasTableClient({ items }: { items: Booking[] }) {
                   </button>
                 </td>
                 <td className="px-6 py-4" onClick={() => toggleSelect(reserva.id)}>
-                  <div className="font-bold text-white flex items-center gap-2">
+                  <div className="font-bold text-foreground flex items-center gap-2">
                     {reserva.clientName}
                   </div>
                   <div className="text-[10px] text-muted-foreground font-mono mt-0.5">{reserva.shortId || "S/F"}</div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm text-white flex items-center gap-2">
+                  <div className="text-sm text-foreground flex items-center gap-2">
                     <Calendar className="w-3 h-3 text-primary" />
                     {formatDateMX(reserva.requestedDate, "dd/MM/yyyy")}
                   </div>
                   <div className="text-[10px] text-muted-foreground mt-0.5">{reserva.packageName}</div>
                 </td>
                 <td className="px-6 py-4 font-mono">
-                  <div className="text-sm font-black text-white">{formatCurrency(Number(reserva.baseAmount) + Number(reserva.viaticosAmount || 0))}</div>
+                  <div className="text-sm font-black text-foreground">{formatCurrency(Number(reserva.baseAmount) + Number(reserva.viaticosAmount || 0))}</div>
                   <div className="text-[9px] text-muted-foreground">Anticipo: {formatCurrency(Number(reserva.depositAmount))}</div>
                 </td>
                 <td className="px-6 py-4 text-center">
                   <StatusBadge status={reserva.status} />
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <Link href={`/admin/ventas/${reserva.id}`}>
-                    <Button variant="ghost" size="sm" className="h-8 px-3 text-xs gap-2 rounded-lg hover:bg-primary hover:text-white transition-all">
-                      Gestionar <ChevronRight className="w-3 h-3" />
-                    </Button>
-                  </Link>
+                  <div className="flex items-center justify-end gap-2">
+                    {(reserva.status === "pendiente" || reserva.status === "pending") && (
+                      <FollowUpButton 
+                        id={reserva.id}
+                        type="booking"
+                        phone={reserva.clientPhone}
+                        clientName={reserva.clientName}
+                        currentCount={reserva.followUpCount}
+                        template={followUpTemplate}
+                      />
+                    )}
+                    <Link href={`/admin/ventas/${reserva.id}`}>
+                      <Button variant="ghost" size="sm" className="h-8 px-3 text-xs gap-2 rounded-lg hover:bg-primary hover:text-foreground transition-all">
+                        Gestionar <ChevronRight className="w-3 h-3" />
+                      </Button>
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -212,10 +227,10 @@ export function VentasTableClient({ items }: { items: Booking[] }) {
 
 function StatusBadge({ status }: { status: string }) {
   const configs: any = {
-    pendiente: { color: "text-yellow-400 border-yellow-700/40 bg-yellow-900/20", label: "Pendiente" },
-    agendado:  { color: "text-green-400 border-green-700/40 bg-green-900/20", label: "Agendado" },
-    cancelado: { color: "text-red-400 border-red-700/40 bg-red-900/20", label: "Cancelado" },
-    EXPIRED:   { color: "text-gray-500 border-gray-700 bg-gray-800/50", label: "Expirado" },
+    pendiente: { color: "text-yellow-700 border-yellow-700/40 bg-yellow-900/20", label: "Pendiente" },
+    agendado:  { color: "text-green-700 border-green-700/40 bg-green-900/20", label: "Agendado" },
+    cancelado: { color: "text-red-700 border-red-700/40 bg-red-900/20", label: "Cancelado" },
+    EXPIRED:   { color: "text-muted-foreground border-gray-700 bg-gray-800/50", label: "Expirado" },
   }
   const cfg = configs[status] || configs.pendiente
   return (

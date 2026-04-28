@@ -8,11 +8,10 @@ export async function GET(req: NextRequest) {
   
   if (!date) return NextResponse.json({ error: "date required" }, { status: 400 })
 
-  // Normalizar fecha para evitar problemas de zona horaria (CDMX UTC-6)
-  // Al usar split y crear con unidades locales, nos aseguramos que 2024-05-10 siempre sea ese día.
+  // Normalizar fecha para evitar problemas de zona horaria (UTC)
   const [y, m, d] = date.split('-').map(Number)
-  const dayStart = new Date(y, m - 1, d, 0, 0, 0)
-  const dayEnd = new Date(y, m - 1, d, 23, 59, 59, 999)
+  const dayStart = new Date(Date.UTC(y, m - 1, d, 0, 0, 0))
+  const dayEnd = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999))
 
   console.log(`[Disponibilidad] Checking ${date} -> Range: ${dayStart.toISOString()} - ${dayEnd.toISOString()}`)
 
@@ -32,6 +31,9 @@ export async function GET(req: NextRequest) {
       select: { id: true, startTime: true, endTime: true, status: true, clientName: true }
     })
   ])
+  
+  console.log(`[Disponibilidad] Results for ${date}:`, { eventsCount: events.length, bookingsCount: bookings.length })
+  if (events.length > 0) console.log(`[Disponibilidad] First event date:`, events[0].startTime)
 
   // Lógica de Conflicto Logístico (1.5h gap = 90 mins)
   const GAP_MINUTES = 90

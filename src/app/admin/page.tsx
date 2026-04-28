@@ -2,10 +2,11 @@ export const dynamic = "force-dynamic"
 import { db } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Users, Calendar, Banknote, FileText, TrendingUp, Music, Bell } from "lucide-react"
+import { Calendar, Banknote, FileText, TrendingUp, Music, Bell, ShieldAlert, CheckCircle2, AlertCircle, XCircle } from "lucide-react"
 import { IncomeChart } from "@/components/admin/IncomeChart"
 import Link from "next/link"
 import { formatDateMX } from "@/lib/utils"
+import { FollowUpButton } from "@/components/admin/FollowUpButton"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(v)
 
@@ -15,74 +16,104 @@ export default async function AdminDashboardPage() {
   const now = new Date()
   const thisMonthName = MONTHS[now.getMonth()]
   const thisYear = now.getFullYear()
-  const startOfMonth = new Date(thisYear, now.getMonth(), 1)
-  const startOfNextMonth = new Date(thisYear, now.getMonth() + 1, 1)
-  // 🔍 AGENTE ANTIGRAVITY - DIAGNÓSTICO DE CONEXIÓN
-  console.log("VENDETTA_DB_DIAG: Iniciando fetch de datos para el dashboard...");
   
   // -- Fetch en paralelo ------------------------------------------
   const [
-    totalClients,
-    pendingQuotes,
     upcomingEvents,
-    recentQuotes,
     bandEvents,
-    notifications,
-    expiredStats
+    newEvents,
+    pendingBookingRequests,
+    pendingQuotes,
+    expiredBookingRequests,
+    allBookingRequests
   ] = await Promise.all([
-    db.clientProfile.count(),
-    db.quote.count({ where: { status: "pendiente" } }),
     db.event.findMany({
       where: { date: { gte: now }, status: { not: "cancelado" } },
       orderBy: { date: "asc" },
       take: 5,
-      include: { client: { include: { user: true } }, location: true, package: true }
-    }),
-    db.quote.findMany({
-      where: { status: "pendiente" },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      include: { client: { include: { user: true } } }
+      include: { 
+        client: { include: { user: true } }, 
+        location: true, 
+        package: true,
+        contracts: true 
+      }
     }),
     db.bandEvent.findMany({
       where: { status: { not: "cancelado" } },
       orderBy: [{ eventYear: "asc" }, { eventDate: "asc" }]
     }),
-    db.notification.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 4,
+    db.event.findMany({
+      where: { status: { notIn: ["cancelado", "cancelled"] } },
+      orderBy: { date: "asc" }
     }),
-    db.bookingRequest.aggregate({
-      _sum: { baseAmount: true },
-      where: { status: "EXPIRED" }
-    })
+    // Pipeline: Booking Requests (Web Funnel)
+    db.bookingRequest.findMany({
+      where: { status: { in: ["pending", "pendiente"] } },
+      orderBy: { createdAt: "desc" },
+    }),
+    // Pipeline: Quotes Manuales
+    db.quote.findMany({
+      where: { status: "pendiente" },
+      orderBy: { createdAt: "desc" },
+      include: { client: { include: { user: true } } }
+    }),
+    // Para la vista de pérdida potencial
+    db.bookingRequest.findMany({
+      where: { status: "EXPIRED" },
+      orderBy: { updatedAt: "desc" },
+      take: 5
+    }),
+    // Para Tasa de Cierre
+    db.bookingRequest.count()
   ])
 
-  const potentialLoss = expiredStats?._sum?.baseAmount || 0 
+  // -- Métricas de ingresos unificadas ------------------------------
+  const allEventsIncome = [
+    ...bandEvents.map(e => ({ month: e.eventMonth, year: e.eventYear, income: e.totalIncome })),
+    ...newEvents.map(e => ({ 
+      month: MONTHS[new Date(e.date).getMonth()], 
+      year: new Date(e.date).getFullYear(), 
+      income: e.totalIncome || e.amount || 0 
+    }))
+  ]
 
-  // -- Métricas de ingresos ----------------------------------------
-  const thisMonthEvents = bandEvents.filter(e => e.eventMonth === thisMonthName && e.eventYear === thisYear)
+  const thisMonthEventsIncome = allEventsIncome.filter(e => e.month === thisMonthName && e.year === thisYear)
   const lastMonthDate = new Date(thisYear, now.getMonth() - 1, 1)
   const lastMonthName = MONTHS[lastMonthDate.getMonth()]
   const lastMonthYear = lastMonthDate.getFullYear()
-  const lastMonthEvents = bandEvents.filter(e => e.eventMonth === lastMonthName && e.eventYear === lastMonthYear)
+  const lastMonthEventsIncome = allEventsIncome.filter(e => e.month === lastMonthName && e.year === lastMonthYear)
 
-  const thisMonthTotal = thisMonthEvents.reduce((s, e) => s + e.totalIncome, 0)
-  const lastMonthTotal = lastMonthEvents.reduce((s, e) => s + e.totalIncome, 0)
-  const totalAllTime   = bandEvents.reduce((s, e) => s + e.totalIncome, 0)
-  const totalShows     = bandEvents.length
-  const avgPerShow     = totalShows > 0 ? totalAllTime / totalShows : 0
+  const thisMonthTotal = thisMonthEventsIncome.reduce((s, e) => s + e.income, 0)
+  const lastMonthTotal = lastMonthEventsIncome.reduce((s, e) => s + e.income, 0)
+  const totalAllTime   = allEventsIncome.reduce((s, e) => s + e.income, 0)
 
   const monthDelta = lastMonthTotal > 0
     ? Math.round(((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100)
     : null
 
+  // -- Pipeline y Conversion Rate -------------------------------------
+  const totalPipelineValue = 
+    pendingBookingRequests.reduce((acc, req) => acc + (req.baseAmount || 0), 0) +
+    pendingQuotes.reduce((acc, q) => acc + (q.totalEstimated || 0), 0);
+
+  const activeLeadsCount = pendingBookingRequests.length + pendingQuotes.length;
+
+  const confirmedBookingsCount = await db.bookingRequest.count({
+    where: { status: "CONFIRMED" }
+  })
+  
+  const conversionRate = allBookingRequests > 0 
+    ? Math.round((confirmedBookingsCount / allBookingRequests) * 100) 
+    : 0;
+
+  const expiredValue = expiredBookingRequests.reduce((acc, req) => acc + (req.baseAmount || 0), 0);
+
   // -- Datos para la gráfica (agrupado por mes/año, últimos 6 meses) --
   const monthMap: Record<string, { total: number; count: number }> = {}
-  bandEvents.forEach(e => {
-    const key = `${e.eventMonth} ${e.eventYear}`
+  allEventsIncome.forEach(e => {
+    const key = `${e.month} ${e.year}`
     if (!monthMap[key]) monthMap[key] = { total: 0, count: 0 }
-    monthMap[key].total += e.totalIncome
+    monthMap[key].total += e.income
     monthMap[key].count += 1
   })
 
@@ -95,7 +126,6 @@ export default async function AdminDashboardPage() {
     .sort((a, b) => a.year !== b.year ? a.year - b.year : MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month))
     .slice(-6)
 
-  // Si hay meses duplicados (mismo nombre, distinto año), mostrar "'YY" junto al mes
   const monthNames = chartDataRaw.map(d => d.month)
   const hasDupes   = monthNames.some((m, i) => monthNames.indexOf(m) !== i)
 
@@ -105,7 +135,7 @@ export default async function AdminDashboardPage() {
     count: d.count,
   }))
 
-  // -- Upcoming events próximos 7 días ------------------------------
+  // -- Upcoming events próximos 7 días para alerta principal ---------
   const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
   const soonEvents = upcomingEvents.filter(e => e.date <= nextWeek)
 
@@ -114,7 +144,7 @@ export default async function AdminDashboardPage() {
       {/* Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-white tracking-tight">Dashboard General</h1>
+          <h1 className="text-3xl font-heading font-bold text-foreground tracking-tight">Dashboard General</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {formatDateMX(now, "PPPP")}
           </p>
@@ -133,173 +163,141 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
           {
-            label: "Ingresos del Mes",
+            label: "Proyección del Mes",
             value: MXN(thisMonthTotal),
             sub: monthDelta !== null
-              ? `${monthDelta >= 0 ? "+" : ""}${monthDelta}% vs mes anterior`
-              : "Sin datos del mes anterior",
-            subColor: monthDelta !== null && monthDelta >= 0 ? "text-green-400" : "text-red-400",
+              ? `${monthDelta >= 0 ? "↗" : "↘"} ${Math.abs(monthDelta)}% vs mes anterior`
+              : "Ingresos consolidados",
+            subColor: monthDelta !== null && monthDelta >= 0 ? "text-green-600" : "text-red-600",
             icon: Banknote,
+            bg: "bg-white",
           },
           {
-            label: "Shows Totales",
-            value: `${totalShows}`,
-            sub: `${thisMonthEvents.length} este mes`,
+            label: "Valor del Pipeline",
+            value: MXN(totalPipelineValue),
+            sub: `${activeLeadsCount} leads activos`,
+            subColor: "text-primary",
+            icon: FileText,
+            bg: "bg-white",
+          },
+          {
+            label: "Tasa de Cierre",
+            value: `${conversionRate}%`,
+            sub: "Conversión Real",
+            subColor: conversionRate > 20 ? "text-green-600" : "text-yellow-600",
+            icon: TrendingUp,
+            bg: "bg-white",
+          },
+          {
+            label: "Shows Próximos",
+            value: `${upcomingEvents.length}`,
+            sub: "Agenda confirmada",
             subColor: "text-muted-foreground",
             icon: Music,
-          },
-          {
-            label: "Cotizaciones Activas",
-            value: `${pendingQuotes}`,
-            sub: "Requieren seguimiento",
-            subColor: pendingQuotes > 0 ? "text-primary" : "text-muted-foreground",
-            icon: FileText,
-          },
-          {
-            label: "Total de Clientes",
-            value: `${totalClients}`,
-            sub: `Promedio por show: ${MXN(avgPerShow)}`,
-            subColor: "text-muted-foreground",
-            icon: Users,
+            bg: "bg-white",
           },
         ].map(kpi => (
-          <Card key={kpi.label} className="bg-card/50 border-border/40">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+          <Card key={kpi.label} className={`${kpi.bg} border-border/40 shadow-sm hover:shadow-md transition-all duration-300`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
                 {kpi.label}
               </CardTitle>
-              <kpi.icon className="h-4 w-4 text-primary" />
+              <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center">
+                <kpi.icon className="h-4 w-4 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-black font-heading text-white">{kpi.value}</div>
-              <p className={`text-xs mt-1 font-medium ${kpi.subColor}`}>{kpi.sub}</p>
+              <div className="text-3xl font-black font-heading text-foreground tracking-tighter">{kpi.value}</div>
+              <p className={`text-[10px] mt-1 font-bold uppercase tracking-wider ${kpi.subColor}`}>{kpi.sub}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* -- Gráfica + Stats secundarios -- */}
+      {/* -- Gráfica + Pérdida Potencial -- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Gráfica ingresos por mes */}
-        <Card className="lg:col-span-2 bg-card/50 border-border/40">
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="lg:col-span-2 bg-white border-border/40 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/5 mb-4">
             <div>
-              <CardTitle className="font-heading">Ingresos por Mes</CardTitle>
-              <CardDescription>Historial de ingresos de la banda — últimos {chartData.length} meses.</CardDescription>
+              <CardTitle className="font-heading font-black text-xl">Tendencia de Ingresos</CardTitle>
+              <CardDescription>Historial de facturación — últimos 6 meses.</CardDescription>
             </div>
-            <Link href="/admin/eventualidades"
-              className="text-xs text-primary hover:underline flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" /> Ver detalle
+            <Link href="/admin/ventas"
+              className="px-4 py-2 bg-primary/5 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
+               Ver detalle
             </Link>
           </CardHeader>
           <CardContent>
             <IncomeChart data={chartData} />
-            {/* Totales rápidos */}
-            <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-white/5">
+            <div className="grid grid-cols-3 gap-6 mt-6 pt-6 border-t border-border/40">
               <div className="text-center">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Acumulado Total</div>
-                <div className="text-lg font-black text-white mt-1">{MXN(totalAllTime)}</div>
+                <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Acumulado Histórico</div>
+                <div className="text-xl font-black text-foreground mt-1">{MXN(totalAllTime)}</div>
+              </div>
+              <div className="text-center border-x border-border/40">
+                <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Facturación Mes</div>
+                <div className="text-xl font-black text-green-600 mt-1">{MXN(thisMonthTotal)}</div>
               </div>
               <div className="text-center">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Este mes</div>
-                <div className="text-lg font-black text-primary mt-1">{MXN(thisMonthTotal)}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Mes anterior</div>
-                <div className="text-lg font-black text-white/60 mt-1">{MXN(lastMonthTotal)}</div>
-              </div>
-              <div className="text-center col-span-3 border-t border-white/5 pt-3 mt-1">
-                <div className="text-[10px] text-red-400 uppercase tracking-widest font-bold">Pérdida Potencial (Funnel Expirado)</div>
-                <div className="text-xl font-black text-red-500/80">{MXN(potentialLoss)}</div>
+                <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Cierre Anterior</div>
+                <div className="text-xl font-black text-muted-foreground mt-1">{MXN(lastMonthTotal)}</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Minilog de Notificaciones */}
-        <Card className="bg-card/50 border-border/40">
-          <CardHeader>
-            <CardTitle className="font-heading flex items-center gap-2">
-              <Bell className="w-4 h-4 text-primary" /> Notificaciones Recientes
-            </CardTitle>
-            <CardDescription>Últimos avisos enviados a músicos.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {notifications.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                Sin notificaciones aún.<br />
-                <span className="text-xs">Se generan al crear eventos.</span>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {notifications.map(n => (
-                  <div key={n.id} className="flex items-start gap-3 p-3 rounded-lg bg-background/40 border border-white/5">
-                    <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.status === "sent" ? "bg-green-400" : n.status === "failed" ? "bg-red-400" : "bg-yellow-400"}`} />
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold text-white capitalize">{n.type.replace("_", " ")}</div>
-                      <div className="text-[10px] text-muted-foreground truncate">{n.recipient ?? "Sin destinatario"}</div>
-                      <div className="text-[10px] text-muted-foreground/50">
-                        {formatDateMX(n.createdAt, "dd MMM HH:mm")}
-                      </div>
-                    </div>
-                    <Badge className={`text-[9px] shrink-0 ${n.status === "sent" ? "bg-green-900/50 text-green-300 border-green-600/30" : "bg-yellow-900/50 text-yellow-300 border-yellow-600/30"} border`}>
-                      {n.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* -- Próximos Eventos + Cotizaciones pendientes -- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Próximos Eventos */}
-        <Card className="bg-card/50 border-border/40">
-          <CardHeader className="flex flex-row items-center justify-between">
+        {/* Pipeline Activo (Movido aquí) */}
+        <Card className="bg-white border-border/40 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/5 mb-4">
             <div>
-              <CardTitle className="font-heading">Próximos Shows</CardTitle>
-              <CardDescription>Fechas confirmadas más cercanas.</CardDescription>
+              <CardTitle className="font-heading font-black text-xl">Pipeline Activo</CardTitle>
+              <CardDescription>Cotizaciones y leads sin concretar.</CardDescription>
             </div>
-            <Link href="/admin/eventos" className="text-xs text-primary hover:underline">Ver todos →</Link>
+            <Link href="/admin/ventas" className="px-3 py-1 bg-primary/5 text-primary rounded-full text-[9px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
+              Gestionar
+            </Link>
           </CardHeader>
           <CardContent>
-            {upcomingEvents.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                Sin eventos próximos registrados.
+            {pendingBookingRequests.length === 0 && pendingQuotes.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm border border-dashed border-border/40 rounded-xl">
+                Sin negociaciones activas.
               </div>
             ) : (
-              <div className="space-y-3">
-                {upcomingEvents.map(ev => {
-                  const daysUntil = Math.ceil((ev.date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+              <div className="space-y-4">
+                {[...pendingBookingRequests, ...pendingQuotes].slice(0, 4).map(q => {
+                  const isWebFunnel = "clientName" in q;
+                  const clientName = isWebFunnel ? q.clientName : q.client?.user?.name ?? "Sin nombre";
+                  const dateInfo = isWebFunnel ? q.requestedDate : q.eventDate;
+                  const amount = isWebFunnel ? q.baseAmount : q.totalEstimated;
+                  const createdAt = q.createdAt;
+                  const daysAgo = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
+
                   return (
-                    <div key={ev.id} className="flex items-center gap-3 p-3 rounded-lg bg-background/40 border border-white/5 hover:border-primary/20 transition-colors">
-                      <div className="bg-primary/20 text-primary w-11 h-11 rounded-lg flex flex-col items-center justify-center shrink-0">
-                        <span className="text-[9px] font-bold uppercase leading-none">
-                          {ev.date.toLocaleString("es-MX", { month: "short" })}
-                        </span>
-                        <span className="text-base font-black leading-none">{ev.date.getDate()}</span>
+                    <div key={q.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/10 hover:border-primary/30 hover:bg-white transition-all shadow-sm group">
+                      <div className="w-10 h-10 rounded-lg bg-white border border-border/40 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                        <FileText className="w-4 h-4 text-primary" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="font-bold text-white text-sm truncate">
-                          {ev.client?.user?.name ?? "Cliente no especificado"}
+                        <div className="font-black text-foreground text-sm truncate uppercase tracking-tight">
+                          {clientName}
                         </div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {ev.location?.name ?? "Ubicación por confirmar"}
+                        <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
+                          {isWebFunnel ? "Lead Web" : "Manual"}
+                          {dateInfo ? ` · ${formatDateMX(dateInfo, "d MMM")}` : ""}
                         </div>
                       </div>
-                      <div className="text-right shrink-0">
-                        {daysUntil <= 7 ? (
-                          <Badge className="text-[9px] bg-primary/20 text-primary border-primary/40 border">
-                            {daysUntil === 0 ? "¡Hoy!" : daysUntil === 1 ? "Mañana" : `${daysUntil}d`}
-                          </Badge>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">{daysUntil}d</span>
-                        )}
-                        {ev.package && (
-                          <div className="text-[10px] text-primary/60 mt-0.5">{ev.package.name}</div>
-                        )}
+                      <div className="flex flex-col items-end shrink-0">
+                        <div className="text-xs font-black text-foreground">
+                          {MXN(amount)}
+                        </div>
+                        <FollowUpButton 
+                          id={q.id}
+                          type={isWebFunnel ? "booking" : "quote"}
+                          phone={isWebFunnel ? (q as any).clientPhone : (q as any).client?.clientProfile?.whatsapp || (q as any).client?.clientProfile?.phone || ""}
+                          clientName={clientName}
+                          currentCount={(q as any).followUpCount || 0}
+                        />
                       </div>
                     </div>
                   )
@@ -308,47 +306,74 @@ export default async function AdminDashboardPage() {
             )}
           </CardContent>
         </Card>
+      </div>
 
-        {/* Cotizaciones pendientes */}
-        <Card className="bg-card/50 border-border/40">
-          <CardHeader className="flex flex-row items-center justify-between">
+      {/* -- Semáforo de Producción (Sección Inferior Completa) -- */}
+      <div className="mt-8">
+        <Card className="bg-white border-border/40 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/5 mb-4">
             <div>
-              <CardTitle className="font-heading">Cotizaciones Pendientes</CardTitle>
-              <CardDescription>Solicitudes que requieren respuesta.</CardDescription>
+              <CardTitle className="font-heading font-black text-xl uppercase tracking-tight">Semáforo de Producción</CardTitle>
+              <CardDescription>Auditoría de próximos shows confirmados y estatus de logística.</CardDescription>
             </div>
-            <Link href="/admin/ventas" className="text-xs text-primary hover:underline">Ver todas →</Link>
+            <Link href="/admin/eventos" className="px-4 py-2 bg-primary/5 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm">
+              Ver Agenda Completa
+            </Link>
           </CardHeader>
           <CardContent>
-            {recentQuotes.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                Sin cotizaciones pendientes. ✅
+            {upcomingEvents.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground text-sm border border-dashed border-border/40 rounded-xl">
+                Sin eventos próximos en agenda.
               </div>
             ) : (
-              <div className="space-y-3">
-                {recentQuotes.map(q => {
-                  const daysAgo = Math.floor((now.getTime() - q.createdAt.getTime()) / (1000 * 60 * 60 * 24))
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {upcomingEvents.map(ev => {
+                  const daysUntil = Math.ceil((ev.date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+                  const hasContract = ev.contracts && ev.contracts.length > 0
+                  const isPaid = ev.balance <= 0
+                  const hasAudio = !!ev.audioEngineer
+                  
+                  const isUrgent = daysUntil <= 7
+                  const isReady = hasContract && isPaid && hasAudio
+                  const cardBorder = isReady ? "border-green-500/30 shadow-green-500/5" : isUrgent ? "border-red-500/40 shadow-red-500/5" : "border-border/40 shadow-sm"
+                  const urgencyBg = isUrgent && !isReady ? "bg-red-50/50" : "bg-white"
+
                   return (
-                    <div key={q.id} className="flex items-center gap-3 p-3 rounded-lg bg-background/40 border border-white/5 hover:border-yellow-500/20 transition-colors">
-                      <div className="w-10 h-10 rounded-lg bg-yellow-900/30 border border-yellow-600/20 flex items-center justify-center shrink-0">
-                        <FileText className="w-4 h-4 text-yellow-400" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-bold text-white text-sm truncate">
-                          {q.client?.user?.name ?? "Cliente no especificado"}
+                    <div key={ev.id} className={`flex flex-col gap-4 p-5 rounded-2xl border ${cardBorder} ${urgencyBg} transition-all hover:shadow-lg group`}>
+                      <div className="flex items-center gap-4">
+                        <div className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 border-2 ${isUrgent ? "bg-red-600 text-white border-red-700" : "bg-primary text-white border-primary"} shadow-lg group-hover:scale-105 transition-transform`}>
+                          <span className="text-[10px] font-black uppercase leading-none opacity-80">
+                            {ev.date.toLocaleString("es-MX", { month: "short" })}
+                          </span>
+                          <span className="text-xl font-black leading-none mt-1">{ev.date.getDate()}</span>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {q.ceremonyType ? q.ceremonyType.replace("_", " ") : "Tipo no especificado"}
-                          {q.eventDate ? ` · ${formatDateMX(q.eventDate, "d MMM")}` : ""}
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-sm font-bold text-white">
-                          {MXN(q.totalEstimated)}
-                        </div>
-                        <div className={`text-[10px] ${daysAgo > 3 ? "text-red-400" : "text-muted-foreground"}`}>
-                          {daysAgo === 0 ? "Hoy" : daysAgo === 1 ? "Ayer" : `hace ${daysAgo}d`}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-black text-foreground text-sm truncate uppercase tracking-tight">
+                            {ev.client?.user?.name ?? ev.customName ?? "Cliente"}
+                          </div>
+                          <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-tighter mt-1 ${isUrgent ? 'bg-red-100 border-red-200 text-red-700' : 'bg-muted/50 text-muted-foreground'}`}>
+                            {daysUntil === 0 ? "HOY" : daysUntil === 1 ? "MAÑANA" : `EN ${daysUntil} DÍAS`}
+                          </Badge>
                         </div>
                       </div>
+                      
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${hasContract ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
+                          {hasContract ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} Contrato
+                        </div>
+                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${isPaid ? "bg-green-50 border-green-200 text-green-700" : "bg-yellow-50 border-yellow-200 text-yellow-700"}`}>
+                          {isPaid ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />} Pago
+                        </div>
+                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${hasAudio ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
+                          {hasAudio ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} Audio
+                        </div>
+                      </div>
+
+                      {!isPaid && ev.balance > 0 && (
+                        <div className="text-[10px] font-bold text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 text-center">
+                          Saldo Pendiente: {MXN(ev.balance)}
+                        </div>
+                      )}
                     </div>
                   )
                 })}

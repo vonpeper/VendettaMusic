@@ -12,32 +12,80 @@ interface Props {
   data: Partial<FunnelData>
   onNext: (d: Partial<FunnelData>) => void
   onBack: () => void
+  viaticosConfig?: {
+    zona2Rate?: number
+    zona3Rate?: number
+  }
 }
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(v)
 
-export default function Step2_Ubicacion({ data, onNext, onBack }: Props) {
+export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }: Props) {
   const [street,      setStreet]      = useState(data.street      ?? "")
   const [houseNumber, setHouseNumber] = useState(data.houseNumber ?? "")
   const [colonia,     setColonia]     = useState(data.colonia     ?? "")
+  const [zipCode,     setZipCode]     = useState(data.zipCode     ?? "")
   const [city,        setCity]        = useState(data.city        ?? "")
   const [state,       setState]       = useState(data.state       ?? "Estado de México")
   const [mapsLink,    setMapsLink]    = useState(data.mapsLink    ?? "")
   const [isPublic,    setIsPublic]    = useState(data.isPublic    ?? (data.venueType === "bar" || data.venueType === "festival"))
   
   const [viaticos, setViaticos] = useState(() =>
-    city ? calcularViatcos(city, state) : null
+    city ? calcularViatcos(city, state, viaticosConfig) : null
   )
   const [error, setError] = useState("")
+  const [isLocating, setIsLocating] = useState(false)
+
+  async function handleGeolocate() {
+    if (!navigator.geolocation) {
+      setError("Tu navegador no soporta geolocalización.")
+      return
+    }
+
+    setIsLocating(true)
+    setError("")
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const { latitude, longitude } = pos.coords
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+        if (!res.ok) throw new Error("Error al consultar la API de mapas.")
+        const data = await res.json()
+        
+        // Nominatim puede regresar city, town, village o county
+        const geoCity = data.address?.city || data.address?.town || data.address?.village || data.address?.county || ""
+        const geoState = data.address?.state || ""
+        const geoZip = data.address?.postcode || ""
+        const geoStreet = data.address?.road || ""
+        const geoSuburb = data.address?.suburb || data.address?.neighbourhood || ""
+
+        if (geoCity) setCity(geoCity)
+        if (geoState) setState(geoState)
+        if (geoZip) setZipCode(geoZip)
+        if (geoStreet) setStreet(geoStreet)
+        if (geoSuburb) setColonia(geoSuburb)
+
+      } catch (err) {
+        console.error(err)
+        setError("No pudimos obtener la dirección exacta. Por favor escríbela manualmente.")
+      } finally {
+        setIsLocating(false)
+      }
+    }, (err) => {
+      console.error(err)
+      setError("Permiso de ubicación denegado o error de GPS.")
+      setIsLocating(false)
+    }, { timeout: 10000 })
+  }
 
   // Auto-verificar si cambia la ciudad
   useEffect(() => {
     if (city.length > 2) {
-      setViaticos(calcularViatcos(city, state))
+      setViaticos(calcularViatcos(city, state, viaticosConfig))
     } else {
       setViaticos(null)
     }
-  }, [city, state])
+  }, [city, state, viaticosConfig])
 
   function handleNext() {
     if (!city.trim())    { setError("Ingresa el municipio para calcular viáticos."); return }
@@ -47,10 +95,11 @@ export default function Step2_Ubicacion({ data, onNext, onBack }: Props) {
       street,
       houseNumber,
       colonia,
+      zipCode,
       city,
       municipio: city, // Sincronizar campo nuevo
       state,
-      address: `${street} ${houseNumber}, Col. ${colonia}, ${city}, ${state}`, // Full address legacy
+      address: `${street} ${houseNumber}, Col. ${colonia}, CP ${zipCode}, ${city}, ${state}`, // Full address legacy
       isOutsideZone:  viaticos.isOutsideZone,
       viaticosAmount: viaticos.amount,
       viaticosLabel:  viaticos.label,
@@ -100,8 +149,19 @@ export default function Step2_Ubicacion({ data, onNext, onBack }: Props) {
       <div className="space-y-5 mb-6">
         {/* Zona Check (Municipio/Estado) */}
         <div className="bg-card/30 p-5 rounded-2xl border border-white/5 space-y-4">
-           <div className="flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-2">
-             <MapPin className="w-3 h-3" /> 1. Verificación de Zona
+           <div className="flex items-center justify-between mb-2">
+             <div className="flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
+               <MapPin className="w-3 h-3" /> 1. Verificación de Zona
+             </div>
+             <Button 
+               variant="outline" 
+               size="sm" 
+               onClick={handleGeolocate} 
+               disabled={isLocating}
+               className="h-8 text-xs bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
+             >
+               {isLocating ? "📍 Localizando..." : "📍 Usar mi ubicación actual"}
+             </Button>
            </div>
            <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -115,7 +175,7 @@ export default function Step2_Ubicacion({ data, onNext, onBack }: Props) {
                   setError("")
                 }}
                 onBlur={() => {
-                  if (city.length > 2) setViaticos(calcularViatcos(city, state))
+                  if (city.length > 2) setViaticos(calcularViatcos(city, state, viaticosConfig))
                 }}
                 placeholder="Ej. Metepec"
                 className="bg-card/50 border-white/15 h-12 text-base focus:border-primary rounded-xl"
@@ -169,6 +229,16 @@ export default function Step2_Ubicacion({ data, onNext, onBack }: Props) {
                 value={colonia}
                 onChange={e => { setColonia(e.target.value); setError("") }}
                 placeholder="Ej. Centro"
+                className="bg-card/50 border-white/15 h-12 text-base focus:border-primary rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="zipCode" className="text-white font-bold text-xs uppercase tracking-wider">Código Postal</Label>
+              <Input
+                id="zipCode"
+                value={zipCode}
+                onChange={e => { setZipCode(e.target.value); setError("") }}
+                placeholder="Ej. 52140"
                 className="bg-card/50 border-white/15 h-12 text-base focus:border-primary rounded-xl"
               />
             </div>

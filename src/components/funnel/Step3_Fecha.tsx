@@ -3,8 +3,15 @@
 import { useState, useEffect, useCallback } from "react"
 import { FunnelData }  from "./FunnelWizard"
 import { Button }      from "@/components/ui/button"
-import { Calendar, Clock, AlertCircle, MessageCircle, Loader2 } from "lucide-react"
+import { Calendar, Clock, AlertCircle, MessageCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
 import { formatDateMX } from "@/lib/utils"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface Props {
   data: Partial<FunnelData>
@@ -32,7 +39,7 @@ function dateToISO(d: Date) {
 export default function Step3_Fecha({ data, onNext, onBack }: Props) {
   const today          = new Date()
   today.setHours(0,0,0,0)
-  const minDate = new Date(today.getTime() + 7 * 24 * 3600 * 1000) // Mínimo 7 días adelante
+  const minDate = new Date(today.getTime() + 2 * 24 * 3600 * 1000) // Mínimo 2 días adelante
 
   const [viewYear,  setViewYear]  = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth())
@@ -165,15 +172,15 @@ export default function Step3_Fecha({ data, onNext, onBack }: Props) {
         {/* Header mes */}
         <div className="flex items-center justify-between mb-5">
           <button onClick={prevMonth} disabled={!canGoBack}
-            className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-            ‹
+            className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed transition-all">
+            <ChevronLeft className="w-5 h-5 text-white" />
           </button>
-          <span className="font-bold text-white text-lg">
+          <span className="font-black text-white text-xl uppercase tracking-tighter">
             {MONTHS[viewMonth]} {viewYear}
           </span>
           <button onClick={nextMonth}
-            className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
-            ›
+            className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all">
+            <ChevronRight className="w-5 h-5 text-white" />
           </button>
         </div>
 
@@ -294,30 +301,38 @@ export default function Step3_Fecha({ data, onNext, onBack }: Props) {
         <div className="bg-card/40 border border-white/10 rounded-2xl p-5 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-4 h-4 text-primary" />
-            <span className="font-bold text-white">Horario de ejecución</span>
+            <span className="font-bold text-white uppercase tracking-tighter">Horario del Show</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="text-xs font-bold text-muted-foreground mb-3 block uppercase tracking-widest">Inicio del Show</label>
-              <div className="grid grid-cols-4 gap-2 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
-                {TIME_SLOTS.map(t => (
-                  <button key={t} onClick={() => setStartTime(t)}
-                    className={`text-[13px] py-2.5 rounded-xl border font-black transition-all ${
-                      startTime === t ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" : "border-white/10 text-gray-400 hover:border-white/30 bg-white/5"
-                    }`}>{t}</button>
-                ))}
-              </div>
+              <label className="text-[10px] font-black text-muted-foreground mb-2 block uppercase tracking-[0.2em]">Inicio del Show</label>
+              <Select value={startTime} onValueChange={setStartTime}>
+                <SelectTrigger className="w-full bg-white/5 border-white/10 h-12 rounded-xl text-white font-bold focus:ring-primary/20 hover:bg-white/10 transition-all">
+                  <SelectValue placeholder="Selecciona hora" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0a0a0a] border-white/10 text-white max-h-[300px]">
+                  {TIME_SLOTS.map(t => (
+                    <SelectItem key={t} value={t} className="font-bold py-3">
+                      {t} hrs
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <label className="text-xs font-bold text-muted-foreground mb-3 block uppercase tracking-widest">Término estimado</label>
-              <div className="grid grid-cols-4 gap-2 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
-                {TIME_SLOTS.map(t => (
-                  <button key={t} onClick={() => setEndTime(t)}
-                    className={`text-[13px] py-2.5 rounded-xl border font-black transition-all ${
-                      endTime === t ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" : "border-white/10 text-gray-400 hover:border-white/30 bg-white/5"
-                    }`}>{t}</button>
-                ))}
-              </div>
+              <label className="text-[10px] font-black text-muted-foreground mb-2 block uppercase tracking-[0.2em]">Término estimado</label>
+              <Select value={endTime} onValueChange={setEndTime}>
+                <SelectTrigger className="w-full bg-white/5 border-white/10 h-12 rounded-xl text-white font-bold focus:ring-primary/20 hover:bg-white/10 transition-all">
+                  <SelectValue placeholder="Selecciona hora" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0a0a0a] border-white/10 text-white max-h-[300px]">
+                  {TIME_SLOTS.map(t => (
+                    <SelectItem key={t} value={t} className="font-bold py-3">
+                      {t} hrs
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
