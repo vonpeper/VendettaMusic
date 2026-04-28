@@ -38,6 +38,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin/repertorio" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group">
             <Music className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Repertorio
           </Link>
+          <Link href="/admin/paquetes" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group">
+            <ShoppingBag className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Catálogo de Paquetes
+          </Link>
           
           <Link href="/admin/configuracion" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-t border-border/20 pt-4 mt-4 border-b border-border/5 mb-1 group">
             <Settings className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Configuración
