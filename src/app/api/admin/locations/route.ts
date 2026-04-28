@@ -21,7 +21,7 @@ export async function GET() {
   try {
     // RECOMPILE_VERSION: 1.0.1 - FORCING REBUILD AFTER CACHE CLEAR
     // NUCLEAR OPTION: Bypassing Prisma Client validation entirely using Raw SQL.
-    const locations = await db.$queryRawUnsafe(`SELECT * FROM Location ORDER BY name ASC`)
+    const locations = await db.$queryRawUnsafe(`SELECT * FROM Location WHERE active = 1 ORDER BY name ASC`)
     
     console.log(`🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.`)
     
