@@ -44,14 +44,15 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
     
     let total = 0
     
-    // 1. Banda
-    if (!isCustom) {
-      total = (pkg.baseCostPerHour || 0) * (pkg.minDuration || 1)
+    // 1. Banda (Tarifa especial para Arma tu Show: $4,000/hr)
+    if (isCustom) {
+      total = 4000 * bandHrs
     } else {
-      total = (pkg.baseCostPerHour || 0) * bandHrs
+      total = (pkg.baseCostPerHour || 0) * (pkg.minDuration || 1)
     }
 
-    // 2. Invitados (Audio Fee)
+    // 2. Invitados (Audio Fee - Solo si no es local, o basado en reglas de audio)
+    // El usuario menciona que viáticos no están incluídos, pero el audio fee se mantiene por capacidad
     if (guests > 300) {
       total += 10000
     } else if (guests > 100) {
@@ -152,12 +153,12 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
                 <div className="text-right">
                    <div className="text-xl font-black text-white">
                      {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") 
-                       ? "CUSTOM" 
+                       ? "$0" 
                        : `$${basePrice.toLocaleString()}`}
                    </div>
                    <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
                      {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") 
-                       ? "Personaliza" 
+                       ? "Arma tu show" 
                        : "Desde"}
                    </div>
                 </div>
