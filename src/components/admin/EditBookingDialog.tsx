@@ -69,16 +69,17 @@ export function EditBookingDialog({ booking }: { booking: any }) {
           <Button 
             {...triggerProps}
             variant="outline" 
-            className="w-full border-primary/30 text-primary hover:bg-primary hover:text-foreground transition-all rounded-xl h-11 gap-2 font-bold"
+            className="w-full border-primary/30 text-primary hover:bg-primary hover:text-foreground transition-all rounded-xl h-11 px-2 gap-1.5 font-black text-xs uppercase tracking-widest overflow-hidden"
           >
-            <Edit3 className="w-4 h-4" /> Editar Información
+            <Edit3 className="w-4 h-4 shrink-0" /> Editar
           </Button>
         )}
       />
       <DialogContent className="bg-card border-border/40 backdrop-blur-xl sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <Edit3 className="w-5 h-5 text-primary" /> Editar Cotización {booking.shortId}
+            <Edit3 className="w-5 h-5 text-primary" /> 
+            {booking.status === "agendado" ? "Editar Contrato" : "Editar Cotización"} {booking.shortId}
           </DialogTitle>
           <DialogDescription>
             Modifica los detalles del evento. Los cambios se reflejarán en el contrato PDF y la agenda.

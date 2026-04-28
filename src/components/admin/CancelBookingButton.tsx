@@ -54,10 +54,9 @@ export function CancelBookingButton({ bookingId, shortId, hasEvent = false }: Ca
           <Button 
             {...triggerProps}
             variant="outline" 
-            className="w-full border-red-500/30 text-red-500 hover:bg-red-500 hover:text-foreground transition-all rounded-xl h-11 gap-2 font-bold"
+            className="w-full border-red-500/30 text-red-500 hover:bg-red-500 hover:text-foreground transition-all rounded-xl h-11 px-2 gap-1.5 font-black text-xs uppercase tracking-widest overflow-hidden"
           >
-            <Trash2 className="w-4 h-4" /> 
-            {hasEvent ? "Cancelar Evento y Borrar" : "Eliminar Cotización"}
+            <Trash2 className="w-4 h-4 shrink-0" /> Eliminar
           </Button>
         )}
       />

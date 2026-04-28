@@ -83,19 +83,19 @@ export function BookingActions({
         <Button
           onClick={() => handleAction("confirm")}
           disabled={loading !== null}
-          className="flex-1 bg-green-600 hover:bg-green-500 h-11 gap-2 font-bold rounded-xl"
+          className="flex-1 bg-green-600 hover:bg-green-500 h-11 gap-2 font-bold rounded-xl text-white uppercase text-[10px] tracking-widest"
         >
           {loading === "confirm"
             ? <Loader2 className="w-4 h-4 animate-spin" />
             : <Check className="w-4 h-4" />
           }
-          Confirmar y Notificar
+          Confirmar
         </Button>
         <Button
           onClick={() => handleAction("reject")}
           disabled={loading !== null}
           variant="outline"
-          className="flex-1 border-red-900/50 text-red-700 hover:bg-red-900/30 h-11 gap-2 font-bold rounded-xl"
+          className="flex-1 border-red-900/50 text-red-500 hover:bg-red-900/30 h-11 gap-2 font-bold rounded-xl uppercase text-[10px] tracking-widest"
         >
           {loading === "reject"
             ? <Loader2 className="w-4 h-4 animate-spin" />

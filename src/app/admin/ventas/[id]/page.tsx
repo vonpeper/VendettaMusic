@@ -55,10 +55,11 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           {(booking.status === "agendado" || booking.status === "confirmed" || booking.status === "pendiente") && (
             <div className="flex gap-3">
               <Button 
-                className={`${booking.status === "pendiente" ? "bg-blue-600 hover:bg-blue-500" : "bg-green-600 hover:bg-green-500"} gap-2 h-11 px-6 font-bold rounded-xl whitespace-nowrap`} 
+                variant="outline"
+                className={`${booking.status === "pendiente" ? "border-blue-600/50 text-blue-400 hover:bg-blue-600" : "border-green-600/50 text-green-400 hover:bg-green-600"} gap-2 h-11 px-6 font-bold rounded-xl whitespace-nowrap hover:text-white transition-all`} 
                 render={
                   <a href={`/api/admin/contract/${booking.id}`}>
-                    <Download className="w-5 h-5" /> {booking.status === "pendiente" ? "Descargar Cotización" : "Descargar Contrato PDF"}
+                    <Download className="w-5 h-5" /> {booking.status === "pendiente" ? "Cotización PDF" : "Contrato PDF"}
                   </a>
                 } 
               />
@@ -72,7 +73,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             
             {/* Detalles del Evento */}
             <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="bg-primary/10 border-b border-border/40">
+              <CardHeader className="bg-muted/30 border-b border-border/40">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Package className="w-5 h-5 text-primary" /> Detalles del Evento
                 </CardTitle>
@@ -91,7 +92,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   </div>
                   <div className="pt-4 border-t border-border/40">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Fecha y Horario</div>
-                    <div className="text-base text-gray-200 flex items-center gap-2">
+                    <div className="text-base text-foreground flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-primary" /> {formatDateMX(booking.requestedDate, "EEEE, d 'de' MMMM")}
                     </div>
                     <div className="text-sm text-muted-foreground font-mono mt-1">
@@ -102,7 +103,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 <div className="space-y-4">
                   <div>
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Ubicación</div>
-                    <div className="text-base text-gray-200 flex items-start gap-2">
+                    <div className="text-base text-foreground flex items-start gap-2">
                       <MapPin className="w-4 h-4 text-primary shrink-0 mt-1" />
                       <div>
                         <div className="font-bold">{booking.city}, {booking.state}</div>
@@ -132,7 +133,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
 
             {/* Desglose Financiero */}
             <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="bg-primary/10 border-b border-border/40">
+              <CardHeader className="bg-muted/30 border-b border-border/40">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-primary" /> Información Financiera
                 </CardTitle>

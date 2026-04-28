@@ -137,11 +137,11 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
       <div className="bg-card border border-border/40 rounded-2xl overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-primary/10 border-b border-border/40">
-              <th className="px-6 py-4 w-12">
+            <tr className="bg-muted/30 border-b border-border/40">
+              <th className="px-6 py-4 w-12 text-center">
                 <button 
                   onClick={toggleSelectAll}
-                  className="w-5 h-5 rounded border border-border/40 flex items-center justify-center hover:border-primary/50 transition-colors"
+                  className="w-5 h-5 mx-auto rounded border border-border/40 flex items-center justify-center hover:border-primary/50 transition-colors"
                 >
                   {selectedIds.size === items.length ? (
                     <CheckSquare className="w-4 h-4 text-primary fill-primary/10" />
@@ -210,8 +210,8 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                       />
                     )}
                     <Link href={`/admin/ventas/${reserva.id}`}>
-                      <Button variant="ghost" size="sm" className="h-8 px-3 text-xs gap-2 rounded-lg hover:bg-primary hover:text-foreground transition-all">
-                        Gestionar <ChevronRight className="w-3 h-3" />
+                      <Button variant="outline" size="sm" className="h-8 px-3 text-[10px] uppercase font-bold gap-1 rounded-lg hover:bg-primary hover:text-black border-primary/20 transition-all">
+                        Ver <ChevronRight className="w-3 h-3" />
                       </Button>
                     </Link>
                   </div>

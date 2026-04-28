@@ -14,7 +14,8 @@ import {
   Loader2, 
   Building2,
   Search,
-  AlertCircle
+  AlertCircle,
+  Pencil
 } from "lucide-react"
 
 interface Location {
@@ -273,7 +274,7 @@ export default function LocationsManager() {
                         window.scrollTo({ top: 0, behavior: "smooth" })
                       }}
                     >
-                      <Save className="w-4 h-4" />
+                      <Pencil className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="ghost" 
