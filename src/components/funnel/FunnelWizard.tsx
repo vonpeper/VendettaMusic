@@ -119,8 +119,12 @@ export default function FunnelWizard({ packages, initialStep = 0, initialPkgId, 
   function next(partial: Partial<FunnelData>) {
     setData(prev => ({ ...prev, ...partial }))
     setStep(s => s + 1)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
-  function back() { setStep(s => Math.max(0, s - 1)) }
+  function back() { 
+    setStep(s => Math.max(0, s - 1))
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
 
   const totalSteps = STEPS.length
 
@@ -134,7 +138,7 @@ export default function FunnelWizard({ packages, initialStep = 0, initialPkgId, 
   }
 
   return (
-    <div className="min-h-screen bg-background pb-16 relative">
+    <div className="min-h-screen bg-background pb-16 relative pt-20">
       <RockBackground />
       <motion.div 
         initial={{ opacity: 0, y: 30, scale: 0.98 }}
