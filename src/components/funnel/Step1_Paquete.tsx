@@ -46,9 +46,9 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
     
     // 1. Banda
     if (!isCustom) {
-      total = pkg.baseCostPerHour * pkg.minDuration
+      total = (pkg.baseCostPerHour || 0) * (pkg.minDuration || 1)
     } else {
-      total = pkg.baseCostPerHour * bandHrs
+      total = (pkg.baseCostPerHour || 0) * bandHrs
     }
 
     // 2. Invitados (Audio Fee)
