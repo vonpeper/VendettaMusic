@@ -72,10 +72,14 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
         setIsLocating(false)
       }
     }, (err) => {
-      console.error(err)
-      setError("Permiso de ubicación denegado o error de GPS.")
+      console.error("Geolocation error:", err)
+      if (err.code === 1) {
+        setError("Permiso de ubicación denegado. Por favor, escribe tu dirección manualmente.")
+      } else {
+        setError("Error de GPS o señal débil. Por favor, escribe tu dirección manualmente.")
+      }
       setIsLocating(false)
-    }, { timeout: 10000 })
+    }, { timeout: 15000, enableHighAccuracy: false })
   }
 
   // Auto-verificar si cambia la ciudad
