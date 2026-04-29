@@ -37,7 +37,7 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
   const [isLocating, setIsLocating] = useState(false)
 
   async function handleGeolocate() {
-    if (!navigator.geolocation) {
+    if (typeof window === "undefined" || !navigator.geolocation) {
       setError("Tu navegador no soporta geolocalización.")
       return
     }
@@ -45,41 +45,40 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
     setIsLocating(true)
     setError("")
 
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      try {
-        const { latitude, longitude } = pos.coords
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-        if (!res.ok) throw new Error("Error al consultar la API de mapas.")
-        const data = await res.json()
-        
-        // Nominatim puede regresar city, town, village o county
-        const geoCity = data.address?.city || data.address?.town || data.address?.village || data.address?.county || ""
-        const geoState = data.address?.state || ""
-        const geoZip = data.address?.postcode || ""
-        const geoStreet = data.address?.road || ""
-        const geoSuburb = data.address?.suburb || data.address?.neighbourhood || ""
+    try {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+          if (!res.ok) throw new Error("API Maps error")
+          const data = await res.json()
+          
+          const geoCity = data.address?.city || data.address?.town || data.address?.village || data.address?.county || ""
+          const geoState = data.address?.state || ""
+          const geoZip = data.address?.postcode || ""
+          const geoStreet = data.address?.road || ""
+          const geoSuburb = data.address?.suburb || data.address?.neighbourhood || ""
 
-        if (geoCity) setCity(geoCity)
-        if (geoState) setState(geoState)
-        if (geoZip) setZipCode(geoZip)
-        if (geoStreet) setStreet(geoStreet)
-        if (geoSuburb) setColonia(geoSuburb)
-
-      } catch (err) {
-        console.error(err)
-        setError("No pudimos obtener la dirección exacta. Por favor escríbela manualmente.")
-      } finally {
+          if (geoCity) setCity(geoCity)
+          if (geoState) setState(geoState)
+          if (geoZip) setZipCode(geoZip)
+          if (geoStreet) setStreet(geoStreet)
+          if (geoSuburb) setColonia(geoSuburb)
+        } catch (err) {
+          console.error("Geocoding failed:", err)
+          setError("No pudimos obtener la dirección exacta. Por favor escríbela manualmente.")
+        } finally {
+          setIsLocating(false)
+        }
+      }, (err) => {
+        console.error("GPS error callback:", err)
+        setError("Error de GPS o permiso denegado. Por favor escribe tu municipio manualmente.")
         setIsLocating(false)
-      }
-    }, (err) => {
-      console.error("Geolocation error:", err)
-      if (err.code === 1) {
-        setError("Permiso de ubicación denegado. Por favor, escribe tu dirección manualmente.")
-      } else {
-        setError("Error de GPS o señal débil. Por favor, escribe tu dirección manualmente.")
-      }
+      }, { timeout: 8000, enableHighAccuracy: false })
+    } catch (criticalErr) {
+      console.error("Critical geolocation error:", criticalErr)
       setIsLocating(false)
-    }, { timeout: 15000, enableHighAccuracy: false })
+    }
   }
 
   // Auto-verificar si cambia la ciudad
