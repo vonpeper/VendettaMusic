@@ -34,13 +34,10 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
   const [error,       setError]        = useState("")
 
   const pkg = packages.find(p => p.id === selectedPkg)
-  const isCustom = selectedPkg === "arma-tu-show" || 
-                   selectedPkg === "custom" || 
-                   selectedPkg === "personalizado" ||
-                   (pkg?.name.toLowerCase().includes("armar") || false) || 
-                   (pkg?.name.toLowerCase().includes("arma") || false) ||
-                   (pkg?.name.toLowerCase().includes("custom") || false) ||
-                   (pkg?.name.toLowerCase().includes("personal") || false)
+  const isCustom = selectedPkg !== "" && 
+                   pkg?.name !== "Essential" && 
+                   pkg?.name !== "Experience" && 
+                   pkg?.name !== "Festival Premium"
   
   const discountAmount = (promoCode.toUpperCase() === "CLIENTEVIP" && pkg?.name === "Essential") ? 1000 : 0
 
