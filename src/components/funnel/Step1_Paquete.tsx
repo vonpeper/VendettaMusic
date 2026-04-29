@@ -133,7 +133,17 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
           return (
             <button
               key={p.id}
-              onClick={() => { setSelectedPkg(p.id); setError(""); if (p.id !== "custom") { setBandHrs(p.minDuration); setDjHrs(0); } }}
+              onClick={() => { 
+                setSelectedPkg(p.id); 
+                setError(""); 
+                // Si es un paquete estándar, reseteamos a sus horas mínimas
+                if (!["custom", "arma-tu-show"].includes(p.id) && 
+                    !p.name.toLowerCase().includes("arma") && 
+                    !p.name.toLowerCase().includes("personal")) {
+                  setBandHrs(p.minDuration); 
+                  setDjHrs(0); 
+                }
+              }}
               className={`w-full text-left rounded-2xl border p-4 transition-all ${
                 isSelect
                   ? "border-primary bg-primary/10 shadow-lg"
@@ -154,12 +164,12 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
                 </div>
                 <div className="text-right">
                    <div className="text-xl font-black text-white">
-                     {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") 
+                     {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") || p.id === "custom"
                        ? "$0" 
                        : `$${basePrice.toLocaleString()}`}
                    </div>
                    <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                     {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") 
+                     {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") || p.id === "custom"
                        ? "Arma tu show" 
                        : "Desde"}
                    </div>
@@ -169,6 +179,110 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
           )
         })}
       </div>
+
+      {/* SECCIÓN DE PERSONALIZACIÓN - MOVIDA AL PRINCIPIO PARA VISIBILIDAD TOTAL */}
+      {(isCustom || selectedPkg === "custom") && (
+        <div className="space-y-8 p-6 bg-primary/5 border border-primary/20 rounded-[2.5rem] animate-in fade-in zoom-in duration-500">
+          <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest mb-4">
+            <Sparkles className="w-4 h-4" /> Personaliza tu experiencia
+          </div>
+          
+          {/* Invitados y Audio logic */}
+          <div className="space-y-4">
+            <label className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
+              <Users className="w-4 h-4 text-primary" /> 1. Audio por Invitados
+            </label>
+            <div className="flex items-center gap-4">
+              <input 
+                type="range" min={20} max={500} step={10} 
+                value={guests} 
+                onChange={e => setGuests(parseInt(e.target.value))}
+                className="flex-1 accent-red-600"
+              />
+              <div className="w-20 text-center bg-black/40 rounded-xl p-2 border border-white/10">
+                <div className="text-xl font-black text-white">{guests}</div>
+                <div className="text-[9px] text-gray-500 uppercase">Per.</div>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-400 font-medium">
+              {guests <= 100 ? "✓ Audio estándar incluido (Hasta 100 personas)." : 
+               guests <= 300 ? "⚠️ Upgrade de audio Pro necesario (+$7,500)." : 
+               "🔥 Sistema Line Array Festival necesario (+$10,000)."}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-white/5">
+            {/* Banda y DJ Horas */}
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-primary" /> 2. Horas de Show (Banda)
+                </label>
+                <div className="flex items-center gap-3 bg-black/20 p-2 rounded-2xl border border-white/5 w-fit">
+                  <Button variant="ghost" size="icon" onClick={() => setBandHrs(Math.max(2, bandHrs - 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">-</Button>
+                  <span className="text-xl font-black text-white w-10 text-center">{bandHrs}h</span>
+                  <Button variant="ghost" size="icon" onClick={() => setBandHrs(bandHrs + 1)} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
+                </div>
+                <p className="text-[10px] text-gray-500 font-bold tracking-tight">* Mínimo 2 horas para contratación.</p>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
+                  <RadioTower className="w-4 h-4 text-primary" /> 3. Horas de DJ
+                </label>
+                <div className="flex items-center gap-3 bg-black/20 p-2 rounded-2xl border border-white/5 w-fit">
+                  <Button variant="ghost" size="icon" onClick={() => setDjHrs(Math.max(0, djHrs - 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">-</Button>
+                  <span className="text-xl font-black text-white w-10 text-center">{djHrs}h</span>
+                  <Button variant="ghost" size="icon" onClick={() => setDjHrs(djHrs + 1)} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
+                </div>
+                {djHrs > 0 && (
+                  <label className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-all group mt-2">
+                    <input type="checkbox" checked={djTvs} onChange={e => setDjTvs(e.target.checked)} className="w-4 h-4 accent-primary rounded" />
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-bold text-white group-hover:text-primary transition-colors">¿Incluir 2 Pantallas LED de 45"?</span>
+                      <span className="text-[9px] text-primary font-black">+$700 por hora extra</span>
+                    </div>
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Equipamiento */}
+            <div className="space-y-4">
+              <label className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
+                <Box className="w-4 h-4 text-primary" /> 4. Equipamiento Extra
+              </label>
+              <div className="grid grid-cols-1 gap-2">
+                 {[
+                   { id: 'templete', label: 'Templete', price: 3800, state: templete, set: setTemplete },
+                   { id: 'pista', label: 'Pista Iluminada', price: 7500, state: pista, set: setPista },
+                   { id: 'robot', label: 'Robot LED (Batucada)', price: 700, state: robot, set: setRobot },
+                 ].map(ex => (
+                  <button 
+                    key={ex.id}
+                    onClick={() => ex.set(!ex.state)}
+                    className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                      ex.state 
+                        ? "border-primary bg-primary/20 shadow-lg shadow-primary/10" 
+                        : "border-white/5 bg-black/40 hover:border-white/20"
+                    }`}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span className="text-xs font-black text-white uppercase tracking-tighter">{ex.label}</span>
+                      <span className="text-[10px] text-gray-500">Un pago único</span>
+                    </div>
+                    <span className="text-xs text-primary font-black">+${ex.price.toLocaleString()}</span>
+                  </button>
+                 ))}
+                 <div className="w-full flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-black/10 opacity-40 grayscale cursor-not-allowed">
+                    <span className="text-xs font-bold text-gray-600">Pantalla LED 3x2</span>
+                    <span className="text-[9px] text-gray-600 uppercase tracking-tighter">Próximamente</span>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Selección de Venue (Tipo de Lugar) */}
       <div className="space-y-4">
