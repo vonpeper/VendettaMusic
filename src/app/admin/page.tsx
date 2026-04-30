@@ -12,7 +12,12 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", c
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
 
+import { auth } from "@/lib/auth"
+
 export default async function AdminDashboardPage() {
+  const session = await auth()
+  const isAdmin = session?.user?.role === "ADMIN"
+
   const now = new Date()
   const thisMonthName = MONTHS[now.getMonth()]
   const thisYear = now.getFullYear()
@@ -171,7 +176,7 @@ export default async function AdminDashboardPage() {
       {/* -- KPIs Row -- */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
-          {
+          isAdmin && {
             label: "Proyección del Mes",
             value: MXN(thisMonthTotal),
             sub: monthDelta !== null
@@ -181,7 +186,7 @@ export default async function AdminDashboardPage() {
             icon: Banknote,
             bg: "bg-white",
           },
-          {
+          isAdmin && {
             label: "Valor del Pipeline",
             value: MXN(totalPipelineValue),
             sub: `${activeLeadsCount} leads activos`,
@@ -205,7 +210,7 @@ export default async function AdminDashboardPage() {
             icon: Music,
             bg: "bg-white",
           },
-        ].map(kpi => (
+        ].filter(Boolean).map((kpi: any) => (
           <Card key={kpi.label} className={`${kpi.bg} border-border/40 shadow-sm hover:shadow-md transition-all duration-300`}>
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
@@ -226,11 +231,15 @@ export default async function AdminDashboardPage() {
       {/* -- Gráfica + Pérdida Potencial -- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Gráfica ingresos por mes */}
-        <Card className="lg:col-span-2 bg-white border-border/40 shadow-sm">
+        <Card className={`${isAdmin ? "lg:col-span-2" : "lg:col-span-3"} bg-white border-border/40 shadow-sm`}>
           <CardHeader className="flex flex-row items-center justify-between border-b border-border/5 mb-4">
             <div>
-              <CardTitle className="font-heading font-black text-xl">Tendencia de Ingresos</CardTitle>
-              <CardDescription>Historial de facturación — últimos 6 meses.</CardDescription>
+              <CardTitle className="font-heading font-black text-xl">
+                {isAdmin ? "Tendencia de Ingresos" : "Próximas Reservas"}
+              </CardTitle>
+              <CardDescription>
+                {isAdmin ? "Historial de facturación — últimos 6 meses." : "Resumen de actividad reciente."}
+              </CardDescription>
             </div>
             <Link href="/admin/ventas"
               className="px-4 py-2 bg-primary/5 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
@@ -238,21 +247,30 @@ export default async function AdminDashboardPage() {
             </Link>
           </CardHeader>
           <CardContent>
-            <IncomeChart data={chartData} />
-            <div className="grid grid-cols-3 gap-6 mt-6 pt-6 border-t border-border/40">
-              <div className="text-center">
-                <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Acumulado Histórico</div>
-                <div className="text-xl font-black text-foreground mt-1">{MXN(totalAllTime)}</div>
+            {isAdmin ? (
+              <>
+                <IncomeChart data={chartData} />
+                <div className="grid grid-cols-3 gap-6 mt-6 pt-6 border-t border-border/40">
+                  <div className="text-center">
+                    <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Acumulado Histórico</div>
+                    <div className="text-xl font-black text-foreground mt-1">{MXN(totalAllTime)}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Leads Totales</div>
+                    <div className="text-xl font-black text-foreground mt-1">{allBookingRequests}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Promedio/Mes</div>
+                    <div className="text-xl font-black text-foreground mt-1">{MXN(totalAllTime / 12)}</div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="p-8 text-center text-muted-foreground">
+                <LayoutDashboard className="w-12 h-12 mx-auto opacity-10 mb-4" />
+                <p className="text-sm">Vista operativa activada para Agentes.</p>
               </div>
-              <div className="text-center border-x border-border/40">
-                <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Facturación Mes</div>
-                <div className="text-xl font-black text-green-600 mt-1">{MXN(thisMonthTotal)}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Cierre Anterior</div>
-                <div className="text-xl font-black text-muted-foreground mt-1">{MXN(lastMonthTotal)}</div>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
