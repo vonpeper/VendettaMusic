@@ -46,11 +46,11 @@ export default async function AdminDashboardPage() {
       }
     }),
     db.bandEvent.findMany({
-      where: { status: { not: "cancelado" } },
+      where: { status: { notIn: ["cancelado", "cancelled", "pendiente", "pending"] } },
       orderBy: [{ eventYear: "asc" }, { eventDate: "asc" }]
     }),
     db.event.findMany({
-      where: { status: { notIn: ["cancelado", "cancelled"] } },
+      where: { status: { notIn: ["cancelado", "cancelled", "pendiente", "pending"] } },
       orderBy: { date: "asc" }
     }),
     // Pipeline: Booking Requests (Web Funnel)
@@ -266,9 +266,28 @@ export default async function AdminDashboardPage() {
                 </div>
               </>
             ) : (
-              <div className="p-8 text-center text-muted-foreground">
-                <LayoutDashboard className="w-12 h-12 mx-auto opacity-10 mb-4" />
-                <p className="text-sm">Vista operativa activada para Agentes.</p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-bold uppercase tracking-widest">Próximos en Agenda</span>
+                </div>
+                {upcomingEvents.length === 0 ? (
+                   <p className="text-sm text-muted-foreground italic text-center py-8">No hay eventos próximos.</p>
+                ) : (
+                  upcomingEvents.slice(0, 4).map(ev => (
+                    <div key={ev.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/10">
+                      <div>
+                        <div className="text-sm font-black text-foreground uppercase">{ev.client?.user?.name ?? ev.customName ?? "Cliente"}</div>
+                        <div className="text-[10px] text-muted-foreground font-bold uppercase mt-0.5">
+                          {formatDateMX(ev.date, "PPPP")}
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary border-primary/20">
+                        Ver Agenda
+                      </Badge>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </CardContent>

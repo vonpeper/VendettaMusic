@@ -41,10 +41,26 @@ export default async function AdminVentasPage() {
   yesterday.setDate(yesterday.getDate() - 1)
   yesterday.setHours(23, 59, 59, 999)
 
-  await db.bookingRequest.updateMany({
+  const toComplete = await db.bookingRequest.findMany({
     where: { status: "agendado", requestedDate: { lt: yesterday } },
-    data: { status: "completado" }
+    select: { id: true, eventId: true }
   })
+
+  if (toComplete.length > 0) {
+    const ids = toComplete.map(b => b.id)
+    const eventIds = toComplete.map(b => b.eventId).filter(Boolean) as string[]
+
+    await db.$transaction([
+      db.bookingRequest.updateMany({
+        where: { id: { in: ids } },
+        data: { status: "completado", paymentStatus: "paid" }
+      }),
+      db.event.updateMany({
+        where: { id: { in: eventIds } },
+        data: { status: "completado" }
+      })
+    ])
+  }
 
   // 3. Fetch de datos unificados
   const [bookings, quotes, expiredStats, config] = await Promise.all([

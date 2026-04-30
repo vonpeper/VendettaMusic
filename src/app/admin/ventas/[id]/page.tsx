@@ -35,6 +35,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     where: { id: id }
   })
 
+  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+
   if (!booking) notFound()
 
   return (
@@ -311,7 +313,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Gestión de Registro</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <AdminManagementTools booking={booking} />
+                <AdminManagementTools booking={booking} config={config} />
               </CardContent>
             </Card>
           </div>

@@ -67,6 +67,27 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
         audioEngineer: (data.audioEngineer as string) || null,
       }
     })
+
+    // Sincronizar con Quote (Legacy) si existe
+    const updatedEvent = await db.event.findUnique({ where: { id } })
+    if (updatedEvent?.quoteId) {
+      await db.quote.update({
+        where: { id: updatedEvent.quoteId },
+        data: { 
+          status: (data.status as string) || "scheduled"
+        }
+      })
+    }
+
+    // Sincronizar con BookingRequest (Nuevo Funnel)
+    await db.bookingRequest.updateMany({
+      where: { eventId: id },
+      data: {
+        status: (data.status as string) || "scheduled",
+        ...(data.status === "completado" ? { paymentStatus: "paid" } : {})
+      }
+    })
+
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/eventualidades")
     revalidatePath("/")
@@ -170,6 +191,25 @@ export async function createEventAction(_prev: any, formData: FormData) {
       }
     })
 
+    // Sincronizar con Quote (Legacy) si existe
+    if (event.quoteId) {
+      await db.quote.update({
+        where: { id: event.quoteId },
+        data: { 
+          status: (data.status as string) || "scheduled"
+        }
+      })
+    }
+
+    // Sincronizar con BookingRequest (Nuevo Funnel)
+    await db.bookingRequest.updateMany({
+      where: { eventId: event.id },
+      data: {
+        status: (data.status as string) || "scheduled",
+        ...(data.status === "completado" ? { paymentStatus: "paid" } : {})
+      }
+    })
+
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/eventualidades")
     revalidatePath("/")
@@ -231,13 +271,22 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
       data: { status: newStatus }
     })
 
-    // Sincronizar con BookingRequest si existe
+    // Sincronizar con Quote (Legacy) si existe
     if (event.quoteId) {
-       await db.bookingRequest.updateMany({
-         where: { eventId: id },
+       await db.quote.update({
+         where: { id: event.quoteId },
          data: { status: newStatus }
        })
     }
+
+    // Sincronizar con BookingRequest (Nuevo Funnel)
+    await db.bookingRequest.updateMany({
+      where: { eventId: id },
+      data: { 
+        status: newStatus,
+        ...(newStatus === "completado" ? { paymentStatus: "paid" } : {})
+      }
+    })
 
     revalidatePath("/admin/eventualidades")
     revalidatePath("/admin/eventos")

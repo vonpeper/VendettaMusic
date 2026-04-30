@@ -229,11 +229,13 @@ export async function PATCH(req: NextRequest) {
 
       return NextResponse.json({ success: true, eventId: event.id })
     }
-
+    if (action === "reject") {
       await db.bookingRequest.update({
         where: { id: bookingId },
         data:  { status: "cancelado", adminNote: adminNote || null }
       })
+      return NextResponse.json({ success: true })
+    }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 })
   } catch (error) {
@@ -262,6 +264,7 @@ export async function PUT(req: NextRequest) {
     if (updates.endTime)       dataToUpdate.endTime       = updates.endTime
     if (updates.baseAmount)    dataToUpdate.baseAmount    = parseFloat(updates.baseAmount)
     if (updates.depositAmount) dataToUpdate.depositAmount = parseFloat(updates.depositAmount)
+    if (updates.viaticosAmount !== undefined) dataToUpdate.viaticosAmount = parseFloat(updates.viaticosAmount)
     if (updates.adminNote)     dataToUpdate.adminNote     = updates.adminNote
     // Campos de Personalización
     if (updates.bandHours !== undefined)   dataToUpdate.bandHours   = parseInt(updates.bandHours)

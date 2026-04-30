@@ -112,6 +112,19 @@ export function AddMusicianForm() {
             <Input name="whatsapp" required placeholder="Ej. 7221234567" />
           </div>
           <div className="space-y-2">
+            <label className="text-sm font-medium">Calificación inicial</label>
+            <Select name="rating" defaultValue="3">
+              <SelectTrigger>
+                <SelectValue placeholder="Calificación..." />
+              </SelectTrigger>
+              <SelectContent>
+                {[1, 2, 3, 4, 5].map(n => (
+                  <SelectItem key={n} value={n.toString()}>{n} Estrellas</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <label className="text-sm font-medium">Observaciones / Notas</label>
             <textarea 
               name="notes" 

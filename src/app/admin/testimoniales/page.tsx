@@ -1,10 +1,16 @@
 import { Shield, MessageSquare, Check, X, Trash2, Clock, Star, TrendingUp } from "lucide-react"
 import { db } from "@/lib/db"
 import { ReviewList } from "./ReviewList"
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
 export default async function TestimonialesPage() {
+  const session = await auth()
+  if (!session || session.user?.role !== "ADMIN") {
+    redirect("/admin")
+  }
   const reviews = await db.review.findMany({
     orderBy: { createdAt: "desc" }
   })

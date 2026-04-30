@@ -1,3 +1,5 @@
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
 import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction } from "@/actions/config"
 import { Button } from "@/components/ui/button"
@@ -9,6 +11,11 @@ import { MessageCircle, Calendar, Settings, ShieldCheck, Mail, ArrowRight, Exter
 import { ConfigFormWrapper } from "@/components/admin/ConfigFormWrapper"
 
 export default async function AdminConfiguracionPage() {
+  const session = await auth()
+  if (!session || session.user?.role !== "ADMIN") {
+    redirect("/admin")
+  }
+
   const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
 
   return (
@@ -300,6 +307,29 @@ export default async function AdminConfiguracionPage() {
                   <Label htmlFor="zona3Rate" className="text-foreground">Zona 3 (Querétaro, Cuernavaca, Puebla, Pachuca)</Label>
                   <Input id="zona3Rate" name="zona3Rate" type="number" step="100" 
                     defaultValue={(config as any)?.zona3Rate || 3000} 
+                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
+                </div>
+
+                <div className="space-y-2 pt-4 border-t border-border/10 md:col-span-2">
+                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Parámetros de Cálculo Manual</h3>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="gasPrice" className="text-foreground">Precio Gasolina (Ltr)</Label>
+                  <Input id="gasPrice" name="gasPrice" type="number" step="0.1" 
+                    defaultValue={(config as any)?.gasPrice || 24.5} 
+                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tollCost" className="text-foreground">Costo Casetas (Total Ida/Vuelta)</Label>
+                  <Input id="tollCost" name="tollCost" type="number" step="10" 
+                    defaultValue={(config as any)?.tollCost || 0} 
+                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vehicleCount" className="text-foreground">Número de Vehículos</Label>
+                  <Input id="vehicleCount" name="vehicleCount" type="number" 
+                    defaultValue={(config as any)?.vehicleCount || 2} 
                     className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
                 </div>
                 <div className="md:col-span-2">

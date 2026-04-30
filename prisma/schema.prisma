@@ -50,6 +50,7 @@ model MusicianProfile {
   whatsapp           String?
   status             String              @default("active")
   availability       String              @default("Disponible")
+  rating             Int                 @default(3)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @default(now()) @updatedAt
   eventMusicians     EventMusician[]
@@ -124,8 +125,8 @@ model Package {
 model ServiceItem {
   id          String    @id @default(uuid())
   name        String
-  category    String    @default("Inclusión") // Inclusión, Extra, etc.
-  icon        String?   @default("Check") // Lucide icon name
+  category    String    @default("Inclusión")
+  icon        String?   @default("Check")
   description String?
   order       Int       @default(0)
   active      Boolean   @default(true)
@@ -298,7 +299,6 @@ model Event {
   googleCalendarId    String?
   bandEventId         String?
   notificationSent    Boolean         @default(false)
-  bookingRequest      BookingRequest?
   customName          String?
   mapsLink            String?
   venueType           String?
@@ -309,6 +309,7 @@ model Event {
   updatedAt           DateTime        @default(now()) @updatedAt
   bitacora            String?
   audioEngineer       String?
+  bookingRequest      BookingRequest?
   contracts           Contract[]
   quote               Quote?          @relation(fields: [quoteId], references: [id])
   client              ClientProfile?  @relation(fields: [clientId], references: [id])
@@ -390,7 +391,6 @@ model BookingRequest {
   notifiedAdmin       Boolean        @default(false)
   notifiedMusicians   Boolean        @default(false)
   eventId             String?        @unique
-  event               Event?         @relation(fields: [eventId], references: [id])
   clientId            String?
   isPublic            Boolean        @default(false)
   clientProvidesAudio Boolean        @default(false)
@@ -405,6 +405,7 @@ model BookingRequest {
   hasPista            Boolean?       @default(false)
   hasRobot            Boolean?       @default(false)
   client              ClientProfile? @relation(fields: [clientId], references: [id])
+  event               Event?         @relation(fields: [eventId], references: [id])
 }
 
 model Rehearsal {
@@ -473,6 +474,9 @@ model GlobalConfig {
   msgTemplateEventClose String?
   zona2Rate             Float?    @default(1500.0)
   zona3Rate             Float?    @default(3000.0)
+  gasPrice              Float?    @default(24.5)
+  tollCost              Float?    @default(0)
+  vehicleCount          Int?      @default(2)
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   msgTemplateFollowUp   String?

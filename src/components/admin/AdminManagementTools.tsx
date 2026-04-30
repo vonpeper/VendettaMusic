@@ -21,10 +21,10 @@ const CancelBookingButton = dynamic(
   )}
 )
 
-export function AdminManagementTools({ booking }: { booking: any }) {
+export function AdminManagementTools({ booking, config }: { booking: any, config?: any }) {
   return (
     <div className="grid grid-cols-2 gap-4">
-      <EditBookingDialog booking={booking} />
+      <EditBookingDialog booking={booking} config={config} />
       <CancelBookingButton 
         bookingId={booking.id} 
         shortId={booking.shortId} 

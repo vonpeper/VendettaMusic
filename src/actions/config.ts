@@ -119,17 +119,26 @@ export async function saveViaticosConfigAction(arg1: any, arg2?: any) {
 
     const zona2Rate = parseFloat(formData.get("zona2Rate") as string) || 1500
     const zona3Rate = parseFloat(formData.get("zona3Rate") as string) || 3000
+    const gasPrice = parseFloat(formData.get("gasPrice") as string) || 24.5
+    const tollCost = parseFloat(formData.get("tollCost") as string) || 0
+    const vehicleCount = parseInt(formData.get("vehicleCount") as string) || 2
 
     await db.globalConfig.upsert({
       where: { id: "singleton" },
       update: {
         zona2Rate,
         zona3Rate,
+        gasPrice,
+        tollCost,
+        vehicleCount,
       },
       create: {
         id: "singleton",
         zona2Rate,
         zona3Rate,
+        gasPrice,
+        tollCost,
+        vehicleCount,
       }
     })
 

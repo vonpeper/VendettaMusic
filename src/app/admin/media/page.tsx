@@ -1,7 +1,8 @@
 import { db } from "@/lib/db"
 import { MediaManagerClient } from "@/components/admin/MediaManagerClient"
 import { BandMembersManagerClient } from "@/components/admin/BandMembersManagerClient"
-import { Metadata } from "next"
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export const metadata: Metadata = {
   title: "Gestión de Medios | Admin Vendetta",
@@ -9,6 +10,11 @@ export const metadata: Metadata = {
 }
 
 export default async function AdminMediaPage() {
+  const session = await auth()
+  if (!session || session.user?.role !== "ADMIN") {
+    redirect("/admin")
+  }
+
   const allMedia = await db.siteMedia.findMany({
     orderBy: { createdAt: "desc" }
   })

@@ -17,10 +17,19 @@ import { Edit3, Loader2, Save } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-export function EditBookingDialog({ booking }: { booking: any }) {
+export function EditBookingDialog({ booking, config }: { booking: any, config?: any }) {
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const router = useRouter()
+
+  // Calculadora de viáticos state
+  const [calcData, setCalcData] = useState({
+    distance: 0,
+    gasPrice: config?.gasPrice || 24.5,
+    tollCost: config?.tollCost || 0,
+    vehicles: config?.vehicleCount || 2,
+    efficiency: 8, // km/l promedio carga
+  })
 
   const [formData, setFormData] = useState({
     packageName:   booking.packageName   || "",
@@ -42,6 +51,7 @@ export function EditBookingDialog({ booking }: { booking: any }) {
     hasTemplete:   booking.hasTemplete   || false,
     hasPista:      booking.hasPista      || false,
     hasRobot:      booking.hasRobot      || false,
+    viaticosAmount: booking.viaticosAmount || 0,
   })
 
   async function handleUpdate(e: React.FormEvent) {
@@ -247,9 +257,86 @@ export function EditBookingDialog({ booking }: { booking: any }) {
             </div>
           </div>
 
+          <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/40">
+            <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2 text-center">Calculadora de Viáticos</h4>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="calc_dist">Distancia Total (Km Ida/Vuelta)</Label>
+                <Input 
+                  id="calc_dist" 
+                  type="number"
+                  value={calcData.distance} 
+                  onChange={e => setCalcData({...calcData, distance: parseFloat(e.target.value)})}
+                  className="bg-background h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="calc_vehicles">Vehículos</Label>
+                <Input 
+                  id="calc_vehicles" 
+                  type="number"
+                  value={calcData.vehicles} 
+                  onChange={e => setCalcData({...calcData, vehicles: parseInt(e.target.value)})}
+                  className="bg-background h-8 text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="calc_gas">Gasolina ($/L)</Label>
+                <Input 
+                  id="calc_gas" 
+                  type="number"
+                  value={calcData.gasPrice} 
+                  onChange={e => setCalcData({...calcData, gasPrice: parseFloat(e.target.value)})}
+                  className="bg-background h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="calc_tolls">Casetas ($ Total)</Label>
+                <Input 
+                  id="calc_tolls" 
+                  type="number"
+                  value={calcData.tollCost} 
+                  onChange={e => setCalcData({...calcData, tollCost: parseFloat(e.target.value)})}
+                  className="bg-background h-8 text-xs"
+                />
+              </div>
+            </div>
+
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full h-8 text-[10px] font-bold border-primary/40 text-primary hover:bg-primary/10"
+              onClick={() => {
+                const gasNeeded = (calcData.distance / calcData.efficiency) * calcData.vehicles;
+                const totalGas = gasNeeded * calcData.gasPrice;
+                const totalTolls = calcData.tollCost * calcData.vehicles;
+                const total = Math.ceil(totalGas + totalTolls);
+                setFormData({...formData, viaticosAmount: total});
+                toast.info(`Viáticos calculados: $${total}`);
+              }}
+            >
+              Calcular Viáticos
+            </Button>
+
+            <div className="pt-2 border-t border-border/10">
+              <Label htmlFor="viaticosAmount">Monto de Viáticos Final ($)</Label>
+              <Input 
+                id="viaticosAmount" 
+                type="number"
+                value={formData.viaticosAmount} 
+                onChange={e => setFormData({...formData, viaticosAmount: parseFloat(e.target.value)})}
+                className="bg-background border-primary/30 font-bold"
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="baseAmount">Total del Servicio ($)</Label>
+              <Label htmlFor="baseAmount">Total del Servicio (Sin viáticos) ($)</Label>
               <Input 
                 id="baseAmount" 
                 type="number"

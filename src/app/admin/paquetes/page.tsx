@@ -1,3 +1,5 @@
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
 import { PackagesManager } from "@/components/admin/PackagesManager"
 import { ExtrasManager } from "@/components/admin/ExtrasManager"
@@ -5,6 +7,11 @@ import { ServicesManager } from "@/components/admin/ServicesManager"
 import { Box, Sparkles, Zap } from "lucide-react"
 
 export default async function AdminPaquetesPage() {
+  const session = await auth()
+  if (!session || session.user?.role !== "ADMIN") {
+    redirect("/admin")
+  }
+
   const packages = await db.package.findMany({
     include: { serviceItems: true },
     orderBy: { createdAt: "desc" }

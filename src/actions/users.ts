@@ -12,7 +12,7 @@ export async function createUserAction(formData: FormData) {
   }
 
   const name = formData.get("name") as string
-  const email = formData.get("email") as string
+  const email = (formData.get("email") as string || "").toLowerCase().trim()
   const password = formData.get("password") as string
   const role = formData.get("role") as string || "ADMIN"
 
@@ -21,9 +21,15 @@ export async function createUserAction(formData: FormData) {
   }
 
   try {
-    const existingUser = await db.user.findUnique({ where: { email } })
+    // Verificación robusta de duplicados (insensible a mayúsculas/minúsculas)
+    const allUsers = await db.user.findMany({ select: { email: true, role: true } })
+    const existingUser = allUsers.find(u => u.email?.toLowerCase() === email)
+    
     if (existingUser) {
-      return { success: false, message: "El usuario ya existe" }
+      const roleLabel = existingUser.role === 'CLIENT' ? 'Cliente' : 
+                        existingUser.role === 'USER' ? 'Músico/Staff' : 
+                        existingUser.role
+      return { success: false, message: `El correo ya está registrado como ${roleLabel}` }
     }
 
     const hashedPassword = await hash(password, 12)

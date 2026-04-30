@@ -5,8 +5,14 @@ import { NuevoEnsayoButton, DeleteRehearsalButton, EditRehearsalButton } from "@
 import { AddSubstituteForm, DeleteSubstituteButton } from "@/components/admin/SubstituteActions"
 import { AddMusicianForm } from "@/components/admin/MusicianActions"
 import { Music, MapPin, Calendar as CalendarIcon, Users } from "lucide-react"
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export default async function AdminEnsayosPage() {
+  const session = await auth()
+  if (!session || session.user?.role !== "ADMIN") {
+    redirect("/admin")
+  }
   const [rehearsals, musicians, locations, songs] = await Promise.all([
     db.rehearsal.findMany({
       orderBy: { datetime: "asc" },

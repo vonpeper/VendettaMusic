@@ -99,7 +99,10 @@ export async function createMusicianProfileAction(formData: FormData) {
     const phone = formData.get("phone") as string
     const whatsapp = formData.get("whatsapp") as string
     const notes = formData.get("notes") as string
+    const ratingStr = formData.get("rating") as string
     const imageFile = formData.get("image") as File
+
+    const rating = ratingStr ? parseInt(ratingStr, 10) : 3
 
     if (!name || !instrument) {
       return { success: false, error: "Nombre e instrumento son obligatorios" }
@@ -124,7 +127,8 @@ export async function createMusicianProfileAction(formData: FormData) {
         instrument,
         phone: phone || null,
         whatsapp: whatsapp || null,
-        notes: notes || null
+        notes: notes || null,
+        rating
       }
     })
 
@@ -164,6 +168,7 @@ export async function updateMusicianProfileAction(id: string, formData: FormData
         notes: (data.notes as string) || null,
         status: data.status as string || "active",
         availability: data.availability as string || "Disponible",
+        rating: data.rating ? parseInt(data.rating as string, 10) : 3,
         user: {
           update: {
             name: name || profile.user.name,

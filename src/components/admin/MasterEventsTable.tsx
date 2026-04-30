@@ -5,10 +5,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Calendar, CheckCircle2, XCircle, Clock, Info, Filter } from "lucide-react"
+import { Calendar, CheckCircle2, XCircle, Clock, Info, Filter, Loader2 } from "lucide-react"
 import { NotifyEventButton, EditEventoButton, DeleteEventoButton } from "./EventActions"
 import { formatDateMX } from "@/lib/utils"
 import Link from "next/link"
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { updateEventStatusAction } from "@/actions/events"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(v)
 
@@ -19,16 +29,11 @@ const DRESS_LABELS: Record<string, string> = {
   nocturno:      "🌙 Nocturno",
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  pendiente:  "border-yellow-200 text-yellow-700 bg-yellow-50",
-  agendado:   "border-green-200 text-green-700 bg-green-50",
-  completado: "border-blue-200 text-blue-700 bg-blue-50",
-  cancelado:  "border-red-200 text-red-700 bg-red-50",
-}
-
 export function MasterEventsTable({ events, clients, locations, packages, staff }: any) {
   const [activeTab, setActiveTab] = useState("todos")
   const [showCurrentMonth, setShowCurrentMonth] = useState(false)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const router = useRouter()
   const now = new Date()
 
   const filteredEvents = events.filter((evt: any) => {
@@ -46,6 +51,23 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
     
     return true
   })
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    setUpdatingId(id)
+    try {
+      const result = await updateEventStatusAction(id, newStatus)
+      if (result.success) {
+        toast.success("Estado actualizado")
+        router.refresh()
+      } else {
+        toast.error("Error: " + result.error)
+      }
+    } catch (error) {
+      toast.error("Error de red")
+    } finally {
+      setUpdatingId(null)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -171,11 +193,14 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                         )}
                       </div>
 
-                      {/* Estatus Consolidado */}
+                      {/* Estatus Consolidado e Interactivo */}
                       <div className="mt-3">
-                        <Badge className={`text-[9px] font-bold uppercase tracking-wider border px-2 py-0.5 rounded-md ${STATUS_COLORS[evt.status] ?? "border-border text-muted-foreground"}`}>
-                          {evt.status === "agendado" ? "Confirmado" : evt.status}
-                        </Badge>
+                        <StatusSwitcher 
+                          status={evt.status} 
+                          id={evt.id} 
+                          onStatusChange={handleStatusChange}
+                          isUpdating={updatingId === evt.id}
+                        />
                       </div>
                     </TableCell>
 
@@ -304,3 +329,46 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
     </div>
   )
 }
+
+function StatusSwitcher({ status, id, onStatusChange, isUpdating }: { 
+  status: string, 
+  id: string, 
+  onStatusChange: (id: string, s: string) => void,
+  isUpdating: boolean
+}) {
+  const configs: any = {
+    pendiente:  { color: "text-yellow-600 border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20", label: "Pendiente" },
+    agendado:   { color: "text-green-600 border-green-500/40 bg-green-500/10 hover:bg-green-500/20", label: "Confirmado" },
+    completado: { color: "text-blue-600 border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20", label: "Completado" },
+    cancelado:  { color: "text-red-600 border-red-500/40 bg-red-500/10 hover:bg-red-500/20", label: "Cancelado" },
+  }
+  
+  const cfg = configs[status] || configs.pendiente
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button 
+          disabled={isUpdating}
+          className={`${cfg.color} border px-2 py-1 text-[9px] rounded-md font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 disabled:opacity-50`}
+        >
+          {isUpdating ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+          {cfg.label}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="bg-card border-border/40 backdrop-blur-xl min-w-[140px]">
+        {Object.entries(configs).map(([key, value]: [string, any]) => (
+          <DropdownMenuItem 
+            key={key}
+            onClick={() => onStatusChange(id, key)}
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-primary/10"
+          >
+            <div className={`w-2 h-2 rounded-full ${value.color.split(' ')[0].replace('text-', 'bg-')}`} />
+            {value.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+

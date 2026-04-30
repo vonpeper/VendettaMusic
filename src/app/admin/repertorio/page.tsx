@@ -1,8 +1,14 @@
 import { db } from "@/lib/db"
 import { RepertoireManager } from "@/components/admin/RepertoireManager"
 import { Music, ListMusic, Layers, Radio } from "lucide-react"
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export default async function AdminRepertorioPage() {
+  const session = await auth()
+  if (!session || session.user?.role !== "ADMIN") {
+    redirect("/admin")
+  }
   const [songs, setlists] = await Promise.all([
     db.song.findMany({ 
       orderBy: { title: "asc" },

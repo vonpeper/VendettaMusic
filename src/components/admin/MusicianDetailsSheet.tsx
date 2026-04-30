@@ -142,6 +142,13 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
               </div>
 
               <div className="space-y-2">
+                <label className="text-xs text-muted-foreground">Calificación (Estrellas)</label>
+                <select name="rating" defaultValue={musician.rating || 3} className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground">
+                  {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n} Estrellas</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-2">
                 <label className="text-xs text-muted-foreground">Observaciones / Notas</label>
                 <textarea name="notes" defaultValue={musician.notes} rows={3} className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground" />
               </div>

@@ -1,4 +1,4 @@
-import { Phone, Users as UsersIcon, AlertTriangle, MessageCircle } from "lucide-react"
+import { Phone, Users as UsersIcon, AlertTriangle, MessageCircle, Star } from "lucide-react"
 
 export function MusicianCard({ musician, onViewDetails }: { musician: any, onViewDetails: () => void }) {
   const isAvailable = musician.availability === "Disponible"
@@ -55,13 +55,34 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
 
       <div className="grid grid-cols-2 gap-3 mb-5 py-3 border-y border-border/40">
         <div className="flex items-center gap-2 text-sm">
-          <UsersIcon className="w-4 h-4 text-muted-foreground" />
-          <span className="text-muted-foreground"><span className="font-bold text-foreground">{musician.substitutes.length}</span> Suplentes</span>
+          {["Ingeniero de Audio", "Técnico", "Staff"].includes(musician.instrument) ? (
+            <>
+              <UsersIcon className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground font-bold text-[10px] uppercase">Apoyo</span>
+            </>
+          ) : (
+            <>
+              <UsersIcon className="w-4 h-4 text-muted-foreground" />
+              <span className="text-muted-foreground"><span className="font-bold text-foreground">{musician.substitutes.length}</span> Suplentes</span>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2 text-sm">
           <Phone className="w-4 h-4 text-muted-foreground" />
           <span className="text-muted-foreground truncate">{musician.phone || "Sin teléfono"}</span>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between mb-4 px-1">
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map(star => (
+            <Star 
+              key={star} 
+              className={`w-3.5 h-3.5 ${star <= (musician.rating || 3) ? "fill-yellow-500 text-yellow-600" : "fill-white/10 text-muted-foreground/30"}`} 
+            />
+          ))}
+        </div>
+        <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Calificación General</div>
       </div>
 
       <div className="flex gap-2">
@@ -84,7 +105,7 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
         ) : (
           <button 
             disabled
-            className="flex-1 bg-gray-800 text-muted-foreground cursor-not-allowed py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2"
+            className="flex-1 bg-zinc-800/50 border border-border/20 text-zinc-500 cursor-not-allowed py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2"
           >
             <MessageCircle className="w-4 h-4" /> Sin WhatsApp
           </button>

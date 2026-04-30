@@ -1,5 +1,6 @@
 import Link from "next/link"
-import { Shield, Users, Calendar, Settings, LogOut, FileText, Music, LayoutDashboard, TrendingUp, ShoppingBag, Image as ImageIcon, Truck, Mic } from "lucide-react"
+import Image from "next/image"
+import { Users, Calendar, Settings, LogOut, FileText, Music, LayoutDashboard, TrendingUp, ShoppingBag, Image as ImageIcon, Truck, Mic, Shield } from "lucide-react"
 
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
@@ -17,10 +18,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="admin-theme flex min-h-screen bg-background text-foreground">
       {/* Sidebar */}
       <aside className="w-64 border-r border-border/40 bg-card hidden md:flex flex-col">
-        <div className="p-6 border-b border-border/40 flex items-center gap-2">
-          <Shield className="h-6 w-6 text-primary" />
-          <span className="font-heading font-black text-xl text-primary tracking-wider uppercase">
-            {isAdmin ? "Admin" : "Agente"}
+        <div className="p-6 border-b border-border/40 flex items-center gap-3">
+          <div className="w-8 h-8 relative shrink-0">
+            <Image 
+              src="/logo.png" 
+              alt="Vendetta Logo" 
+              fill
+              className="object-contain"
+            />
+          </div>
+          <span className="font-heading font-black text-xl text-primary tracking-wider uppercase truncate">
+            {session.user?.name || (isAdmin ? "Admin" : "Agente")}
           </span>
         </div>
         <nav className="flex-1 p-4 space-y-1">
@@ -69,12 +77,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link href="/admin/media" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group">
                 <ImageIcon className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Banners & Galería
               </Link>
+              <Link href="/admin/testimoniales" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all group border-b border-border/5 mb-1">
+                <FileText className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Testimoniales
+              </Link>
             </>
           )}
 
-          <Link href="/admin/testimoniales" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all group">
-            <FileText className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Testimoniales
-          </Link>
         </nav>
         <div className="p-4 border-t border-border/40">
           <Link href="/" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">

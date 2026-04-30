@@ -1,8 +1,14 @@
 import { db } from "@/lib/db"
 import { Users, AlertTriangle, CheckCircle, Calendar, Mic } from "lucide-react"
 import { BandaClientView } from "@/components/admin/BandaClientView"
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export default async function AdminBandaPage() {
+  const session = await auth()
+  if (!session || session.user?.role !== "ADMIN") {
+    redirect("/admin")
+  }
   const [musicians, upcomingEvents, upcomingRehearsals] = await Promise.all([
     db.musicianProfile.findMany({
       include: { 

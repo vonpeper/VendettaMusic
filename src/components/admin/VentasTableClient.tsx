@@ -1,32 +1,10 @@
-"use client"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { 
-  Calendar, 
-  Trash2, 
-  Loader2, 
-  CheckSquare, 
-  Square,
-  AlertTriangle,
-  ChevronRight
-} from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { formatDateMX, formatCurrency } from "@/lib/utils"
-import { FollowUpButton } from "@/components/admin/FollowUpButton"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { updateBookingStatusAction } from "@/actions/ventas"
 
 interface Booking {
   id: string
@@ -38,13 +16,16 @@ interface Booking {
   viaticosAmount: number
   depositAmount: number
   status: string
+  paymentStatus?: string
   clientPhone: string
   followUpCount: number
+  clientEmail?: string | null
 }
 
 export function VentasTableClient({ items, followUpTemplate }: { items: Booking[], followUpTemplate?: string }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
   const router = useRouter()
 
   if (items.length === 0) return (
@@ -85,6 +66,23 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
       toast.error("Error de conexión al servidor")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    setUpdatingId(id)
+    try {
+      const result = await updateBookingStatusAction(id, newStatus)
+      if (result.success) {
+        toast.success("Estado actualizado")
+        router.refresh()
+      } else {
+        toast.error("Error: " + result.error)
+      }
+    } catch (error) {
+      toast.error("Error de red")
+    } finally {
+      setUpdatingId(null)
     }
   }
 
@@ -134,7 +132,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
         </div>
       )}
 
-      <div className="bg-card border border-border/40 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border/40 rounded-2xl overflow-hidden shadow-sm">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-muted/30 border-b border-border/40">
@@ -152,18 +150,18 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                   )}
                 </button>
               </th>
-              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase">Cliente / ID</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase">Evento / Paquete</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase">Monto Total</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase text-center">Estado</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase text-right">Acción</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Cliente / ID</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Evento / Paquete</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Monto Total</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-center">Estado</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-right">Acción</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
             {items.map(reserva => (
               <tr 
                 key={reserva.id} 
-                className={`hover:bg-primary/10 transition-colors group ${selectedIds.has(reserva.id) ? 'bg-primary/5' : ''}`}
+                className={`hover:bg-primary/5 transition-colors group ${selectedIds.has(reserva.id) ? 'bg-primary/5' : ''}`}
               >
                 <td className="px-6 py-4">
                   <button 
@@ -191,11 +189,23 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                   <div className="text-[10px] text-muted-foreground mt-0.5">{reserva.packageName}</div>
                 </td>
                 <td className="px-6 py-4 font-mono">
-                  <div className="text-sm font-black text-foreground">{formatCurrency(Number(reserva.baseAmount) + Number(reserva.viaticosAmount || 0))}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-black text-foreground">{formatCurrency(Number(reserva.baseAmount) + Number(reserva.viaticosAmount || 0))}</div>
+                    {reserva.paymentStatus === "paid" ? (
+                      <span className="text-[8px] font-black bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded border border-green-500/20 uppercase tracking-tighter">PAGADO</span>
+                    ) : (
+                      <span className="text-[8px] font-black bg-yellow-500/10 text-yellow-600 px-1.5 py-0.5 rounded border border-yellow-500/20 uppercase tracking-tighter">PENDIENTE</span>
+                    )}
+                  </div>
                   <div className="text-[9px] text-muted-foreground">Anticipo: {formatCurrency(Number(reserva.depositAmount))}</div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <StatusBadge status={reserva.status} />
+                  <StatusSwitcher 
+                    status={reserva.status} 
+                    id={reserva.id} 
+                    onStatusChange={handleStatusChange}
+                    isUpdating={updatingId === reserva.id}
+                  />
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
@@ -225,17 +235,45 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
   )
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusSwitcher({ status, id, onStatusChange, isUpdating }: { 
+  status: string, 
+  id: string, 
+  onStatusChange: (id: string, s: string) => void,
+  isUpdating: boolean
+}) {
   const configs: any = {
-    pendiente: { color: "text-yellow-700 border-yellow-700/40 bg-yellow-900/20", label: "Pendiente" },
-    agendado:  { color: "text-green-700 border-green-700/40 bg-green-900/20", label: "Agendado" },
-    cancelado: { color: "text-red-700 border-red-700/40 bg-red-900/20", label: "Cancelado" },
-    EXPIRED:   { color: "text-muted-foreground border-gray-700 bg-gray-800/50", label: "Expirado" },
+    pendiente:  { color: "text-yellow-600 border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20", label: "Pendiente" },
+    agendado:   { color: "text-green-600 border-green-500/40 bg-green-500/10 hover:bg-green-500/20", label: "Confirmado" },
+    completado: { color: "text-blue-600 border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20", label: "Completado" },
+    cancelado:  { color: "text-red-600 border-red-500/40 bg-red-500/10 hover:bg-red-500/20", label: "Cancelado" },
+    EXPIRED:    { color: "text-muted-foreground border-gray-700 bg-gray-800/50 hover:bg-gray-800/70", label: "Expirado" },
   }
+  
   const cfg = configs[status] || configs.pendiente
+
   return (
-    <Badge className={`${cfg.color} border px-2 py-0.5 text-[10px]`}>
-      {cfg.label}
-    </Badge>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button 
+          disabled={isUpdating}
+          className={`${cfg.color} border px-2 py-1 text-[10px] rounded-md font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 mx-auto disabled:opacity-50`}
+        >
+          {isUpdating ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+          {cfg.label}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="center" className="bg-card border-border/40 backdrop-blur-xl min-w-[140px]">
+        {Object.entries(configs).map(([key, value]: [string, any]) => (
+          <DropdownMenuItem 
+            key={key}
+            onClick={() => onStatusChange(id, key)}
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-primary/10"
+          >
+            <div className={`w-2 h-2 rounded-full ${value.color.split(' ')[0].replace('text-', 'bg-')}`} />
+            {value.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
