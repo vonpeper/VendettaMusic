@@ -36,6 +36,12 @@ export function EditBookingDialog({ booking }: { booking: any }) {
     clientProvidesAudio: booking.clientProvidesAudio || false,
     isPublic:      booking.isPublic      || false,
     mapsLink:      booking.mapsLink      || "",
+    bandHours:     booking.bandHours     || 2,
+    djHours:       booking.djHours       || 0,
+    isDjWithTvs:   booking.isDjWithTvs   || false,
+    hasTemplete:   booking.hasTemplete   || false,
+    hasPista:      booking.hasPista      || false,
+    hasRobot:      booking.hasRobot      || false,
   })
 
   async function handleUpdate(e: React.FormEvent) {
@@ -170,6 +176,75 @@ export function EditBookingDialog({ booking }: { booking: any }) {
               onChange={e => setFormData({...formData, address: e.target.value})}
               className="bg-background"
             />
+          </div>
+
+          <div className="space-y-4 bg-muted/30 p-4 rounded-xl border border-border/40">
+            <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2 text-center">Configuración de Show</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bandHours">Horas Banda</Label>
+                <Input 
+                  id="bandHours" 
+                  type="number"
+                  value={formData.bandHours} 
+                  onChange={e => setFormData({...formData, bandHours: parseInt(e.target.value)})}
+                  className="bg-background"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="djHours">Horas DJ</Label>
+                <Input 
+                  id="djHours" 
+                  type="number"
+                  value={formData.djHours} 
+                  onChange={e => setFormData({...formData, djHours: parseInt(e.target.value)})}
+                  className="bg-background"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-y-3 pt-2">
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="isDjWithTvs"
+                  checked={formData.isDjWithTvs} 
+                  onChange={e => setFormData({...formData, isDjWithTvs: e.target.checked})}
+                  className="w-4 h-4 accent-primary rounded"
+                />
+                <Label htmlFor="isDjWithTvs" className="text-xs">DJ con Pantallas</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="hasTemplete"
+                  checked={formData.hasTemplete} 
+                  onChange={e => setFormData({...formData, hasTemplete: e.target.checked})}
+                  className="w-4 h-4 accent-primary rounded"
+                />
+                <Label htmlFor="hasTemplete" className="text-xs">Incluye Templete</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="hasPista"
+                  checked={formData.hasPista} 
+                  onChange={e => setFormData({...formData, hasPista: e.target.checked})}
+                  className="w-4 h-4 accent-primary rounded"
+                />
+                <Label htmlFor="hasPista" className="text-xs">Incluye Pista LED</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="hasRobot"
+                  checked={formData.hasRobot} 
+                  onChange={e => setFormData({...formData, hasRobot: e.target.checked})}
+                  className="w-4 h-4 accent-primary rounded"
+                />
+                <Label htmlFor="hasRobot" className="text-xs">Incluye Robot LED</Label>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

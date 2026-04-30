@@ -29,6 +29,7 @@ export default async function AdminEventosPage() {
         client:   { include: { user: true } },
         location: true,
         package:  true,
+        bookingRequest: true,
       }
     }),
     db.clientProfile.findMany({

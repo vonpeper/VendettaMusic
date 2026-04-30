@@ -44,7 +44,7 @@ export function BuildShowHero({ imageUrl = "/images/shows/arma-tu-show.jpg" }: {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
-              <Link href="/cotizar?pkg=custom&step=1">
+              <Link href="/cotizar?pkg=custom&step=0">
                 <Button 
                   size="lg" 
                   className="h-24 px-16 rounded-[2rem] font-black text-3xl gap-4 shadow-[0_20px_60px_-15px_rgba(220,38,38,0.5)] hover:scale-105 active:scale-95 transition-all bg-primary"

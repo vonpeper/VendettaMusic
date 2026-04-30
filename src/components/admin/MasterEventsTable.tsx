@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, CheckCircle2, XCircle, Clock, Info, Filter } from "lucide-react"
 import { NotifyEventButton, EditEventoButton, DeleteEventoButton } from "./EventActions"
 import { formatDateMX } from "@/lib/utils"
+import Link from "next/link"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(v)
 
@@ -125,7 +126,17 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                     {/* Identidad y Detalles Consolidados */}
                     <TableCell className="py-6 min-w-[300px]">
                       <div className="font-bold text-foreground text-base leading-tight">
-                        {evt.customName || evt.client?.user?.name || "Sin nombre"}
+                        {evt.bookingRequest ? (
+                          <Link 
+                            href={`/admin/ventas/${evt.bookingRequest.id}`}
+                            className="hover:text-primary transition-colors flex items-center gap-2"
+                          >
+                            {evt.customName || evt.client?.user?.name || "Sin nombre"}
+                            <Info className="w-3.5 h-3.5 opacity-30" />
+                          </Link>
+                        ) : (
+                          evt.customName || evt.client?.user?.name || "Sin nombre"
+                        )}
                       </div>
                       
                       <div className="flex flex-wrap gap-2 mt-2">

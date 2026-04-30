@@ -15,7 +15,10 @@ import {
   Mail, 
   CreditCard, 
   ExternalLink,
-  Download
+  Download,
+  Disc,
+  Music2,
+  Sparkles
 } from "lucide-react"
 import Link from "next/link"
 import { formatDateMX } from "@/lib/utils"
@@ -130,6 +133,44 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 </div>
               </CardContent>
             </Card>
+
+            {/* Servicios Personalizados */}
+            {(booking.bandHours! > 0 || booking.djHours! > 0 || booking.packageName.toLowerCase().includes("arma") || booking.packageName.toLowerCase().includes("personal")) && (
+              <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden border-l-4 border-l-primary">
+                <CardHeader className="bg-primary/5 border-b border-border/40">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" /> Configuración de Show
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Música en Vivo</div>
+                      <div className="text-sm font-bold flex items-center gap-2">
+                        <Music2 className="w-3.5 h-3.5 text-primary" /> {booking.bandHours} Horas
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Servicio de DJ</div>
+                      <div className="text-sm font-bold flex items-center gap-2">
+                        <Disc className="w-3.5 h-3.5 text-primary" /> {booking.djHours! > 0 ? `${booking.djHours} Horas ${booking.isDjWithTvs ? '(Con Pantallas)' : '(Solo Audio)'}` : 'No solicitado'}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Extras y Montaje</div>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {booking.hasTemplete && <Badge variant="outline" className="text-[9px] border-primary/20 bg-primary/5">TEMPLETE</Badge>}
+                        {booking.hasPista && <Badge variant="outline" className="text-[9px] border-primary/20 bg-primary/5">PISTA LED</Badge>}
+                        {booking.hasRobot && <Badge variant="outline" className="text-[9px] border-primary/20 bg-primary/5">ROBOT LED</Badge>}
+                        {!booking.hasTemplete && !booking.hasPista && !booking.hasRobot && <span className="text-xs text-muted-foreground italic">Sin extras</span>}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Desglose Financiero */}
             <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">

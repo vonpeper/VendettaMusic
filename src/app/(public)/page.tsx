@@ -15,6 +15,7 @@ import { Suspense } from "react"
 import Image from "next/image"
 import { db } from "@/lib/db"
 import { ReviewModal } from "@/components/public/ReviewModal"
+import { StatusSearch } from "@/components/public/StatusSearch"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -98,6 +99,12 @@ export default async function HomePage() {
     orderBy: { order: "asc" }
   })
 
+  const dbPackages = await db.package.findMany({
+    where: { active: true },
+    include: { serviceItems: { orderBy: { order: "asc" } } },
+    orderBy: { createdAt: "asc" }
+  })
+
   return (
     <div className="flex flex-col min-h-screen">
       <NeonBorder />
@@ -168,7 +175,7 @@ export default async function HomePage() {
       </section>
 
       {/* -- PAQUETES ------------------------------------------------------- */}
-      <PaquetesSection />
+      <PaquetesSection dbPackages={dbPackages as any} />
 
       {mediaMap.video_home && <VideoSection videoUrl={mediaMap.video_home} />}
       {!mediaMap.video_home && <VideoSection />}
@@ -352,6 +359,22 @@ export default async function HomePage() {
           </div>
 
           <ReviewModal />
+        </div>
+      </section>
+
+      {/* -- CONSULTA ESTATUS --------------------------------------------- */}
+      <section className="py-24 relative overflow-hidden bg-black/40">
+        <div className="container mx-auto px-4 max-w-4xl">
+           <div className="text-center mb-12">
+              <div className="text-primary font-black uppercase tracking-[0.4em] text-[10px] mb-4">Zona de Clientes</div>
+              <h2 className="text-4xl md:text-5xl font-heading font-black text-white uppercase tracking-tighter leading-none mb-4">
+                Consulta tu <span className="animated-title italic pr-4">Estatus</span>
+              </h2>
+              <p className="text-muted-foreground text-sm font-medium italic">
+                ¿Ya apartaste tu fecha? Ingresa el ID de tu reserva para ver detalles, pagos y contrato.
+              </p>
+           </div>
+           <StatusSearch />
         </div>
       </section>
 

@@ -169,8 +169,19 @@ export async function generateContractPdf(data: FunnelData, shortId: string, opt
   if (data.clientProvidesAudio) {
     inclusions = inclusions.filter(inc => !inc.toLowerCase().includes("audio") && !inc.toLowerCase().includes("sonido"))
   }
+
+  // Personalización dinámica en la tabla
+  const showDetails = [
+    `• Música en Vivo: ${data.bandHours} Horas`,
+    data.djHours > 0 ? `• DJ: ${data.djHours} Horas ${data.isDjWithTvs ? '(Con Pantallas)' : '(Audio)'}` : null,
+    data.hasTemplete ? "• Incluye Escenario (Templete)" : null,
+    data.hasPista ? "• Incluye Pista LED" : null,
+    data.hasRobot ? "• Incluye Robot LED" : null
+  ].filter(Boolean) as string[]
+
+  const finalDesc = `Show Vendetta Rock — ${data.packageName}\n${showDetails.join("\n")}\n${inclusions.map(i => "• " + i).join("\n")}`
   
-  const tableRows = [{ no: "1", desc: `Show Vendetta Rock — ${data.packageName}\n${inclusions.map(i => "• " + i).join("\n")}`, pu: MXN(data.packagePrice) }]
+  const tableRows = [{ no: "1", desc: finalDesc, pu: MXN(data.packagePrice) }]
   if (data.viaticosAmount > 0) tableRows.push({ no: String(tableRows.length + 1), desc: "Viáticos y gastos logísticos", pu: MXN(data.viaticosAmount) })
   if (extraSoundcheck > 0) tableRows.push({ no: String(tableRows.length + 1), desc: "Disponibilidad Extendida (Soundcheck)", pu: MXN(extraSoundcheck) })
 

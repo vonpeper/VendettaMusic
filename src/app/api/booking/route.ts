@@ -105,6 +105,13 @@ export async function POST(req: NextRequest) {
         isPublic:      Boolean(isPublic),
         clientProvidesAudio: Boolean(clientProvidesAudio),
         status:        "pendiente", // Nuevo estándar: pendiente
+        // Campos de Personalización
+        bandHours:     body.bandHours || 2,
+        djHours:       body.djHours || 0,
+        isDjWithTvs:   Boolean(body.isDjWithTvs),
+        hasTemplete:   Boolean(body.hasTemplete),
+        hasPista:      Boolean(body.hasPista),
+        hasRobot:      Boolean(body.hasRobot),
       }
     })
 
@@ -256,6 +263,13 @@ export async function PUT(req: NextRequest) {
     if (updates.baseAmount)    dataToUpdate.baseAmount    = parseFloat(updates.baseAmount)
     if (updates.depositAmount) dataToUpdate.depositAmount = parseFloat(updates.depositAmount)
     if (updates.adminNote)     dataToUpdate.adminNote     = updates.adminNote
+    // Campos de Personalización
+    if (updates.bandHours !== undefined)   dataToUpdate.bandHours   = parseInt(updates.bandHours)
+    if (updates.djHours !== undefined)     dataToUpdate.djHours     = parseInt(updates.djHours)
+    if (updates.isDjWithTvs !== undefined) dataToUpdate.isDjWithTvs = Boolean(updates.isDjWithTvs)
+    if (updates.hasTemplete !== undefined) dataToUpdate.hasTemplete = Boolean(updates.hasTemplete)
+    if (updates.hasPista !== undefined)    dataToUpdate.hasPista    = Boolean(updates.hasPista)
+    if (updates.hasRobot !== undefined)    dataToUpdate.hasRobot    = Boolean(updates.hasRobot)
 
     const booking = await db.bookingRequest.update({
       where: { id: bookingId },

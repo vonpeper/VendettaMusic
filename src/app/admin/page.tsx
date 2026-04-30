@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 import { db } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Banknote, FileText, TrendingUp, Music, Bell, ShieldAlert, CheckCircle2, AlertCircle, XCircle } from "lucide-react"
+import { Calendar, Banknote, FileText, TrendingUp, Music, Bell, ShieldAlert, CheckCircle2, AlertCircle, XCircle, ExternalLink } from "lucide-react"
 import { IncomeChart } from "@/components/admin/IncomeChart"
 import Link from "next/link"
 import { formatDateMX } from "@/lib/utils"
@@ -25,7 +25,8 @@ export default async function AdminDashboardPage() {
     pendingBookingRequests,
     pendingQuotes,
     expiredBookingRequests,
-    allBookingRequests
+    allBookingRequests,
+    confirmedBookings
   ] = await Promise.all([
     db.event.findMany({
       where: { date: { gte: now }, status: { not: "cancelado" } },
@@ -35,7 +36,8 @@ export default async function AdminDashboardPage() {
         client: { include: { user: true } }, 
         location: true, 
         package: true,
-        contracts: true 
+        contracts: true,
+        bookingRequest: true
       }
     }),
     db.bandEvent.findMany({
@@ -64,8 +66,15 @@ export default async function AdminDashboardPage() {
       take: 5
     }),
     // Para Tasa de Cierre
-    db.bookingRequest.count()
+    db.bookingRequest.count(),
+    // Para el Semáforo de Producción (Robust Lookup)
+    db.bookingRequest.findMany({
+      where: { status: "agendado" },
+      select: { id: true, eventId: true, clientName: true }
+    })
   ])
+
+
 
   // -- Métricas de ingresos unificadas ------------------------------
   const allEventsIncome = [
@@ -331,50 +340,100 @@ export default async function AdminDashboardPage() {
                   const daysUntil = Math.ceil((ev.date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
                   const hasContract = ev.contracts && ev.contracts.length > 0
                   const isPaid = ev.balance <= 0
+                  const hasDeposit = ev.deposit > 0
                   const hasAudio = !!ev.audioEngineer
                   
                   const isUrgent = daysUntil <= 7
                   const isReady = hasContract && isPaid && hasAudio
-                  const cardBorder = isReady ? "border-green-500/30 shadow-green-500/5" : isUrgent ? "border-red-500/40 shadow-red-500/5" : "border-border/40 shadow-sm"
-                  const urgencyBg = isUrgent && !isReady ? "bg-red-50/50" : "bg-white"
+                  
+                  // Lógica de color de la tarjeta (Semáforo Principal)
+                  // Verde: Todo listo. 
+                  // Rojo: Falta algo y es urgente (<= 7 días).
+                  // Amarillo/Normal: Falta algo pero hay tiempo.
+                  const cardBorder = isReady 
+                    ? "border-green-500/40 shadow-green-500/5 bg-green-50/20" 
+                    : isUrgent 
+                      ? "border-red-500/50 shadow-red-500/10 bg-red-50/50" 
+                      : "border-border/40 bg-white shadow-sm"
+
+                  const dateBlockColor = isReady
+                    ? "bg-green-600 text-white border-green-700"
+                    : isUrgent
+                      ? "bg-red-600 text-white border-red-700"
+                      : "bg-primary text-white border-primary"
+
+                  const linkedBooking = ev.bookingRequest || (confirmedBookings as any[]).find(b => 
+                    b.eventId === ev.id || 
+                    (b.clientName && (
+                      (ev.client?.user?.name && b.clientName.toLowerCase().includes(ev.client.user.name.toLowerCase())) ||
+                      (ev.customName && b.clientName.toLowerCase().includes(ev.customName.toLowerCase())) ||
+                      (ev.client?.user?.name && ev.client.user.name.toLowerCase().includes(b.clientName.toLowerCase())) ||
+                      (ev.customName && ev.customName.toLowerCase().includes(b.clientName.toLowerCase()))
+                    ))
+                  )
+                  const bookingId = linkedBooking?.id
 
                   return (
-                    <div key={ev.id} className={`flex flex-col gap-4 p-5 rounded-2xl border ${cardBorder} ${urgencyBg} transition-all hover:shadow-lg group`}>
+                    <a 
+                      key={ev.id}
+                      href={bookingId ? `/admin/ventas/${bookingId}` : `/admin/eventos`}
+                      className={`flex flex-col h-full gap-4 p-5 rounded-2xl border ${cardBorder} transition-all hover:shadow-lg active:scale-[0.95] group cursor-pointer no-underline text-inherit`}
+                      title={bookingId ? "Ver detalles de venta" : "Ver detalles de evento"}
+                    >
                       <div className="flex items-center gap-4">
-                        <div className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 border-2 ${isUrgent ? "bg-red-600 text-white border-red-700" : "bg-primary text-white border-primary"} shadow-lg group-hover:scale-105 transition-transform`}>
+                        <div className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 border-2 ${dateBlockColor} shadow-lg transition-transform group-hover:scale-105`}>
                           <span className="text-[10px] font-black uppercase leading-none opacity-80">
                             {ev.date.toLocaleString("es-MX", { month: "short" })}
                           </span>
                           <span className="text-xl font-black leading-none mt-1">{ev.date.getDate()}</span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="font-black text-foreground text-sm truncate uppercase tracking-tight">
+                          <div className="font-black text-foreground text-sm truncate uppercase tracking-tight flex items-center gap-1.5">
                             {ev.client?.user?.name ?? ev.customName ?? "Cliente"}
+                            {ev.bookingRequest && <ExternalLink className="w-3 h-3 opacity-30" />}
                           </div>
-                          <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-tighter mt-1 ${isUrgent ? 'bg-red-100 border-red-200 text-red-700' : 'bg-muted/50 text-muted-foreground'}`}>
+                          <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-tighter mt-1 ${isUrgent && !isReady ? 'bg-red-100 border-red-200 text-red-700' : isReady ? 'bg-green-100 border-green-200 text-green-700' : 'bg-muted/50 text-muted-foreground'}`}>
                             {daysUntil === 0 ? "HOY" : daysUntil === 1 ? "MAÑANA" : `EN ${daysUntil} DÍAS`}
                           </Badge>
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-3 gap-2 relative z-10">
+                        {/* CONTRATO: Rojo si no hay, Verde si hay */}
                         <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${hasContract ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
                           {hasContract ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} Contrato
                         </div>
-                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${isPaid ? "bg-green-50 border-green-200 text-green-700" : "bg-yellow-50 border-yellow-200 text-yellow-700"}`}>
-                          {isPaid ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />} Pago
+
+                        {/* PAGO: Rojo si 0, Amarillo si hay algo, Verde si completo */}
+                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${
+                          isPaid 
+                            ? "bg-green-50 border-green-200 text-green-700" 
+                            : hasDeposit 
+                              ? "bg-yellow-50 border-yellow-200 text-yellow-700" 
+                              : "bg-red-50 border-red-200 text-red-700"
+                        }`}>
+                          {isPaid ? <CheckCircle2 className="w-3 h-3" /> : hasDeposit ? <AlertCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} Pago
                         </div>
+
+                        {/* AUDIO: Rojo si no hay inge, Verde si hay */}
                         <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${hasAudio ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
                           {hasAudio ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} Audio
                         </div>
                       </div>
 
-                      {!isPaid && ev.balance > 0 && (
-                        <div className="text-[10px] font-bold text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 text-center">
-                          Saldo Pendiente: {MXN(ev.balance)}
-                        </div>
-                      )}
-                    </div>
+                      <div className="mt-auto space-y-2 relative z-10">
+                        {ev.balance > 0 && (
+                          <div className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border text-center ${isUrgent ? "bg-red-100 border-red-200 text-red-700" : "bg-muted/30 border-border/10 text-muted-foreground"}`}>
+                            Saldo Pendiente: {MXN(ev.balance)}
+                          </div>
+                        )}
+                        {isReady && (
+                          <div className="text-[10px] font-bold bg-green-100 border border-green-200 text-green-700 px-3 py-1.5 rounded-lg text-center flex items-center justify-center gap-1.5">
+                             <CheckCircle2 className="w-3 h-3" /> LISTO PARA EL SHOW
+                          </div>
+                        )}
+                      </div>
+                    </a>
                   )
                 })}
               </div>

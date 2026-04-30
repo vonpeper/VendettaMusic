@@ -34,9 +34,10 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
   const [error,       setError]        = useState("")
 
   const pkg = packages.find(p => p.id === selectedPkg)
-  const isCustom = selectedPkg !== "" && 
-                   (pkg?.isCustom || // Campo nuevo desde DB
-                   (!["Essential", "Experience", "Festival Premium"].includes(pkg?.name || "")))
+  const isCustom = selectedPkg === "custom" || 
+                   pkg?.isCustom === true || 
+                   pkg?.name?.toLowerCase().includes("arma") ||
+                   pkg?.name?.toLowerCase().includes("personal")
   
   const discountAmount = (promoCode.toUpperCase() === "CLIENTEVIP" && pkg?.name === "Essential") ? 1000 : 0
 
@@ -117,68 +118,81 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-heading font-black text-white tracking-tight">
-          Elige tu <span className="text-primary">Experiencia</span>
-        </h2>
-        <p className="text-muted-foreground mt-2">Selecciona un paquete base o personaliza tu propio show.</p>
-      </div>
+      {!isCustom && (
+        <>
+          <div>
+            <h2 className="text-3xl font-heading font-black text-white tracking-tight">
+              Elige tu <span className="text-primary">Experiencia</span>
+            </h2>
+            <p className="text-muted-foreground mt-2">Selecciona un paquete base o personaliza tu propio show.</p>
+          </div>
 
-      {/* Grid de Paquetes */}
-      <div className="grid gap-3">
-        {sorted.map(p => {
-          const isSelect = selectedPkg === p.id
-          const features = FEATURES[p.name] ?? ["Opción personalizable"]
-          const basePrice = p.baseCostPerHour * p.minDuration
-          return (
-            <button
-              key={p.id}
-              onClick={() => { 
-                setSelectedPkg(p.id); 
-                setError(""); 
-                // Si es un paquete estándar, reseteamos a sus horas mínimas
-                if (!["custom", "arma-tu-show"].includes(p.id) && 
-                    !p.name.toLowerCase().includes("arma") && 
-                    !p.name.toLowerCase().includes("personal")) {
-                  setBandHrs(p.minDuration); 
-                  setDjHrs(0); 
-                }
-              }}
-              className={`w-full text-left rounded-2xl border p-4 transition-all ${
-                isSelect
-                  ? "border-primary bg-primary/10 shadow-lg"
-                  : "border-white/10 bg-card/40 hover:border-white/20"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-white text-lg flex items-center gap-2">
-                    {p.name}
-                    {p.name.includes("Premium") && <Sparkles className="w-3 h-3 text-primary" />}
+          {/* Grid de Paquetes */}
+          <div className="grid gap-3">
+            {sorted.map(p => {
+              const isSelect = selectedPkg === p.id
+              const features = FEATURES[p.name] ?? ["Opción personalizable"]
+              const basePrice = p.baseCostPerHour * p.minDuration
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => { 
+                    setSelectedPkg(p.id); 
+                    setError(""); 
+                    // Si es un paquete estándar, reseteamos a sus horas mínimas
+                    if (!["custom", "arma-tu-show"].includes(p.id) && 
+                        !p.name.toLowerCase().includes("arma") && 
+                        !p.name.toLowerCase().includes("personal")) {
+                      setBandHrs(p.minDuration); 
+                      setDjHrs(0); 
+                    }
+                  }}
+                  className={`w-full text-left rounded-2xl border p-4 transition-all ${
+                    isSelect
+                      ? "border-primary bg-primary/10 shadow-lg"
+                      : "border-white/10 bg-card/40 hover:border-white/20"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-white text-lg flex items-center gap-2">
+                        {p.name}
+                        {p.name.includes("Premium") && <Sparkles className="w-3 h-3 text-primary" />}
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {features.map(f => (
+                          <span key={f} className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-gray-400 capitalize">{f}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                       <div className="text-xl font-black text-white">
+                         {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") || p.id === "custom"
+                           ? "$0" 
+                           : `$${basePrice.toLocaleString()}`}
+                       </div>
+                       <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                         {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") || p.id === "custom"
+                           ? "Arma tu show" 
+                           : "Desde"}
+                       </div>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {features.map(f => (
-                      <span key={f} className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-gray-400 capitalize">{f}</span>
-                    ))}
-                  </div>
-                </div>
-                <div className="text-right">
-                   <div className="text-xl font-black text-white">
-                     {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") || p.id === "custom"
-                       ? "$0" 
-                       : `$${basePrice.toLocaleString()}`}
-                   </div>
-                   <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                     {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") || p.id === "custom"
-                       ? "Arma tu show" 
-                       : "Desde"}
-                   </div>
-                </div>
-              </div>
-            </button>
-          )
-        })}
-      </div>
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+
+      {isCustom && (
+        <div className="mb-4">
+          <h2 className="text-3xl font-heading font-black text-white tracking-tight">
+            Arma tu <span className="text-primary">Show</span> 🎸
+          </h2>
+          <p className="text-muted-foreground mt-2">Configura cada detalle de tu evento. El precio se actualiza en tiempo real.</p>
+        </div>
+      )}
 
       {/* SECCIÓN DE PERSONALIZACIÓN - MOVIDA AL PRINCIPIO PARA VISIBILIDAD TOTAL */}
       {(isCustom || selectedPkg === "custom") && (
@@ -250,9 +264,21 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
             {/* Equipamiento */}
             <div className="space-y-4">
               <label className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
-                <Box className="w-4 h-4 text-primary" /> 4. Equipamiento Extra
+                <Box className="w-4 h-4 text-primary" /> 4. Equipamiento y Base
               </label>
               <div className="grid grid-cols-1 gap-2">
+                 {/* Ítem fijo de 2 horas base */}
+                 <div className="w-full flex items-center justify-between p-4 rounded-2xl border border-primary bg-primary/20 shadow-lg shadow-primary/10 cursor-default">
+                    <div className="flex flex-col items-start">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-3 h-3 text-primary" />
+                        <span className="text-xs font-black text-white uppercase tracking-tighter">2 Horas de Música en Vivo</span>
+                      </div>
+                      <span className="text-[10px] text-gray-400">Contratación mínima obligatoria</span>
+                    </div>
+                    <span className="text-xs text-primary font-black">$8,000</span>
+                 </div>
+
                  {[
                    { id: 'templete', label: 'Templete', price: 3800, state: templete, set: setTemplete },
                    { id: 'pista', label: 'Pista Iluminada', price: 7500, state: pista, set: setPista },

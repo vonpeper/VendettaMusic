@@ -24,14 +24,14 @@ export async function GET(
       packagePrice: booking.baseAmount || 0,
       guestCount: booking.guestCount || 0,
       venueType: booking.venueType || "salon",
-      // Valores por defecto para opciones que podrían no estar en BookingRequest
-      bandHours: 2,
-      djHours: 0,
-      isDjWithTvs: false,
-      hasTemplete: false,
-      hasPista: false,
-      hasRobot: false,
-      hasPantalla: false,
+      // Valores desde BookingRequest
+      bandHours: booking.bandHours || 2,
+      djHours:   booking.djHours || 0,
+      isDjWithTvs: booking.isDjWithTvs || false,
+      hasTemplete: booking.hasTemplete || false,
+      hasPista:    booking.hasPista || false,
+      hasRobot:    booking.hasRobot || false,
+      hasPantalla: false, // Coming soon
       // Ubicación
       street: booking.calle || "",
       houseNumber: booking.numero || "",
