@@ -43,12 +43,10 @@ const RELATIONS: Record<string, Record<string, { table: string, localField: stri
     "clientProfile": { table: "ClientProfile", localField: "id", remoteField: "userId", type: "one" },
     "musicianProfile": { table: "MusicianProfile", localField: "id", remoteField: "userId", type: "one" }
   },
-  "Event": {
-    "client": { table: "ClientProfile", localField: "clientId", remoteField: "id", type: "one" },
-    "location": { table: "Location", localField: "locationId", remoteField: "id", type: "one" },
-    "package": { table: "Package", localField: "packageId", remoteField: "id", type: "one" },
-    "quote": { table: "Quote", localField: "quoteId", remoteField: "id", type: "one" },
-    "contracts": { table: "Contract", localField: "id", remoteField: "eventId", type: "many" }
+  "MusicianProfile": {
+    "user": { table: "User", localField: "userId", remoteField: "id", type: "one" },
+    "substitutes": { table: "Substitute", localField: "id", remoteField: "musicianProfileId", type: "many" },
+    "eventMusicians": { table: "EventMusician", localField: "id", remoteField: "musicianProfileId", type: "many" }
   },
   "ClientProfile": {
     "user": { table: "User", localField: "userId", remoteField: "id", type: "one" },
@@ -57,19 +55,33 @@ const RELATIONS: Record<string, Record<string, { table: string, localField: stri
     "bookings": { table: "BookingRequest", localField: "id", remoteField: "clientId", type: "many" }
   },
   "BookingRequest": {
-    "client": { table: "ClientProfile", localField: "clientId", remoteField: "id", type: "one" }
+    "client": { table: "ClientProfile", localField: "clientId", remoteField: "id", type: "one" },
+    "event": { table: "Event", localField: "eventId", remoteField: "id", type: "one" }
   },
   "Quote": {
     "client": { table: "ClientProfile", localField: "clientId", remoteField: "id", type: "one" },
-    "items": { table: "QuoteItem", localField: "id", remoteField: "quoteId", type: "many" }
+    "items": { table: "QuoteItem", localField: "id", remoteField: "quoteId", type: "many" },
+    "event": { table: "Event", localField: "id", remoteField: "quoteId", type: "one" }
   },
   "Package": {
-    "services": { table: "PackageService", localField: "id", remoteField: "packageId", type: "many" }
+    "services": { table: "PackageService", localField: "id", remoteField: "packageId", type: "many" },
+    "serviceItems": { table: "ServiceItem", localField: "id", type: "many-to-many", joinTable: "_PackageToService", localJoinField: "A", remoteJoinField: "B" }
   },
-  "MusicianProfile": {
-    "user": { table: "User", localField: "userId", remoteField: "id", type: "one" },
-    "substitutes": { table: "Substitute", localField: "id", remoteField: "musicianProfileId", type: "many" },
-    "eventMusicians": { table: "EventMusician", localField: "id", remoteField: "musicianProfileId", type: "many" }
+  "ServiceItem": {
+    "packages": { table: "Package", localField: "id", type: "many-to-many", joinTable: "_PackageToService", localJoinField: "B", remoteJoinField: "A" }
+  },
+  "Event": {
+    "client": { table: "ClientProfile", localField: "clientId", remoteField: "id", type: "one" },
+    "location": { table: "Location", localField: "locationId", remoteField: "id", type: "one" },
+    "package": { table: "Package", localField: "packageId", remoteField: "id", type: "one" },
+    "quote": { table: "Quote", localField: "quoteId", remoteField: "id", type: "one" },
+    "contracts": { table: "Contract", localField: "id", remoteField: "eventId", type: "many" },
+    "musicians": { table: "EventMusician", localField: "id", remoteField: "eventId", type: "many" },
+    "payments": { table: "Payment", localField: "id", remoteField: "eventId", type: "many" }
+  },
+  "EventMusician": {
+    "event": { table: "Event", localField: "eventId", remoteField: "id", type: "one" },
+    "musician": { table: "MusicianProfile", localField: "musicianId", remoteField: "id", type: "one" }
   },
   "Rehearsal": {
     "location": { table: "Location", localField: "locationId", remoteField: "id", type: "one" },
@@ -123,6 +135,16 @@ const resolveIncludes = async (tableName: string, row: any, include: any): Promi
       } else if (rel.type === 'many') {
         const resp = await libsql.execute({
           sql: `SELECT * FROM ${rel.table} WHERE ${rel.remoteField} = ?`,
+          args: [result[rel.localField]]
+        });
+        let rows = resp.rows.map(r => ({ ...r }));
+        if (typeof include[key] === 'object' && include[key].include) {
+          rows = await Promise.all(rows.map(r => resolveIncludes(rel.table, r, include[key].include)));
+        }
+        result[key] = transformDateFields(rows);
+      } else if (rel.type === 'many-to-many') {
+        const resp = await libsql.execute({
+          sql: `SELECT T.* FROM ${rel.table} T INNER JOIN ${rel.joinTable} J ON T.id = J.${rel.remoteJoinField} WHERE J.${rel.localJoinField} = ?`,
           args: [result[rel.localField]]
         });
         let rows = resp.rows.map(r => ({ ...r }));
@@ -525,6 +547,8 @@ export const db = {
   substitute: createModel("Substitute"),
   setlist: createModel("Setlist"),
   setlistSong: createModel("SetlistSong"),
+  serviceItem: createModel("ServiceItem"),
+  eventMusician: createModel("EventMusician"),
   
   $queryRawUnsafe: async (query: string, ...args: any[]) => {
     try {
