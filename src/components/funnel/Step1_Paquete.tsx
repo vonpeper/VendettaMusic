@@ -15,7 +15,7 @@ const VENUE_TYPES = [
 ]
 
 interface Props {
-  packages: { id: string; name: string; baseCostPerHour: number; minDuration: number; description: string | null; includes: string | null }[]
+  packages: { id: string; name: string; baseCostPerHour: number; minDuration: number; description: string | null; includes: string | null; isCustom?: boolean }[]
   data: Partial<FunnelData>
   onNext: (d: Partial<FunnelData>) => void
 }

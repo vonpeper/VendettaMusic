@@ -43,7 +43,7 @@ export function CancelBookingButton({ bookingId, shortId, hasEvent = false }: Ca
     } catch (err) {
       toast.error("Error de conexión al servidor")
     } finally {
-      setLoading(null)
+      setLoading(false)
     }
   }
 

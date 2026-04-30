@@ -47,7 +47,7 @@ export async function createBandEventAction(prevState: any, formData: FormData) 
 
     const parsed = BandEventSchema.safeParse(raw)
     if (!parsed.success) {
-      const msg = parsed.error.errors.map(e => e.message).join(", ")
+      const msg = parsed.error.issues.map(e => e.message).join(", ")
       return { success: false, message: msg }
     }
 
@@ -107,7 +107,7 @@ export async function updateBandEventAction(prevState: any, formData: FormData) 
 
     const parsed = BandEventSchema.safeParse(raw)
     if (!parsed.success) {
-      const msg = parsed.error.errors.map(e => e.message).join(", ")
+      const msg = parsed.error.issues.map(e => e.message).join(", ")
       return { success: false, message: msg }
     }
 

@@ -2,17 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  // Configuración forzada para estabilización
-  // Este cambio debería obligar a Turbopack a recargar la configuración del servidor
-  // 🚀 AGENTE ANTIGRAVITY - ESTABILIZACIÓN TOTAL VENDETTA
   env: {
     PORT: process.env.PORT || "3005"
   },
   typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
+    ignoreBuildErrors: false,
   },
   images: {
     formats: ['image/avif', 'image/webp'],

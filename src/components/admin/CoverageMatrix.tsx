@@ -43,7 +43,7 @@ export function CoverageMatrix({ musicians, onViewDetails }: { musicians: any[],
         </TableHeader>
         <TableBody>
           {Object.entries(grouped).map(([instrument, list]) => (
-            list.map((musician: any, idx: number) => {
+            (list as any[]).map((musician: any, idx: number) => {
               const isAtRisk = musician.status === "active" && musician.substitutes.length === 0
               const badgeColor = availabilityColors[musician.availability] || "bg-gray-500/20 text-muted-foreground border-gray-500/30"
 

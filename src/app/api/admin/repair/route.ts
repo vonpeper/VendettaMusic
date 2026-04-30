@@ -1,8 +1,13 @@
 import { db } from "@/lib/db"
 import { findOrCreateClient } from "@/lib/clients"
 import { NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
 
 export async function GET() {
+  const session = await auth()
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   try {
     const johanna = await db.bookingRequest.findFirst({
       where: { clientName: { contains: "Johanna" } }

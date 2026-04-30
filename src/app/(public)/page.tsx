@@ -302,7 +302,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {liveDbReviews.slice(0, 9).map((r, i) => (
               <div
-                key={r.id || i}
+                key={("id" in r ? r.id : null) || i}
                 className={`group relative bg-card/40 border border-white/5 rounded-[3rem] p-10 hover:border-primary/40 transition-all duration-500 ${
                   i % 2 !== 0 ? "lg:-translate-y-12" : ""
                 }`}

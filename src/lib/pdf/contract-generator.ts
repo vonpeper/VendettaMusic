@@ -127,7 +127,7 @@ export async function generateContractPdf(data: FunnelData, shortId: string, opt
   const safeValue = (val: any, fallback = "N/A") => (val && val !== "undefined" && val !== "") ? String(val) : fallback
   const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(v || 0)
 
-  const isEarlySoundcheck = data.adminNote?.toLowerCase().includes("soundcheck") || false 
+  const isEarlySoundcheck = (data as any).adminNote?.toLowerCase().includes("soundcheck") || false
   const extraSoundcheck = isEarlySoundcheck ? 2000 : 0
   // fullAddress se define abajo para evitar ReferenceError en algunos entornos de ejecución
   const baseTotal = data.packagePrice + (data.viaticosAmount || 0)

@@ -306,7 +306,7 @@ export default function Step3_Fecha({ data, onNext, onBack }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label className="text-[10px] font-black text-muted-foreground mb-2 block uppercase tracking-[0.2em]">Inicio del Show</label>
-              <Select value={startTime} onValueChange={setStartTime}>
+              <Select value={startTime} onValueChange={v => setStartTime(v ?? "")}>
                 <SelectTrigger className="w-full bg-white/5 border-white/10 h-12 rounded-xl text-white font-bold focus:ring-primary/20 hover:bg-white/10 transition-all">
                   <SelectValue placeholder="Selecciona hora" />
                 </SelectTrigger>
@@ -321,7 +321,7 @@ export default function Step3_Fecha({ data, onNext, onBack }: Props) {
             </div>
             <div>
               <label className="text-[10px] font-black text-muted-foreground mb-2 block uppercase tracking-[0.2em]">Término estimado</label>
-              <Select value={endTime} onValueChange={setEndTime}>
+              <Select value={endTime} onValueChange={v => setEndTime(v ?? "")}>
                 <SelectTrigger className="w-full bg-white/5 border-white/10 h-12 rounded-xl text-white font-bold focus:ring-primary/20 hover:bg-white/10 transition-all">
                   <SelectValue placeholder="Selecciona hora" />
                 </SelectTrigger>

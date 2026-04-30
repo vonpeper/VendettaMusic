@@ -8,6 +8,14 @@ export async function createClienteAction(prevState: any, formData: FormData) {
   try {
     const name = formData.get("name") as string
     const email = (formData.get("email") as string || "").trim() || null
+    const phone = (formData.get("phone") as string) || null
+    const whatsapp = (formData.get("whatsapp") as string) || null
+    const state = (formData.get("state") as string) || null
+    const city = (formData.get("city") as string) || null
+    const type = (formData.get("type") as string) || null
+    const company = (formData.get("company") as string) || null
+    const rfc = (formData.get("rfc") as string) || null
+    const notes = (formData.get("notes") as string) || null
 
     if (!name) {
       return { success: false, message: "El nombre es obligatorio." }
