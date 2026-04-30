@@ -30,6 +30,7 @@ export default async function AdminEventosPage() {
         location: true,
         package:  true,
         bookingRequest: true,
+        musicians: true,
       }
     }),
     db.clientProfile.findMany({

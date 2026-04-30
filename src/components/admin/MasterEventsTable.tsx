@@ -81,12 +81,13 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
 
       <div className="border border-border/40 rounded-xl bg-card overflow-hidden shadow-sm px-6">
         <div className="overflow-x-auto">
-          <Table className="min-w-[1300px]">
+          <Table className="min-w-[1400px]">
             <TableHeader>
               <tr className="bg-primary/5 border-b border-border/40">
                 <TableHead className="text-primary font-bold w-24 py-5 pl-6">Fecha</TableHead>
                 <TableHead className="font-bold">Evento, Identidad y Estatus</TableHead>
                 <TableHead className="font-bold">Horario y Logística</TableHead>
+                <TableHead className="font-bold">Staff</TableHead>
                 <TableHead className="font-bold">Finanzas</TableHead>
                 <TableHead className="text-right pr-10 font-bold">Acciones</TableHead>
               </tr>
@@ -195,6 +196,35 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                           <span className="text-xs text-muted-foreground italic opacity-50 italic">Por confirmar horario</span>
                         )}
                       </div>
+                    </TableCell>
+
+                    {/* Staff y Confirmaciones */}
+                    <TableCell className="py-6">
+                      {evt.musicians && evt.musicians.length > 0 ? (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-foreground">
+                              {evt.musicians.filter((m: any) => m.status === 'confirmed').length}/{evt.musicians.length}
+                            </span>
+                            <div className="flex-1 h-1.5 w-20 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full transition-all ${
+                                  evt.musicians.filter((m: any) => m.status === 'confirmed').length === evt.musicians.length 
+                                  ? "bg-green-500" 
+                                  : "bg-primary"
+                                }`}
+                                style={{ width: `${(evt.musicians.filter((m: any) => m.status === 'confirmed').length / evt.musicians.length) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                          <div className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Confirmados</div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] text-muted-foreground italic">Sin músicos</span>
+                          <span className="text-[8px] text-primary font-bold uppercase tracking-tighter">Asignar en editar</span>
+                        </div>
+                      )}
                     </TableCell>
 
                     {/* Finanzas (Consolidadas y Limpias) */}
