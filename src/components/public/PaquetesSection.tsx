@@ -267,7 +267,7 @@ export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[] }) {
                   <div className="flex-1 mb-6">
                     <div className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${style.accentColor}`}>¿Qué incluye?</div>
                     <ul className="space-y-2.5">
-                      {pkg.serviceItems.map((item) => {
+                      {(pkg.serviceItems || []).map((item) => {
                         const IconComp = getIcon(item.icon)
                         return (
                           <li key={item.id} className="flex items-start gap-2.5">
