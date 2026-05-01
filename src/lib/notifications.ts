@@ -172,9 +172,11 @@ export async function notifyWhatsApp({
   
   // 3. Enviar
   const messageId = await sendWhatsApp(to, message)
-  
-  // 4. Registrar en BD si aplica
-  if (saveLog && messageId) {
+
+  // 4. Registrar SIEMPRE en BD para tener trazabilidad y poder reintentar.
+  //    status: "sent" si Evolution aceptó el mensaje, "failed" si no (config faltante,
+  //    error 4xx/5xx, etc). El centro de notificaciones permite reenviar los failed.
+  if (saveLog) {
     await db.notification.create({
       data: {
         eventId:   eventId || null,
@@ -182,8 +184,8 @@ export async function notifyWhatsApp({
         channel:   "whatsapp",
         recipient: to,
         message,
-        status:    "sent",
-        messageId,
+        status:    messageId ? "sent" : "failed",
+        messageId: messageId || null,
       }
     }).catch(e => console.error("Error logging notification:", e))
   }
