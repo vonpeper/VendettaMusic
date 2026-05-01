@@ -1,18 +1,23 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Users, Calendar, Settings, LogOut, FileText, Music, LayoutDashboard, TrendingUp, ShoppingBag, Image as ImageIcon, Truck, Mic, Shield } from "lucide-react"
+import { Users, Calendar, Settings, LogOut, FileText, Music, LayoutDashboard, TrendingUp, ShoppingBag, Image as ImageIcon, Truck, Mic, Shield, Bell } from "lucide-react"
 
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { db } from "@/lib/db"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
-  
+
   if (!session) {
     redirect("/auth/login")
   }
 
   const isAdmin = session.user?.role === "ADMIN"
+
+  const pendingNotifications = await db.notification.count({
+    where: { OR: [{ status: "pending" }, { status: "failed" }, { status: "received" }] },
+  }).catch(() => 0)
 
   return (
     <div className="admin-theme flex min-h-screen bg-background text-foreground">
@@ -61,6 +66,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
           <Link href="/admin/ventas" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group">
             <ShoppingBag className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Centro de Ventas
+          </Link>
+          <Link href="/admin/notificaciones" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group">
+            <Bell className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" />
+            <span className="flex-1">Notificaciones</span>
+            {pendingNotifications > 0 && (
+              <span className="text-[10px] font-black bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
+                {pendingNotifications}
+              </span>
+            )}
           </Link>
 
           {isAdmin && (

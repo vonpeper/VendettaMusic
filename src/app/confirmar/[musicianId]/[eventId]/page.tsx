@@ -8,11 +8,12 @@ export default async function ConfirmationPage({
   params,
   searchParams,
 }: {
-  params: { musicianId: string; eventId: string };
-  searchParams: { success?: string };
+  params: Promise<{ musicianId: string; eventId: string }>;
+  searchParams: Promise<{ success?: string }>;
 }) {
-  const { musicianId, eventId } = params
-  const success = searchParams.success === "true"
+  const { musicianId, eventId } = await params
+  const { success: successParam } = await searchParams
+  const success = successParam === "true"
 
   const [musician, event] = await Promise.all([
     db.musicianProfile.findUnique({
