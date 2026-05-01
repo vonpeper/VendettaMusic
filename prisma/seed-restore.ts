@@ -64,6 +64,35 @@ const EXTRAS = [
   { id: "ddc8429f-492a-4732-b905-492a3a02583c", packageId: "4e3406f6-cb05-4cf4-805b-24b5cd9c2b62", name: "Pantalla LED P3",       setupCost: 15000, hourlyCost: 0    },
 ]
 
+// ServiceItems aparecen como bullets en las cards del home (PaquetesSection).
+// Cada paquete enlaza un subconjunto vía _PackageToService.
+const SERVICE_ITEMS = [
+  { id: "svc-audio-ev",       name: "Audio EV",                          icon: "Volume2",   order: 1 },
+  { id: "svc-audio-pro",      name: "Audio Profesional (100-300 pers)",  icon: "Volume2",   order: 2 },
+  { id: "svc-backline",       name: "Backline completo",                  icon: "Music2",    order: 3 },
+  { id: "svc-luces-rgb",      name: "Luces RGB",                          icon: "Lightbulb", order: 4 },
+  { id: "svc-roboticas",      name: "Iluminación Robótica",                icon: "Zap",       order: 5 },
+  { id: "svc-templete",       name: "Templete",                            icon: "Star",      order: 6 },
+  { id: "svc-pantalla-led",   name: "Pantalla LED",                        icon: "Monitor",   order: 7 },
+  { id: "svc-4-musicos",      name: "4 músicos",                           icon: "Users",     order: 8 },
+  { id: "svc-staff",          name: "Staff técnico",                       icon: "Users",     order: 9 },
+  { id: "svc-2-sets",         name: "2 sets",                              icon: "Mic2",      order: 10 },
+  { id: "svc-todo-essential", name: "Todo lo de Essential",                icon: "Check",     order: 11 },
+  { id: "svc-todo-experience",name: "Todo lo de Experience",               icon: "Check",     order: 12 },
+]
+
+const PACKAGE_TO_SERVICE: Record<string, string[]> = {
+  "61a5477c-de10-4788-a8bd-1dfa8b57d256": [ // Essential
+    "svc-audio-ev", "svc-backline", "svc-luces-rgb", "svc-4-musicos", "svc-staff", "svc-2-sets",
+  ],
+  "clx-experience-id": [ // Experience
+    "svc-todo-essential", "svc-audio-pro",
+  ],
+  "4e3406f6-cb05-4cf4-805b-24b5cd9c2b62": [ // Festival Premium
+    "svc-todo-experience", "svc-templete", "svc-pantalla-led", "svc-roboticas",
+  ],
+}
+
 async function main() {
   console.log("🎸 Restaurando paquetes históricos...")
 
@@ -83,6 +112,23 @@ async function main() {
       create: { ...e },
     })
     console.log(`  ➕ ${e.name} (${e.packageId.slice(0, 8)}…)`)
+  }
+
+  for (const s of SERVICE_ITEMS) {
+    await prisma.serviceItem.upsert({
+      where:  { id: s.id },
+      update: { ...s, category: "Inclusión", active: true },
+      create: { ...s, category: "Inclusión", active: true },
+    })
+  }
+  console.log(`  📋 ${SERVICE_ITEMS.length} ServiceItems en catálogo`)
+
+  for (const [pkgId, serviceIds] of Object.entries(PACKAGE_TO_SERVICE)) {
+    await prisma.package.update({
+      where: { id: pkgId },
+      data:  { serviceItems: { set: serviceIds.map(id => ({ id })) } },
+    })
+    console.log(`  🔗 ${pkgId.slice(0, 8)}… → ${serviceIds.length} bullets`)
   }
 
   await prisma.globalConfig.upsert({

@@ -69,9 +69,9 @@ export default async function HomePage() {
   })
 
   const dbPackages = await db.package.findMany({
-    where: { active: true },
+    where: { active: true, NOT: { isCustom: true } },
     include: { serviceItems: { orderBy: { order: "asc" } } },
-    orderBy: { createdAt: "asc" }
+    orderBy: { baseCostPerHour: "asc" }
   })
 
   return (
