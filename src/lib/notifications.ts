@@ -288,9 +288,15 @@ export async function sendWhatsApp(to: string, message: string): Promise<string 
  * Notifica a todos los músicos base sobre un nuevo Gig
  * Guarda el log de cada notification en la BD
  */
-export async function notifyMusicians(eventId: string, gig: GigDetails, db: any) {
+export async function notifyMusicians(eventId: string, gig: GigDetails, db: any, musicianIds?: string[]) {
+  const whereClause: any = { phone: { not: null } }
+  
+  if (musicianIds && musicianIds.length > 0) {
+    whereClause.id = { in: musicianIds }
+  }
+
   const musicians = await db.musicianProfile.findMany({
-    where: { phone: { not: null } },
+    where: whereClause,
     include: { user: true },
   })
 

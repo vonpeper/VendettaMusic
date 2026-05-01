@@ -61,3 +61,26 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
     return { success: false, error: "Error al actualizar el estado." }
   }
 }
+
+export async function markBookingAsPaidAction(bookingId: string) {
+  try {
+    const booking = await db.bookingRequest.update({
+      where: { id: bookingId },
+      data: { paymentStatus: "paid" }
+    })
+
+    if (booking.eventId) {
+      await db.event.update({
+        where: { id: booking.eventId },
+        data: { balance: 0 }
+      })
+    }
+
+    revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    return { success: true }
+  } catch (error) {
+    console.error("Error marking booking as paid:", error)
+    return { success: false, error: "Error al liquidar el pago." }
+  }
+}

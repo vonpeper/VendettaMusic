@@ -2,23 +2,38 @@
 
 import { useState } from "react"
 import { Button }   from "@/components/ui/button"
-import { Check, X, Loader2 } from "lucide-react"
+import { Check, X, Loader2, Users, Send } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 
 export function BookingActions({ 
   bookingId, 
   clientName, 
+  musicians = [],
   forceSync = false 
 }: { 
   bookingId: string; 
   clientName: string;
+  musicians?: any[];
   forceSync?: boolean;
 }) {
   const [note,    setNote]    = useState("")
   const [loading, setLoading] = useState<"confirm" | "reject" | "sync" | null>(null)
   const [done,    setDone]    = useState(false)
+  const [selectedMusicians, setSelectedMusicians] = useState<string[]>(
+    musicians
+      .filter(m => !["Ingeniero de Audio", "Técnico", "Staff", "Proveedor"].includes(m.instrument || ""))
+      .map(m => m.id)
+  )
   const router = useRouter()
+
+  const toggleMusician = (id: string) => {
+    setSelectedMusicians(prev => 
+      prev.includes(id) ? prev.filter(mid => mid !== id) : [...prev, id]
+    )
+  }
 
   async function handleAction(action: "confirm" | "reject" | "sync") {
     const actionToApi = action === "sync" ? "confirm" : action
@@ -27,7 +42,12 @@ export function BookingActions({
       const res  = await fetch("/api/booking", {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ bookingId, action: actionToApi, adminNote: note })
+        body:    JSON.stringify({ 
+          bookingId, 
+          action: actionToApi, 
+          adminNote: note,
+          musicianIds: action === "confirm" ? selectedMusicians : undefined
+        })
       })
       const json = await res.json()
       if (json.success) {
@@ -69,6 +89,37 @@ export function BookingActions({
 
   return (
     <div className="space-y-4">
+      <div className="space-y-3 pb-2">
+        <div className="flex items-center justify-between px-1">
+          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <Users className="w-3 h-3" /> Convocar Músicos (WhatsApp)
+          </label>
+          <span className="text-[10px] font-bold text-primary">{selectedMusicians.length} Seleccionados</span>
+        </div>
+        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1 scrollbar-hide">
+          {musicians.map(m => {
+            const isSelected = selectedMusicians.includes(m.id)
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => toggleMusician(m.id)}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold transition-all",
+                  isSelected 
+                    ? "bg-primary/20 border-primary text-primary" 
+                    : "bg-background border-border/40 text-muted-foreground opacity-60 hover:opacity-100"
+                )}
+              >
+                {m.name.split(' ')[0]} 
+                <span className="opacity-50 font-normal">({m.instrument || 'Músico'})</span>
+                {isSelected && <Check className="w-2.5 h-2.5" />}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       <div className="space-y-2">
         <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">Notas Administrativas</label>
         <textarea

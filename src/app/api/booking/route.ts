@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
 // Confirmar booking (llamado desde admin)
 export async function PATCH(req: NextRequest) {
   try {
-    const { bookingId, action, adminNote } = await req.json()
+    const { bookingId, action, adminNote, musicianIds } = await req.json()
 
     const booking = await db.bookingRequest.findUnique({ where: { id: bookingId } })
     if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 })
@@ -222,7 +222,7 @@ export async function PATCH(req: NextRequest) {
         packageName:      booking.packageName,
         isPublic:         booking.isPublic,
       }
-      await notifyMusiciansFunnel(event.id, gig)
+      await notifyMusiciansFunnel(event.id, gig, musicianIds)
       
       // 6. Notificar al CLIENTE (Cierre de venta)
       await notifyClientBookingClosed(booking).catch(e => console.error("Error notificado cliente closure:", e))
@@ -362,9 +362,15 @@ export async function DELETE(req: NextRequest) {
   }
 }
 
-async function notifyMusiciansFunnel(eventId: string, gig: any) {
+async function notifyMusiciansFunnel(eventId: string, gig: any, musicianIds?: string[]) {
+  const whereClause: any = { whatsapp: { not: null } }
+  
+  if (musicianIds && musicianIds.length > 0) {
+    whereClause.id = { in: musicianIds }
+  }
+
   const musicians = await db.musicianProfile.findMany({
-    where: { whatsapp: { not: null } },
+    where: whereClause,
     include: { user: true }
   })
 

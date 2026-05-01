@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { BookingActions } from "@/components/admin/BookingActions"
 import { AdminManagementTools } from "@/components/admin/AdminManagementTools"
+import { LiquidarButton } from "@/components/admin/LiquidarButton"
 import { 
   ArrowLeft, 
   Calendar, 
@@ -70,6 +71,10 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
   }
 
   const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const musicians = await db.musicianProfile.findMany({
+    where: { whatsapp: { not: null } },
+    orderBy: { instrument: 'asc' }
+  })
 
   if (!booking) notFound()
 
@@ -235,6 +240,9 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                     Referencia de pago: {booking.paymentRef}
                   </div>
                 )}
+                {booking.paymentStatus === "pendiente" && (
+                  <LiquidarButton bookingId={booking.id} />
+                )}
               </CardContent>
             </Card>
           </div>
@@ -287,7 +295,11 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   <CardTitle className="text-sm font-bold text-yellow-400 uppercase tracking-widest">Acciones Administrativas</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BookingActions bookingId={booking.id} clientName={booking.clientName} />
+                  <BookingActions 
+                    bookingId={booking.id} 
+                    clientName={booking.clientName} 
+                    musicians={musicians}
+                  />
                 </CardContent>
               </Card>
             )}
