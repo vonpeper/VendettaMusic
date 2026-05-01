@@ -4,10 +4,10 @@ import { redirect } from "next/navigation"
 export default async function ConfirmGoPage({
   params,
 }: {
-  params: { musicianId: string; eventId: string };
+  params: Promise<{ musicianId: string; eventId: string }>;
 }) {
-  const { musicianId, eventId } = params
-  
+  const { musicianId, eventId } = await params
+
   await confirmAttendanceAction(musicianId, eventId)
   
   redirect(`/confirmar/${musicianId}/${eventId}?success=true`)

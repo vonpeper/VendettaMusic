@@ -475,6 +475,7 @@ model GlobalConfig {
   evolutionUrl          String?
   evolutionApiKey       String?
   evolutionInstance     String?   @default("vendetta_admin")
+  adminWhatsapp         String?
   facebookUrl           String?
   instagramUrl          String?
   tiktokUrl             String?

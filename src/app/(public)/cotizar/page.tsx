@@ -26,7 +26,10 @@ export default async function CotizarPage({ searchParams }: Props) {
       initialStep={initialStep}
       initialPkgId={params.pkg}
       initialCity={params.city}
-      viaticosConfig={{}}
+      viaticosConfig={{
+        zona2Rate: config?.zona2Rate || undefined,
+        zona3Rate: config?.zona3Rate || undefined,
+      }}
     />
   )
 }

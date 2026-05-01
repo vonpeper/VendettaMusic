@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
-import { notifyWhatsApp, notifyClientBookingClosed } from "@/lib/notifications"
+import { notifyWhatsApp, notifyClientBookingClosed, notifyMusicians } from "@/lib/notifications"
 import { calcularViatcos } from "@/lib/viaticos"
 import { findOrCreateClient } from "@/lib/clients"
 import { formatDateMX } from "@/lib/utils"
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     console.log("✅ Booking creado exitosamente:", booking.id, "shortId:", shortId)
 
     try {
-      const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER
+      const adminPhone = config?.adminWhatsapp || process.env.ADMIN_WHATSAPP_NUMBER
       if (adminPhone) {
         const baseUrl = getAppUrl()
         const adminLink = `${baseUrl}/admin/bookings/${booking.id}`
@@ -225,7 +225,24 @@ export async function PATCH(req: NextRequest) {
         data:  { eventId: event.id }
       })
 
-      // 5. Notificar a los músicos
+      // 5. Crear filas EventMusician para los músicos convocados
+      //    (necesario para que /confirmar/<musicianId>/<eventId> y el webhook "CONFIRMO" puedan marcarlos)
+      const targetMusicianIds: string[] = Array.isArray(musicianIds) && musicianIds.length > 0
+        ? musicianIds
+        : (await db.musicianProfile.findMany({
+            where: { whatsapp: { not: null } },
+            select: { id: true },
+          })).map(m => m.id)
+
+      for (const mId of targetMusicianIds) {
+        await db.eventMusician.upsert({
+          where:  { id: `${event.id}-${mId}` }, // determinístico → idempotente
+          create: { id: `${event.id}-${mId}`, eventId: event.id, musicianId: mId, status: "pending" },
+          update: { status: "pending" },
+        }).catch(e => console.error("EventMusician upsert:", e))
+      }
+
+      // 6. Notificar a los músicos (template + confirmLink por músico) — único lugar central
       const gig = {
         clientName:       booking.clientName,
         date:             booking.requestedDate,
@@ -237,9 +254,10 @@ export async function PATCH(req: NextRequest) {
         packageName:      booking.packageName,
         isPublic:         booking.isPublic,
       }
-      await notifyMusiciansFunnel(event.id, gig, musicianIds)
+      await notifyMusicians(event.id, gig, db, targetMusicianIds)
+        .catch(e => console.error("notifyMusicians:", e))
       
-      // 6. Notificar al CLIENTE (Cierre de venta)
+      // 7. Notificar al CLIENTE (Cierre de venta)
       await notifyClientBookingClosed(booking).catch(e => console.error("Error notificado cliente closure:", e))
 
       return NextResponse.json({ success: true, eventId: event.id })
@@ -381,39 +399,3 @@ export async function DELETE(req: NextRequest) {
   }
 }
 
-async function notifyMusiciansFunnel(eventId: string, gig: any, musicianIds?: string[]) {
-  const whereClause: any = { whatsapp: { not: null } }
-  
-  if (musicianIds && musicianIds.length > 0) {
-    whereClause.id = { in: musicianIds }
-  }
-
-  const musicians = await db.musicianProfile.findMany({
-    where: whereClause,
-    include: { user: true }
-  })
-
-  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
-  const template = config?.msgTemplateGig || `🎸 *NUEVO GIG — VENDETTA* 🎸\n\n📅 *Fecha:* {{date}}\n👤 *Cliente:* {{clientName}}\n🎉 *Tipo de evento:* {{ceremony}}\n📍 *Ubicación:* {{location}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n📝 *Notas:* {{notes}}\n\n{{confirmLink}}\n— Administración Vendetta`
-
-  for (const m of musicians) {
-    const phone = m.whatsapp ?? m.phone
-    if (!phone) continue
-    
-    await notifyWhatsApp({
-      to: phone,
-      type: "gig_created",
-      data: {
-        clientName:       gig.clientName,
-        date:             formatDateMX(gig.date, "EEEE, d 'de' MMMM, yyyy"),
-        ceremony:         gig.isPublic ? "Evento Público" : "Evento Privado",
-        location:         gig.locationAddress || gig.locationName || "Por confirmar",
-        time:             `${gig.performanceStart} — ${gig.performanceEnd} hrs`,
-        package:          gig.packageName || "Por confirmar",
-        notes:            "Nuevas fechas disponibles.",
-        confirmLink:      ""
-      },
-      eventId
-    })
-  }
-}
