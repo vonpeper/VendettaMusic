@@ -91,6 +91,12 @@ export default async function AdminConfiguracionPage() {
                     <Input id="instance" name="instance" defaultValue={config?.evolutionInstance || "vendetta_admin"}
                       placeholder="vendetta_admin" className="bg-card border-border/40" />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="adminWhatsapp">WhatsApp del Administrador</Label>
+                    <Input id="adminWhatsapp" name="adminWhatsapp" defaultValue={config?.adminWhatsapp || ""}
+                      placeholder="5217221234567 (E.164 sin +)" className="bg-card border-border/40" />
+                    <p className="text-[10px] text-muted-foreground">Recibe avisos cuando un cliente confirma un evento desde el funnel.</p>
+                  </div>
                   <Button type="submit" className="w-full bg-green-600 hover:bg-green-500 font-bold mt-2 text-white">
                     Guardar Configuración WhatsApp
                   </Button>

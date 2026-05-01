@@ -71,10 +71,18 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
   }
 
   const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
-  const musicians = await db.musicianProfile.findMany({
+  const musicianProfiles = await db.musicianProfile.findMany({
     where: { whatsapp: { not: null } },
+    include: { user: true },
     orderBy: { instrument: 'asc' }
   })
+
+  // Aplanar para BookingActions (espera m.name, m.instrument)
+  const musicians = musicianProfiles.map(m => ({
+    id:         m.id,
+    name:       m.user?.name || "Músico",
+    instrument: m.instrument || null,
+  }))
 
   if (!booking) notFound()
 

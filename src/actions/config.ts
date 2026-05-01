@@ -104,9 +104,10 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
     const url = formData.get("url") as string
     const apiKey = formData.get("apiKey") as string
     const instance = formData.get("instance") as string
+    const adminWhatsapp = (formData.get("adminWhatsapp") as string || "").replace(/\D/g, "") || null
 
     const existing = await db.globalConfig.findUnique({ where: { id: "singleton" } })
-    
+
     // Si el valor llega vacío, lo guardamos como null o vacío
     // Si llega con asteriscos, mantenemos el valor anterior
     let finalApiKey = apiKey?.trim() || ""
@@ -120,12 +121,14 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
         evolutionUrl: url,
         evolutionApiKey: finalApiKey,
         evolutionInstance: instance,
+        adminWhatsapp,
       },
       create: {
         id: "singleton",
         evolutionUrl: url,
         evolutionApiKey: finalApiKey,
         evolutionInstance: instance,
+        adminWhatsapp,
       }
     })
 
