@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 
 export async function submitReviewAction(formData: FormData) {
   const name = formData.get("name")?.toString() || ""
+  const event = formData.get("event")?.toString() || ""
   const text = formData.get("text")?.toString() || ""
   const starsStr = formData.get("stars")?.toString() || "5"
   
@@ -18,6 +19,7 @@ export async function submitReviewAction(formData: FormData) {
     await db.review.create({
       data: {
         name,
+        event,
         text,
         stars,
         status: "pending" // Requiere aprobación del admin

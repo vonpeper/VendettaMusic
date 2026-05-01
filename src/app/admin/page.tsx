@@ -320,7 +320,12 @@ export default async function AdminDashboardPage() {
                   const daysAgo = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
 
                   return (
-                    <div key={q.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/10 hover:border-primary/30 hover:bg-white transition-all shadow-sm group">
+                    <Link 
+                      key={q.id} 
+                      href={`/admin/ventas/${q.id}`}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/10 hover:border-primary/30 hover:bg-white transition-all shadow-sm group cursor-pointer no-underline text-inherit active:scale-[0.98]"
+                      title="Ver detalles de la negociación"
+                    >
                       <div className="w-10 h-10 rounded-lg bg-white border border-border/40 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
                         <FileText className="w-4 h-4 text-primary" />
                       </div>
@@ -333,7 +338,7 @@ export default async function AdminDashboardPage() {
                           {dateInfo ? ` · ${formatDateMX(dateInfo, "d MMM")}` : ""}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end shrink-0">
+                      <div className="flex flex-col items-end shrink-0 gap-1">
                         <div className="text-xs font-black text-foreground">
                           {MXN(amount)}
                         </div>
@@ -345,7 +350,7 @@ export default async function AdminDashboardPage() {
                           currentCount={(q as any).followUpCount || 0}
                         />
                       </div>
-                    </div>
+                    </Link>
                   )
                 })}
               </div>

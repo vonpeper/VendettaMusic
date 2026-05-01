@@ -220,6 +220,7 @@ model Review {
   id        String   @id @default(uuid())
   name      String
   stars     Int      @default(5)
+  event     String?
   text      String
   status    String   @default("approved")
   createdAt DateTime @default(now())

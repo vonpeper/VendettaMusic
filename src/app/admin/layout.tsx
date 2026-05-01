@@ -41,6 +41,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/eventos" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group">
             <Calendar className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Shows / Eventos
           </Link>
+          <Link href="/admin/eventualidades" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group">
+            <TrendingUp className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Eventualidades
+          </Link>
           
           {isAdmin && (
             <>

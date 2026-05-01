@@ -38,38 +38,7 @@ const BADGES = [
 
 
 
-const REVIEWS = [
-  {
-    name: "Juan Pablo S.",
-    event: "Evento Corporativo · WTC México",
-    stars: 5,
-    text: "Contratamos a Vendetta para el cierre de nuestro congreso en el WTC CDMX. Impecables en puntualidad, presentación y ejecución. Muy recomendados.",
-  },
-  {
-    name: "Laura M.",
-    event: "XV Años · Toluca",
-    stars: 5,
-    text: "El show fue espectacular. No solo tocan bien, también saben conectar con el público. Fue la parte favorita de todos los invitados.",
-  },
-  {
-    name: "Harley-Davidson Toluca",
-    event: "Evento de Marca · Día Internacional de la Mujer",
-    stars: 5,
-    text: "La banda se integró perfectamente a la atmósfera del evento. Rock en vivo de primer nivel. Vendetta fue el alma de la noche.",
-  },
-  {
-    name: "Rodrigo P.",
-    event: "Cumpleaños · Ocoyoacac",
-    stars: 5,
-    text: "Todo perfecto desde la logística hasta el show. Vinieron con todo el equipo de audio y luz. No tuve que preocuparme por nada. 100% recomendado.",
-  },
-  {
-    name: "Ana C.",
-    event: "Boda · Valle de Bravo",
-    stars: 5,
-    text: "Me sorprendió la variedad de repertorio y lo bien que se adaptaron al ambiente. Todos mis invitados me preguntaron quiénes eran. ¡Volveremos a contratarlos!",
-  },
-]
+// Reviews are now managed in the database via /admin/testimoniales
 
 const CLIENTS = [
   "WTC México", "COMEXANE A.C", "Secretaría de Salud Edomex",
@@ -331,7 +300,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {([...liveDbReviews, ...REVIEWS].slice(0, 9)).map((r, i) => (
+            {liveDbReviews.slice(0, 9).map((r, i) => (
               <div
                 key={r.id || i}
                 className={`group relative bg-card/40 border border-white/5 rounded-[3rem] p-10 hover:border-primary/40 transition-all duration-500 ${

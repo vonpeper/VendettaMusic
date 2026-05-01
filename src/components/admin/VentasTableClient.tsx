@@ -1,10 +1,38 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import Link from "next/link"
+import { 
+  Loader2, 
+  Trash2, 
+  AlertTriangle, 
+  CheckSquare, 
+  Square, 
+  Calendar, 
+  ChevronRight 
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { 
+  Dialog, 
+  DialogTrigger, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogClose 
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { formatDateMX, formatCurrency } from "@/lib/utils"
 import { updateBookingStatusAction } from "@/actions/ventas"
+import { FollowUpButton } from "./FollowUpButton"
 
 interface Booking {
   id: string

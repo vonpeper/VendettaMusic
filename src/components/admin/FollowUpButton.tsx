@@ -19,7 +19,11 @@ export function FollowUpButton({ id, type, phone, clientName, currentCount, temp
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleFollowUp = async () => {
+  const handleFollowUp = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation()
+      e.preventDefault()
+    }
     setLoading(true)
     try {
       // 1. Increment counter in DB

@@ -19,6 +19,7 @@ export function ReviewModal() {
   async function handleSubmit(formData: FormData) {
     setLoading(true)
     formData.append("stars", stars.toString())
+    // event is handled by formData automatically if named correctly
     
     const result = await submitReviewAction(formData)
     
@@ -114,6 +115,13 @@ export function ReviewModal() {
                         name="name"
                         placeholder="Tu Nombre o el de tu Evento"
                         required
+                        disabled={loading}
+                        className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary/50 uppercase text-xs font-bold tracking-widest"
+                      />
+
+                      <Input
+                        name="event"
+                        placeholder="¿Qué evento fue? (ej. Boda en Valle)"
                         disabled={loading}
                         className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary/50 uppercase text-xs font-bold tracking-widest"
                       />

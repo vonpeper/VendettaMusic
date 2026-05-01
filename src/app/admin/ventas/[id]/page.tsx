@@ -31,9 +31,43 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", {
 
 export default async function DetalleSolicitudPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const booking = await db.bookingRequest.findUnique({
+  
+  // Intentar buscar en BookingRequest (Web / Manual Moderno)
+  let booking = await db.bookingRequest.findUnique({
     where: { id: id }
   })
+
+  // Si no se encuentra, intentar buscar en Quote (Legacy)
+  if (!booking) {
+    const quote = await db.quote.findUnique({
+      where: { id: id },
+      include: { client: { include: { user: true } } }
+    })
+    
+    if (quote) {
+      // Mapear Quote Legacy a estructura de Booking para la vista
+      booking = {
+        id: quote.id,
+        shortId: (quote as any).shortId || quote.id.slice(0, 8).toUpperCase(),
+        clientName: quote.client?.user?.name || "Cliente Legacy",
+        clientEmail: (quote as any).clientEmail || quote.client?.user?.email || "",
+        clientPhone: (quote as any).clientPhone || "",
+        status: quote.status,
+        packageName: quote.packageId || "Paquete Personalizado",
+        requestedDate: quote.eventDate,
+        startTime: quote.startTime || "00:00",
+        endTime: quote.endTime || "00:00",
+        address: quote.location || "Dirección no especificada",
+        city: "",
+        state: "",
+        baseAmount: quote.totalEstimated,
+        depositAmount: 0,
+        paymentStatus: "pendiente",
+        createdAt: quote.createdAt,
+        source: "legacy",
+      } as any
+    }
+  }
 
   const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
 

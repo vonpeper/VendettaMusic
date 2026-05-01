@@ -9,6 +9,7 @@ import { formatDateMX } from "@/lib/utils"
 interface Review {
   id: string
   name: string
+  event?: string
   stars: number
   text: string
   status: string
@@ -138,7 +139,12 @@ function ReviewCard({ review, loading, onApprove, onReject, onDelete }: any) {
         </div>
         <div>
           <div className="text-xs font-black text-foreground uppercase tracking-tight">{review.name}</div>
-          <div className="flex items-center gap-2 mt-0.5">
+          {review.event && (
+            <div className="text-[9px] text-primary font-black uppercase tracking-widest leading-none mt-0.5">
+              {review.event}
+            </div>
+          )}
+          <div className="flex items-center gap-2 mt-1.5">
              <Clock className="w-2.5 h-2.5 text-muted-foreground" />
              <span className="text-[10px] text-muted-foreground font-medium">{formatDateMX(review.createdAt, "d MMM, HH:mm")}</span>
              <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest ${
