@@ -55,7 +55,7 @@ function Button({
       {
         className: cn(buttonVariants({ variant, size }), className),
         "data-slot": "button",
-      },
+      } as any,
       props
     ),
     render: asChild ? props.children as any : render,

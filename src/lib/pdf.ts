@@ -9,7 +9,7 @@ export async function downloadContractPdf(data: FunnelData, filename: string) {
     const pdfBytes = await generateContractPdf(data, data.shortId)
     
     // Crear un Blob y trigger de descarga
-    const blob = new Blob([pdfBytes], { type: "application/pdf" })
+    const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" })
     const link = document.createElement("a")
     link.href = URL.createObjectURL(blob)
     link.download = filename

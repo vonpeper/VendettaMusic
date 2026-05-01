@@ -2,8 +2,15 @@ import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 import { findOrCreateClient } from "@/lib/clients"
 import crypto from "crypto"
+import { auth } from "@/lib/auth"
+
+const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
 
 export async function POST(req: NextRequest) {
+  const session = await auth()
+  if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   try {
     const data = await req.json()
     const {

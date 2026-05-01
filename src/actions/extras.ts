@@ -2,6 +2,17 @@
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/lib/auth"
+
+const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
+
+async function requireAdmin() {
+  const session = await auth()
+  if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
+    return { success: false as const, error: "No autorizado" }
+  }
+  return null
+}
 
 export async function createExtraAction(data: {
   name: string
@@ -9,6 +20,7 @@ export async function createExtraAction(data: {
   setupCost: number
   hourlyCost: number
 }) {
+  const u = await requireAdmin(); if (u) return u
   try {
     // Buscamos o creamos el paquete "Arma tu Show" que actúa como contenedor global de extras
     let armaPackage = await db.package.findFirst({
@@ -46,6 +58,7 @@ export async function createExtraAction(data: {
 }
 
 export async function updateExtraAction(id: string, data: any) {
+  const u = await requireAdmin(); if (u) return u
   try {
     await db.packageService.update({
       where: { id },
@@ -60,6 +73,7 @@ export async function updateExtraAction(id: string, data: any) {
 }
 
 export async function deleteExtraAction(id: string) {
+  const u = await requireAdmin(); if (u) return u
   try {
     await db.packageService.delete({ where: { id } })
     revalidatePath("/admin/paquetes")

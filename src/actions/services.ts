@@ -2,6 +2,17 @@
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/lib/auth"
+
+const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
+
+async function requireAdmin() {
+  const session = await auth()
+  if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
+    return { success: false as const, error: "No autorizado" }
+  }
+  return null
+}
 
 export async function createServiceItemAction(data: {
   name: string
@@ -10,6 +21,7 @@ export async function createServiceItemAction(data: {
   description?: string
   order?: number
 }) {
+  const u = await requireAdmin(); if (u) return u
   try {
     await db.serviceItem.create({
       data: {
@@ -27,6 +39,7 @@ export async function createServiceItemAction(data: {
 }
 
 export async function updateServiceItemAction(id: string, data: any) {
+  const u = await requireAdmin(); if (u) return u
   try {
     await db.serviceItem.update({
       where: { id },
@@ -42,6 +55,7 @@ export async function updateServiceItemAction(id: string, data: any) {
 }
 
 export async function deleteServiceItemAction(id: string) {
+  const u = await requireAdmin(); if (u) return u
   try {
     await db.serviceItem.delete({ where: { id } })
     revalidatePath("/admin/servicios")
@@ -54,6 +68,7 @@ export async function deleteServiceItemAction(id: string) {
 }
 
 export async function linkServiceToPackageAction(packageId: string, serviceId: string) {
+  const u = await requireAdmin(); if (u) return u
   try {
     await db.package.update({
       where: { id: packageId },
@@ -72,6 +87,7 @@ export async function linkServiceToPackageAction(packageId: string, serviceId: s
 }
 
 export async function unlinkServiceFromPackageAction(packageId: string, serviceId: string) {
+  const u = await requireAdmin(); if (u) return u
   try {
     await db.package.update({
       where: { id: packageId },

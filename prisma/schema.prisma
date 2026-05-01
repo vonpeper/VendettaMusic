@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -321,16 +320,26 @@ model Event {
 }
 
 model Payment {
-  id        String   @id @default(uuid())
-  eventId   String
-  amount    Float
-  method    String
-  status    String   @default("pending")
-  reference String?
-  proofUrl  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  id                    String   @id @default(uuid())
+  eventId               String?
+  bookingRequestId      String?
+  amount                Float
+  currency              String   @default("MXN")
+  method                String
+  provider              String?
+  status                String   @default("pending")
+  reference             String?
+  proofUrl              String?
+  receiptUrl            String?
+  stripeSessionId       String?  @unique
+  stripePaymentIntentId String?  @unique
+  stripeChargeId        String?
+  stripeCustomerId      String?
+  rawPayload            String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @default(now()) @updatedAt
+  event                 Event?            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  bookingRequest        BookingRequest?   @relation(fields: [bookingRequestId], references: [id], onDelete: SetNull)
 }
 
 model Contract {
@@ -352,7 +361,7 @@ model Notification {
   recipient String?
   message   String
   status    String   @default("pending")
-  twilioSid String?
+  messageId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
@@ -405,8 +414,11 @@ model BookingRequest {
   hasTemplete         Boolean?       @default(false)
   hasPista            Boolean?       @default(false)
   hasRobot            Boolean?       @default(false)
+  stripeSessionId       String?      @unique
+  stripePaymentIntentId String?
   client              ClientProfile? @relation(fields: [clientId], references: [id])
   event               Event?         @relation(fields: [eventId], references: [id])
+  payments            Payment[]
 }
 
 model Rehearsal {
@@ -455,9 +467,6 @@ model EventMusician {
 
 model GlobalConfig {
   id                    String    @id @default("singleton")
-  twilioSid             String?
-  twilioToken           String?
-  twilioNumber          String?
   googleClientId        String?
   googleClientSecret    String?
   googleRefreshToken    String?
@@ -475,6 +484,13 @@ model GlobalConfig {
   msgTemplateEventClose String?
   zona2Rate             Float?    @default(1500.0)
   zona3Rate             Float?    @default(3000.0)
+  // Datos bancarios para transferencias (mostrados sólo tras seleccionar transfer)
+  bankName              String?
+  bankAccount           String?
+  bankClabe             String?
+  bankBeneficiary       String?
+  // Webhook secret de Evolution API (verifica payloads entrantes)
+  evolutionWebhookSecret String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   msgTemplateFollowUp   String?

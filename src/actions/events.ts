@@ -168,7 +168,7 @@ export async function createEventAction(_prev: any, formData: FormData) {
         paymentRef: (data.paymentRef as string) || null,
         ceremonyType: (data.ceremonyType as string) || "show",
         guestCount: parseInt(data.guestCount as string || "0"),
-        location: finalLocationId ? { connect: { id: finalLocationId } } : undefined,
+        locationId: finalLocationId || null,
         performanceStart: (data.performanceStart as string) || null,
         performanceEnd: (data.performanceEnd as string) || null,
         arrivalTime: (data.arrivalTime as string) || null,

@@ -50,7 +50,7 @@ interface Booking {
   clientEmail?: string | null
 }
 
-export function VentasTableClient({ items, followUpTemplate }: { items: Booking[], followUpTemplate?: string }) {
+export function VentasTableClient({ items, followUpTemplate }: { items: Booking[], followUpTemplate?: string | null }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
@@ -244,7 +244,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                         phone={reserva.clientPhone}
                         clientName={reserva.clientName}
                         currentCount={reserva.followUpCount}
-                        template={followUpTemplate}
+                        template={followUpTemplate ?? undefined}
                       />
                     )}
                     <Link href={`/admin/ventas/${reserva.id}`}>

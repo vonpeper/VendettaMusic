@@ -3,6 +3,7 @@ import { MediaManagerClient } from "@/components/admin/MediaManagerClient"
 import { BandMembersManagerClient } from "@/components/admin/BandMembersManagerClient"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Gestión de Medios | Admin Vendetta",

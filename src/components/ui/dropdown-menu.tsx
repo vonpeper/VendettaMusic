@@ -18,7 +18,7 @@ function DropdownMenuTrigger({ asChild, render, ...props }: MenuPrimitive.Trigge
   return (
     <MenuPrimitive.Trigger 
       data-slot="dropdown-menu-trigger" 
-      render={asChild ? props.children as any : render}
+      render={asChild ? (props as any).children : render}
       {...props} 
     />
   )
@@ -125,7 +125,7 @@ function DropdownMenuSubTrigger({
         "flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-popup-open:bg-accent data-popup-open:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
-      render={asChild ? props.children as any : render}
+      render={asChild ? (props as any).children : render}
       {...props}
     >
       {children}
@@ -176,7 +176,7 @@ function DropdownMenuCheckboxItem({
         className
       )}
       checked={checked}
-      render={asChild ? props.children as any : render}
+      render={asChild ? (props as any).children : render}
       {...props}
     >
       <span
@@ -221,7 +221,7 @@ function DropdownMenuRadioItem({
         "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
-      render={asChild ? props.children as any : render}
+      render={asChild ? (props as any).children : render}
       {...props}
     >
       <span

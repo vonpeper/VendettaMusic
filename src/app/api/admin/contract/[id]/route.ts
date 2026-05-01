@@ -2,11 +2,18 @@ import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 import { generateContractPdf } from "@/lib/pdf/contract-generator"
 import { FunnelData } from "@/components/funnel/FunnelWizard"
+import { auth } from "@/lib/auth"
+
+const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await auth()
+  if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   try {
     const { id } = await params
     const booking = await db.bookingRequest.findUnique({
@@ -19,6 +26,8 @@ export async function GET(
 
     // Mapear BookingRequest a FunnelData para el generador
     const funnelData: FunnelData = {
+      bookingId: booking.id,
+      shortId: booking.shortId || "",
       packageId: booking.packageId || "manual-arma",
       packageName: booking.packageName || "Paquete Personalizado",
       packagePrice: booking.baseAmount || 0,
@@ -55,19 +64,18 @@ export async function GET(
       clientName: booking.clientName || "Cliente Genérico",
       clientPhone: booking.clientPhone || "",
       clientEmail: booking.clientEmail || "",
-      adminNote: booking.adminNote || undefined
     }
 
     const isQuote = booking.status === "pendiente"
-    const pdfBytes = await generateContractPdf(funnelData, booking.shortId, { 
-      includeLegal: !isQuote 
+    const pdfBytes = await generateContractPdf(funnelData, booking.shortId || booking.id, {
+      includeLegal: !isQuote
     })
 
     // Crear la respuesta con el PDF
     const prefix = isQuote ? "Cotizacion" : "Contrato"
     const filename = `${prefix}_${booking.shortId}_${booking.clientName.replace(/\s+/g, "_")}.pdf`
     
-    return new NextResponse(pdfBytes, {
+    return new NextResponse(new Uint8Array(pdfBytes) as any, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

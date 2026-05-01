@@ -1,12 +1,12 @@
 /**
- * Generador de mensajes de Gig y cliente de Twilio WhatsApp
- * 
- * Variables de entorno requeridas (agregar al .env cuando tengas cuenta Twilio):
- * TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
- * TWILIO_AUTH_TOKEN=your_auth_token
- * TWILIO_WHATSAPP_FROM=whatsapp:+14155238886  (sandbox) o tu número verificado
+ * Generador de mensajes de Gig y cliente de WhatsApp vía Evolution API v2.
+ *
+ * Configuración (DB > env vars):
+ *   GlobalConfig.evolutionUrl, evolutionApiKey, evolutionInstance
+ *   o EVOLUTION_BASE_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE
  */
 import { formatDateMX } from "./utils"
+import { getAppUrl } from "./url"
 
 export interface GigDetails {
   clientName: string
@@ -64,10 +64,12 @@ export function parseTemplate(template: string, data: Record<string, string>): s
   return result
 }
 
+const DEFAULT_GIG_TEMPLATE = `🎸 *NUEVO GIG — VENDETTA* 🎸\n\n📅 *Fecha:* {{date}}\n👤 *Cliente:* {{clientName}}\n🎉 *Tipo de evento:* {{ceremony}}\n📍 *Ubicación:* {{location}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n📝 *Notas:* {{notes}}\n\n{{confirmLink}}\n— Administración Vendetta`
+
 /**
  * Genera el mensaje de WhatsApp formateado para los músicos basado en la plantilla
  */
-export function buildGigMessage(gig: GigDetails, template: string, musicianId?: string, eventId?: string): string {
+export function buildGigMessage(gig: GigDetails, template: string = DEFAULT_GIG_TEMPLATE, musicianId?: string, eventId?: string): string {
   const dateStr = formatDateMX(gig.date, "EEEE, d 'de' MMMM, yyyy")
 
   const ceremony = gig.ceremonyType
@@ -82,7 +84,7 @@ export function buildGigMessage(gig: GigDetails, template: string, musicianId?: 
     ? `${gig.locationName}${gig.locationAddress ? `, ${gig.locationAddress}` : ""}`
     : "Por confirmar"
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://vendetta.app"
+  const baseUrl = getAppUrl()
   const confirmLink = musicianId && eventId 
     ? `\n✅ *CONFIRMA AQUÍ:* \n${baseUrl}/confirmar/${musicianId}/${eventId}`
     : "\n✅ *CONFIRMACIÓN REQUERIDA:* \nResponde con la palabra *CONFIRMO*."
@@ -109,7 +111,7 @@ export function buildGigMessage(gig: GigDetails, template: string, musicianId?: 
  * Notifica al cliente cuando su reserva ha sido confirmada/agendada
  */
 export async function notifyClientBookingClosed(booking: any) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://vendettalive.com"
+  const baseUrl = getAppUrl()
   const bookingLink = `${baseUrl}/status/${booking.shortId}`
   
   await notifyWhatsApp({
@@ -181,7 +183,7 @@ export async function notifyWhatsApp({
         recipient: to,
         message,
         status:    "sent",
-        twilioSid: messageId,
+        messageId,
       }
     }).catch(e => console.error("Error logging notification:", e))
   }
@@ -190,8 +192,20 @@ export async function notifyWhatsApp({
 }
 
 /**
- * Envía un mensaje de WhatsApp vía Evolution API v2
- * Retorna el ID del mensaje si se envió, o null si no hay credenciales
+ * Normaliza un número MX al formato E.164 sin "+":
+ *  - Quita todo lo que no sea dígito
+ *  - Si tiene 10 dígitos, antepone "52"
+ */
+function normalizeMxPhone(input: string): string {
+  let n = input.replace(/\D/g, "")
+  if (n.length === 10) n = `52${n}`
+  return n
+}
+
+/**
+ * Envía un mensaje de WhatsApp vía Evolution API v2.
+ * Payload v2 plano (number + text). Single auth header (apikey).
+ * Reintento exponencial sólo en 429/5xx.
  */
 export async function sendWhatsApp(to: string, message: string): Promise<string | null> {
   const { db } = await import("./db")
@@ -202,85 +216,93 @@ export async function sendWhatsApp(to: string, message: string): Promise<string 
   const instance = config?.evolutionInstance || process.env.EVOLUTION_INSTANCE || "vendetta_admin"
 
   if (!baseUrl || !apiKey || !baseUrl.startsWith("http")) {
-    console.log("⚠️  Evolution API no configurada o URL inválida. Mensaje listo para enviar manualmente:")
-    console.log("BASE_URL:", baseUrl)
-    console.log("TO:", to)
-    console.log("MSG:", message)
+    console.warn("⚠️  Evolution API no configurada. Mensaje no enviado a", to)
     return null
   }
 
+  const cleanNumber = normalizeMxPhone(to)
+  const url = `${baseUrl.replace(/\/$/, "")}/message/sendText/${encodeURIComponent(instance)}`
+  const payload = {
+    number: cleanNumber,
+    text: message,
+    delay: 1200,
+    linkPreview: true,
+  }
+
+  const headers = {
+    apikey: apiKey,
+    "Content-Type": "application/json",
+  }
+
+  const MAX_ATTEMPTS = 3
+  let lastError: any = null
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(payload) })
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}))
+        const msgId = data.key?.id || data.messageId || data.id || "sent_ok"
+        return msgId
+      }
+      // Reintentamos solo en 429 / 5xx (errores transitorios)
+      if (res.status === 429 || res.status >= 500) {
+        lastError = await res.text().catch(() => res.statusText)
+        if (attempt < MAX_ATTEMPTS) {
+          const backoffMs = 500 * Math.pow(2, attempt - 1) // 500, 1000, 2000
+          await new Promise(r => setTimeout(r, backoffMs))
+          continue
+        }
+      }
+      // 4xx no transitorio: no reintentar
+      const errBody = await res.text().catch(() => res.statusText)
+      console.error(`❌ Evolution API ${res.status}: ${errBody}`)
+      return null
+    } catch (err) {
+      lastError = err
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt - 1)))
+        continue
+      }
+    }
+  }
+  console.error("❌ Evolution API: agotados los reintentos.", lastError)
+  return null
+}
+
+/**
+ * Verifica el estado de conexión de la instancia (cacheado 30s).
+ * Útil para no encolar mensajes a una instancia desconectada.
+ */
+let connectionCache: { ts: number; connected: boolean } | null = null
+export async function isEvolutionConnected(): Promise<boolean> {
+  const now = Date.now()
+  if (connectionCache && now - connectionCache.ts < 30_000) return connectionCache.connected
+
+  const { db } = await import("./db")
+  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const baseUrl  = config?.evolutionUrl || process.env.EVOLUTION_BASE_URL
+  const apiKey   = config?.evolutionApiKey || process.env.EVOLUTION_API_KEY
+  const instance = config?.evolutionInstance || process.env.EVOLUTION_INSTANCE || "vendetta_admin"
+
+  if (!baseUrl || !apiKey) {
+    connectionCache = { ts: now, connected: false }
+    return false
+  }
   try {
-    // Evolution API v2 strict phone number format
-    let cleanNumber = to.replace(/\D/g, "")
-    // Agregamos el prefijo 52 si falta y es número mexicano de 10 dígitos
-    if (cleanNumber.length === 10) cleanNumber = `52${cleanNumber}`
-    
-    // El payload en Evolution API v2 soporta "number", y "text" a la raíz, pero en algunas subversiones requiere "options".
-    // El envío estándar de texto que funciona en la mayoría de forks de v2 es:
-    const payload = {
-      number: cleanNumber,
-      options: {
-        delay: 1200,
-        presence: "composing",
-        linkPreview: true
-      },
-      textMessage: {
-        text: message
-      }
+    const url = `${baseUrl.replace(/\/$/, "")}/instance/connectionState/${encodeURIComponent(instance)}`
+    const res = await fetch(url, { headers: { apikey: apiKey } })
+    if (!res.ok) {
+      connectionCache = { ts: now, connected: false }
+      return false
     }
-
-    // Usamos headers agresivos para soportar auth v1 (apikey) y auth v2 (Bearer)
-    const response = await fetch(`${baseUrl}/message/sendText/${instance}`, {
-      method: 'POST',
-      headers: {
-        'apikey': apiKey,
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    })
-
-    // Fallback: si el server responde 400 por esquema estricto (algunos forks de Evo no soportan textMessage anidado)
-    // Hacemos un re-intento con el formato legacy plano.
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.warn(`⚠️ Intento 1 Evolution API (${response.status}) falló. Intentando formato legacy. Error:`, errorData)
-      
-      const legacyResponse = await fetch(`${baseUrl}/message/sendText/${instance}`, {
-        method: 'POST',
-        headers: {
-          'apikey': apiKey,
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          number: cleanNumber,
-          text: message,
-          delay: 1200,
-          linkPreview: true
-        })
-      })
-
-      if (!legacyResponse.ok) {
-         const legacyError = await legacyResponse.json().catch(() => ({}))
-         console.error(`❌ Error definitivo Evolution API (${legacyResponse.status}):`, legacyError)
-         return null
-      }
-      
-      const data = await legacyResponse.json()
-      const msgId = data.key?.id || data.messageId || data.id || "sent_ok_legacy"
-      console.log(`✅ WhatsApp (Legacy) enviado a ${to} — ID: ${msgId}`)
-      return msgId
-    }
-
-    const data = await response.json()
-    const msgId = data.key?.id || data.messageId || data.id || "sent_ok"
-
-    console.log(`✅ WhatsApp (v2) enviado a ${to} — ID: ${msgId}`)
-    return msgId
-  } catch (err) {
-    console.error(`❌ Error conectando con Evolution API:`, err)
-    return null
+    const data = await res.json().catch(() => ({}))
+    const state = data?.instance?.state || data?.state
+    const connected = state === "open" || state === "connected"
+    connectionCache = { ts: now, connected }
+    return connected
+  } catch {
+    connectionCache = { ts: now, connected: false }
+    return false
   }
 }
 
@@ -316,7 +338,7 @@ export async function notifyMusicians(eventId: string, gig: GigDetails, db: any,
     const ceremony = gig.ceremonyType ? (CEREMONY_LABELS[gig.ceremonyType] ?? gig.ceremonyType) : "Evento"
     const horario = gig.performanceStart ? `${gig.performanceStart}${gig.performanceEnd ? ` — ${gig.performanceEnd}` : ""} hrs` : "Por confirmar"
     const ubicacion = gig.locationName ? `${gig.locationName}${gig.locationAddress ? `, ${gig.locationAddress}` : ""}` : "Por confirmar"
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://vendetta.app"
+    const baseUrl = getAppUrl()
     const confirmLink = `\n✅ *CONFIRMA AQUÍ:* \n${baseUrl}/confirmar/${musician.id}/${eventId}`
     const notesText = gig.musicianNotes ? `${gig.musicianNotes}` : "Ninguna"
     const isPublicText = !gig.isPublic ? `\n⚠️ *AVISO:* EVENTO PRIVADO\n` : ""

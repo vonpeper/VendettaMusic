@@ -9,7 +9,7 @@ import { formatDateMX } from "@/lib/utils"
 interface Review {
   id: string
   name: string
-  event?: string
+  event?: string | null
   stars: number
   text: string
   status: string

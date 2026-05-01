@@ -103,7 +103,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
                 <Bell className="w-3 h-3" />
                 {sendNotif
                   ? "El mensaje fue enviado automáticamente por WhatsApp a los músicos."
-                  : "Twilio no configurado. Copia el mensaje y envíalo manualmente."}
+                  : "Evolution API no configurada. Copia el mensaje y envíalo manualmente."}
               </p>
             </div>
           )}
@@ -365,7 +365,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
             </label>
             <p className="text-[11px] text-muted-foreground mt-2">
               {sendNotif
-                ? "⚠️ Requiere credenciales Twilio en .env — si no están, el mensaje se generará para copiar manualmente."
+                ? "⚠️ Requiere Evolution API configurada — si no lo está, el mensaje se generará para copiar manualmente."
                 : "El mensaje de Gig se generará al guardar para que lo puedas copiar y enviar manualmente."}
             </p>
           </fieldset>

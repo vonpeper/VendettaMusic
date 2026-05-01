@@ -4,6 +4,18 @@ import { notifyWhatsApp, notifyClientBookingClosed } from "@/lib/notifications"
 import { calcularViatcos } from "@/lib/viaticos"
 import { findOrCreateClient } from "@/lib/clients"
 import { formatDateMX } from "@/lib/utils"
+import { auth } from "@/lib/auth"
+import { getAppUrl } from "@/lib/url"
+
+const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
+
+async function requireAdmin() {
+  const session = await auth()
+  if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+  return null
+}
 
 // --- 🛡️ IN-MEMORY RATE LIMITER (Anti-Spam) ---
 const bookingAttempts = new Map<string, { count: number; firstAttempt: number }>()
@@ -89,7 +101,7 @@ export async function POST(req: NextRequest) {
         city:          city || "No especificada",
         state:         state || "México",
         isOutsideZone: Boolean(viaticos.isOutsideZone),
-        viaticosAmount: parseFloat(viaticos.amount) || 0,
+        viaticosAmount: viaticos.amount || 0,
         mapsLink:      mapsLink || null,
         requestedDate: cleanDate,
         startTime:     startTime || "21:00",
@@ -120,7 +132,7 @@ export async function POST(req: NextRequest) {
     try {
       const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER
       if (adminPhone) {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3005"
+        const baseUrl = getAppUrl()
         const adminLink = `${baseUrl}/admin/bookings/${booking.id}`
         
         await notifyWhatsApp({
@@ -157,6 +169,9 @@ export async function POST(req: NextRequest) {
 // Confirmar booking (llamado desde admin)
 export async function PATCH(req: NextRequest) {
   try {
+    const unauthorized = await requireAdmin()
+    if (unauthorized) return unauthorized
+
     const { bookingId, action, adminNote, musicianIds } = await req.json()
 
     const booking = await db.bookingRequest.findUnique({ where: { id: bookingId } })
@@ -229,7 +244,8 @@ export async function PATCH(req: NextRequest) {
 
       return NextResponse.json({ success: true, eventId: event.id })
     }
-    if (action === "reject") {
+
+    if (action === "cancel" || action === "reject") {
       await db.bookingRequest.update({
         where: { id: bookingId },
         data:  { status: "cancelado", adminNote: adminNote || null }
@@ -247,6 +263,9 @@ export async function PATCH(req: NextRequest) {
 // Actualizar campos de la cotización
 export async function PUT(req: NextRequest) {
   try {
+    const unauthorized = await requireAdmin()
+    if (unauthorized) return unauthorized
+
     const { bookingId, ...updates } = await req.json()
 
     // 1. Limpiar data de entrada
@@ -292,9 +311,6 @@ export async function PUT(req: NextRequest) {
           deposit:          booking.depositAmount,
           balance:          booking.baseAmount - booking.depositAmount,
           venueType:        booking.venueType,
-          address:          booking.address,
-          city:             booking.city,
-          state:            booking.state,
           mapsLink:         booking.mapsLink,
           isPublic:         booking.isPublic,
           clientProvidesAudio: booking.clientProvidesAudio,
@@ -312,6 +328,9 @@ export async function PUT(req: NextRequest) {
 // Eliminar/Cancelar cotización
 export async function DELETE(req: NextRequest) {
   try {
+    const unauthorized = await requireAdmin()
+    if (unauthorized) return unauthorized
+
     const { searchParams } = new URL(req.url)
     const idParam = searchParams.get("id")
 

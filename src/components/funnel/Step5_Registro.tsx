@@ -83,14 +83,31 @@ export default function Step5_Registro({ data, onNext, onBack }: Props) {
         setLoading(false)
         return
       }
-      
+
+      // Si eligió Stripe, redirige a Checkout antes de mostrar success.
+      if (data.paymentMethod === "stripe") {
+        const checkout = await fetch("/api/payments/create-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookingId: json.bookingId }),
+        })
+        const cj = await checkout.json()
+        if (!checkout.ok || !cj.url) {
+          setError(cj.error || "No se pudo iniciar el pago en línea.")
+          setLoading(false)
+          return
+        }
+        window.location.href = cj.url
+        return
+      }
+
       // CRITICO: Pasar el shortId que generó la API para que Success lo use
-      onNext({ 
-        clientName: name, 
-        clientPhone: phone, 
-        clientEmail: email, 
+      onNext({
+        clientName: name,
+        clientPhone: phone,
+        clientEmail: email,
         bookingId: json.bookingId,
-        shortId: json.shortId 
+        shortId: json.shortId
       })
     } catch (e) {
       console.error("Submit Error:", e)
