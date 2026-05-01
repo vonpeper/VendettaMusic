@@ -27,9 +27,8 @@ export default async function CotizarPage({ searchParams }: Props) {
       initialPkgId={params.pkg}
       initialCity={params.city}
       viaticosConfig={{
-        gasPrice: config?.gasPrice || undefined,
-        tollsDefault: config?.tollsDefault || undefined,
-        vehicleCount: config?.vehicleCount || undefined
+        zona2Rate: config?.zona2Rate || undefined,
+        zona3Rate: config?.zona3Rate || undefined,
       }}
     />
   )

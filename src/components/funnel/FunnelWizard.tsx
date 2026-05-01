@@ -83,9 +83,8 @@ interface WizardProps {
   initialPkgId?: string
   initialCity?:  string
   viaticosConfig?: {
-    gasPrice?: number
-    tollsDefault?: number
-    vehicleCount?: number
+    zona2Rate?: number
+    zona3Rate?: number
   }
 }
 

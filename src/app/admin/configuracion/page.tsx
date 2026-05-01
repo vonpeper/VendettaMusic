@@ -310,28 +310,6 @@ export default async function AdminConfiguracionPage() {
                     className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
                 </div>
 
-                <div className="space-y-2 pt-4 border-t border-border/10 md:col-span-2">
-                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Parámetros de Cálculo Manual</h3>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="gasPrice" className="text-foreground">Precio Gasolina (Ltr)</Label>
-                  <Input id="gasPrice" name="gasPrice" type="number" step="0.1" 
-                    defaultValue={(config as any)?.gasPrice || 24.5} 
-                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tollCost" className="text-foreground">Costo Casetas (Total Ida/Vuelta)</Label>
-                  <Input id="tollCost" name="tollCost" type="number" step="10" 
-                    defaultValue={(config as any)?.tollCost || 0} 
-                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="vehicleCount" className="text-foreground">Número de Vehículos</Label>
-                  <Input id="vehicleCount" name="vehicleCount" type="number" 
-                    defaultValue={(config as any)?.vehicleCount || 2} 
-                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
-                </div>
                 <div className="md:col-span-2">
                   <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold h-12 text-lg text-white">
                     Actualizar Tarifas

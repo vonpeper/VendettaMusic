@@ -475,9 +475,6 @@ model GlobalConfig {
   msgTemplateEventClose String?
   zona2Rate             Float?    @default(1500.0)
   zona3Rate             Float?    @default(3000.0)
-  gasPrice              Float?    @default(24.5)
-  tollCost              Float?    @default(0)
-  vehicleCount          Int?      @default(2)
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   msgTemplateFollowUp   String?
