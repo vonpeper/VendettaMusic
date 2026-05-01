@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
-import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction } from "@/actions/config"
+import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction, saveBankConfigAction, saveEvolutionWebhookSecretAction } from "@/actions/config"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -204,6 +204,74 @@ export default async function AdminConfiguracionPage() {
                  <Button variant="link" className="p-0 h-auto text-primary font-bold hover:no-underline underline-offset-4 decoration-2">
                    Ver guía de configuración pública →
                  </Button>
+              </div>
+            </section>
+
+            {/* ================ Datos Bancarios (transferencias) ================ */}
+            <section className="space-y-6 mt-8">
+              <div className="bg-card border border-border/40 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                    <Mail className="w-6 h-6 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">Cuenta para transferencia</h2>
+                    <p className="text-[11px] text-muted-foreground">Mostrada al cliente cuando elige "Transferencia" en el funnel.</p>
+                  </div>
+                </div>
+                <ConfigFormWrapper action={saveBankConfigAction} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bankName">Banco</Label>
+                    <Input id="bankName" name="bankName" defaultValue={config?.bankName || ""} className="bg-card border-border/40" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bankAccount">Cuenta</Label>
+                    <Input id="bankAccount" name="bankAccount" defaultValue={config?.bankAccount || ""} className="bg-card border-border/40" />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="bankClabe">CLABE</Label>
+                    <Input id="bankClabe" name="bankClabe" defaultValue={config?.bankClabe || ""} className="bg-card border-border/40 font-mono" />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="bankBeneficiary">Beneficiario</Label>
+                    <Input id="bankBeneficiary" name="bankBeneficiary" defaultValue={config?.bankBeneficiary || ""} className="bg-card border-border/40" />
+                  </div>
+                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold mt-2 text-white md:col-span-2">
+                    Guardar Datos Bancarios
+                  </Button>
+                </ConfigFormWrapper>
+              </div>
+
+              {/* Evolution Webhook Secret */}
+              <div className="bg-card border border-border/40 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center">
+                    <ShieldCheck className="w-6 h-6 text-green-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">Webhook Secret (Evolution)</h2>
+                    <p className="text-[11px] text-muted-foreground">
+                      Secreto compartido para validar webhooks entrantes en
+                      <code className="ml-1 px-1 py-0.5 rounded bg-muted/40 text-[10px]">/api/webhooks/evolution</code>.
+                    </p>
+                  </div>
+                </div>
+                <ConfigFormWrapper action={saveEvolutionWebhookSecretAction} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="evolutionWebhookSecret">Webhook Secret</Label>
+                    <Input
+                      id="evolutionWebhookSecret"
+                      name="evolutionWebhookSecret"
+                      type="password"
+                      defaultValue={config?.evolutionWebhookSecret ? "********" : ""}
+                      placeholder="Mínimo 32 caracteres aleatorios"
+                      className="bg-card border-border/40 font-mono"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold mt-2 text-white">
+                    Guardar Webhook Secret
+                  </Button>
+                </ConfigFormWrapper>
               </div>
             </section>
           </div>

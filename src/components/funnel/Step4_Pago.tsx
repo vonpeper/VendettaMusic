@@ -1,10 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { FunnelData } from "./FunnelWizard"
 import { Button }     from "@/components/ui/button"
 import { CreditCard, Building2, Banknote, Info } from "lucide-react"
 import { Input } from "@/components/ui/input"
+
+interface PaymentInfo {
+  bank: string | null
+  account: string | null
+  clabe: string | null
+  beneficiary: string | null
+}
 
 interface Props {
   data: Partial<FunnelData>
@@ -17,10 +24,10 @@ const MXN = (v: number) =>
 
 const PAYMENT_METHODS = [
   {
-    value: "mercadopago",
-    label: "Mercado Pago",
+    value: "stripe",
+    label: "Tarjeta / OXXO (Stripe)",
     icon:  "💳",
-    desc:  "Pago inmediato con tarjeta, débito o saldo MP. + comisión bancaria.",
+    desc:  "Pago seguro con tarjeta de crédito, débito o ficha OXXO. La reserva se confirma al instante.",
     badge: "En línea",
     badgeColor: "text-blue-400 bg-blue-900/40 border-blue-700/50",
   },
@@ -50,6 +57,15 @@ export default function Step4_Pago({ data, onNext, onBack }: Props) {
   const [method,  setMethod]  = useState<string>(data.paymentMethod ?? "")
   const [deposit, setDeposit] = useState<number>(data.depositAmount ?? minDeposit)
   const [error,   setError]   = useState("")
+  const [bankInfo, setBankInfo] = useState<PaymentInfo | null>(null)
+
+  useEffect(() => {
+    if (method !== "transfer" || bankInfo) return
+    fetch("/api/payment-info")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setBankInfo(d))
+      .catch(() => null)
+  }, [method, bankInfo])
 
   const balance = base - deposit
 
@@ -178,12 +194,16 @@ export default function Step4_Pago({ data, onNext, onBack }: Props) {
       {method === "transfer" && (
         <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 mb-4">
           <p className="text-sm font-bold text-blue-300 mb-2">Cuenta para transferencia:</p>
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Banco:</span><span className="text-white font-bold">BBVA</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Cuenta:</span><span className="text-white font-mono">299 637 6576</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">CLABE:</span><span className="text-white font-mono text-[11px]">012 700 02996376576 4</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Beneficiario:</span><span className="text-white font-bold text-[11px]">JOSÉ ALBERTO BAUTISTA ROMERO PAREDES</span></div>
-          </div>
+          {bankInfo ? (
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Banco:</span><span className="text-white font-bold">{bankInfo.bank ?? "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Cuenta:</span><span className="text-white font-mono">{bankInfo.account ?? "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">CLABE:</span><span className="text-white font-mono text-[11px]">{bankInfo.clabe ?? "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Beneficiario:</span><span className="text-white font-bold text-[11px]">{bankInfo.beneficiary ?? "—"}</span></div>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">Cargando datos bancarios…</p>
+          )}
           <p className="text-[10px] text-muted-foreground mt-2">
             Envía tu comprobante por WhatsApp al completar el registro para validar tu fecha.
           </p>

@@ -20,6 +20,13 @@ interface Location {
   state: string | null
 }
 
+interface Pkg {
+  id: string
+  name: string
+  baseCostPerHour: number
+  minDuration: number
+}
+
 export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -69,7 +76,8 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
     locationId: ""
   })
 
-  const handlePackageChange = (id: string) => {
+  const handlePackageChange = (id: string | null) => {
+    if (!id) return
     const pkg = packages.find(p => p.id === id)
     if (pkg) {
       const price = pkg.baseCostPerHour * pkg.minDuration
@@ -83,7 +91,8 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
     }
   }
 
-  const handleLocationSelect = (id: string) => {
+  const handleLocationSelect = (id: string | null) => {
+    if (!id) return
     const loc = locations.find(l => l.id === id)
     if (loc) {
       // Intentar parsear dirección básica
@@ -327,7 +336,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
               </div>
               <div className="space-y-2">
                 <Label>Tipo de Lugar (Venue)</Label>
-                <Select value={formData.venueType} onValueChange={v => setFormData({...formData, venueType: v})}>
+                <Select value={formData.venueType} onValueChange={v => setFormData({...formData, venueType: v ?? ""})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -392,7 +401,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
               </div>
               <div className="space-y-2">
                 <Label>Método de Pago</Label>
-                <Select value={formData.paymentMethod} onValueChange={v => setFormData({...formData, paymentMethod: v})}>
+                <Select value={formData.paymentMethod} onValueChange={v => setFormData({...formData, paymentMethod: v ?? ""})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

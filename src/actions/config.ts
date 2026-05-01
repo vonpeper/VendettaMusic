@@ -2,40 +2,64 @@
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/lib/auth"
 
-export async function saveTwilioConfigAction(arg1: any, arg2?: any) {
+const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
+
+async function requireAdmin() {
+  const session = await auth()
+  if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
+    return { success: false as const, message: "No autorizado" }
+  }
+  return null
+}
+
+export async function saveBankConfigAction(arg1: any, arg2?: any) {
+  const u = await requireAdmin(); if (u) return u
   try {
-    const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null);
-    if (!formData) return { success: false, message: "Error: No se recibieron datos" };
-
-    const sid = formData.get("sid") as string
-    const token = formData.get("token") as string
-    const fromNumber = formData.get("fromNumber") as string
-
+    const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null)
+    if (!formData) return { success: false, message: "Error: No se recibieron datos" }
+    const bankName        = (formData.get("bankName") as string)        || ""
+    const bankAccount     = (formData.get("bankAccount") as string)     || ""
+    const bankClabe       = (formData.get("bankClabe") as string)       || ""
+    const bankBeneficiary = (formData.get("bankBeneficiary") as string) || ""
     await db.globalConfig.upsert({
       where: { id: "singleton" },
-      update: {
-        twilioSid: sid,
-        twilioToken: token,
-        twilioNumber: fromNumber,
-      },
-      create: {
-        id: "singleton",
-        twilioSid: sid,
-        twilioToken: token,
-        twilioNumber: fromNumber,
-      }
+      update: { bankName, bankAccount, bankClabe, bankBeneficiary },
+      create: { id: "singleton", bankName, bankAccount, bankClabe, bankBeneficiary },
     })
-
     revalidatePath("/admin/configuracion")
-    return { success: true, message: "Configuración de Twilio guardada" }
-  } catch (error) {
-    console.error("Error saving Twilio config:", error)
-    return { success: false, message: "Error al guardar la configuración" }
+    return { success: true, message: "Datos bancarios guardados" }
+  } catch (error: any) {
+    console.error("Error saving bank config:", error)
+    return { success: false, message: `Error: ${error.message}` }
+  }
+}
+
+export async function saveEvolutionWebhookSecretAction(arg1: any, arg2?: any) {
+  const u = await requireAdmin(); if (u) return u
+  try {
+    const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null)
+    if (!formData) return { success: false, message: "Error: No se recibieron datos" }
+    const incoming = (formData.get("evolutionWebhookSecret") as string) || ""
+    if (incoming === "********") {
+      return { success: true, message: "Webhook secret sin cambios" }
+    }
+    await db.globalConfig.upsert({
+      where: { id: "singleton" },
+      update: { evolutionWebhookSecret: incoming || null },
+      create: { id: "singleton", evolutionWebhookSecret: incoming || null },
+    })
+    revalidatePath("/admin/configuracion")
+    return { success: true, message: "Webhook secret guardado" }
+  } catch (error: any) {
+    console.error("Error saving evolution webhook secret:", error)
+    return { success: false, message: `Error: ${error.message}` }
   }
 }
 
 export async function saveGoogleCredentialsAction(arg1: any, arg2?: any) {
+  const u = await requireAdmin(); if (u) return u
   try {
     const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null);
     if (!formData) return { success: false, message: "Error: No se recibieron datos" };
@@ -68,6 +92,7 @@ export async function saveGoogleCredentialsAction(arg1: any, arg2?: any) {
 }
 
 export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
+  const u = await requireAdmin(); if (u) return u
   try {
     // Detectar si fue llamado con (formData) o (prevState, formData)
     const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null);
@@ -113,6 +138,7 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
 }
 
 export async function saveViaticosConfigAction(arg1: any, arg2?: any) {
+  const u = await requireAdmin(); if (u) return u
   try {
     const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null);
     if (!formData) return { success: false, message: "Error: No se recibieron datos" };
@@ -142,6 +168,7 @@ export async function saveViaticosConfigAction(arg1: any, arg2?: any) {
 }
 
 export async function saveSocialConfigAction(arg1: any, arg2?: any) {
+  const u = await requireAdmin(); if (u) return u
   try {
     const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null);
     if (!formData) return { success: false, message: "Error: No se recibieron datos" };
@@ -178,6 +205,7 @@ export async function saveSocialConfigAction(arg1: any, arg2?: any) {
 }
 
 export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
+  const u = await requireAdmin(); if (u) return u
   try {
     const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null);
     if (!formData) return { success: false, message: "Error: No se recibieron datos" };

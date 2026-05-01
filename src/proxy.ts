@@ -7,14 +7,19 @@ const { auth } = NextAuth(authConfig)
 const publicRoutes = ["/", "/nosotros", "/servicios", "/paquetes", "/repertorio", "/contacto"]
 const authRoutes = ["/auth/login", "/auth/registro"]
 
+// Bots de buscadores y previews que NO debemos geo-bloquear
+// (de lo contrario destruimos SEO y previews de WhatsApp/Twitter/Slack/etc.)
+const BOT_UA_RE = /(googlebot|bingbot|duckduckbot|slurp|baiduspider|yandex|applebot|facebookexternalhit|twitterbot|linkedinbot|telegrambot|whatsapp|discordbot|slackbot|embedly|preview)/i
+
 export default auth((req) => {
   const { nextUrl, headers } = req
 
   // -- 🌍 GEO-BLOCKING: Solo permitir tráfico de México --
   const country = headers.get("cf-ipcountry") || headers.get("x-vercel-ip-country")
-  
-  // Si tenemos el dato del país y no es MX, bloqueamos.
-  if (country && country !== "MX") {
+  const ua = headers.get("user-agent") || ""
+  const isBot = BOT_UA_RE.test(ua)
+
+  if (country && country !== "MX" && !isBot) {
     return new NextResponse("Access Denied: This service is only available in Mexico.", { status: 403 })
   }
 
@@ -37,7 +42,7 @@ export default auth((req) => {
     return NextResponse.next()
   }
 
-  // Rutas protegidas Admin
+  // Rutas protegidas Admin (ADMIN y AGENTE)
   if (nextUrl.pathname.startsWith("/admin")) {
     if (!isLoggedIn) return NextResponse.redirect(new URL("/auth/login", nextUrl))
     if (role !== "ADMIN" && role !== "AGENTE") return NextResponse.redirect(new URL("/", nextUrl))

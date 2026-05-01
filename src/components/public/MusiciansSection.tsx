@@ -11,7 +11,7 @@ interface Musician {
   img: string
   shortBio: string
   fullBio: string
-  ig: string
+  ig: string | null
 }
 
 export function MusiciansSection({ musicians }: { musicians: Musician[] }) {
@@ -38,7 +38,7 @@ export function MusiciansSection({ musicians }: { musicians: Musician[] }) {
                 </div>
                 <h3 className="text-3xl font-heading font-black text-white mb-2">{activeMuso.name}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed mb-6 italic">"{activeMuso.fullBio}"</p>
-                <a href={activeMuso.ig} target="_blank" rel="noopener noreferrer">
+                <a href={activeMuso.ig ?? "#"} target="_blank" rel="noopener noreferrer">
                   <Button className="w-full gap-2 font-bold">
                     <ExternalLink className="w-4 h-4" /> Seguir en Instagram
                   </Button>

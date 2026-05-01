@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
 
 /**
  * MIGRATION UTILITY
@@ -10,6 +11,10 @@ import { NextResponse } from "next/server"
  * rejected  -> cancelado
  */
 export async function GET() {
+  const session = await auth()
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   try {
     const results = {
       bookingRequests: { updated: 0, errors: 0 },

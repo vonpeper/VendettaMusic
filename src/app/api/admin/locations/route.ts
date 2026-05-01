@@ -2,8 +2,22 @@ import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 import fs from "fs"
 import path from "path"
+import { auth } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
+
+const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
+
+async function requireAdmin() {
+  const session = await auth()
+  if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+  return null
+}
 
 const DEBUG_FILE = path.join(process.cwd(), "debug_crash.log")
 
@@ -18,13 +32,11 @@ function logError(context: string, error: any) {
 }
 
 export async function GET() {
+  const unauthorized = await requireAdmin()
+  if (unauthorized) return unauthorized
   try {
-    // RECOMPILE_VERSION: 1.0.1 - FORCING REBUILD AFTER CACHE CLEAR
-    // NUCLEAR OPTION: Bypassing Prisma Client validation entirely using Raw SQL.
     const locations = await db.$queryRawUnsafe(`SELECT * FROM Location WHERE active = 1 ORDER BY name ASC`)
-    
-    console.log(`🚀 [V2_NUCLEAR_SUCCESS] GET /api/admin/locations: Recompilation Verified.`)
-    
+
     return new Response(JSON.stringify(Array.isArray(locations) ? locations : []), {
       status: 200,
       headers: {
@@ -45,6 +57,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireAdmin()
+  if (unauthorized) return unauthorized
   try {
     const data = await req.json()
     
@@ -79,6 +93,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const unauthorized = await requireAdmin()
+  if (unauthorized) return unauthorized
   try {
     const data = await req.json()
     const { id, name, address, mapsLink, phone, city, state } = data
@@ -105,6 +121,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const unauthorized = await requireAdmin()
+  if (unauthorized) return unauthorized
   try {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get("id")
