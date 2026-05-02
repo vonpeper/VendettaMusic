@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   keywords: ["música en vivo bodas", "grupo musical eventos", "banda versátil toluca", "show musical cdmx", "música para eventos valle de bravo"],
 }
 
+// La home lee paquetes/medios/reseñas de la DB en cada request — no debe pre-renderizarse
+// estáticamente o queda con el snapshot del build (vacío si la DB se llenó después del deploy).
+export const dynamic = "force-dynamic"
+
 // --- Animación arcoiris pasteles ---------------------------------------------
 const BADGES = [
   { icon: Volume2,        label: "Audio de Alta Fidelidad",   desc: "Equipos Electro-Voice y consola digital en cada show." },
