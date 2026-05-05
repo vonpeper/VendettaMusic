@@ -35,6 +35,8 @@ interface PackageData {
   minDuration: number
   description: string | null
   serviceItems: ServiceItem[]
+  includes?: string
+  exclusions?: string
 }
 
 // Estilos visuales por defecto para paquetes (se pueden personalizar en el futuro)
