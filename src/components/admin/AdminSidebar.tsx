@@ -146,24 +146,28 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
   ]
 
   return (
-    <aside className="w-64 border-r border-border/40 bg-card hidden md:flex flex-col h-screen sticky top-0 overflow-hidden">
+    <aside className="w-64 bg-gradient-to-br from-[#3c3c3c] to-[#1a1a1a] hidden md:flex flex-col h-[calc(100vh-2rem)] rounded-2xl shadow-2xl overflow-hidden border-none shrink-0">
       {/* Header */}
-      <div className="p-6 border-b border-border/40 flex items-center gap-3 shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Music className="w-5 h-5 text-primary" />
+      <div className="p-6 flex items-center gap-3 shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-lg">
+          <Music className="w-5 h-5 text-white" />
         </div>
-        <span className="font-heading font-black text-lg text-primary tracking-wider uppercase truncate">
-          {user.name || (isAdmin ? "Admin" : "Agente")}
-        </span>
+        <div className="flex flex-col">
+          <span className="font-heading font-black text-sm text-white tracking-widest uppercase truncate">
+            {user.name || (isAdmin ? "Admin" : "Agente")}
+          </span>
+          <span className="text-[9px] text-white/50 font-bold uppercase tracking-tighter">Panel de Control</span>
+        </div>
+      </div>
+
+      <div className="px-4 mb-4">
+        <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+      <nav className="flex-1 overflow-y-auto px-4 space-y-4 custom-scrollbar-white pb-6">
         {sections.map((section) => {
-          // Filter items based on admin role
           const visibleItems = section.items.filter(item => !item.adminOnly || isAdmin)
-          
-          // Don't show empty sections (except placeholders)
           if (visibleItems.length === 0 && !section.placeholder) return null
 
           const isExpanded = expandedSections[section.id]
@@ -174,18 +178,19 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
               <button
                 onClick={() => toggleSection(section.id)}
                 className={cn(
-                  "w-full flex items-center justify-between px-3 py-2 text-[10px] font-black tracking-widest uppercase transition-colors rounded-md",
-                  section.placeholder ? "text-muted-foreground/40 cursor-not-allowed" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  "w-full flex items-center justify-between px-3 py-2 text-[10px] font-black tracking-widest uppercase transition-all rounded-lg group",
+                  section.placeholder 
+                    ? "text-white/20 cursor-not-allowed" 
+                    : "text-white/60 hover:text-white hover:bg-white/5"
                 )}
                 disabled={section.placeholder}
               >
                 <div className="flex items-center gap-2">
-                  <SectionIcon className="w-3 h-3" />
+                  <SectionIcon className={cn("w-3.5 h-3.5", isExpanded ? "text-white" : "text-white/40 group-hover:text-white/80")} />
                   {section.title}
-                  {section.placeholder && <span className="ml-2 text-[8px] font-medium lowercase opacity-50">(soon)</span>}
                 </div>
                 {!section.placeholder && (
-                  isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />
+                  isExpanded ? <ChevronDown className="w-3 h-3 text-white/40" /> : <ChevronRight className="w-3 h-3 text-white/40" />
                 )}
               </button>
 
@@ -198,7 +203,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                     transition={{ duration: 0.2, ease: "easeInOut" }}
                     className="overflow-hidden"
                   >
-                    <div className="space-y-0.5 ml-2 border-l border-border/40 pl-2 py-1">
+                    <div className="space-y-1.5 mt-1">
                       {visibleItems.map((item) => {
                         const Icon = item.icon
                         const isActive = pathname === item.href
@@ -208,28 +213,22 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                              "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-all group relative",
+                              "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all group relative",
                               isActive 
-                                ? "bg-primary/10 text-primary shadow-sm" 
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                ? "bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white shadow-lg shadow-pink-500/30" 
+                                : "text-white/70 hover:text-white hover:bg-white/5"
                             )}
                           >
                             <Icon className={cn(
-                              "w-4 h-4 shrink-0 transition-transform group-hover:scale-110",
-                              isActive ? "text-primary" : "text-muted-foreground/70"
+                              "w-5 h-5 shrink-0 transition-transform",
+                              isActive ? "text-white" : "text-white/50 group-hover:text-white/90"
                             )} />
                             <span className="flex-1 truncate">{item.name}</span>
                             {item.badgeCount ? (
-                              <span className="px-1.5 py-0.5 rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                              <span className="px-1.5 py-0.5 rounded-full bg-white text-[10px] font-bold text-pink-600">
                                 {item.badgeCount}
                               </span>
                             ) : null}
-                            {isActive && (
-                              <motion.div 
-                                layoutId="active-nav-indicator"
-                                className="absolute left-0 w-1 h-4 bg-primary rounded-r-full"
-                              />
-                            )}
                           </Link>
                         )
                       })}
@@ -243,13 +242,13 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border/40 shrink-0">
+      <div className="p-4 mt-auto">
         <Link 
           href="/" 
-          className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all group"
+          className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-white/60 hover:text-white hover:bg-red-500/20 rounded-xl transition-all group"
         >
           <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> 
-          <span>Salir al sitio</span>
+          <span>Regresar al Sitio</span>
         </Link>
       </div>
     </aside>
