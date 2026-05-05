@@ -14,8 +14,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client
+# Generate Prisma client and initialize dummy DB for build
 RUN DATABASE_URL=file:./dev.db npx prisma generate
+RUN DATABASE_URL=file:./dev.db npx prisma db push --accept-data-loss
 
 # Disable telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
