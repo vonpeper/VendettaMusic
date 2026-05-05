@@ -61,8 +61,8 @@ export function PublicNavbar() {
             >
               <Menu className="h-6 w-6" />
             </SheetTrigger>
-            <SheetContent side="right" className="bg-[#111] border-white/10 w-80 text-white p-0">
-              <div className="flex flex-col h-full">
+            <SheetContent side="right" className="bg-[#111] border-white/10 w-80 text-white p-0 overflow-hidden">
+              <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
                 <div className="p-6 border-b border-white/5">
                   <SheetHeader className="text-left mb-6">
                     <img src="/logo.png" alt="Vendetta Logo" className="h-10 w-auto self-start" />

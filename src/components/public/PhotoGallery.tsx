@@ -68,14 +68,19 @@ export function PhotoGallery({ images = [] }: { images?: string[] }) {
         </div>
       </div>
 
-      <div className="relative">
-        <div className="flex gap-4 px-4 md:gap-8 transition-transform duration-700 ease-in-out"
-             style={{ transform: `translateX(-${currentIndex * 33.33}%)` }}>
+      <div className="relative overflow-hidden cursor-grab active:cursor-grabbing px-4">
+        <motion.div 
+          className="flex gap-4 md:gap-8"
+          drag="x"
+          dragConstraints={{ left: -((PHOTOS.length - 1) * 320), right: 0 }} // Aproximado para móvil
+          animate={{ x: `-${currentIndex * (100 / 3.33)}%` }} // Ajuste para desktop
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
           {PHOTOS.map((photo, idx) => (
             <div 
               key={idx} 
               onClick={() => { setSelectedImage(idx); setIsLightboxOpen(true) }}
-              className="min-w-[85%] md:min-w-[400px] lg:min-w-[500px] aspect-[4/3] rounded-[2.5rem] overflow-hidden border border-white/10 relative group cursor-pointer"
+              className="min-w-[85%] md:min-w-[400px] lg:min-w-[500px] aspect-[4/3] rounded-[2.5rem] overflow-hidden border border-white/10 relative group cursor-pointer shrink-0"
             >
               <Image 
                 src={photo.src} 
@@ -83,6 +88,7 @@ export function PhotoGallery({ images = [] }: { images?: string[] }) {
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-80 group-hover:opacity-100" 
+                draggable={false}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="absolute bottom-8 left-8 flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
@@ -93,7 +99,7 @@ export function PhotoGallery({ images = [] }: { images?: string[] }) {
               </div>
             </div>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* Lightbox Pop-up */}
