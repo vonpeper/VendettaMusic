@@ -119,7 +119,7 @@ export function BandMembersManagerClient({ members }: { members: PublicBandMembe
               </div>
 
               <div className="pt-4 flex justify-end">
-                 <Button type="submit" disabled={loading} className="gap-2 bg-white text-black hover:bg-gray-200 text-white">
+                 <Button type="submit" disabled={loading} className="gap-2 bg-primary text-white hover:bg-primary/90 font-bold uppercase tracking-widest px-8">
                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                    Guardar Perfil Público
                  </Button>
@@ -145,7 +145,7 @@ export function BandMembersManagerClient({ members }: { members: PublicBandMembe
                <Image src={m.img} alt={m.name} fill className="object-cover object-top" />
                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent" />
                <div className="absolute bottom-3 left-4">
-                  <h3 className="font-black text-xl text-foreground flex items-center gap-2">{m.name} <span className="text-xl">{m.emoji}</span></h3>
+                  <h3 className="font-black text-xl text-white flex items-center gap-2">{m.name} <span className="text-xl">{m.emoji}</span></h3>
                   <p className="text-xs uppercase tracking-widest text-primary font-bold">{m.role}</p>
                </div>
             </div>

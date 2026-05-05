@@ -13,6 +13,7 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", c
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
 
 import { auth } from "@/lib/auth"
+import { RepairSyncButton } from "@/components/admin/RepairSyncButton"
 
 export default async function AdminDashboardPage() {
   const session = await auth()
@@ -75,8 +76,7 @@ export default async function AdminDashboardPage() {
     db.bookingRequest.count(),
     // Para el Semáforo de Producción (Robust Lookup)
     db.bookingRequest.findMany({
-      where: { status: "agendado" },
-      select: { id: true, eventId: true, clientName: true }
+      select: { id: true, eventId: true, clientName: true, status: true, shortId: true }
     }),
     db.inboxItem.count({ where: { status: "pending" } })
   ])
@@ -166,12 +166,18 @@ export default async function AdminDashboardPage() {
           </p>
         </div>
         {soonEvents.length > 0 && (
-          <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-lg px-4 py-2">
-            <Bell className="w-4 h-4 text-primary animate-pulse" />
-            <span className="text-sm text-primary font-bold">
-              {soonEvents.length} show{soonEvents.length > 1 ? "s" : ""} esta semana
-            </span>
+          <div className="flex items-center gap-3">
+            <RepairSyncButton />
+            <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-lg px-4 py-2">
+              <Bell className="w-4 h-4 text-primary animate-pulse" />
+              <span className="text-sm text-primary font-bold">
+                {soonEvents.length} show{soonEvents.length > 1 ? "s" : ""} esta semana
+              </span>
+            </div>
           </div>
+        )}
+        {!soonEvents.length && (
+          <RepairSyncButton />
         )}
       </div>
       
@@ -480,8 +486,8 @@ export default async function AdminDashboardPage() {
                   const linkedBooking = ev.bookingRequest || (confirmedBookings as any[]).find(b => 
                     b.eventId === ev.id || 
                     (b.clientName && (
-                      (ev.client?.user?.name && b.clientName.toLowerCase().includes(ev.client.user.name.toLowerCase())) ||
-                      (ev.customName && b.clientName.toLowerCase().includes(ev.customName.toLowerCase())) ||
+                      (ev.client?.user?.name && b.clientName.toLowerCase().trim() === ev.client.user.name.toLowerCase().trim()) ||
+                      (ev.customName && b.clientName.toLowerCase().trim() === ev.customName.toLowerCase().trim()) ||
                       (ev.client?.user?.name && ev.client.user.name.toLowerCase().includes(b.clientName.toLowerCase())) ||
                       (ev.customName && ev.customName.toLowerCase().includes(b.clientName.toLowerCase()))
                     ))
@@ -489,7 +495,7 @@ export default async function AdminDashboardPage() {
                   const bookingId = linkedBooking?.id
 
                   return (
-                    <a 
+                    <Link 
                       key={ev.id}
                       href={bookingId ? `/admin/ventas/${bookingId}` : `/admin/eventos`}
                       className={`flex flex-col h-full gap-4 p-5 rounded-2xl border ${cardBorder} transition-all hover:shadow-lg active:scale-[0.95] group cursor-pointer no-underline text-inherit`}
@@ -505,7 +511,12 @@ export default async function AdminDashboardPage() {
                         <div className="min-w-0 flex-1">
                           <div className="font-black text-foreground text-sm truncate uppercase tracking-tight flex items-center gap-1.5">
                             {ev.client?.user?.name ?? ev.customName ?? "Cliente"}
-                            {ev.bookingRequest && <ExternalLink className="w-3 h-3 opacity-30" />}
+                            {linkedBooking && (
+                              <span className="ml-2 text-[10px] font-black bg-primary/20 text-primary px-2 py-0.5 rounded-full border border-primary/20">
+                                {linkedBooking.shortId}
+                              </span>
+                            )}
+                            {linkedBooking && <ExternalLink className="w-3 h-3 opacity-30" />}
                           </div>
                           <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-tighter mt-1 ${isUrgent && !isReady ? 'bg-red-100 border-red-200 text-red-700' : isReady ? 'bg-green-100 border-green-200 text-green-700' : 'bg-muted/50 text-muted-foreground'}`}>
                             {daysUntil === 0 ? "HOY" : daysUntil === 1 ? "MAÑANA" : `EN ${daysUntil} DÍAS`}
@@ -548,7 +559,7 @@ export default async function AdminDashboardPage() {
                           </div>
                         )}
                       </div>
-                    </a>
+                    </Link>
                   )
                 })}
               </div>
