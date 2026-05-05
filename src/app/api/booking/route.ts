@@ -4,6 +4,7 @@ import { notifyWhatsApp, notifyClientBookingClosed, notifyMusicians } from "@/li
 import { calcularViatcos } from "@/lib/viaticos"
 import { findOrCreateClient } from "@/lib/clients"
 import { formatDateMX } from "@/lib/utils"
+import crypto from "crypto"
 import { auth } from "@/lib/auth"
 import { getAppUrl } from "@/lib/url"
 
@@ -196,9 +197,34 @@ export async function PATCH(req: NextRequest) {
         data:  { status: "agendado", adminNote: adminNote || null } // Nuevo estándar: agendado
       })
 
-      // 3. Crear Event automáticamente
+      // 3. Crear Cotización (Legacy compatibility)
+      const quoteId = crypto.randomUUID()
+      await db.quote.create({
+        data: {
+          id: quoteId,
+          clientId: booking.clientId!,
+          status: "agendado",
+          totalEstimated: booking.baseAmount,
+          guestCount: booking.guestCount,
+          ceremonyType: booking.venueType,
+          notes: booking.adminNote || "",
+          eventDate: booking.requestedDate,
+          items: {
+            create: [
+              {
+                description: `Confirmación Web: ${booking.packageName}`,
+                quantity: 1,
+                unitCost: booking.baseAmount
+              }
+            ]
+          }
+        }
+      })
+
+      // 4. Crear Event automáticamente
       const event = await db.event.create({
         data: {
+          quoteId:          quoteId, // Vincular a la cotización
           date:             booking.requestedDate,
           guestCount:       booking.guestCount,
           performanceStart: booking.startTime,
