@@ -9,6 +9,7 @@ import { Bell, MessageCircle, AlertTriangle, CheckCircle2, Clock, Inbox, type Lu
 import { formatDateMX } from "@/lib/utils"
 import { NotificationActions } from "@/components/admin/NotificationActions"
 import { ClearNotificationsButton } from "@/components/admin/ClearNotificationsButton"
+import { TestNotificationButtons } from "@/components/admin/TestNotificationButtons"
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   admin_booking:     { label: "Nuevo pedido (Admin)",     color: "bg-blue-500/10 text-blue-300 border-blue-500/30" },
@@ -71,6 +72,8 @@ export default async function NotificacionesPage() {
         </div>
         <ClearNotificationsButton />
       </div>
+
+      <TestNotificationButtons />
 
       <div className="grid grid-cols-3 gap-4">
         <Card className="bg-card border-yellow-500/20">
