@@ -72,7 +72,7 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="bg-background border-l border-border/40 sm:max-w-xl w-full overflow-y-auto p-0">
+      <SheetContent className="bg-background border-l border-border/40 sm:max-w-xl w-full overflow-y-auto p-0 admin-theme">
         <div className="p-6 bg-card border-b border-border/40">
           <SheetHeader>
             <SheetTitle className="text-2xl font-bold text-foreground">{musician.user.name}</SheetTitle>
