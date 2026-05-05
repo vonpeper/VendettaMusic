@@ -75,7 +75,9 @@ export function CoverageMatrix({ musicians, onViewDetails }: { musicians: any[],
                       <div className="flex flex-wrap gap-3">
                         {musician.substitutes.map((sub: any) => {
                           const subWa = sub.whatsapp || sub.phone
-                          const waLink = subWa ? `https://wa.me/${subWa.replace(/\D/g, "")}` : null
+                          const cleanWa = subWa ? subWa.replace(/\D/g, "") : ""
+                          const formattedWa = (cleanWa.length === 10) ? `52${cleanWa}` : cleanWa
+                          const waLink = cleanWa ? `https://wa.me/${formattedWa}` : null
                           
                           return (
                             <div key={sub.id} className="bg-card border border-border/40 rounded-lg p-2 flex flex-col gap-1 min-w-[180px]" onClick={(e) => e.stopPropagation()}>

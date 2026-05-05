@@ -14,6 +14,8 @@ const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto
 
 import { auth } from "@/lib/auth"
 import { RepairSyncButton } from "@/components/admin/RepairSyncButton"
+import { NuevoEventoButton } from "@/components/admin/EventActions"
+import { Plus, UserPlus, FilePlus, CalendarDays } from "lucide-react"
 
 export default async function AdminDashboardPage() {
   const session = await auth()
@@ -33,7 +35,11 @@ export default async function AdminDashboardPage() {
     expiredBookingRequests,
     allBookingRequests,
     confirmedBookings,
-    pendingInbox
+    pendingInbox,
+    allClients,
+    allLocations,
+    allPackages,
+    musicianProfiles
   ] = await Promise.all([
     db.event.findMany({
       where: { date: { gte: now }, status: { not: "cancelado" } },
@@ -78,8 +84,26 @@ export default async function AdminDashboardPage() {
     db.bookingRequest.findMany({
       select: { id: true, eventId: true, clientName: true, status: true, shortId: true }
     }),
-    db.inboxItem.count({ where: { status: "pending" } })
+    db.inboxItem.count({ where: { status: "pending" } }),
+    // Data for Quick Actions
+    db.client.findMany({ include: { user: true }, orderBy: { user: { name: 'asc' } } }),
+    db.location.findMany({ orderBy: { name: 'asc' } }),
+    db.package.findMany({ orderBy: { name: 'asc' } }),
+    db.musicianProfile.findMany({ 
+      where: { instrument: { contains: "Ingeniero" } }, // USER REQUEST: Filter by Engineer
+      include: { user: true } 
+    }),
   ])
+
+  const staffMapped = musicianProfiles.map(m => ({
+    id: m.id,
+    name: m.user?.name || "Staff"
+  }))
+
+  const clientsMapped = allClients.map(c => ({
+    id: c.id,
+    name: c.user?.name || "Sin nombre"
+  }))
 
 
 
@@ -180,77 +204,59 @@ export default async function AdminDashboardPage() {
           <RepairSyncButton />
         )}
       </div>
-      
-      {/* -- Quick Actions Row -- */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Link 
-          href="/admin/ventas/manual"
-          className="flex items-center gap-4 p-4 rounded-2xl bg-primary shadow-sm hover:shadow-md transition-all group overflow-hidden relative"
-        >
-          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-            <FileText className="w-5 h-5 text-white" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-white font-black text-sm uppercase tracking-tight">Nueva Cotización</div>
-            <div className="text-white/60 text-[9px] font-bold uppercase tracking-wider">Registrar Cliente + Evento</div>
-          </div>
-          <div className="absolute -right-2 -bottom-2 opacity-10 group-hover:opacity-20 transition-opacity">
-            <FileText className="w-16 h-16 text-white" />
-          </div>
+
+      {/* Quick Actions Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <NuevoEventoButton 
+          clients={clientsMapped}
+          locations={allLocations}
+          packages={allPackages as any}
+          staff={staffMapped}
+        />
+        
+        <Link href="/admin/ventas?new=quote" className="no-underline">
+          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 rounded-xl group transition-all">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+              <FilePlus className="w-4 h-4" />
+            </div>
+            <div className="text-left">
+              <div className="text-sm font-bold text-foreground">Nueva Cotización</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-tight">Venta Directa</div>
+            </div>
+          </Button>
         </Link>
 
-        {isAdmin && (
-          <Link 
-            href="/admin/ensayos"
-            className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-border/40 shadow-sm hover:shadow-md transition-all group overflow-hidden relative"
-          >
-            <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <Music className="w-5 h-5 text-primary" />
+        <Link href="/admin/ensayos" className="no-underline">
+          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-border/40 hover:border-primary hover:bg-primary/5 rounded-xl group transition-all">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 transition-transform">
+              <CalendarDays className="w-4 h-4" />
             </div>
-            <div className="min-w-0">
-              <div className="text-foreground font-black text-sm uppercase tracking-tight">Agendar Ensayo</div>
-              <div className="text-muted-foreground text-[9px] font-bold uppercase tracking-wider">Citar a la banda</div>
+            <div className="text-left">
+              <div className="text-sm font-bold text-foreground">Agendar Ensayo</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-tight">Producción</div>
             </div>
-            <div className="absolute -right-2 -bottom-2 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Music className="w-16 h-16 text-primary" />
-            </div>
-          </Link>
-        )}
-
-        <Link 
-          href="/admin/inbox"
-          className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-border/40 shadow-sm hover:shadow-md transition-all group overflow-hidden relative"
-        >
-          <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-            <Inbox className="w-5 h-5 text-primary" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-foreground font-black text-sm uppercase tracking-tight">Bandeja Atención</div>
-            <div className="text-muted-foreground text-[9px] font-bold uppercase tracking-wider">Consultas pendientes</div>
-          </div>
-          {pendingInbox > 0 && (
-            <div className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white shadow-sm animate-bounce">
-              {pendingInbox}
-            </div>
-          )}
+          </Button>
         </Link>
 
-        <Link 
-          href="/admin/notificaciones"
-          className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-border/40 shadow-sm hover:shadow-md transition-all group overflow-hidden relative"
-        >
-          <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-            <Bell className="w-5 h-5 text-primary" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-foreground font-black text-sm uppercase tracking-tight">Log de Mensajes</div>
-            <div className="text-muted-foreground text-[9px] font-bold uppercase tracking-wider">Historial WhatsApp</div>
-          </div>
-          <div className="absolute -right-2 -bottom-2 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Bell className="w-16 h-16 text-primary" />
-          </div>
+        <Link href="/admin/inbox" className="no-underline">
+          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-border/40 hover:border-primary hover:bg-primary/5 rounded-xl group transition-all relative">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 transition-transform">
+              <Inbox className="w-4 h-4" />
+            </div>
+            <div className="text-left">
+              <div className="text-sm font-bold text-foreground">Bandeja Inbox</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-tight">Atención a Leads</div>
+            </div>
+            {pendingInbox > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black h-5 w-5 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-bounce">
+                {pendingInbox}
+              </span>
+            )}
+          </Button>
         </Link>
       </div>
+      
+      {/* Quick Actions Row handled above */}
 
       {/* -- KPIs Row -- */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

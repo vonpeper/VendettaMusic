@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Bell, MessageCircle, AlertTriangle, CheckCircle2, Clock, Inbox, type LucideIcon } from "lucide-react"
 import { formatDateMX } from "@/lib/utils"
 import { NotificationActions } from "@/components/admin/NotificationActions"
+import { ClearNotificationsButton } from "@/components/admin/ClearNotificationsButton"
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   admin_booking:     { label: "Nuevo pedido (Admin)",     color: "bg-blue-500/10 text-blue-300 border-blue-500/30" },
@@ -57,15 +58,18 @@ export default async function NotificacionesPage() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
-      <div>
-        <div className="flex items-center gap-3 text-primary mb-2">
-          <Bell className="w-6 h-6" />
-          <span className="text-sm font-bold uppercase tracking-widest">Centro de Notificaciones</span>
+      <div className="flex justify-between items-end">
+        <div>
+          <div className="flex items-center gap-3 text-primary mb-2">
+            <Bell className="w-6 h-6" />
+            <span className="text-sm font-bold uppercase tracking-widest">Centro de Notificaciones</span>
+          </div>
+          <h1 className="text-4xl font-heading font-bold text-foreground tracking-tight">Mensajes de WhatsApp</h1>
+          <p className="text-muted-foreground mt-2 max-w-2xl">
+            Historial completo de mensajes enviados a clientes, músicos y administradores. Reenvía los que fallaron.
+          </p>
         </div>
-        <h1 className="text-4xl font-heading font-bold text-foreground tracking-tight">Mensajes de WhatsApp</h1>
-        <p className="text-muted-foreground mt-2 max-w-2xl">
-          Historial completo de mensajes enviados a clientes, músicos y administradores. Reenvía los que fallaron.
-        </p>
+        <ClearNotificationsButton />
       </div>
 
       <div className="grid grid-cols-3 gap-4">
