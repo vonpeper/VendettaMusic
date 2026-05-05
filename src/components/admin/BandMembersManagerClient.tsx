@@ -67,7 +67,7 @@ export function BandMembersManagerClient({ members }: { members: PublicBandMembe
       )}
 
       {(isCreating || editing) && (
-        <Card className="bg-black border border-primary/40 shadow-2xl shadow-primary/10 relative overflow-hidden">
+        <Card className="bg-card border border-primary/40 shadow-2xl shadow-primary/10 relative overflow-hidden">
           <div className="absolute top-4 right-4">
             <Button variant="ghost" size="icon" onClick={() => { setIsCreating(false); setEditing(null) }}>
               <X className="w-5 h-5 text-muted-foreground hover:text-foreground" />

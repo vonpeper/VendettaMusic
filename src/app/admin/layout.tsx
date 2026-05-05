@@ -17,7 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }).catch(() => 0)
 
   return (
-    <div className="admin-theme flex min-h-screen bg-background text-foreground">
+    <div className="flex min-h-screen bg-background text-foreground">
       {/* Sidebar */}
       <AdminSidebar 
         user={{ name: session.user?.name, role: session.user?.role }} 
