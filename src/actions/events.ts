@@ -3,6 +3,7 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { buildGigMessage, notifyMusicians } from "@/lib/notifications"
+import crypto from "crypto"
 
 export async function updateEventAction(id: string, _prev: any, formData: FormData) {
   try {
@@ -155,8 +156,32 @@ export async function createEventAction(_prev: any, formData: FormData) {
       if (locId) finalLocationId = locId
     }
 
+    const quoteId = crypto.randomUUID()
+    await db.quote.create({
+      data: {
+        id: quoteId,
+        clientId: (data.clientId as string) || null,
+        status: (data.status as string) || "scheduled",
+        totalEstimated: amount,
+        guestCount: parseInt(data.guestCount as string || "0"),
+        ceremonyType: (data.ceremonyType as string) || "show",
+        notes: (data.adminNote as string) || (data.musicianNotes as string) || "",
+        eventDate: new Date((data.date as string) + "T12:00:00"),
+        items: {
+          create: [
+            {
+              description: `Evento Manual: ${data.customName || "Sin Nombre"}`,
+              quantity: 1,
+              unitCost: amount
+            }
+          ]
+        }
+      }
+    })
+
     const event = await db.event.create({
       data: {
+        quoteId, // Vincular a la cotización
         clientId: (data.clientId as string) || null,
         date: new Date((data.date as string) + "T12:00:00"),
         amount,

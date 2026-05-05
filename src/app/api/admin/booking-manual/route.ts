@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
     // Generar IDs manualmente para evitar fallos del conector custom
     const bookingId = crypto.randomUUID()
     const eventId = crypto.randomUUID()
+    const quoteId = crypto.randomUUID()
     const randomHex = crypto.randomBytes(2).toString('hex').toUpperCase()
     const shortId = `VND-${randomHex}`
 
@@ -64,6 +65,29 @@ export async function POST(req: NextRequest) {
     if (isNaN(dateObj.getTime())) {
       return NextResponse.json({ success: false, error: `Fecha inválida: ${requestedDate}` }, { status: 400 })
     }
+
+    // --- [NUEVO] Crear Cotización (Quote) ---
+    await db.quote.create({
+      data: {
+        id: quoteId,
+        clientId,
+        status: computedStatus,
+        totalEstimated: normalizedBaseAmount,
+        guestCount: Number(data.guestCount) || 0,
+        ceremonyType: venueType || "show",
+        notes: adminNote || "",
+        eventDate: dateObj,
+        items: {
+          create: [
+            {
+              description: `Cotización Manual: ${packageName}`,
+              quantity: 1,
+              unitCost: normalizedBaseAmount
+            }
+          ]
+        }
+      }
+    })
 
     // Crear BookingRequest
     const booking = await db.bookingRequest.create({
@@ -104,6 +128,7 @@ export async function POST(req: NextRequest) {
       await db.event.create({
         data: {
           id:               eventId,
+          quoteId:          quoteId, // [NUEVO] Vincular a la cotización
           date:             dateObj,
           guestCount:       Number(data.guestCount) || 0,
           performanceStart: startTime || "21:00",
