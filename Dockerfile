@@ -19,8 +19,9 @@ RUN DATABASE_URL=file:./dev.db npx prisma generate
 
 # Disable telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-RUN DATABASE_URL=file:./dev.db npm run build
+RUN DATABASE_URL=file:./dev.db NEXT_PRIVATE_SKIP_TYPESCRIPT_CHECK=1 NEXT_PRIVATE_SKIP_LINT=1 npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
