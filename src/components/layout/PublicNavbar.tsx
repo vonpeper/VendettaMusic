@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Phone, Calendar } from "lucide-react"
+import { Menu, X, Phone, Calendar, Lock } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -45,6 +45,9 @@ export function PublicNavbar() {
             <Button variant="default" className="font-black text-[10px] uppercase tracking-widest px-6 h-10 rounded-xl shadow-lg shadow-primary/20">
               Cotizar Evento
             </Button>
+          </Link>
+          <Link href="/auth/login" className="text-white/30 hover:text-primary transition-colors p-2" title="Admin Login">
+            <Lock className="w-4 h-4" />
           </Link>
         </nav>
 
@@ -97,6 +100,9 @@ export function PublicNavbar() {
                       <Phone className="w-4 h-4 mr-2" /> Llamar Ahora
                     </Button>
                   </a>
+                  <Link href="/auth/login" className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-primary transition-colors pt-4">
+                    <Lock className="w-3 h-3" /> Login Admin
+                  </Link>
                 </div>
               </div>
             </SheetContent>
