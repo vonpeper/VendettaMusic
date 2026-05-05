@@ -86,7 +86,7 @@ export default async function AdminDashboardPage() {
     }),
     db.inboxItem.count({ where: { status: "pending" } }),
     // Data for Quick Actions
-    db.client.findMany({ include: { user: true }, orderBy: { user: { name: 'asc' } } }),
+    db.clientProfile.findMany({ include: { user: true }, orderBy: { user: { name: 'asc' } } }),
     db.location.findMany({ orderBy: { name: 'asc' } }),
     db.package.findMany({ orderBy: { name: 'asc' } }),
     db.musicianProfile.findMany({ 
