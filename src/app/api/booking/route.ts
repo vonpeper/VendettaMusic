@@ -199,32 +199,37 @@ export async function PATCH(req: NextRequest) {
 
       // 3. Crear Cotización (Legacy compatibility)
       const quoteId = crypto.randomUUID()
-      await db.quote.create({
-        data: {
-          id: quoteId,
-          clientId: booking.clientId!,
-          status: "agendado",
-          totalEstimated: booking.baseAmount,
-          guestCount: booking.guestCount,
-          ceremonyType: booking.venueType,
-          notes: booking.adminNote || "",
-          eventDate: booking.requestedDate,
-          items: {
-            create: [
-              {
-                description: `Confirmación Web: ${booking.packageName}`,
-                quantity: 1,
-                unitCost: booking.baseAmount
-              }
-            ]
+      let quoteCreated = false
+      
+      if (booking.clientId) {
+        await db.quote.create({
+          data: {
+            id: quoteId,
+            clientId: booking.clientId,
+            status: "agendado",
+            totalEstimated: booking.baseAmount,
+            guestCount: booking.guestCount,
+            ceremonyType: booking.venueType,
+            notes: booking.adminNote || "",
+            eventDate: booking.requestedDate,
+            items: {
+              create: [
+                {
+                  description: `Confirmación Web: ${booking.packageName}`,
+                  quantity: 1,
+                  unitCost: booking.baseAmount
+                }
+              ]
+            }
           }
-        }
-      })
+        })
+        quoteCreated = true
+      }
 
       // 4. Crear Event automáticamente
       const event = await db.event.create({
         data: {
-          quoteId:          quoteId, // Vincular a la cotización
+          quoteId:          quoteCreated ? quoteId : null, // Vincular a la cotización
           date:             booking.requestedDate,
           guestCount:       booking.guestCount,
           performanceStart: booking.startTime,
