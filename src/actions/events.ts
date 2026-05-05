@@ -185,7 +185,7 @@ export async function createEventAction(_prev: any, formData: FormData) {
 
     const event = await db.event.create({
       data: {
-        quoteId: targetClientId ? quoteId : null, // Vincular solo si se creó
+        quoteId: targetClientId ? quoteId : null,
         clientId: targetClientId || null,
         date: new Date((data.date as string) + "T12:00:00"),
         amount,
@@ -203,7 +203,7 @@ export async function createEventAction(_prev: any, formData: FormData) {
         arrivalTime: (data.arrivalTime as string) || null,
         setupTime: (data.setupTime as string) || null,
         dressCode: (data.dressCode as string) || null,
-        status: (data.status as string) || "scheduled",
+        status: (data.status as string) === "scheduled" ? "agendado" : (data.status as string) || "agendado",
         musicianNotes: (data.musicianNotes as string) || null,
         invoice: data.invoice === "on" || data.invoice === "true",
         depositMethod: (data.depositMethod as string) || null,
@@ -217,6 +217,60 @@ export async function createEventAction(_prev: any, formData: FormData) {
       include: {
         client: { include: { user: true } },
         location: true,
+      }
+    })
+
+    // [NUEVO] Crear BookingRequest para que aparezca en el Centro de Ventas
+    const randomHex = crypto.randomBytes(2).toString('hex').toUpperCase()
+    const shortId = `VND-${randomHex}`
+    
+    // Obtener nombre del paquete
+    let packageName = "Paquete Personalizado"
+    if (data.packageId) {
+      const pkg = await db.package.findUnique({ where: { id: data.packageId as string } })
+      if (pkg) packageName = pkg.name
+    }
+
+    // Obtener info del cliente para el booking
+    let clientName = (data.customName as string) || "Sin Nombre"
+    let clientPhone = ""
+    let clientEmail = ""
+    
+    if (targetClientId) {
+      const fullClient = await db.clientProfile.findUnique({ 
+        where: { id: targetClientId },
+        include: { user: true }
+      })
+      if (fullClient) {
+        clientName = fullClient.user.name || clientName
+        clientPhone = fullClient.whatsapp || fullClient.phone || ""
+        clientEmail = fullClient.user.email || ""
+      }
+    }
+
+    await db.bookingRequest.create({
+      data: {
+        shortId,
+        eventId: event.id,
+        clientId: targetClientId || null,
+        clientName,
+        clientPhone,
+        clientEmail,
+        requestedDate: event.date,
+        startTime: event.performanceStart || "21:00",
+        endTime: event.performanceEnd || "23:00",
+        packageName,
+        packageId: (data.packageId as string) || null,
+        baseAmount: amount,
+        depositAmount: deposit,
+        paymentMethod: (data.paymentMethod as string) || "transfer",
+        status: event.status === "scheduled" ? "agendado" : event.status,
+        source: "manual",
+        adminNote: (data.musicianNotes as string) || "",
+        venueType: (data.ceremonyType as string) || "salon",
+        address: (data.locationFree as string) || event.location?.address || "Dirección manual",
+        city: event.location?.city || "CDMX",
+        isPublic: event.isPublic,
       }
     })
 
