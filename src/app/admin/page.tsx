@@ -172,6 +172,77 @@ export default async function AdminDashboardPage() {
           </div>
         )}
       </div>
+      
+      {/* -- Quick Actions Row -- */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <Link 
+          href="/admin/ventas/manual"
+          className="flex items-center gap-4 p-4 rounded-2xl bg-primary shadow-sm hover:shadow-md transition-all group overflow-hidden relative"
+        >
+          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <FileText className="w-5 h-5 text-white" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-white font-black text-sm uppercase tracking-tight">Nueva Cotización</div>
+            <div className="text-white/60 text-[9px] font-bold uppercase tracking-wider">Registrar Cliente + Evento</div>
+          </div>
+          <div className="absolute -right-2 -bottom-2 opacity-10 group-hover:opacity-20 transition-opacity">
+            <FileText className="w-16 h-16 text-white" />
+          </div>
+        </Link>
+
+        {isAdmin && (
+          <Link 
+            href="/admin/ensayos"
+            className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-border/40 shadow-sm hover:shadow-md transition-all group overflow-hidden relative"
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <Music className="w-5 h-5 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-foreground font-black text-sm uppercase tracking-tight">Agendar Ensayo</div>
+              <div className="text-muted-foreground text-[9px] font-bold uppercase tracking-wider">Citar a la banda</div>
+            </div>
+            <div className="absolute -right-2 -bottom-2 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Music className="w-16 h-16 text-primary" />
+            </div>
+          </Link>
+        )}
+
+        <Link 
+          href="/admin/inbox"
+          className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-border/40 shadow-sm hover:shadow-md transition-all group overflow-hidden relative"
+        >
+          <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <Inbox className="w-5 h-5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-foreground font-black text-sm uppercase tracking-tight">Bandeja Atención</div>
+            <div className="text-muted-foreground text-[9px] font-bold uppercase tracking-wider">Consultas pendientes</div>
+          </div>
+          {pendingInbox > 0 && (
+            <div className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white shadow-sm animate-bounce">
+              {pendingInbox}
+            </div>
+          )}
+        </Link>
+
+        <Link 
+          href="/admin/notificaciones"
+          className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-border/40 shadow-sm hover:shadow-md transition-all group overflow-hidden relative"
+        >
+          <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <Bell className="w-5 h-5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-foreground font-black text-sm uppercase tracking-tight">Log de Mensajes</div>
+            <div className="text-muted-foreground text-[9px] font-bold uppercase tracking-wider">Historial WhatsApp</div>
+          </div>
+          <div className="absolute -right-2 -bottom-2 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Bell className="w-16 h-16 text-primary" />
+          </div>
+        </Link>
+      </div>
 
       {/* -- KPIs Row -- */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
