@@ -164,13 +164,13 @@ function RehearsalForm({ onClose, locations, musicians, songs, initialData }: an
                   </Button>
                 </div>
               ))}
-              <Button type="button" variant="outline" size="sm" onClick={addNewSongField} className="w-full text-xs border-dashed border-border/60 hover:border-primary/40 hover:bg-primary/5">
+              <Button type="button" variant="outline" size="sm" onClick={addNewSongField} className="w-full text-xs border-dashed border-border/60 hover:border-primary/40 hover:bg-primary/10">
                 <Plus className="w-3 h-3 mr-2" /> Agregar Canción Nueva
               </Button>
             </div>
           </fieldset>
 
-          <fieldset className="border border-border/40 rounded-xl p-4 bg-primary/5">
+          <fieldset className="border border-border/40 rounded-xl p-4 bg-primary/10">
             <legend className="text-[10px] font-bold uppercase tracking-widest text-primary px-2">Notificaciones WhatsApp</legend>
             <p className="text-xs text-muted-foreground mb-3">Selecciona a quiénes se les enviará el mensaje automático. Se vincularán al ensayo los músicos titulares seleccionados.</p>
             

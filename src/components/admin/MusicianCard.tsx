@@ -5,37 +5,37 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
   const isAtRisk = musician.status === "active" && musician.substitutes.length === 0
 
   const availabilityColors: Record<string, string> = {
-    "Disponible": "bg-green-500/20 text-green-700 border-green-500/30",
-    "Ocupado": "bg-red-500/20 text-red-700 border-red-500/30",
-    "Vacaciones": "bg-blue-500/20 text-blue-800 border-blue-500/30",
-    "Ausencia": "bg-orange-500/20 text-orange-400 border-orange-500/30",
+    "Disponible": "bg-green-600 text-white border-none shadow-sm",
+    "Ocupado": "bg-red-600 text-white border-none shadow-sm",
+    "Vacaciones": "bg-blue-600 text-white border-none shadow-sm",
+    "Ausencia": "bg-orange-600 text-white border-none shadow-sm",
   }
 
   const badgeColor = availabilityColors[musician.availability] || "bg-gray-500/20 text-muted-foreground border-gray-500/30"
   
   // Format phone for whatsapp link
   const rawPhone = musician.whatsapp || musician.phone
-  const cleanPhone = rawPhone ? rawPhone.replace(/\D/g, "") : ""
+  const cleanPhone = rawPhone ? String(rawPhone).replace(/\D/g, "") : ""
   
   // Basic validation for Mexico (52) if 10 digits
   const formattedPhone = (cleanPhone.length === 10) ? `52${cleanPhone}` : cleanPhone
-  const waLink = cleanPhone ? `https://wa.me/${formattedPhone}` : null
+  const waLink = (cleanPhone.length >= 10) ? `https://wa.me/${formattedPhone}` : null
 
   return (
     <div className={`bg-card border ${isAtRisk ? 'border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-border/40'} rounded-xl p-5 relative overflow-hidden transition-all hover:border-primary/50`}>
       {/* Risk Alert */}
       {isAtRisk && (
-        <div className="absolute top-0 right-0 bg-red-500 text-foreground text-[10px] font-bold px-3 py-1 uppercase tracking-wider rounded-bl-lg flex items-center gap-1 shadow-sm">
+        <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-black px-3 py-1 uppercase tracking-wider rounded-bl-lg flex items-center gap-1 shadow-md z-10">
           <AlertTriangle className="w-3 h-3" /> Sin Suplente
         </div>
       )}
 
       <div className="flex items-start gap-4 mb-4">
-        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30 shrink-0 overflow-hidden">
+        <div className="w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center border border-primary/30 shrink-0 overflow-hidden shadow-inner">
           {musician.user.image ? (
             <img src={musician.user.image} alt={musician.user.name} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-xl font-black text-primary">
+            <span className="text-xl font-black text-white">
               {musician.user.name.charAt(0).toUpperCase()}
             </span>
           )}
@@ -43,7 +43,7 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
         
         <div className="flex-1 pr-12">
           <h3 className="font-bold text-lg text-foreground leading-tight">{musician.user.name}</h3>
-          <p className="text-sm font-medium text-primary/80 uppercase tracking-wider mt-0.5">{musician.instrument || "Músico"}</p>
+          <p className="text-sm font-black text-[#E91E63] uppercase tracking-wider mt-0.5">{musician.instrument || "Músico"}</p>
           
           <div className="flex flex-wrap gap-2 mt-2">
             <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${badgeColor}`}>
@@ -93,9 +93,10 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
       <div className="flex gap-2">
         <button 
           onClick={onViewDetails}
-          className="flex-1 bg-primary/10 hover:bg-primary/10 text-foreground border border-border/40 py-2 rounded-lg text-sm font-bold transition-colors"
+          style={{ background: 'linear-gradient(to right, #E91E63, #D81B60)' }}
+          className="flex-1 text-white py-2.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-pink-500/20"
         >
-          Ver Detalles
+          Ver Perfil
         </button>
         
         {waLink ? (
@@ -103,14 +104,15 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
             href={waLink} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="flex-1 bg-green-600 hover:bg-green-500 text-foreground py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-sm"
+            style={{ backgroundColor: '#25D366' }}
+            className="flex-1 text-white py-2.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-md hover:brightness-110 active:scale-95"
           >
             <MessageCircle className="w-4 h-4" /> WhatsApp
           </a>
         ) : (
           <button 
             disabled
-            className="flex-1 bg-zinc-800/50 border border-border/20 text-zinc-500 cursor-not-allowed py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2"
+            className="flex-1 bg-[#2a2a2a] border border-white/5 text-zinc-500 cursor-not-allowed py-2 rounded-lg text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
           >
             <MessageCircle className="w-4 h-4" /> Sin WhatsApp
           </button>

@@ -81,7 +81,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
            <Sparkles className="w-5 h-5 text-primary" />
            <h2 className="text-2xl font-bold text-foreground">Servicios Adicionales (Extras)</h2>
         </div>
-        <Button onClick={() => setIsAdding(true)} variant="outline" className="gap-2 border-primary/40 text-primary hover:bg-primary/5">
+        <Button onClick={() => setIsAdding(true)} variant="outline" className="gap-2 border-primary/40 text-primary hover:bg-primary/10">
           <Plus className="w-4 h-4" /> Agregar Extra
         </Button>
       </div>

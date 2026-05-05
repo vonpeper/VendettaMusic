@@ -51,8 +51,8 @@ export function AddMusicianForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="secondary" className="h-8 text-xs gap-1.5">
-          <UserPlus className="w-3.5 h-3.5" />
+        <Button size="sm" variant="default" className="h-9 px-4 text-xs font-black uppercase tracking-widest gap-2 rounded-xl bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white hover:shadow-lg hover:shadow-pink-500/30 border-none transition-all active:scale-95">
+          <UserPlus className="w-4 h-4" />
           Agregar Personal
         </Button>
       </DialogTrigger>

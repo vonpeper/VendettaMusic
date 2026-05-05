@@ -178,7 +178,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
               </div>
 
               {/* Nuevos controles de visibilidad pública */}
-              <div className="col-span-1 md:col-span-2 p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-4">
+              <div className="col-span-1 md:col-span-2 p-4 bg-primary/10 border border-primary/20 rounded-xl space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label htmlFor="isPublic" className="text-sm font-bold text-primary flex items-center gap-2">
@@ -259,7 +259,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
                 className="flex w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
             </div>
             
-            <div className="space-y-2 mt-4 p-4 border border-primary/20 bg-primary/5 rounded-xl">
+            <div className="space-y-2 mt-4 p-4 border border-primary/20 bg-primary/10 rounded-xl">
               <Label htmlFor="bitacora" className="text-primary font-bold flex items-center gap-2">
                 📓 Bitácora / Observaciones del Show
               </Label>

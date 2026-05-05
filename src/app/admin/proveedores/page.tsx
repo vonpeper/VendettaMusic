@@ -85,7 +85,7 @@ export default async function AdminProveedoresPage() {
 
                 {/* Rubro */}
                 <TableCell className="py-4 align-top">
-                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 capitalize">
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 capitalize">
                     {provider.serviceType}
                   </Badge>
                 </TableCell>

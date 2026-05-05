@@ -266,7 +266,7 @@ export function PackagesManager({ initialPackages, serviceCatalog }: { initialPa
                           className={`flex items-center gap-2 p-3 rounded-xl border transition-all text-left group ${
                             isLinked 
                               ? 'bg-primary/10 border-primary/40 ring-1 ring-primary/20' 
-                              : 'bg-background/40 border-border/20 hover:border-primary/20 hover:bg-primary/5'
+                              : 'bg-background/40 border-border/20 hover:border-primary/20 hover:bg-primary/10'
                           }`}
                         >
                           <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${

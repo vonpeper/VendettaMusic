@@ -31,7 +31,7 @@ export function RepairSyncButton() {
       size="sm" 
       onClick={handleRepair} 
       disabled={loading}
-      className="gap-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all h-9 px-4 rounded-xl font-bold"
+      className="gap-2 border-primary/20 bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all h-9 px-4 rounded-xl font-bold"
     >
       {loading ? (
         <RefreshCw className="w-3.5 h-3.5 animate-spin" />

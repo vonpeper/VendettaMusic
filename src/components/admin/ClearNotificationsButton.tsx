@@ -28,18 +28,18 @@ export function ClearNotificationsButton() {
 
   return (
     <Button 
-      variant={confirming ? "destructive" : "outline"} 
+      variant="default" 
       size="sm" 
       onClick={handleClear}
       disabled={isPending}
-      className="gap-2 border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition-all"
+      className="gap-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] hover:shadow-lg hover:shadow-pink-500/30 transition-all text-white border-none rounded-xl font-bold"
     >
       {isPending ? (
         <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
         <Trash2 className="w-4 h-4" />
       )}
-      {confirming ? "¿Seguro? Clic otra vez" : "Limpiar Historial"}
+      {confirming ? "¿Confirmar?" : "Limpiar Historial"}
     </Button>
   )
 }

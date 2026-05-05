@@ -201,7 +201,7 @@ export default async function AdminConfiguracionPage() {
                 </div>
               </div>
               
-              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
+              <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6">
                  <div className="flex items-center gap-3 text-primary mb-3">
                    <Mail className="w-5 h-5" />
                    <h3 className="font-bold font-heading">¿Necesitas ayuda?</h3>
@@ -393,7 +393,7 @@ export default async function AdminConfiguracionPage() {
                 </div>
               </ConfigFormWrapper>
               
-              <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-xl flex gap-3">
+              <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-xl flex gap-3">
                  <Settings className="w-5 h-5 text-primary shrink-0" />
                  <div className="text-xs text-muted-foreground leading-relaxed space-y-2">
                    <p>

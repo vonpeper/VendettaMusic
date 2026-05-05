@@ -133,16 +133,16 @@ export default async function AdminVentasPage() {
 
       <Tabs defaultValue="bookings" className="space-y-6">
         <TabsList className="bg-card border border-border/40 p-1 h-12 rounded-xl">
-          <TabsTrigger value="bookings" className="gap-2 px-6 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-foreground">
+          <TabsTrigger value="bookings" className="gap-2 px-6 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#E91E63] data-[state=active]:to-[#D81B60] data-[state=active]:text-white data-[state=active]:shadow-lg">
             <ShoppingBag className="w-4 h-4" /> Bookings (Web)
           </TabsTrigger>
-          <TabsTrigger value="cotizaciones" className="gap-2 px-6 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-foreground">
+          <TabsTrigger value="cotizaciones" className="gap-2 px-6 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#E91E63] data-[state=active]:to-[#D81B60] data-[state=active]:text-white data-[state=active]:shadow-lg">
             <FileText className="w-4 h-4" /> Cotizaciones (Manual)
           </TabsTrigger>
-          <TabsTrigger value="contratos" className="gap-2 px-6 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-foreground">
+          <TabsTrigger value="contratos" className="gap-2 px-6 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
             <CheckCircle2 className="w-4 h-4" /> Contratos
           </TabsTrigger>
-          <TabsTrigger value="completados" className="gap-2 px-6 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
+          <TabsTrigger value="completados" className="gap-2 px-6 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
             <CheckCircle2 className="w-4 h-4" /> Completados
           </TabsTrigger>
         </TabsList>
@@ -153,7 +153,7 @@ export default async function AdminVentasPage() {
 
         <TabsContent value="cotizaciones" className="space-y-4">
           <div className="space-y-6">
-            <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl flex items-center gap-4">
+            <div className="bg-primary/10 border border-primary/20 p-4 rounded-xl flex items-center gap-4">
               <AlertCircle className="text-primary w-5 h-5" />
               <p className="text-sm text-muted-foreground">Aquí se listan las cotizaciones creadas manualmente por el equipo de Vendetta y registros legacy (Quotes).</p>
             </div>

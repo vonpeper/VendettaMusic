@@ -284,7 +284,7 @@ export function RepertoireManager({ initialSongs, initialSetlists }: { initialSo
                 {filteredSongs.map(song => (
                   <TableRow 
                     key={song.id} 
-                    className={`border-border/40 transition-colors cursor-pointer ${selectedSongs.includes(song.id) ? 'bg-primary/5' : 'hover:bg-muted/30'}`}
+                    className={`border-border/40 transition-colors cursor-pointer ${selectedSongs.includes(song.id) ? 'bg-primary/10' : 'hover:bg-muted/30'}`}
                     onClick={() => toggleSongSelection(song.id)}
                   >
                     <TableCell onClick={(e) => e.stopPropagation()}>

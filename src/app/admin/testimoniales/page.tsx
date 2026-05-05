@@ -22,7 +22,7 @@ export default async function TestimonialesPage() {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-4">
             <MessageSquare className="w-3 h-3" /> Moderación de Contenido
           </div>
           <h1 className="text-4xl font-heading font-black text-foreground uppercase tracking-tighter leading-none">

@@ -128,7 +128,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
           
           <Dialog>
             <DialogTrigger render={
-              <Button variant="destructive" size="sm" className="gap-2 font-bold h-9 px-4 rounded-lg shadow-lg shadow-red-500/10 text-white">
+              <Button variant="default" size="sm" className="gap-2 font-black h-9 px-4 rounded-xl bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white hover:shadow-lg hover:shadow-pink-500/30 border-none">
                 <Trash2 className="w-4 h-4" /> Eliminar Selección
               </Button>
             } />
@@ -189,7 +189,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
             {items.map(reserva => (
               <tr 
                 key={reserva.id} 
-                className={`hover:bg-primary/5 transition-colors group ${selectedIds.has(reserva.id) ? 'bg-primary/5' : ''}`}
+                className={`hover:bg-primary/10 transition-colors group ${selectedIds.has(reserva.id) ? 'bg-primary/10' : ''}`}
               >
                 <td className="px-6 py-4">
                   <button 
@@ -248,7 +248,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                       />
                     )}
                     <Link href={`/admin/ventas/${reserva.id}`}>
-                      <Button variant="outline" size="sm" className="h-8 px-3 text-[10px] uppercase font-bold gap-1 rounded-lg hover:bg-primary hover:text-black border-primary/20 transition-all">
+                      <Button variant="default" size="sm" className="h-8 px-3 text-[10px] uppercase font-black gap-1 rounded-lg bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white hover:shadow-md transition-all border-none">
                         Ver <ChevronRight className="w-3 h-3" />
                       </Button>
                     </Link>
