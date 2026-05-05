@@ -50,17 +50,17 @@ const SelectContent = React.forwardRef<
       <SelectPrimitive.Popup
         ref={ref}
         className={cn(
-          "p-1",
+          "p-1 overflow-y-auto custom-scrollbar",
           position === "popper" &&
-            "h-[var(--base-ui-select-popup-available-height)] w-full min-w-[var(--base-ui-select-trigger-width)]"
+            "h-[var(--base-ui-select-popup-available-height)] max-h-[min(var(--base-ui-select-popup-available-height),300px)] w-full min-w-[var(--base-ui-select-trigger-width)]"
         )}
         {...props}
       >
         <SelectPrimitive.List
           className={cn(
-            "p-1",
+            "p-1 overflow-y-auto custom-scrollbar",
             position === "popper" &&
-              "h-[var(--base-ui-select-popup-available-height)] w-full min-w-[var(--base-ui-select-trigger-width)]"
+              "h-auto w-full min-w-[var(--base-ui-select-trigger-width)]"
           )}
         >
           {children}
