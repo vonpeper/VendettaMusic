@@ -12,9 +12,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const isAdmin = session.user?.role === "ADMIN"
 
-  const pendingInbox = await db.inboxItem.count({
-    where: { status: "pending" },
-  }).catch(() => 0)
+  const pendingInbox = (db as any).inboxItem 
+    ? await db.inboxItem.count({ where: { status: "pending" } }).catch(() => 0)
+    : 0;
 
   return (
     <div className="admin-theme flex min-h-screen bg-background text-foreground p-4 gap-4">
