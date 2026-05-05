@@ -20,6 +20,20 @@ services:
       - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
       - ADMIN_WHATSAPP_NUMBER=${ADMIN_WHATSAPP_NUMBER}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vendetta.rule=Host(`vendetta.prosuite.pro`)"
+      - "traefik.http.routers.vendetta.entrypoints=websecure"
+      - "traefik.http.routers.vendetta.tls.certresolver=letsencrypt"
+      - "traefik.http.services.vendetta.loadbalancer.server.port=3000"
+      - "traefik.docker.network=dokploy-network"
+    networks:
+      - default
+      - dokploy-network
     volumes:
       - ./prisma:/app/prisma
       - ./public/assets:/app/public/assets
+
+networks:
+  dokploy-network:
+    external: true

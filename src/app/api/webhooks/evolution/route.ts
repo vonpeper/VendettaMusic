@@ -112,6 +112,10 @@ async function handleMessageEvent(event: string, payload: any) {
     ])
 
     const isKnown = !!(client || musician || booking)
+    if (!isKnown) {
+      console.log(`🔇 Ignoring message from unknown number: ${phone}`)
+      return
+    }
 
     // 2. LÓGICA DE CLASIFICACIÓN Y ESCALACIÓN
     let shouldEscalate = false

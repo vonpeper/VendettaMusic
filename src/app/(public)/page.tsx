@@ -336,7 +336,7 @@ export default async function HomePage() {
       </section>
 
       {/* -- CONSULTA ESTATUS --------------------------------------------- */}
-      <section className="py-24 relative overflow-hidden bg-black/40">
+      <section id="estatus" className="py-24 relative overflow-hidden bg-black/40">
         <div className="container mx-auto px-4 max-w-4xl">
            <div className="text-center mb-12">
               <div className="text-primary font-black uppercase tracking-[0.4em] text-[10px] mb-4">Zona de Clientes</div>
