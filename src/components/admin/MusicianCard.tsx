@@ -14,7 +14,22 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
   const badgeColor = availabilityColors[musician.availability] || "bg-gray-500/20 text-muted-foreground border-gray-500/30"
   
   // Format phone for whatsapp link
-  const waLink = musician.phone ? `https://wa.me/${musician.phone.replace(/\D/g, "")}` : null
+  const rawPhone = musician.whatsapp || musician.phone
+  const cleanPhone = rawPhone ? rawPhone.replace(/\D/g, "") : ""
+  
+  if (musician.user.name.includes("Edgar")) {
+    console.log("DEBUG EDGAR:", { 
+      name: musician.user.name, 
+      whatsapp: musician.whatsapp, 
+      phone: musician.phone, 
+      rawPhone, 
+      cleanPhone 
+    });
+  }
+
+  // Basic validation for Mexico (52) if 10 digits
+  const formattedPhone = (cleanPhone.length === 10) ? `52${cleanPhone}` : cleanPhone
+  const waLink = cleanPhone ? `https://wa.me/${formattedPhone}` : null
 
   return (
     <div className={`bg-card border ${isAtRisk ? 'border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-border/40'} rounded-xl p-5 relative overflow-hidden transition-all hover:border-primary/50`}>
@@ -69,7 +84,7 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
         </div>
         <div className="flex items-center gap-2 text-sm">
           <Phone className="w-4 h-4 text-muted-foreground" />
-          <span className="text-muted-foreground truncate">{musician.phone || "Sin teléfono"}</span>
+          <span className="text-muted-foreground truncate">{rawPhone || "Sin teléfono"}</span>
         </div>
       </div>
 

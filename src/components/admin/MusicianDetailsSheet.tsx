@@ -117,9 +117,15 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
                 <input name="instrument" defaultValue={musician.instrument} className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground" />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs text-muted-foreground">WhatsApp (Contacto Principal)</label>
-                <input name="whatsapp" defaultValue={musician.whatsapp} required className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">WhatsApp (Principal)</label>
+                  <input name="whatsapp" defaultValue={musician.whatsapp} required className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground font-bold text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">Teléfono de Respaldo</label>
+                  <input name="phone" defaultValue={musician.phone} className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground" />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

@@ -46,7 +46,15 @@ export default async function AdminEventosPage() {
   ])
 
   const clientsMapped = clients.map(c => ({ id: c.id, name: c.user.name ?? c.user.email ?? "Sin nombre" }))
-  const staffMapped = musicianProfiles.map(p => ({ id: p.id, name: p.user.name ?? "Sin nombre" }))
+  
+  // Filtrar solo Ingenieros y Staff para el campo de Audio Engineer
+  const staffMapped = musicianProfiles
+    .filter(p => 
+      p.instrument?.toLowerCase().includes("ingeniero") || 
+      p.instrument?.toLowerCase().includes("staff")
+    )
+    .map(p => ({ id: p.id, name: p.user.name ?? "Sin nombre" }))
+
   const now = new Date()
 
   return (
