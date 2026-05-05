@@ -99,10 +99,12 @@ async function handleMessageEvent(event: string, payload: any) {
     // 1. Identificar si es un contacto conocido
     const [client, musician, booking] = await Promise.all([
       db.clientProfile.findFirst({
-        where: { OR: [{ whatsapp: { contains: cleanLast10 } }, { phone: { contains: cleanLast10 } }] }
+        where: { OR: [{ whatsapp: { contains: cleanLast10 } }, { phone: { contains: cleanLast10 } }] },
+        include: { user: true }
       }),
       db.musicianProfile.findFirst({
-        where: { OR: [{ whatsapp: { contains: cleanLast10 } }, { phone: { contains: cleanLast10 } }] }
+        where: { OR: [{ whatsapp: { contains: cleanLast10 } }, { phone: { contains: cleanLast10 } }] },
+        include: { user: true }
       }),
       db.bookingRequest.findFirst({
         where: { clientPhone: { contains: cleanLast10 } }
@@ -144,12 +146,12 @@ async function handleMessageEvent(event: string, payload: any) {
       }
     }).catch(() => null)
 
-    // 4. Crear Ítem en Bandeja de Atención (Attention Inbox)
     if (shouldEscalate) {
+      const senderName = (client as any)?.user?.name || booking?.clientName || (musician as any)?.user?.name || "Nuevo Lead"
       await db.inboxItem.create({
         data: {
           phoneNumber: phone,
-          senderName: client?.user?.name || booking?.clientName || musician?.user?.name || "Nuevo Lead",
+          senderName,
           message: text || "(media)",
           type: itemType,
           category: category as any,
