@@ -31,7 +31,8 @@ export default async function AdminDashboardPage() {
     pendingQuotes,
     expiredBookingRequests,
     allBookingRequests,
-    confirmedBookings
+    confirmedBookings,
+    pendingInbox
   ] = await Promise.all([
     db.event.findMany({
       where: { date: { gte: now }, status: { not: "cancelado" } },
@@ -76,7 +77,8 @@ export default async function AdminDashboardPage() {
     db.bookingRequest.findMany({
       where: { status: "agendado" },
       select: { id: true, eventId: true, clientName: true }
-    })
+    }),
+    db.inboxItem.count({ where: { status: "pending" } })
   ])
 
 
