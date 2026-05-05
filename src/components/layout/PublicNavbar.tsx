@@ -11,6 +11,7 @@ export function PublicNavbar() {
           <img src="/logo.png" alt="Vendetta Logo" className="h-10 w-auto" />
         </Link>
         <nav className="hidden lg:flex gap-8 items-center">
+          <Link href="/" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Inicio</Link>
           <Link href="/#nosotros" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Nosotros</Link>
           <Link href="/#servicios" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Servicios</Link>
           <Link href="/#paquetes" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Paquetes</Link>
