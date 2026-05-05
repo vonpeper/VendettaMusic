@@ -15,12 +15,12 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client
-RUN npx prisma generate
+RUN DATABASE_URL=file:./dev.db npx prisma generate
 
 # Disable telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN npm run build
+RUN DATABASE_URL=file:./dev.db npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
