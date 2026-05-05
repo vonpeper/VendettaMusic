@@ -71,6 +71,41 @@ const PACKAGE_STLYES: Record<number, any> = {
 const MXN = (v: number) =>
   new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(v)
 
+const HARDCODED_FEATURES: Record<string, { includes: {icon: string, text: string}[], notIncludes: string[] }> = {
+  "Essential": {
+    includes: [
+      { icon: "Volume2",    text: "Audio Electro-Voice (2 tops + 1 sub + consola digital)" },
+      { icon: "Music2",     text: "Backline completo (batería, amps, microfonía)" },
+      { icon: "Lightbulb",  text: "Iluminación básica RGB" },
+      { icon: "Users",      text: "4 integrantes + Ingeniero + Staff" },
+      { icon: "Music2",     text: "Repertorio Pop Rock (Inglés/Español)" },
+      { icon: "Sparkles",   text: "2 horas de show (2 sets)" },
+    ],
+    notIncludes: ["Templete", "Pantalla LED", "Iluminación robótica", "Viáticos"]
+  },
+  "Experience": {
+    includes: [
+      { icon: "Sparkles",  text: "Todo lo del paquete Essential" },
+      { icon: "Volume2",   text: "Audio profesional (100 a 300 personas)" },
+      { icon: "Volume2",   text: "Mejora en calidad y cobertura de sonido" },
+      { icon: "Mic2",      text: "Monitoreo inalámbrico profesional" },
+      { icon: "Music2",    text: "2 horas de show potente" },
+    ],
+    notIncludes: ["Templete", "Pantalla LED", "Viáticos"]
+  },
+  "Festival Premium": {
+    includes: [
+      { icon: "Sparkles",   text: "Todo lo del paquete Experience" },
+      { icon: "Monitor",    text: "Pantalla LED 3×2 m" },
+      { icon: "Lightbulb",  text: "Iluminación robótica avanzada" },
+      { icon: "Star",       text: "Templete (Escenario)" },
+      { icon: "Users",      text: "Producción completa tipo concierto" },
+      { icon: "Music2",     text: "2 horas de máxima experiencia" },
+    ],
+    notIncludes: ["Viáticos"]
+  }
+}
+
 // --- Modal de ubicación + precio ---------------------------------------------
 function LocationModal({
   pkg,
@@ -267,18 +302,54 @@ export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[] }) {
                   <div className="flex-1 mb-6">
                     <div className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${style.accentColor}`}>¿Qué incluye?</div>
                     <ul className="space-y-2.5">
-                      {(pkg.serviceItems || []).map((item) => {
-                        const IconComp = getIcon(item.icon)
-                        return (
-                          <li key={item.id} className="flex items-start gap-2.5">
+                      {HARDCODED_FEATURES[pkg.name] ? (
+                        HARDCODED_FEATURES[pkg.name].includes.map((item, j) => {
+                          const IconComp = getIcon(item.icon)
+                          return (
+                            <li key={j} className="flex items-start gap-2.5">
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${style.badgeColor}`}>
+                                <IconComp className="w-2.5 h-2.5" />
+                              </div>
+                              <span className="text-sm text-white/80 leading-snug">{item.text}</span>
+                            </li>
+                          )
+                        })
+                      ) : pkg.serviceItems && pkg.serviceItems.length > 0 ? (
+                        pkg.serviceItems.map((item) => {
+                          const IconComp = getIcon(item.icon)
+                          return (
+                            <li key={item.id} className="flex items-start gap-2.5">
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${style.badgeColor}`}>
+                                <IconComp className="w-2 h-2" />
+                              </div>
+                              <span className="text-sm text-white/80 leading-snug">{item.name}</span>
+                            </li>
+                          )
+                        })
+                      ) : (
+                        pkg.includes?.split(',').map((inc, idx) => (
+                          <li key={idx} className="flex items-start gap-2.5">
                             <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${style.badgeColor}`}>
-                              <IconComp className="w-2 h-2" />
+                              <Check className="w-2 h-2" />
                             </div>
-                            <span className="text-sm text-white/80 leading-snug">{item.name}</span>
+                            <span className="text-sm text-white/80 leading-snug">{inc.trim()}</span>
                           </li>
-                        )
-                      })}
+                        ))
+                      )}
                     </ul>
+
+                    {HARDCODED_FEATURES[pkg.name]?.notIncludes.length > 0 && (
+                      <ul className="mt-3 space-y-1.5">
+                        {HARDCODED_FEATURES[pkg.name].notIncludes.map((item, j) => (
+                          <li key={j} className="flex items-center gap-2.5">
+                            <div className="w-4 h-4 rounded-full bg-white/5 border border-white/15 flex items-center justify-center shrink-0">
+                              <X className="w-2.5 h-2.5 text-white/30" />
+                            </div>
+                            <span className="text-xs text-white/30">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
 
                   <Button
