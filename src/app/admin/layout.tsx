@@ -17,16 +17,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }).catch(() => 0)
 
   return (
-    <div className="admin-theme flex min-h-screen bg-background text-foreground">
-      {/* Sidebar */}
+    <div className="admin-theme flex min-h-screen bg-background text-foreground p-4 gap-4">
+      {/* Sidebar - Floating style */}
       <AdminSidebar 
         user={{ name: session.user?.name, role: session.user?.role }} 
         pendingInbox={pendingInbox} 
       />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {children}
+      <main className="flex-1 overflow-auto rounded-3xl bg-transparent">
+        <div className="h-full">
+          {children}
+        </div>
       </main>
     </div>
   )
