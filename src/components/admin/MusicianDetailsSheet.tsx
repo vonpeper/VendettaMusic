@@ -90,7 +90,7 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
               
               {/* Photo Update */}
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-20 h-20 rounded-full bg-primary/10 border border-border/40 overflow-hidden relative group">
+                <div className="w-20 h-20 rounded-full bg-[#1a1a1a] border border-primary/30 overflow-hidden relative group">
                   <img 
                     src={preview || musician.user.image || `https://ui-avatars.com/api/?name=${musician.user.name}&background=random`} 
                     alt={musician.user.name} 
@@ -168,7 +168,7 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
                   <Trash className="w-3 h-3" /> Borrar Músico
                 </button>
                 
-                <button type="submit" disabled={isPending} className="bg-primary hover:bg-primary/90 text-foreground px-6 py-2 rounded-md text-sm font-bold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+                <button type="submit" disabled={isPending} className="bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white px-6 py-2 rounded-md text-sm font-black transition-all shadow-lg shadow-pink-500/20 flex items-center gap-2">
                   <Save className="w-4 h-4" /> {isPending ? "Guardando..." : "Actualizar Información"}
                 </button>
               </div>

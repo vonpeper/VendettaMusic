@@ -245,7 +245,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
             <div className="mb-6">
               <Label className="mb-2 block">Seleccionar del Catálogo (Opcional)</Label>
               <Select onValueChange={handleLocationSelect}>
-                <SelectTrigger className="bg-primary/5 border-primary/20">
+                <SelectTrigger className="bg-primary/10 border-primary/20">
                   <SelectValue placeholder="Busca un lugar registrado..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -413,7 +413,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
                 </Select>
               </div>
               <div className="md:col-span-3 space-y-4 pt-4 border-t border-border/40">
-                <label className="flex items-center gap-4 cursor-pointer p-4 bg-primary/5 border border-primary/20 rounded-2xl group transition-all hover:bg-primary/10">
+                <label className="flex items-center gap-4 cursor-pointer p-4 bg-primary/10 border border-primary/20 rounded-2xl group transition-all hover:bg-primary/10">
                   <input 
                     type="checkbox" 
                     checked={formData.depositConfirmed} 

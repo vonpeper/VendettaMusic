@@ -165,7 +165,7 @@ export function UsersManager({ users, currentUserId }: UsersManagerProps) {
             </TableHeader>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id} className="hover:bg-primary/5 transition-colors group">
+                <TableRow key={user.id} className="hover:bg-primary/10 transition-colors group">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black uppercase text-xs border border-primary/20">

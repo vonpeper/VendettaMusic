@@ -91,7 +91,7 @@ export function ReviewList({ initialReviews }: { initialReviews: Review[] }) {
 function ReviewCard({ review, loading, onApprove, onReject, onDelete }: any) {
   return (
     <div className={`group relative bg-card border border-border/40 rounded-[2rem] p-6 transition-all duration-300 ${
-      review.status === "pending" ? "border-primary/20 bg-primary/5 shadow-xl shadow-primary/5" : ""
+      review.status === "pending" ? "border-primary/20 bg-primary/10 shadow-xl shadow-primary/5" : ""
     }`}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex gap-1">

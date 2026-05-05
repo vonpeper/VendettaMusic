@@ -57,9 +57,9 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
           {/* SECCIÓN MÚSICOS */}
           <div>
             <div className="flex items-center gap-4 mb-8">
-              <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-lg">
-                <Mic className="w-4 h-4 text-primary" />
-                <h2 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Titulares y Músicos</h2>
+            <div className="flex items-center gap-3 px-4 py-2 bg-[#111111] border-l-4 border-[#E91E63] rounded-r-xl shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+                <Mic className="w-4 h-4 text-[#E91E63]" />
+                <h2 className="text-[12px] font-black uppercase tracking-[0.25em] text-white">Titulares y Músicos</h2>
               </div>
               <div className="h-px flex-1 bg-border/40" />
             </div>
@@ -78,9 +78,9 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
           {engineers.length > 0 && (
             <div>
               <div className="flex items-center gap-4 mb-8">
-                <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <Headphones className="w-4 h-4 text-blue-400" />
-                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-blue-400">Ingeniería de Audio</h2>
+                <div className="flex items-center gap-3 px-4 py-2 bg-[#111111] border-l-4 border-[#E91E63] rounded-r-xl shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+                  <Headphones className="w-4 h-4 text-[#E91E63]" />
+                  <h2 className="text-[12px] font-black uppercase tracking-[0.25em] text-white">Ingeniería de Audio</h2>
                 </div>
                 <div className="h-px flex-1 bg-border/40" />
               </div>
@@ -100,9 +100,9 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
           {staffTech.length > 0 && (
             <div>
               <div className="flex items-center gap-4 mb-8">
-                <div className="flex items-center gap-2 px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                  <Settings className="w-4 h-4 text-orange-400" />
-                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-orange-400">Staff Técnico y Apoyo</h2>
+                <div className="flex items-center gap-3 px-4 py-2 bg-[#111111] border-l-4 border-[#E91E63] rounded-r-xl shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+                  <Settings className="w-4 h-4 text-[#E91E63]" />
+                  <h2 className="text-[12px] font-black uppercase tracking-[0.25em] text-white">Staff Técnico y Apoyo</h2>
                 </div>
                 <div className="h-px flex-1 bg-border/40" />
               </div>

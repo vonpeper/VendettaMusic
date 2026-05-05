@@ -59,7 +59,7 @@ export default async function InboxPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-            <Badge variant="outline" className="px-4 py-2 border-primary/20 bg-primary/5 text-primary text-sm font-bold">
+            <Badge variant="outline" className="px-4 py-2 border-primary/20 bg-primary/10 text-primary text-sm font-bold">
                 {pendingCount} Pendientes
             </Badge>
         </div>

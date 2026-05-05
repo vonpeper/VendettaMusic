@@ -288,7 +288,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
             </div>
           </div>
 
-          <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/20">
+          <div className="space-y-4 bg-primary/10 p-4 rounded-xl border border-primary/20">
             <div className="flex items-center space-x-2 group cursor-pointer transition-all">
               <input 
                 type="checkbox" 

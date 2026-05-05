@@ -18,13 +18,13 @@ export function MarkCompletedButton({ bookingId }: { bookingId: string }) {
   return (
     <Button 
       size="sm" 
-      variant="outline" 
-      className="h-8 gap-2 border-primary/30 text-primary hover:bg-primary hover:text-foreground" 
+      variant="default" 
+      className="h-8 gap-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white hover:shadow-md transition-all rounded-lg font-bold border-none" 
       onClick={handleComplete}
       disabled={loading}
     >
       <CheckCircle className="w-3 h-3" />
-      {loading ? "Actualizando..." : "Completar"}
+      {loading ? "..." : "Completar"}
     </Button>
   )
 }

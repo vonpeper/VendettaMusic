@@ -91,7 +91,12 @@ export default async function AdminDashboardPage() {
     db.location.findMany({ orderBy: { name: 'asc' } }),
     db.package.findMany({ orderBy: { name: 'asc' } }),
     db.musicianProfile.findMany({ 
-      where: { instrument: { contains: "Ingeniero" } }, // USER REQUEST: Filter by Engineer
+      where: { 
+        OR: [
+          { instrument: { contains: "Ingeniero", mode: 'insensitive' } },
+          { instrument: { contains: "Staff", mode: 'insensitive' } }
+        ]
+      },
       include: { user: true } 
     }),
   ])
@@ -193,7 +198,7 @@ export default async function AdminDashboardPage() {
         {soonEvents.length > 0 && (
           <div className="flex items-center gap-3">
             <RepairSyncButton />
-            <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-lg px-4 py-2">
+            <div className="flex items-center gap-2 bg-primary/15 border border-primary/40 rounded-lg px-4 py-2">
               <Bell className="w-4 h-4 text-primary animate-pulse" />
               <span className="text-sm text-primary font-bold">
                 {soonEvents.length} show{soonEvents.length > 1 ? "s" : ""} esta semana
@@ -216,8 +221,8 @@ export default async function AdminDashboardPage() {
         />
         
         <Link href="/admin/ventas?new=quote" className="no-underline">
-          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 rounded-xl group transition-all">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-primary/40 hover:border-primary hover:bg-primary/10 rounded-xl group transition-all">
+            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
               <FilePlus className="w-4 h-4" />
             </div>
             <div className="text-left">
@@ -228,8 +233,8 @@ export default async function AdminDashboardPage() {
         </Link>
 
         <Link href="/admin/ensayos" className="no-underline">
-          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-border/40 hover:border-primary hover:bg-primary/5 rounded-xl group transition-all">
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 transition-transform">
+          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-border/40 hover:border-primary hover:bg-primary/10 rounded-xl group transition-all">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary group-hover:scale-110 transition-transform">
               <CalendarDays className="w-4 h-4" />
             </div>
             <div className="text-left">
@@ -240,8 +245,8 @@ export default async function AdminDashboardPage() {
         </Link>
 
         <Link href="/admin/inbox" className="no-underline">
-          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-border/40 hover:border-primary hover:bg-primary/5 rounded-xl group transition-all relative">
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 transition-transform">
+          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-border/40 hover:border-primary hover:bg-primary/10 rounded-xl group transition-all relative">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary group-hover:scale-110 transition-transform">
               <Inbox className="w-4 h-4" />
             </div>
             <div className="text-left">
@@ -276,7 +281,7 @@ export default async function AdminDashboardPage() {
             label: "Valor del Pipeline",
             value: MXN(totalPipelineValue),
             sub: `${activeLeadsCount} leads activos`,
-            subColor: "text-primary",
+            subColor: "text-primary font-black",
             icon: FileText,
             bg: "bg-white",
           },
@@ -284,7 +289,7 @@ export default async function AdminDashboardPage() {
             label: "Tasa de Cierre",
             value: `${conversionRate}%`,
             sub: "Conversión Real",
-            subColor: conversionRate > 20 ? "text-green-600" : "text-yellow-600",
+            subColor: conversionRate > 20 ? "text-green-600 font-black" : "text-yellow-600 font-black",
             icon: TrendingUp,
             bg: "bg-white",
           },
@@ -292,7 +297,7 @@ export default async function AdminDashboardPage() {
             label: "Shows Próximos",
             value: `${upcomingEvents.length}`,
             sub: "Agenda confirmada",
-            subColor: "text-muted-foreground",
+            subColor: "text-muted-foreground font-black",
             icon: Music,
             bg: "bg-white",
           },
@@ -302,7 +307,7 @@ export default async function AdminDashboardPage() {
               <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
                 {kpi.label}
               </CardTitle>
-              <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <kpi.icon className="h-4 w-4 text-primary" />
               </div>
             </CardHeader>
@@ -328,7 +333,7 @@ export default async function AdminDashboardPage() {
               </CardDescription>
             </div>
             <Link href="/admin/ventas"
-              className="px-4 py-2 bg-primary/5 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
+              className="px-4 py-2 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
                Ver detalle
             </Link>
           </CardHeader>
@@ -368,7 +373,7 @@ export default async function AdminDashboardPage() {
                           {formatDateMX(ev.date, "PPPP")}
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary border-primary/20">
+                      <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-primary/15 text-primary border-primary/30">
                         Ver Agenda
                       </Badge>
                     </div>
@@ -386,7 +391,7 @@ export default async function AdminDashboardPage() {
               <CardTitle className="font-heading font-black text-xl">Pipeline Activo</CardTitle>
               <CardDescription>Cotizaciones y leads sin concretar.</CardDescription>
             </div>
-            <Link href="/admin/ventas" className="px-3 py-1 bg-primary/5 text-primary rounded-full text-[9px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
+            <Link href="/admin/ventas" className="px-3 py-1 bg-primary/10 text-primary rounded-full text-[9px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
               Gestionar
             </Link>
           </CardHeader>
@@ -409,7 +414,7 @@ export default async function AdminDashboardPage() {
                     <Link 
                       key={q.id} 
                       href={`/admin/ventas/${q.id}`}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/10 hover:border-primary/30 hover:bg-white transition-all shadow-sm group cursor-pointer no-underline text-inherit active:scale-[0.98]"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/10 hover:border-primary/40 hover:bg-white transition-all shadow-sm group cursor-pointer no-underline text-inherit active:scale-[0.98]"
                       title="Ver detalles de la negociación"
                     >
                       <div className="w-10 h-10 rounded-lg bg-white border border-border/40 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
@@ -453,7 +458,7 @@ export default async function AdminDashboardPage() {
               <CardTitle className="font-heading font-black text-xl uppercase tracking-tight">Semáforo de Producción</CardTitle>
               <CardDescription>Auditoría de próximos shows confirmados y estatus de logística.</CardDescription>
             </div>
-            <Link href="/admin/eventos" className="px-4 py-2 bg-primary/5 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm">
+            <Link href="/admin/eventos" className="px-4 py-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:shadow-lg hover:shadow-pink-500/30 transition-all shadow-sm">
               Ver Agenda Completa
             </Link>
           </CardHeader>
@@ -466,13 +471,15 @@ export default async function AdminDashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {upcomingEvents.map(ev => {
                   const daysUntil = Math.ceil((ev.date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-                  const hasContract = ev.contracts && ev.contracts.length > 0
+                  const contractRecord = ev.contracts?.[0]
+                  const isSigned = !!contractRecord?.signedAt || contractRecord?.status === "signed"
+                  const hasContract = !!contractRecord
                   const isPaid = ev.balance <= 0
                   const hasDeposit = ev.deposit > 0
                   const hasAudio = !!ev.audioEngineer
                   
                   const isUrgent = daysUntil <= 7
-                  const isReady = hasContract && isPaid && hasAudio
+                  const isReady = isSigned && isPaid && hasAudio
                   
                   // Lógica de color de la tarjeta (Semáforo Principal)
                   // Verde: Todo listo. 
@@ -516,52 +523,59 @@ export default async function AdminDashboardPage() {
                           <span className="text-xl font-black leading-none mt-1">{ev.date.getDate()}</span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="font-black text-foreground text-sm truncate uppercase tracking-tight flex items-center gap-1.5">
+                          <div className="font-black text-foreground text-sm uppercase tracking-tight flex flex-wrap items-center gap-1.5">
                             {ev.client?.user?.name ?? ev.customName ?? "Cliente"}
                             {linkedBooking && (
-                              <span className="ml-2 text-[10px] font-black bg-primary/20 text-primary px-2 py-0.5 rounded-full border border-primary/20">
+                              <span className="text-[10px] font-black bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white px-2 py-0.5 rounded-full shadow-sm">
                                 {linkedBooking.shortId}
                               </span>
                             )}
-                            {linkedBooking && <ExternalLink className="w-3 h-3 opacity-30" />}
+                            {linkedBooking && <ExternalLink className="w-3 h-3 opacity-30 shrink-0" />}
                           </div>
-                          <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-tighter mt-1 ${isUrgent && !isReady ? 'bg-red-100 border-red-200 text-red-700' : isReady ? 'bg-green-100 border-green-200 text-green-700' : 'bg-muted/50 text-muted-foreground'}`}>
+                          <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-tighter mt-1 ${isUrgent && !isReady ? 'bg-red-500/10 border-red-500/20 text-red-600' : isReady ? 'bg-green-500/10 border-green-500/20 text-green-600' : 'bg-muted/50 text-muted-foreground'}`}>
                             {daysUntil === 0 ? "HOY" : daysUntil === 1 ? "MAÑANA" : `EN ${daysUntil} DÍAS`}
                           </Badge>
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-3 gap-2 relative z-10">
-                        {/* CONTRATO: Rojo si no hay, Verde si hay */}
-                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${hasContract ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
-                          {hasContract ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} Contrato
+                        {/* CONTRATO: Verde si está firmado, Amarillo si existe o agendado, Rojo si nada */}
+                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${
+                          isSigned 
+                            ? "bg-green-500/10 border-green-500/20 text-green-600" 
+                            : (hasContract || ev.status === "scheduled" || ev.status === "confirmed")
+                              ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-600"
+                              : "bg-red-500/10 border-red-500/20 text-red-600"
+                        }`}>
+                          {(isSigned || hasContract || ev.status === "scheduled" || ev.status === "confirmed") ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} 
+                          {isSigned ? "Firmado" : (hasContract || ev.status === "scheduled" || ev.status === "confirmed") ? "Generado" : "Contrato"}
                         </div>
 
                         {/* PAGO: Rojo si 0, Amarillo si hay algo, Verde si completo */}
                         <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${
                           isPaid 
-                            ? "bg-green-50 border-green-200 text-green-700" 
+                            ? "bg-green-500/10 border-green-500/20 text-green-600" 
                             : hasDeposit 
-                              ? "bg-yellow-50 border-yellow-200 text-yellow-700" 
-                              : "bg-red-50 border-red-200 text-red-700"
+                              ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-600" 
+                              : "bg-red-500/10 border-red-500/20 text-red-600"
                         }`}>
                           {isPaid ? <CheckCircle2 className="w-3 h-3" /> : hasDeposit ? <AlertCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} Pago
                         </div>
 
                         {/* AUDIO: Rojo si no hay inge, Verde si hay */}
-                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${hasAudio ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
+                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${hasAudio ? "bg-green-500/10 border-green-500/20 text-green-600" : "bg-red-500/10 border-red-500/20 text-red-600"}`}>
                           {hasAudio ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} Audio
                         </div>
                       </div>
 
                       <div className="mt-auto space-y-2 relative z-10">
                         {ev.balance > 0 && (
-                          <div className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border text-center ${isUrgent ? "bg-red-100 border-red-200 text-red-700" : "bg-muted/30 border-border/10 text-muted-foreground"}`}>
+                          <div className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border text-center ${isUrgent ? "bg-red-500/10 border-red-500/20 text-red-600" : "bg-muted/30 border-border/10 text-muted-foreground"}`}>
                             Saldo Pendiente: {MXN(ev.balance)}
                           </div>
                         )}
                         {isReady && (
-                          <div className="text-[10px] font-bold bg-green-100 border border-green-200 text-green-700 px-3 py-1.5 rounded-lg text-center flex items-center justify-center gap-1.5">
+                          <div className="text-[10px] font-bold bg-green-500/10 border border-green-500/20 text-green-600 px-3 py-1.5 rounded-lg text-center flex items-center justify-center gap-1.5">
                              <CheckCircle2 className="w-3 h-3" /> LISTO PARA EL SHOW
                           </div>
                         )}

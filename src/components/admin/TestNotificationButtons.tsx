@@ -21,47 +21,57 @@ export function TestNotificationButtons() {
   }
 
   return (
-    <div className="flex flex-wrap gap-3 items-center p-4 bg-primary/5 rounded-xl border border-primary/20">
-      <div className="flex items-center gap-2 mr-4">
-        <Send className="w-4 h-4 text-primary" />
-        <span className="text-sm font-bold uppercase tracking-wider text-primary">Pruebas Evolution API</span>
+    <div className="flex flex-wrap gap-4 items-center p-6 bg-primary/10 rounded-2xl border border-primary/20 shadow-sm">
+      <div className="flex items-center gap-3 mr-6">
+        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+          <Send className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <span className="text-sm font-black uppercase tracking-[0.1em] text-primary block">Evolution API</span>
+          <span className="text-[10px] text-muted-foreground font-bold uppercase">Pruebas de Envío Automático</span>
+        </div>
       </div>
       
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => handleSendTest("admin")}
-        disabled={isPending}
-        className="gap-2 bg-background border-primary/30 hover:border-primary"
-      >
-        <ShieldCheck className="w-4 h-4" /> Administrador
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          variant="default" 
+          size="sm" 
+          onClick={() => handleSendTest("admin")}
+          disabled={isPending}
+          className="gap-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] hover:shadow-lg hover:shadow-pink-500/30 transition-all rounded-xl h-10 px-4 font-bold text-white border-none"
+        >
+          <ShieldCheck className="w-4 h-4" /> A Administrador
+        </Button>
 
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => handleSendTest("musician")}
-        disabled={isPending}
-        className="gap-2 bg-background border-primary/30 hover:border-primary"
-      >
-        <Users className="w-4 h-4" /> Músico
-      </Button>
+        <Button 
+          variant="default" 
+          size="sm" 
+          onClick={() => handleSendTest("musician")}
+          disabled={isPending}
+          className="gap-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] hover:shadow-lg hover:shadow-pink-500/30 transition-all rounded-xl h-10 px-4 font-bold text-white border-none"
+        >
+          <Users className="w-4 h-4" /> A Músicos
+        </Button>
 
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => handleSendTest("client")}
-        disabled={isPending}
-        className="gap-2 bg-background border-primary/30 hover:border-primary"
-      >
-        <User className="w-4 h-4" /> Cliente
-      </Button>
+        <Button 
+          variant="default" 
+          size="sm" 
+          onClick={() => handleSendTest("client")}
+          disabled={isPending}
+          className="gap-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] hover:shadow-lg hover:shadow-pink-500/30 transition-all rounded-xl h-10 px-4 font-bold text-white border-none"
+        >
+          <User className="w-4 h-4" /> A Clientes
+        </Button>
+      </div>
 
-      {isPending && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+      {isPending && <Loader2 className="w-5 h-5 animate-spin text-primary" />}
       
-      <p className="text-[10px] text-muted-foreground ml-auto uppercase tracking-widest font-bold">
-        * Mensajes automáticos de prueba
-      </p>
+      <div className="ml-auto flex items-center gap-2 bg-white/50 px-3 py-1.5 rounded-full border border-border/20">
+        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+        <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black">
+          API Conectada
+        </p>
+      </div>
     </div>
   )
 }

@@ -194,7 +194,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                   key={client.id} 
                   className={`border-border/40 align-top transition-all duration-300 ${
                     selectedIds.has(client.id) 
-                    ? 'bg-primary/5 border-l-2 border-l-primary' 
+                    ? 'bg-primary/10 border-l-2 border-l-primary' 
                     : 'hover:bg-white/[0.02]'
                   }`}
                 >

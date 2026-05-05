@@ -105,11 +105,11 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
         <div className="overflow-x-auto">
           <Table className="min-w-[1400px]">
             <TableHeader>
-              <tr className="bg-primary/5 border-b border-border/40">
+              <tr className="bg-primary/10 border-b border-border/40">
                 <TableHead className="text-primary font-bold w-24 py-5 pl-6">Fecha</TableHead>
                 <TableHead className="font-bold">Evento, Identidad y Estatus</TableHead>
                 <TableHead className="font-bold">Horario y Logística</TableHead>
-                <TableHead className="font-bold">Staff</TableHead>
+                <TableHead className="font-bold text-center">Staff</TableHead>
                 <TableHead className="font-bold">Finanzas</TableHead>
                 <TableHead className="text-right pr-10 font-bold">Acciones</TableHead>
               </tr>
@@ -169,7 +169,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                           </div>
                         )}
                         {!!evt.ceremonyType && (
-                          <div className="text-[10px] font-bold text-primary uppercase tracking-tighter bg-primary/5 px-2 py-0.5 rounded border border-primary/10">
+                          <div className="text-[10px] font-bold text-primary uppercase tracking-tighter bg-primary/15 px-2 py-0.5 rounded border border-primary/20">
                             {evt.ceremonyType.replace("_", " ")}
                           </div>
                         )}
@@ -213,7 +213,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                           </div>
                         )}
                         {evt.performanceStart && (
-                          <div className="text-foreground font-black text-sm bg-primary/5 border border-primary/10 px-3 py-1.5 rounded-lg w-fit shadow-sm">
+                          <div className="text-foreground font-black text-sm bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg w-fit shadow-sm">
                             ⚡️ {evt.performanceStart}{evt.performanceEnd ? ` — ${evt.performanceEnd}` : ""}
                           </div>
                         )}
@@ -227,22 +227,24 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                     <TableCell className="py-6">
                       {evt.musicians && evt.musicians.length > 0 ? (
                         <div className="space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-black text-foreground">
-                              {evt.musicians.filter((m: any) => m.status === 'confirmed').length}/{evt.musicians.length}
-                            </span>
-                            <div className="flex-1 h-1.5 w-20 bg-muted rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full transition-all ${
-                                  evt.musicians.filter((m: any) => m.status === 'confirmed').length === evt.musicians.length 
-                                  ? "bg-green-500" 
-                                  : "bg-primary"
-                                }`}
-                                style={{ width: `${(evt.musicians.filter((m: any) => m.status === 'confirmed').length / evt.musicians.length) * 100}%` }}
-                              />
+                          <div className="flex flex-col items-center gap-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black text-foreground">
+                                {evt.musicians.filter((m: any) => m.status === 'confirmed').length}/{evt.musicians.length}
+                              </span>
+                              <div className="flex-1 h-1.5 w-20 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full transition-all ${
+                                    evt.musicians.filter((m: any) => m.status === 'confirmed').length === evt.musicians.length 
+                                    ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.3)]" 
+                                    : "bg-primary"
+                                  }`}
+                                  style={{ width: `${(evt.musicians.filter((m: any) => m.status === 'confirmed').length / evt.musicians.length) * 100}%` }}
+                                />
+                              </div>
                             </div>
+                            <div className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Confirmados</div>
                           </div>
-                          <div className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Confirmados</div>
                         </div>
                       ) : (
                         <div className="flex flex-col gap-1">
