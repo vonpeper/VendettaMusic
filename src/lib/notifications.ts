@@ -186,6 +186,8 @@ export async function notifyWhatsApp({
         message,
         status:    messageId ? "sent" : "failed",
         messageId: messageId || null,
+        category:  "automatic_notification",
+        template:  type, // Usamos el type como nombre de la plantilla interna
       }
     }).catch(e => console.error("Error logging notification:", e))
   }

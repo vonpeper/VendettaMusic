@@ -37,6 +37,7 @@ model ClientProfile {
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   events    Event[]
   quotes    Quote[]
+  inboxItems InboxItem[]
 }
 
 model MusicianProfile {
@@ -364,6 +365,8 @@ model Notification {
   messageId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+  category  String?  // automatic_notification, customer_reply, new_lead, payment_related, event_change, contract_related, general_inquiry
+  template  String?  // Nombre de la plantilla usada
 }
 
 model BookingRequest {
@@ -408,6 +411,7 @@ model BookingRequest {
   followUpCount       Int            @default(0)
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @default(now()) @updatedAt
+  inboxItems          InboxItem[]
   bandHours           Int?           @default(0)
   djHours             Int?           @default(0)
   isDjWithTvs         Boolean?       @default(false)
@@ -495,4 +499,22 @@ model GlobalConfig {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   msgTemplateFollowUp   String?
+}
+
+model InboxItem {
+  id               String          @id @default(uuid())
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  phoneNumber      String
+  senderName       String?
+  message          String
+  type             String          // new_lead, customer_action_required
+  category         String?         // payment_related, event_change, contract_related, general_inquiry
+  status           String          @default("pending") // pending, in_progress, resolved
+  priority         String          @default("medium")  // low, medium, high
+  assignedTo       String?         // ID de usuario admin
+  clientId         String?
+  bookingRequestId String?
+  client           ClientProfile?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  bookingRequest   BookingRequest? @relation(fields: [bookingRequestId], references: [id], onDelete: SetNull)
 }
