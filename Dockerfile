@@ -15,7 +15,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client and initialize dummy DB for build
-RUN npx prisma generate --url file:./dev.db
+RUN npx prisma generate
 RUN npx prisma db push --accept-data-loss --url file:./dev.db
 
 # Disable telemetry
