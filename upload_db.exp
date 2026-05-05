@@ -1,0 +1,10 @@
+#!/usr/bin/expect -f
+set timeout 120
+spawn scp -o PreferredAuthentications=password -o StrictHostKeyChecking=no /Users/vonpeper/Documents/Antigravity/Vendetta/prisma/dev.db panel-prosuite:/tmp/dev.db
+expect {
+    "*assword:*" {
+        send "Pp55202104#\r"
+        exp_continue
+    }
+    eof
+}

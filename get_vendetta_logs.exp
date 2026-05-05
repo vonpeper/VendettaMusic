@@ -1,0 +1,10 @@
+#!/usr/bin/expect -f
+set timeout 60
+spawn ssh -o PreferredAuthentications=password -o StrictHostKeyChecking=no panel-prosuite "echo 'Pp55202104#' | sudo -S docker logs --tail=100 vendetta-app"
+expect {
+    "*assword:*" {
+        send "Pp55202104#\r"
+        exp_continue
+    }
+    eof
+}
