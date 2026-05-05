@@ -56,19 +56,23 @@ export async function UpcomingGigs() {
                   className="group flex flex-col md:flex-row items-center justify-between py-10 md:py-8 gap-8 md:gap-6 hover:bg-white/[0.02] transition-all px-6 -mx-6 md:mx-0 md:px-8"
                 >
                   {/* Bloque Izquierdo: Fecha y Hora */}
-                  <div className="flex flex-row md:flex-row items-center md:items-start gap-6 md:gap-5 min-w-[180px] md:min-w-[200px]">
-                    <div className="text-6xl md:text-6xl font-black text-white font-mono leading-none tracking-tighter shrink-0">
-                       {formatDateMX(evt.date, "dd")}
+                  <div className="flex flex-col items-center md:items-start gap-1 md:gap-5 min-w-full md:min-w-[200px] text-center md:text-left">
+                    <div className="flex items-center md:items-start gap-4 md:gap-5">
+                      <div className="text-7xl md:text-6xl font-black text-white font-mono leading-none tracking-tighter shrink-0">
+                         {formatDateMX(evt.date, "dd")}
+                      </div>
+                      <div className="flex flex-col justify-center pt-1">
+                         <div className="text-primary font-black uppercase text-xs md:text-[10px] tracking-[0.2em] leading-none mb-1">
+                            {formatDateMX(evt.date, "MMMM").toUpperCase()}
+                         </div>
+                         <div className="text-gray-500 font-bold text-xs md:text-[9px] tracking-[0.1em]">{formatDateMX(evt.date, "yyyy")}</div>
+                      </div>
                     </div>
-                    <div className="flex flex-col justify-center h-full pt-1">
-                       <div className="text-primary font-black uppercase text-[11px] md:text-[10px] tracking-[0.2em] leading-none mb-1">
-                          {formatDateMX(evt.date, "MMMM").toUpperCase()}
-                       </div>
-                       <div className="text-gray-500 font-bold text-[10px] md:text-[9px] tracking-[0.1em] mb-2">{formatDateMX(evt.date, "yyyy")}</div>
-                       
-                       {/* Horario movido aquí abajo de la fecha */}
-                       <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 border border-primary/20 text-[10px] md:text-[9px] font-black text-primary uppercase tracking-wider">
-                          <Calendar className="w-2.5 h-2.5" /> {evt.performanceStart || "21:00"} {evt.performanceEnd ? `— ${evt.performanceEnd}` : ""}
+                    
+                    {/* Horario en salto abajo, centrado en móvil */}
+                    <div className="mt-3 md:mt-2">
+                       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-primary/10 border border-primary/20 text-[10px] md:text-[9px] font-black text-primary uppercase tracking-wider">
+                          <Calendar className="w-3 h-3 md:w-2.5 md:h-2.5" /> {evt.performanceStart || "21:00"} {evt.performanceEnd ? `— ${evt.performanceEnd}` : ""}
                        </div>
                     </div>
                   </div>
