@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Users, Calendar, Settings, LogOut, FileText, Music, LayoutDashboard, TrendingUp, ShoppingBag, Image as ImageIcon, Truck, Mic, Shield, Bell } from "lucide-react"
+import { Users, Calendar, Settings, LogOut, FileText, Music, LayoutDashboard, TrendingUp, ShoppingBag, Image as ImageIcon, Truck, Mic, Shield, Bell, Inbox } from "lucide-react"
 
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
