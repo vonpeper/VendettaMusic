@@ -56,7 +56,7 @@ export function AddMusicianForm() {
           Agregar Personal
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] admin-theme">
         <DialogHeader>
           <DialogTitle>Agregar Personal / Titular</DialogTitle>
           <DialogDescription>
