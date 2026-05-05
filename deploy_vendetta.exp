@@ -1,6 +1,6 @@
 #!/usr/bin/expect -f
 set timeout 600
-spawn ssh -o PreferredAuthentications=password -o StrictHostKeyChecking=no panel-prosuite echo 'Pp55202104#' | sudo -S sh -c "cd /opt/vendetta && git pull origin main && docker compose build && docker compose up -d && sleep 5 && docker exec -i vendetta-app /bin/sh -c 'DATABASE_URL=file:/app/prisma/prod.db npx prisma db push --accept-data-loss'"
+spawn ssh -o PreferredAuthentications=password -o StrictHostKeyChecking=no panel-prosuite "echo 'Pp55202104#' | sudo -S sh -c 'cd /opt/vendetta && git pull origin main && docker compose build && docker compose up -d && sleep 5 && docker exec -i vendetta-app /bin/sh -c \"DATABASE_URL=file:/app/prisma/prod.db npx prisma db push --accept-data-loss\"'"
 expect {
     "*assword:*" {
         send "Pp55202104#\r"
