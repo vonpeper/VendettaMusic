@@ -17,6 +17,7 @@ export function PublicNavbar() {
           <Link href="/#paquetes" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Paquetes</Link>
           <Link href="/#fechas" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Fechas</Link>
           <Link href="/#testimonios" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Testimoniales</Link>
+          <Link href="/status" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Estatus</Link>
           <div className="w-px h-4 bg-white/10 mx-2" />
           <Link href="/cotizar">
             <Button variant="default" className="font-black text-[10px] uppercase tracking-widest px-6 h-10 rounded-xl shadow-lg shadow-primary/20">
