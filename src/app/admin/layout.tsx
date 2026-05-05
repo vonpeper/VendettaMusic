@@ -15,8 +15,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const isAdmin = session.user?.role === "ADMIN"
 
-  const pendingNotifications = await db.notification.count({
-    where: { OR: [{ status: "pending" }, { status: "failed" }, { status: "received" }] },
+  const pendingInbox = await db.inboxItem.count({
+    where: { status: "pending" },
   }).catch(() => 0)
 
   return (
@@ -46,6 +46,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/eventos" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group">
             <Calendar className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Shows / Eventos
           </Link>
+          
+          {/* NUEVO: Bandeja de Atención */}
+          <Link href="/admin/inbox" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group relative">
+            <Inbox className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" />
+            <span className="flex-1">Bandeja Atención</span>
+            {pendingInbox > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white">
+                {pendingInbox}
+              </span>
+            )}
+          </Link>
+
           <Link href="/admin/eventualidades" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group">
             <TrendingUp className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Eventualidades
           </Link>
@@ -67,14 +79,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/ventas" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group">
             <ShoppingBag className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" /> Centro de Ventas
           </Link>
+
+          {/* NUEVO: Log de WhatsApp */}
           <Link href="/admin/notificaciones" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-foreground rounded-lg hover:bg-primary/5 transition-all border-b border-border/5 mb-1 group">
             <Bell className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" />
-            <span className="flex-1">Notificaciones</span>
-            {pendingNotifications > 0 && (
-              <span className="text-[10px] font-black bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
-                {pendingNotifications}
-              </span>
-            )}
+            <span className="flex-1">Log de WhatsApp</span>
           </Link>
 
           {isAdmin && (

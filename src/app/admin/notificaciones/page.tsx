@@ -16,6 +16,13 @@ const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   gig_created:       { label: "Convocatoria (Músico)",     color: "bg-purple-500/10 text-purple-300 border-purple-500/30" },
   rehearsal_created: { label: "Ensayo (Músico)",           color: "bg-pink-500/10 text-pink-300 border-pink-500/30" },
   inbound:           { label: "Mensaje entrante",           color: "bg-orange-500/10 text-orange-300 border-orange-500/30" },
+  outbound:          { label: "Mensaje saliente",           color: "bg-blue-500/10 text-blue-300 border-blue-500/30" },
+}
+
+const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
+  automatic_notification: { label: "Auto-Notif",    color: "bg-blue-500/20 text-blue-400" },
+  customer_reply:         { label: "Respuesta",     color: "bg-green-500/20 text-green-400" },
+  actionable:             { label: "Acción Req",    color: "bg-orange-500/20 text-orange-400" },
 }
 
 const STATUS_ICONS: Record<string, { icon: LucideIcon; color: string; label: string }> = {
@@ -107,10 +114,20 @@ export default async function NotificacionesPage() {
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div className="flex items-center gap-3 flex-wrap">
                         <Badge variant="outline" className={typeMeta.color}>{typeMeta.label}</Badge>
+                        {n.category && CATEGORY_LABELS[n.category] && (
+                          <Badge variant="outline" className={CATEGORY_LABELS[n.category].color}>
+                            {CATEGORY_LABELS[n.category].label}
+                          </Badge>
+                        )}
                         <div className={`flex items-center gap-1.5 text-xs font-bold ${statusMeta.color}`}>
                           <StatusIcon className="w-3.5 h-3.5" />
                           {statusMeta.label}
                         </div>
+                        {n.template && (
+                           <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono">
+                             {n.template}
+                           </span>
+                        )}
                         <span className="text-[11px] text-muted-foreground">
                           {formatDateMX(n.createdAt, "d MMM, HH:mm")}
                         </span>
