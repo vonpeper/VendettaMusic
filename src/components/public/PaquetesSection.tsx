@@ -271,7 +271,7 @@ export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[] }) {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest mb-6">
               <Sparkles className="w-3.5 h-3.5" /> Nuestros Paquetes
             </div>
-            <h2 className="text-4xl md:text-6xl lg:text-7xl font-heading font-black tracking-tight uppercase mb-4 animated-title pr-4">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-black tracking-tight uppercase mb-4 animated-title pr-4">
               Elige tu Show
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto text-lg font-medium">
