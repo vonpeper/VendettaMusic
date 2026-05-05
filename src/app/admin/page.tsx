@@ -85,7 +85,7 @@ export default async function AdminDashboardPage() {
     db.bookingRequest.findMany({
       select: { id: true, eventId: true, clientName: true, status: true, shortId: true }
     }),
-    db.inboxItem.count({ where: { status: "pending" } }),
+    (db as any).inboxItem ? db.inboxItem.count({ where: { status: "pending" } }) : Promise.resolve(0),
     // Data for Quick Actions
     db.clientProfile.findMany({ include: { user: true }, orderBy: { user: { name: 'asc' } } }),
     db.location.findMany({ orderBy: { name: 'asc' } }),
