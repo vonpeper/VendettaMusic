@@ -93,8 +93,8 @@ export default async function AdminDashboardPage() {
     db.musicianProfile.findMany({ 
       where: { 
         OR: [
-          { instrument: { contains: "Ingeniero", mode: 'insensitive' } },
-          { instrument: { contains: "Staff", mode: 'insensitive' } }
+          { instrument: { contains: "Ingeniero" } },
+          { instrument: { contains: "Staff" } }
         ]
       },
       include: { user: true } 
