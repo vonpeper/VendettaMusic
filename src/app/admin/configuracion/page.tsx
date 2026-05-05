@@ -78,7 +78,7 @@ export default async function AdminConfiguracionPage() {
                   <div className="space-y-2">
                     <Label htmlFor="url">Evolution API URL</Label>
                     <Input id="url" name="url" defaultValue={config?.evolutionUrl || ""} 
-                      placeholder="http://localhost:8080" className="bg-card border-border/40" />
+                      placeholder="https://tu-api-evolution.com" className="bg-card border-border/40" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="apiKey">Global API Key</Label>
@@ -106,22 +106,24 @@ export default async function AdminConfiguracionPage() {
                   <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
                     <div className="space-y-2">
                       <p className="text-[10px] text-amber-200/70 leading-relaxed italic">
-                        <span className="font-bold text-amber-400">⚠️ NOTA IMPORTANTE:</span> Si el Manager te pide <strong>identificarte</strong> nada más abrirlo, usa <code className="bg-card px-1 rounded">admin / admin</code>.
+                        <span className="font-bold text-amber-400">⚠️ NOTA IMPORTANTE:</span> Si el Manager te pide <strong>identificarte</strong> nada más abrirlo, usa las credenciales definidas en tu servidor (por defecto <code className="bg-card px-1 rounded">admin / admin</code>).
                       </p>
                       <p className="text-[10px] text-amber-200/70 leading-relaxed">
-                        <span className="font-bold text-amber-400">💡 Instrucción de Conexión:</span> En el campo <span className="italic font-bold">Server URL</span> escribe <code className="bg-card px-1 rounded text-foreground">http://localhost:8080</code> y usa el API Key de arriba. No pongas "admin" en el campo de URL.
+                        <span className="font-bold text-amber-400">💡 Instrucción de Conexión:</span> En el campo <span className="italic font-bold">Server URL</span> usa la misma URL de arriba y el API Key correspondiente.
                       </p>
                     </div>
                   </div>
-                  <a href="http://localhost:8081" target="_blank" rel="noopener noreferrer" 
-                    className="flex items-center justify-between p-3 rounded-xl bg-primary/10 hover:bg-primary/10 transition-colors group">
-                    <span className="text-xs font-bold text-muted-foreground">Abrir Evolution Manager (Puerto 8081)</span>
-                    <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
-                  </a>
+                  {config?.evolutionUrl && (
+                    <a href={`${config.evolutionUrl.replace(/\/$/, "")}/manager`} target="_blank" rel="noopener noreferrer" 
+                      className="flex items-center justify-between p-3 rounded-xl bg-primary/10 hover:bg-primary/10 transition-colors group">
+                      <span className="text-xs font-bold text-muted-foreground">Abrir Evolution Manager</span>
+                      <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </a>
+                  )}
                 </div>
 
                 <p className="text-[11px] text-muted-foreground mt-4 leading-relaxed">
-                  ⚠️ Las notificaciones automáticas a músicos se enviarán a través de esta instancia local de Docker.
+                  ⚠️ Las notificaciones automáticas se enviarán a través de la instancia configurada arriba.
                 </p>
               </div>
               

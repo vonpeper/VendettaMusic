@@ -248,23 +248,28 @@ export async function sendWhatsApp(to: string, message: string): Promise<string 
         const msgId = data.key?.id || data.messageId || data.id || "sent_ok"
         return msgId
       }
+      
+      // Capture error details
+      const errorText = await res.text().catch(() => res.statusText)
+      console.error(`❌ Error de Evolution API (${res.status}):`, errorText)
+      lastError = errorText
+
       // Reintentamos solo en 429 / 5xx (errores transitorios)
       if (res.status === 429 || res.status >= 500) {
-        lastError = await res.text().catch(() => res.statusText)
         if (attempt < MAX_ATTEMPTS) {
           const backoffMs = 500 * Math.pow(2, attempt - 1) // 500, 1000, 2000
           await new Promise(r => setTimeout(r, backoffMs))
           continue
         }
       }
-      // 4xx no transitorio: no reintentar
-      const errBody = await res.text().catch(() => res.statusText)
-      console.error(`❌ Evolution API ${res.status}: ${errBody}`)
-      return null
-    } catch (err) {
-      lastError = err
+      
+      // Si llegamos aquí con un 4xx (como 401 o 404), no reintentamos
+      break;
+    } catch (err: any) {
+      console.error(`❌ Excepción al contactar Evolution API (Intento ${attempt}):`, err.message)
+      lastError = err.message
       if (attempt < MAX_ATTEMPTS) {
-        await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt - 1)))
+        await new Promise(r => setTimeout(r, 1000))
         continue
       }
     }
