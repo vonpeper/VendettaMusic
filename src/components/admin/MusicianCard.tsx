@@ -17,16 +17,6 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
   const rawPhone = musician.whatsapp || musician.phone
   const cleanPhone = rawPhone ? rawPhone.replace(/\D/g, "") : ""
   
-  if (musician.user.name.includes("Edgar")) {
-    console.log("DEBUG EDGAR:", { 
-      name: musician.user.name, 
-      whatsapp: musician.whatsapp, 
-      phone: musician.phone, 
-      rawPhone, 
-      cleanPhone 
-    });
-  }
-
   // Basic validation for Mexico (52) if 10 digits
   const formattedPhone = (cleanPhone.length === 10) ? `52${cleanPhone}` : cleanPhone
   const waLink = cleanPhone ? `https://wa.me/${formattedPhone}` : null
