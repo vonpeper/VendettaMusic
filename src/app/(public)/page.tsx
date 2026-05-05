@@ -101,7 +101,7 @@ export default async function HomePage() {
           <div className="inline-block relative mb-4 z-30 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-black text-[10px] uppercase tracking-[0.3em] backdrop-blur-md -translate-y-2">
             ✦ Agendando fechas 2026
           </div>
-          <h1 className="animated-title font-heading font-black text-5xl md:text-8xl lg:text-9xl tracking-tighter mb-6 uppercase drop-shadow-2xl leading-[0.85] relative">
+          <h1 className="animated-title font-heading font-black text-4xl sm:text-5xl md:text-8xl lg:text-9xl tracking-tighter mb-6 uppercase drop-shadow-2xl leading-[0.85] relative">
             MÚSICA en Vivo<br />Inolvidable
           </h1>
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
@@ -174,10 +174,10 @@ export default async function HomePage() {
             </div>
             <div className="lg:w-1/2 text-left">
                <div className="text-primary font-black uppercase tracking-[0.4em] text-xs mb-4">Especiales Vendetta</div>
-               <h2 className="text-5xl md:text-6xl font-heading font-black text-white uppercase tracking-tighter leading-none mb-6">
+                <h2 className="text-4xl sm:text-5xl md:text-6xl font-heading font-black text-white uppercase tracking-tighter leading-tight md:leading-none mb-6">
                   Tributo <br />
                   <span className="animated-title italic pr-4">Mentiras</span>
-               </h2>
+                </h2>
                <p className="text-gray-400 text-lg mb-8 leading-relaxed max-w-xl italic">
                   Revive la época dorada del pop en español con nuestro show homenaje a "Mentiras". Un concierto en vivo que pondrá a todos a cantar.
                </p>
@@ -200,7 +200,7 @@ export default async function HomePage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-primary/40 bg-primary/10 text-primary font-black text-xs uppercase tracking-[0.2em] mb-6 rotate-[-2deg] shadow-[4px_4px_0px_#dc2626]">
               ⚡ Estándar Vendetta
             </div>
-            <h2 className="font-heading font-black text-5xl md:text-7xl tracking-tighter mb-4 leading-none uppercase">
+            <h2 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl tracking-tighter mb-4 leading-tight md:leading-none uppercase">
               Show de Épocas <br /> <span className="animated-title italic">Pop & Rock</span>
             </h2>
             <p className="text-muted-foreground max-w-lg mx-auto font-medium">
@@ -263,7 +263,7 @@ export default async function HomePage() {
              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-gray-400 text-[10px] font-black uppercase tracking-[0.4em] mb-5">
                Trusted By
              </div>
-             <h2 className="text-4xl md:text-5xl font-heading font-black text-white uppercase tracking-tight leading-none">
+             <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-white uppercase tracking-tight leading-tight md:leading-none">
                Clientes que <span className="animated-title italic pr-4">Nos Recomiendan</span>
              </h2>
           </div>
@@ -293,7 +293,7 @@ export default async function HomePage() {
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest mb-6">
                 ⭐ Testimoniales
               </div>
-              <h2 className="font-heading font-black text-5xl md:text-7xl tracking-tighter mb-4 leading-[0.9]">
+              <h2 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl tracking-tighter mb-4 leading-[1] md:leading-[0.9]">
                 Lo que dicen <br />
                 <span className="animated-title italic">nuestros clientes</span>
               </h2>
@@ -340,7 +340,7 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 max-w-4xl">
            <div className="text-center mb-12">
               <div className="text-primary font-black uppercase tracking-[0.4em] text-[10px] mb-4">Zona de Clientes</div>
-              <h2 className="text-4xl md:text-5xl font-heading font-black text-white uppercase tracking-tighter leading-none mb-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-white uppercase tracking-tighter leading-tight md:leading-none mb-4">
                 Consulta tu <span className="animated-title italic pr-4">Estatus</span>
               </h2>
               <p className="text-muted-foreground text-sm font-medium italic">
@@ -364,7 +364,7 @@ export default async function HomePage() {
         </div>
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <h2 className="font-heading font-black text-5xl md:text-7xl uppercase tracking-tighter mb-8 text-white leading-none">
+          <h2 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl uppercase tracking-tighter mb-8 text-white leading-tight md:leading-none">
             Haz que tu evento <br />
             sea <span className="animated-title underline decoration-primary/20">Leyenda</span>
           </h2>

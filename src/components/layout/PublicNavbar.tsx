@@ -1,7 +1,25 @@
 "use client"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu } from "lucide-react"
+import { Menu, X, Phone, Calendar } from "lucide-react"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet"
+
+const NAV_LINKS = [
+  { href: "/", label: "Inicio" },
+  { href: "/#nosotros", label: "Nosotros" },
+  { href: "/#servicios", label: "Servicios" },
+  { href: "/#paquetes", label: "Paquetes" },
+  { href: "/#fechas", label: "Fechas" },
+  { href: "/#testimonios", label: "Testimoniales" },
+  { href: "/#estatus", label: "Estatus" },
+]
 
 export function PublicNavbar() {
   return (
@@ -10,14 +28,18 @@ export function PublicNavbar() {
         <Link href="/" className="flex items-center gap-2">
           <img src="/logo.png" alt="Vendetta Logo" className="h-10 w-auto" />
         </Link>
+        
+        {/* Desktop Nav */}
         <nav className="hidden lg:flex gap-8 items-center">
-          <Link href="/" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Inicio</Link>
-          <Link href="/#nosotros" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Nosotros</Link>
-          <Link href="/#servicios" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Servicios</Link>
-          <Link href="/#paquetes" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Paquetes</Link>
-          <Link href="/#fechas" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Fechas</Link>
-          <Link href="/#testimonios" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Testimoniales</Link>
-          <Link href="/#estatus" className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all">Estatus</Link>
+          {NAV_LINKS.map((link) => (
+            <Link 
+              key={link.label} 
+              href={link.href} 
+              className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all"
+            >
+              {link.label}
+            </Link>
+          ))}
           <div className="w-px h-4 bg-white/10 mx-2" />
           <Link href="/cotizar">
             <Button variant="default" className="font-black text-[10px] uppercase tracking-widest px-6 h-10 rounded-xl shadow-lg shadow-primary/20">
@@ -25,10 +47,53 @@ export function PublicNavbar() {
             </Button>
           </Link>
         </nav>
-        <div className="md:hidden">
-          <Button variant="ghost" size="icon">
-            <Menu className="h-6 w-6" />
-          </Button>
+
+        {/* Mobile Nav Button */}
+        <div className="lg:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-[#111] border-white/10 w-80 text-white p-0">
+              <div className="flex flex-col h-full">
+                <div className="p-6 border-b border-white/5">
+                  <SheetHeader className="text-left mb-6">
+                    <img src="/logo.png" alt="Vendetta Logo" className="h-10 w-auto self-start" />
+                    <SheetTitle className="sr-only">Menú de Navegación</SheetTitle>
+                  </SheetHeader>
+                  <div className="space-y-1">
+                    {NAV_LINKS.map((link) => (
+                      <SheetClose asChild key={link.label}>
+                        <Link 
+                          href={link.href} 
+                          className="flex items-center py-4 text-sm font-black uppercase tracking-[0.2em] hover:text-primary transition-all border-b border-white/5 last:border-none"
+                        >
+                          {link.label}
+                        </Link>
+                      </SheetClose>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="p-6 mt-auto space-y-4">
+                  <SheetClose asChild>
+                    <Link href="/cotizar" className="block w-full">
+                      <Button variant="default" className="w-full py-6 font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20">
+                        <Calendar className="w-4 h-4 mr-2" /> Cotizar mi Evento
+                      </Button>
+                    </Link>
+                  </SheetClose>
+                  <a href="tel:5555555555" className="block w-full">
+                    <Button variant="outline" className="w-full py-6 border-white/10 bg-white/5 text-white font-black text-xs uppercase tracking-widest rounded-2xl">
+                      <Phone className="w-4 h-4 mr-2" /> Llamar Ahora
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
