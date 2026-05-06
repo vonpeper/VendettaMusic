@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic"
  * pero los servimos vía API para que NO viajen al bundle estático.
  */
 export async function GET() {
-  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   return NextResponse.json({
     bank: config?.bankName ?? null,
     account: config?.bankAccount ?? null,

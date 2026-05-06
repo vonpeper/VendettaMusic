@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
@@ -30,14 +30,23 @@ export function PhotoGallery({ images = [] }: { images?: string[] }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [selectedImage, setSelectedImage] = useState<number | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [constraints, setConstraints] = useState({ left: 0, right: 0 })
 
   const nextSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % (PHOTOS.length - 2))
-  }, [])
+    setCurrentIndex((prev) => (prev + 1) % (PHOTOS.length))
+  }, [PHOTOS.length])
 
   const prevSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + (PHOTOS.length - 2)) % (PHOTOS.length - 2))
-  }, [])
+    setCurrentIndex((prev) => (prev - 1 + PHOTOS.length) % PHOTOS.length)
+  }, [PHOTOS.length])
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const width = containerRef.current.scrollWidth - containerRef.current.offsetWidth
+      setConstraints({ left: -width, right: 0 })
+    }
+  }, [PHOTOS.length])
 
   useEffect(() => {
     const timer = setInterval(nextSlide, 5000)
@@ -46,8 +55,8 @@ export function PhotoGallery({ images = [] }: { images?: string[] }) {
 
   return (
     <section className="py-24 bg-[#080808] overflow-hidden">
-      <div className="container mx-auto px-4 mb-12">
-        <div className="flex flex-col md:flex-row items-end justify-between gap-6">
+      <div className="container mx-auto px-4 mb-12 text-center md:text-left">
+        <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
           <div className="max-w-xl">
              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-[0.4em] mb-4">
                <Sparkles className="w-3 h-3" /> Galería Capturada
@@ -55,32 +64,36 @@ export function PhotoGallery({ images = [] }: { images?: string[] }) {
              <h2 className="text-4xl md:text-6xl font-heading font-black text-white uppercase tracking-tighter leading-none mb-4">
                Momentos <span className="animated-title italic pr-4">Vendetta</span>
              </h2>
-             <p className="text-gray-400 text-sm font-medium">Desliza para explorar la energía de nuestros shows más recientes.</p>
+             <p className="text-gray-400 text-sm font-medium">Desliza o arrastra para explorar la energía de nuestros shows.</p>
           </div>
           <div className="flex gap-4">
-             <button onClick={prevSlide} className="w-12 h-12 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors text-white">
+             <button onClick={prevSlide} className="w-12 h-12 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors text-white shadow-lg">
                 <ChevronLeft className="w-6 h-6" />
              </button>
-             <button onClick={nextSlide} className="w-12 h-12 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors text-white">
+             <button onClick={nextSlide} className="w-12 h-12 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors text-white shadow-lg">
                 <ChevronRight className="w-6 h-6" />
              </button>
           </div>
         </div>
       </div>
 
-      <div className="relative overflow-hidden cursor-grab active:cursor-grabbing px-4">
+      <div className="relative overflow-hidden cursor-grab active:cursor-grabbing px-4 sm:px-10">
         <motion.div 
+          ref={containerRef}
           className="flex gap-4 md:gap-8"
           drag="x"
-          dragConstraints={{ left: -((PHOTOS.length - 1) * 320), right: 0 }} // Aproximado para móvil
-          animate={{ x: `-${currentIndex * (100 / 3.33)}%` }} // Ajuste para desktop
+          dragConstraints={constraints}
+          dragElastic={0.1}
+          whileTap={{ cursor: "grabbing" }}
+          animate={{ x: constraints.left ? -((currentIndex / PHOTOS.length) * Math.abs(constraints.left)) : 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           {PHOTOS.map((photo, idx) => (
-            <div 
+            <motion.div 
               key={idx} 
+              whileHover={{ scale: 1.02 }}
               onClick={() => { setSelectedImage(idx); setIsLightboxOpen(true) }}
-              className="min-w-[85%] md:min-w-[400px] lg:min-w-[500px] aspect-[4/3] rounded-[2.5rem] overflow-hidden border border-white/10 relative group cursor-pointer shrink-0"
+              className="min-w-[85%] sm:min-w-[400px] md:min-w-[500px] aspect-[4/3] rounded-[2.5rem] overflow-hidden border border-white/10 relative group cursor-pointer shrink-0 shadow-2xl"
             >
               <Image 
                 src={photo.src} 
@@ -97,7 +110,7 @@ export function PhotoGallery({ images = [] }: { images?: string[] }) {
                  </div>
                  <span className="text-xs font-black text-white uppercase tracking-widest">Ampliar Imagen</span>
               </div>
-            </div>
+            </motion.div>
           ))}
         </motion.div>
       </div>

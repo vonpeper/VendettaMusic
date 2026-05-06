@@ -81,13 +81,52 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
     }
 
     // Sincronizar con BookingRequest (Nuevo Funnel)
-    await db.bookingRequest.updateMany({
-      where: { eventId: id },
-      data: {
-        status: (data.status as string) || "scheduled",
-        ...(data.status === "completado" ? { paymentStatus: "paid" } : {})
+    const existingBooking = await db.bookingRequest.findUnique({ where: { eventId: id } })
+    
+    if (existingBooking) {
+      await db.bookingRequest.update({
+        where: { eventId: id },
+        data: {
+          status: (data.status as string) || "scheduled",
+          ...(data.status === "completado" ? { paymentStatus: "paid" } : {})
+        }
+      })
+    } else {
+      // Si no existe, lo creamos (Self-healing)
+      const randomHex = crypto.randomBytes(2).toString('hex').toUpperCase()
+      const shortId = `VND-${randomHex}`
+      
+      const evt = await db.event.findUnique({ 
+        where: { id },
+        include: { location: true, package: true, client: { include: { user: true } } }
+      })
+
+      if (evt) {
+        await db.bookingRequest.create({
+          data: {
+            shortId,
+            eventId: id,
+            clientId: evt.clientId,
+            clientName: evt.customName || evt.client?.user?.name || "Sin Nombre",
+            clientPhone: evt.client?.phone || "",
+            clientEmail: evt.client?.user?.email || "",
+            requestedDate: evt.date,
+            startTime: evt.performanceStart || "21:00",
+            endTime: evt.performanceEnd || "23:00",
+            packageName: evt.package?.name || "Paquete Personalizado",
+            packageId: evt.packageId,
+            baseAmount: evt.amount,
+            depositAmount: evt.deposit,
+            paymentMethod: evt.paymentMethod || "transfer",
+            status: evt.status,
+            source: "manual",
+            venueType: evt.ceremonyType || "salon",
+            address: evt.location?.name || "Dirección manual",
+            city: evt.location?.city || "CDMX",
+          }
+        })
       }
-    })
+    }
 
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/eventualidades")
@@ -363,13 +402,52 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
     }
 
     // Sincronizar con BookingRequest (Nuevo Funnel)
-    await db.bookingRequest.updateMany({
-      where: { eventId: id },
-      data: { 
-        status: newStatus,
-        ...(newStatus === "completado" ? { paymentStatus: "paid" } : {})
+    const existingBooking = await db.bookingRequest.findUnique({ where: { eventId: id } })
+    
+    if (existingBooking) {
+      await db.bookingRequest.update({
+        where: { eventId: id },
+        data: { 
+          status: newStatus,
+          ...(newStatus === "completado" ? { paymentStatus: "paid" } : {})
+        }
+      })
+    } else {
+      // Si no existe, lo creamos (Self-healing)
+      const randomHex = crypto.randomBytes(2).toString('hex').toUpperCase()
+      const shortId = `VND-${randomHex}`
+      
+      const evt = await db.event.findUnique({ 
+        where: { id },
+        include: { location: true, package: true, client: { include: { user: true } } }
+      })
+
+      if (evt) {
+        await db.bookingRequest.create({
+          data: {
+            shortId,
+            eventId: id,
+            clientId: evt.clientId,
+            clientName: evt.customName || evt.client?.user?.name || "Sin Nombre",
+            clientPhone: evt.client?.phone || "",
+            clientEmail: evt.client?.user?.email || "",
+            requestedDate: evt.date,
+            startTime: evt.performanceStart || "21:00",
+            endTime: evt.performanceEnd || "23:00",
+            packageName: evt.package?.name || "Paquete Personalizado",
+            packageId: evt.packageId,
+            baseAmount: evt.amount,
+            depositAmount: evt.deposit,
+            paymentMethod: evt.paymentMethod || "transfer",
+            status: newStatus,
+            source: "manual",
+            venueType: evt.ceremonyType || "salon",
+            address: evt.location?.name || "Dirección manual",
+            city: evt.location?.city || "CDMX",
+          }
+        })
       }
-    })
+    }
 
     revalidatePath("/admin/eventualidades")
     revalidatePath("/admin/eventos")

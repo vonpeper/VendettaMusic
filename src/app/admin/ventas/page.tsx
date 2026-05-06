@@ -72,7 +72,7 @@ export default async function AdminVentasPage() {
       _sum: { baseAmount: true },
       where: { status: "EXPIRED" }
     }),
-    db.globalConfig.findUnique({ where: { id: "singleton" } })
+    db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   ])
 
   // Filtrado por fuente

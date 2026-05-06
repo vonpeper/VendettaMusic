@@ -96,6 +96,6 @@ Un tema adelantado a su época que tocó temas poco explorados en el pop.
 [0Vendetta Live Music en el Halloween de Portofino: ¡Una Noche Espeluznante y Llena de Música! 🎃noviembre 5, 2024](https://vendetta.mx/vendetta-live-music-en-el-halloween-de-portofino-una-noche-espeluznante-y-llena-de-musica-%f0%9f%8e%83/)
 
 ###### Vendetta Live Music en el Halloween de Portofino: ¡Una Noche Espeluznante y Llena de Música! 🎃
-[Prosuite](https://vendetta.mx/las-20-canciones-pop-mas-iconicas-de-los-90s/www.prosuite.mx)
+[Vendetta](https://vendetta.mx/las-20-canciones-pop-mas-iconicas-de-los-90s/www.vendetta.mx)
 
 

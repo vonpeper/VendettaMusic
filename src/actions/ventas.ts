@@ -84,3 +84,39 @@ export async function markBookingAsPaidAction(bookingId: string) {
     return { success: false, error: "Error al liquidar el pago." }
   }
 }
+export async function markContractAsSignedAction(bookingId: string) {
+  try {
+    const booking = await db.bookingRequest.findUnique({
+      where: { id: bookingId },
+      include: { event: { include: { contracts: true } } }
+    })
+
+    if (!booking || !booking.eventId) {
+      return { success: false, error: "No se encontró un evento vinculado." }
+    }
+
+    // Si tiene contrato, marcar el primero como firmado
+    if (booking.event?.contracts && booking.event.contracts.length > 0) {
+      await db.contract.update({
+        where: { id: booking.event.contracts[0].id },
+        data: { status: "signed" }
+      })
+    } else {
+      // Si no tiene, crear uno firmado (fallback)
+      await db.contract.create({
+        data: {
+          eventId: booking.eventId,
+          status: "signed",
+        }
+      })
+    }
+
+    revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    revalidatePath("/admin")
+    return { success: true }
+  } catch (error) {
+    console.error("Error marking contract as signed:", error)
+    return { success: false, error: "Error al firmar el contrato." }
+  }
+}

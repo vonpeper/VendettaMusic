@@ -146,7 +146,7 @@ export async function notifyWhatsApp({
   saveLog?: boolean
 }) {
   const { db } = await import("./db")
-  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   
   let template = ""
   
@@ -213,7 +213,7 @@ function normalizeMxPhone(input: string): string {
  */
 export async function sendWhatsApp(to: string, message: string): Promise<string | null> {
   const { db } = await import("./db")
-  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
   const baseUrl  = config?.evolutionUrl || process.env.EVOLUTION_BASE_URL
   const apiKey   = config?.evolutionApiKey || process.env.EVOLUTION_API_KEY
@@ -288,7 +288,7 @@ export async function isEvolutionConnected(): Promise<boolean> {
   if (connectionCache && now - connectionCache.ts < 30_000) return connectionCache.connected
 
   const { db } = await import("./db")
-  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   const baseUrl  = config?.evolutionUrl || process.env.EVOLUTION_BASE_URL
   const apiKey   = config?.evolutionApiKey || process.env.EVOLUTION_API_KEY
   const instance = config?.evolutionInstance || process.env.EVOLUTION_INSTANCE || "vendetta_admin"
@@ -336,7 +336,7 @@ export async function notifyMusicians(eventId: string, gig: GigDetails, db: any,
     return
   }
 
-  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   const template = config?.msgTemplateGig || `🎸 *NUEVO GIG — VENDETTA* 🎸\n\n📅 *Fecha:* {{date}}\n👤 *Cliente:* {{clientName}}\n🎉 *Tipo de evento:* {{ceremony}}\n📍 *Ubicación:* {{location}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n📝 *Notas:* {{notes}}\n\n{{confirmLink}}\n— Administración Vendetta`
 
   for (const musician of musicians) {

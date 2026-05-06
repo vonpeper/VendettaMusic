@@ -310,7 +310,7 @@ export default function Step3_Fecha({ data, onNext, onBack }: Props) {
                 <SelectTrigger className="w-full bg-white/5 border-white/10 h-12 rounded-xl text-white font-bold focus:ring-primary/20 hover:bg-white/10 transition-all">
                   <SelectValue placeholder="Selecciona hora" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0a0a0a] border-white/10 text-white max-h-[300px]">
+                <SelectContent className="bg-[#0a0a0a] border-white/10 text-white max-h-[40vh]">
                   {TIME_SLOTS.map(t => (
                     <SelectItem key={t} value={t} className="font-bold py-3">
                       {t} hrs
@@ -325,7 +325,7 @@ export default function Step3_Fecha({ data, onNext, onBack }: Props) {
                 <SelectTrigger className="w-full bg-white/5 border-white/10 h-12 rounded-xl text-white font-bold focus:ring-primary/20 hover:bg-white/10 transition-all">
                   <SelectValue placeholder="Selecciona hora" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0a0a0a] border-white/10 text-white max-h-[300px]">
+                <SelectContent className="bg-[#0a0a0a] border-white/10 text-white max-h-[40vh]">
                   {TIME_SLOTS.map(t => (
                     <SelectItem key={t} value={t} className="font-bold py-3">
                       {t} hrs

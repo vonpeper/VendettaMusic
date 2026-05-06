@@ -11,10 +11,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const isAdmin = session.user?.role === "ADMIN"
+  const isAgent = session.user?.role === "AGENTE"
 
-  const pendingInbox = (db as any).inboxItem 
-    ? await db.inboxItem.count({ where: { status: "pending" } }).catch(() => 0)
-    : 0;
+  if (!isAdmin && !isAgent) {
+    redirect("/")
+  }
+
+  const config = await (db as any).globalConfig?.findUnique({ where: { id: "vendetta_config" } }).catch(() => null)
+  const pendingInbox = await (db as any).inboxItem?.count?.({ where: { status: "pending" } }).catch(() => 0) || 0
 
   return (
     <div className="admin-theme flex min-h-screen bg-background text-foreground p-4 gap-4">

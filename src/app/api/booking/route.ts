@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     const shortId = `VND-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
 
     // Calcular viáticos
-    const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+    const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
     const viaticos = calcularViatcos(city, state, {
       zona2Rate: config?.zona2Rate || 1500,
       zona3Rate: config?.zona3Rate || 3000
