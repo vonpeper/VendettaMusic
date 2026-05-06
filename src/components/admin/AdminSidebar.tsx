@@ -8,7 +8,7 @@ import {
   Users, Calendar, Settings, LogOut, FileText, Music, 
   LayoutDashboard, TrendingUp, ShoppingBag, Image as LucideImage, 
   Truck, Mic, Shield, Bell, Inbox, ChevronDown, ChevronRight,
-  BarChart3, Wallet
+  BarChart3, Wallet, XCircle
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
