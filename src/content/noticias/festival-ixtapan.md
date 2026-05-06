@@ -40,6 +40,6 @@ La respuesta del público fue increíble: familias, jóvenes y turistas corearon
 
 ###### Vendetta Live Music en el Halloween de Portofino: ¡Una Noche Espeluznante y Llena de Música! 🎃
 
-[Prosuite](https://vendetta.mx/vendetta-en-el-festival-internacional-luces-de-ixtapan-de-la-sal-2025/www.prosuite.mx)
+[Vendetta](https://vendetta.mx/vendetta-en-el-festival-internacional-luces-de-ixtapan-de-la-sal-2025/www.vendetta.mx)
 
 

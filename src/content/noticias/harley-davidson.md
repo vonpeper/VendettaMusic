@@ -42,6 +42,6 @@ Agradecemos a Harley-Davidson Toluca por permitirnos formar parte de este evento
 [0Vendetta Live Music en el Halloween de Portofino: ¡Una Noche Espeluznante y Llena de Música! 🎃noviembre 5, 2024](https://vendetta.mx/vendetta-live-music-en-el-halloween-de-portofino-una-noche-espeluznante-y-llena-de-musica-%f0%9f%8e%83/)
 
 ###### Vendetta Live Music en el Halloween de Portofino: ¡Una Noche Espeluznante y Llena de Música! 🎃
-[Prosuite](https://vendetta.mx/vendetta-en-harley-davidson-toluca-celebrando-el-dia-internacional-de-la-mujer-con-rock-y-motociclismo/www.prosuite.mx)
+[Vendetta](https://vendetta.mx/vendetta-en-harley-davidson-toluca-celebrando-el-dia-internacional-de-la-mujer-con-rock-y-motociclismo/www.vendetta.mx)
 
 

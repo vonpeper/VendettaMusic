@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { BookingActions } from "@/components/admin/BookingActions"
 import { AdminManagementTools } from "@/components/admin/AdminManagementTools"
 import { LiquidarButton } from "@/components/admin/LiquidarButton"
+import { ContractSignedButton } from "@/components/admin/ContractSignedButton"
 import { 
   ArrowLeft, 
   Calendar, 
@@ -35,7 +36,15 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
   
   // Intentar buscar en BookingRequest (Web / Manual Moderno)
   let booking = await db.bookingRequest.findUnique({
-    where: { id: id }
+    where: { id: id },
+    include: { 
+      event: { 
+        include: { 
+          contracts: true,
+          musicians: true
+        } 
+      } 
+    }
   })
 
   // Si no se encuentra, intentar buscar en Quote (Legacy)
@@ -70,7 +79,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     }
   }
 
-  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   const musicianProfiles = await db.musicianProfile.findMany({
     where: { whatsapp: { not: null } },
     include: { user: true },
@@ -105,7 +114,11 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           </div>
           
           {(booking.status === "agendado" || booking.status === "confirmed" || booking.status === "pendiente") && (
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
+              <ContractSignedButton 
+                bookingId={booking.id} 
+                isSigned={booking.event?.contracts?.some((c: any) => c.status === "signed")} 
+              />
               <Button 
                 variant="outline"
                 className={`${booking.status === "pendiente" ? "border-blue-600/50 text-blue-400 hover:bg-blue-600" : "border-green-600/50 text-green-400 hover:bg-green-600"} gap-2 h-11 px-6 font-bold rounded-xl whitespace-nowrap hover:text-white transition-all`} 

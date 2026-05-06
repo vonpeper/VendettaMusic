@@ -16,7 +16,7 @@ export default async function AdminConfiguracionPage() {
     redirect("/admin")
   }
 
-  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
   return (
     <div className="p-8 max-w-5xl mx-auto pb-24">

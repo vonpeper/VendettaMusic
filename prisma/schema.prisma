@@ -21,23 +21,23 @@ model User {
 }
 
 model ClientProfile {
-  id        String           @id @default(uuid())
-  userId    String           @unique
-  phone     String?
-  type      String?
-  company   String?
-  rfc       String?
-  notes     String?
-  city      String?
-  state     String?
-  whatsapp  String?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @default(now()) @updatedAt
-  bookings  BookingRequest[]
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  events    Event[]
-  quotes    Quote[]
+  id         String           @id @default(uuid())
+  userId     String           @unique
+  phone      String?
+  type       String?
+  company    String?
+  rfc        String?
+  notes      String?
+  city       String?
+  state      String?
+  whatsapp   String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @default(now()) @updatedAt
+  bookings   BookingRequest[]
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events     Event[]
   inboxItems InboxItem[]
+  quotes     Quote[]
 }
 
 model MusicianProfile {
@@ -220,11 +220,11 @@ model Review {
   id        String   @id @default(uuid())
   name      String
   stars     Int      @default(5)
-  event     String?
   text      String
   status    String   @default("approved")
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+  event     String?
 }
 
 model PublicBandMember {
@@ -321,26 +321,26 @@ model Event {
 }
 
 model Payment {
-  id                    String   @id @default(uuid())
+  id                    String          @id @default(uuid())
   eventId               String?
   bookingRequestId      String?
   amount                Float
-  currency              String   @default("MXN")
+  currency              String          @default("MXN")
   method                String
   provider              String?
-  status                String   @default("pending")
+  status                String          @default("pending")
   reference             String?
   proofUrl              String?
   receiptUrl            String?
-  stripeSessionId       String?  @unique
-  stripePaymentIntentId String?  @unique
+  stripeSessionId       String?         @unique
+  stripePaymentIntentId String?         @unique
   stripeChargeId        String?
   stripeCustomerId      String?
   rawPayload            String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @default(now()) @updatedAt
-  event                 Event?            @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  bookingRequest        BookingRequest?   @relation(fields: [bookingRequestId], references: [id], onDelete: SetNull)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @default(now()) @updatedAt
+  bookingRequest        BookingRequest? @relation(fields: [bookingRequestId], references: [id])
+  event                 Event?          @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
 
 model Contract {
@@ -365,64 +365,64 @@ model Notification {
   messageId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
-  category  String?  // automatic_notification, customer_reply, new_lead, payment_related, event_change, contract_related, general_inquiry
-  template  String?  // Nombre de la plantilla usada
+  category  String?
+  template  String?
 }
 
 model BookingRequest {
-  id                  String         @id @default(uuid())
-  shortId             String?        @unique
-  packageId           String?
-  packageName         String
-  guestCount          Int            @default(0)
-  venueType           String
-  calle               String?
-  numero              String?
-  colonia             String?
-  zipCode             String?
-  municipio           String?
-  address             String
-  city                String
-  state               String         @default("México")
-  isOutsideZone       Boolean        @default(false)
-  viaticosAmount      Float          @default(0)
-  mapsLink            String?
-  requestedDate       DateTime
-  startTime           String
-  endTime             String
-  baseAmount          Float
-  depositAmount       Float
-  paymentMethod       String
-  paymentStatus       String         @default("pending")
-  paymentRef          String?
-  clientName          String
-  clientPhone         String
-  clientEmail         String?
-  clientUserId        String?
-  status              String         @default("pending")
-  adminNote           String?
-  notifiedAdmin       Boolean        @default(false)
-  notifiedMusicians   Boolean        @default(false)
-  eventId             String?        @unique
-  clientId            String?
-  isPublic            Boolean        @default(false)
-  clientProvidesAudio Boolean        @default(false)
-  source              String         @default("web")
-  followUpCount       Int            @default(0)
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @default(now()) @updatedAt
-  inboxItems          InboxItem[]
-  bandHours           Int?           @default(0)
-  djHours             Int?           @default(0)
-  isDjWithTvs         Boolean?       @default(false)
-  hasTemplete         Boolean?       @default(false)
-  hasPista            Boolean?       @default(false)
-  hasRobot            Boolean?       @default(false)
-  stripeSessionId       String?      @unique
+  id                    String         @id @default(uuid())
+  shortId               String?        @unique
+  packageId             String?
+  packageName           String
+  guestCount            Int            @default(0)
+  venueType             String
+  calle                 String?
+  numero                String?
+  colonia               String?
+  zipCode               String?
+  municipio             String?
+  address               String
+  city                  String
+  state                 String         @default("México")
+  isOutsideZone         Boolean        @default(false)
+  viaticosAmount        Float          @default(0)
+  mapsLink              String?
+  requestedDate         DateTime
+  startTime             String
+  endTime               String
+  baseAmount            Float
+  depositAmount         Float
+  paymentMethod         String
+  paymentStatus         String         @default("pending")
+  paymentRef            String?
+  clientName            String
+  clientPhone           String
+  clientEmail           String?
+  clientUserId          String?
+  status                String         @default("pending")
+  adminNote             String?
+  notifiedAdmin         Boolean        @default(false)
+  notifiedMusicians     Boolean        @default(false)
+  eventId               String?        @unique
+  clientId              String?
+  isPublic              Boolean        @default(false)
+  clientProvidesAudio   Boolean        @default(false)
+  source                String         @default("web")
+  followUpCount         Int            @default(0)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @default(now()) @updatedAt
+  bandHours             Int?           @default(0)
+  djHours               Int?           @default(0)
+  isDjWithTvs           Boolean?       @default(false)
+  hasTemplete           Boolean?       @default(false)
+  hasPista              Boolean?       @default(false)
+  hasRobot              Boolean?       @default(false)
   stripePaymentIntentId String?
-  client              ClientProfile? @relation(fields: [clientId], references: [id])
-  event               Event?         @relation(fields: [eventId], references: [id])
-  payments            Payment[]
+  stripeSessionId       String?        @unique
+  client                ClientProfile? @relation(fields: [clientId], references: [id])
+  event                 Event?         @relation(fields: [eventId], references: [id])
+  inboxItems            InboxItem[]
+  payments              Payment[]
 }
 
 model Rehearsal {
@@ -470,35 +470,33 @@ model EventMusician {
 }
 
 model GlobalConfig {
-  id                    String    @id @default("singleton")
-  googleClientId        String?
-  googleClientSecret    String?
-  googleRefreshToken    String?
-  googleCalendarId      String?
-  lastCalendarSync      DateTime?
-  evolutionUrl          String?
-  evolutionApiKey       String?
-  evolutionInstance     String?   @default("vendetta_admin")
-  adminWhatsapp         String?
-  facebookUrl           String?
-  instagramUrl          String?
-  tiktokUrl             String?
-  whatsappUrl           String?
-  msgTemplateGig        String?
-  msgTemplateQuote      String?
-  msgTemplateEventClose String?
-  zona2Rate             Float?    @default(1500.0)
-  zona3Rate             Float?    @default(3000.0)
-  // Datos bancarios para transferencias (mostrados sólo tras seleccionar transfer)
-  bankName              String?
-  bankAccount           String?
-  bankClabe             String?
-  bankBeneficiary       String?
-  // Webhook secret de Evolution API (verifica payloads entrantes)
+  id                     String    @id @default("vendetta_config")
+  googleClientId         String?
+  googleClientSecret     String?
+  googleRefreshToken     String?
+  googleCalendarId       String?
+  lastCalendarSync       DateTime?
+  evolutionUrl           String?
+  evolutionApiKey        String?
+  evolutionInstance      String?   @default("vendetta_admin")
+  adminWhatsapp          String?
+  facebookUrl            String?
+  instagramUrl           String?
+  tiktokUrl              String?
+  whatsappUrl            String?
+  msgTemplateGig         String?
+  msgTemplateQuote       String?
+  msgTemplateEventClose  String?
+  zona2Rate              Float?    @default(1500.0)
+  zona3Rate              Float?    @default(3000.0)
+  bankName               String?
+  bankAccount            String?
+  bankClabe              String?
+  bankBeneficiary        String?
   evolutionWebhookSecret String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  msgTemplateFollowUp   String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  msgTemplateFollowUp    String?
 }
 
 model InboxItem {
@@ -508,13 +506,13 @@ model InboxItem {
   phoneNumber      String
   senderName       String?
   message          String
-  type             String          // new_lead, customer_action_required
-  category         String?         // payment_related, event_change, contract_related, general_inquiry
-  status           String          @default("pending") // pending, in_progress, resolved
-  priority         String          @default("medium")  // low, medium, high
-  assignedTo       String?         // ID de usuario admin
+  type             String
+  category         String?
+  status           String          @default("pending")
+  priority         String          @default("medium")
+  assignedTo       String?
   clientId         String?
   bookingRequestId String?
-  client           ClientProfile?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  bookingRequest   BookingRequest? @relation(fields: [bookingRequestId], references: [id], onDelete: SetNull)
+  bookingRequest   BookingRequest? @relation(fields: [bookingRequestId], references: [id])
+  client           ClientProfile?  @relation(fields: [clientId], references: [id])
 }

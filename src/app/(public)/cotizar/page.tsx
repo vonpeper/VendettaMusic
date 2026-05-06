@@ -18,7 +18,7 @@ export default async function CotizarPage({ searchParams }: Props) {
   })
 
   const initialStep = params.step ? parseInt(params.step, 10) : 0
-  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
   return (
     <FunnelWizard

@@ -1,5 +1,6 @@
 "use client"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Phone, Calendar, Lock } from "lucide-react"
 import {
@@ -26,7 +27,13 @@ export function PublicNavbar() {
     <header className="fixed top-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-md">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <img src="/logo.png" alt="Vendetta Logo" className="h-10 w-auto" />
+          <div className="h-12 flex items-center">
+            <img 
+              src="/images/logo-vendetta-horizontal.png?v=4" 
+              alt="Vendetta Logo" 
+              className="h-full w-auto object-contain"
+            />
+          </div>
         </Link>
         
         {/* Desktop Nav */}
@@ -65,7 +72,13 @@ export function PublicNavbar() {
               <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
                 <div className="p-6 border-b border-white/5">
                   <SheetHeader className="text-left mb-6">
-                    <img src="/logo.png" alt="Vendetta Logo" className="h-10 w-auto self-start" />
+                    <div className="h-12 flex items-center self-start">
+                      <img 
+                        src="/images/logo-vendetta-horizontal.png?v=4" 
+                        alt="Vendetta Logo" 
+                        className="h-full w-auto object-contain"
+                      />
+                    </div>
                     <SheetTitle className="sr-only">Menú de Navegación</SheetTitle>
                   </SheetHeader>
                   <div className="space-y-1">

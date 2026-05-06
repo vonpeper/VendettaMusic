@@ -28,7 +28,7 @@ export async function sendTestNotificationAction(target: "admin" | "musician" | 
   }
 
   try {
-    const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+    const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
     let phone = ""
     let recipientName = "Prueba"

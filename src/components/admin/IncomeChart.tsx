@@ -42,13 +42,13 @@ export function IncomeChart({ data }: { data: MonthData[] }) {
         style={{ minWidth: `${Math.max(totalW, 280)}px` }}
       >
         <defs>
-          <linearGradient id="barRed" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="rgb(239,68,68)"  stopOpacity={0.95} />
-            <stop offset="100%" stopColor="rgb(127,29,29)"  stopOpacity={0.7}  />
+          <linearGradient id="barMagenta" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="rgb(233,30,99)"  stopOpacity={0.95} />
+            <stop offset="100%" stopColor="rgb(136,14,79)"  stopOpacity={0.7}  />
           </linearGradient>
-          <linearGradient id="barRedHi" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="rgb(252,165,165)" stopOpacity={1}   />
-            <stop offset="100%" stopColor="rgb(239,68,68)"   stopOpacity={0.9} />
+          <linearGradient id="barMagentaHi" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="rgb(244,143,177)" stopOpacity={1}   />
+            <stop offset="100%" stopColor="rgb(233,30,99)"   stopOpacity={0.9} />
           </linearGradient>
           {/* fondo semitransparente para los value-labels */}
           <filter id="textBg">
@@ -106,14 +106,14 @@ export function IncomeChart({ data }: { data: MonthData[] }) {
                 x={barX + 2} y={barY + 3}
                 width={BAR_W} height={barH}
                 rx={5}
-                fill="rgba(220,38,38,0.15)"
+                fill="rgba(233,30,99,0.15)"
               />
               {/* Barra */}
               <rect
                 x={barX} y={barY}
                 width={BAR_W} height={barH}
                 rx={5}
-                fill={isMax ? "url(#barRedHi)" : "url(#barRed)"}
+                fill={isMax ? "url(#barMagentaHi)" : "url(#barMagenta)"}
               />
 
               {/* Value label — caja semitransparente para legibilidad si es necesario */}
@@ -130,7 +130,7 @@ export function IncomeChart({ data }: { data: MonthData[] }) {
                 textAnchor="middle"
                 fontSize={8.5}
                 fontWeight="bold"
-                fill={isMax ? "rgb(220,38,38)" : "rgba(0,0,0,0.7)"}
+                fill={isMax ? "rgb(233,30,99)" : "rgba(0,0,0,0.7)"}
               >
                 {MXN(d.total)}
               </text>

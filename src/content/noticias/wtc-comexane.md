@@ -71,6 +71,6 @@ Haz que tu evento sea inolvidable.📩 Contáctanos. Llevamos Vendetta a tu esce
 [0Vendetta Live Music en el Halloween de Portofino: ¡Una Noche Espeluznante y Llena de Música! 🎃noviembre 5, 2024](https://vendetta.mx/vendetta-live-music-en-el-halloween-de-portofino-una-noche-espeluznante-y-llena-de-musica-%f0%9f%8e%83/)
 
 ###### Vendetta Live Music en el Halloween de Portofino: ¡Una Noche Espeluznante y Llena de Música! 🎃
-[Prosuite](https://vendetta.mx/vendetta-en-vivo-en-el-wtc-acompanamos-al-colegio-mexicano-de-anestesiologia-por-su-li-curso-anual/www.prosuite.mx)
+[Vendetta](https://vendetta.mx/vendetta-en-vivo-en-el-wtc-acompanamos-al-colegio-mexicano-de-anestesiologia-por-su-li-curso-anual/www.vendetta.mx)
 
 

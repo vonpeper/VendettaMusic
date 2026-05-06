@@ -132,11 +132,11 @@ async function main() {
   }
 
   await prisma.globalConfig.upsert({
-    where:  { id: "singleton" },
+    where:  { id: "vendetta_config" },
     update: {},
-    create: { id: "singleton", zona2Rate: 1500, zona3Rate: 3000 },
+    create: { id: "vendetta_config", zona2Rate: 1500, zona3Rate: 3000 },
   })
-  console.log("  🌎 GlobalConfig singleton listo (zona2=1500, zona3=3000)")
+  console.log("  🌎 GlobalConfig vendetta_config listo (zona2=1500, zona3=3000)")
 
   const total = await prisma.package.count({ where: { active: true } })
   console.log(`\n✨ Restauración completa. Paquetes activos en DB: ${total}`)

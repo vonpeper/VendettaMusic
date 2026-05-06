@@ -24,9 +24,9 @@ export async function saveBankConfigAction(arg1: any, arg2?: any) {
     const bankClabe       = (formData.get("bankClabe") as string)       || ""
     const bankBeneficiary = (formData.get("bankBeneficiary") as string) || ""
     await db.globalConfig.upsert({
-      where: { id: "singleton" },
+      where: { id: "vendetta_config" },
       update: { bankName, bankAccount, bankClabe, bankBeneficiary },
-      create: { id: "singleton", bankName, bankAccount, bankClabe, bankBeneficiary },
+      create: { id: "vendetta_config", bankName, bankAccount, bankClabe, bankBeneficiary },
     })
     revalidatePath("/admin/configuracion")
     return { success: true, message: "Datos bancarios guardados" }
@@ -46,9 +46,9 @@ export async function saveEvolutionWebhookSecretAction(arg1: any, arg2?: any) {
       return { success: true, message: "Webhook secret sin cambios" }
     }
     await db.globalConfig.upsert({
-      where: { id: "singleton" },
+      where: { id: "vendetta_config" },
       update: { evolutionWebhookSecret: incoming || null },
-      create: { id: "singleton", evolutionWebhookSecret: incoming || null },
+      create: { id: "vendetta_config", evolutionWebhookSecret: incoming || null },
     })
     revalidatePath("/admin/configuracion")
     return { success: true, message: "Webhook secret guardado" }
@@ -69,14 +69,14 @@ export async function saveGoogleCredentialsAction(arg1: any, arg2?: any) {
     const calendarId = formData.get("calendarId") as string
 
     await db.globalConfig.upsert({
-      where: { id: "singleton" },
+      where: { id: "vendetta_config" },
       update: {
         googleClientId: clientId,
         googleClientSecret: clientSecret,
         googleCalendarId: calendarId,
       },
       create: {
-        id: "singleton",
+        id: "vendetta_config",
         googleClientId: clientId,
         googleClientSecret: clientSecret,
         googleCalendarId: calendarId,
@@ -106,7 +106,7 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
     const instance = formData.get("instance") as string
     const adminWhatsapp = (formData.get("adminWhatsapp") as string || "").replace(/\D/g, "") || null
 
-    const existing = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+    const existing = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
     // Si el valor llega vacío, lo guardamos como null o vacío
     // Si llega con asteriscos, mantenemos el valor anterior
@@ -116,7 +116,7 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
     }
 
     await db.globalConfig.upsert({
-      where: { id: "singleton" },
+      where: { id: "vendetta_config" },
       update: {
         evolutionUrl: url,
         evolutionApiKey: finalApiKey,
@@ -124,7 +124,7 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
         adminWhatsapp,
       },
       create: {
-        id: "singleton",
+        id: "vendetta_config",
         evolutionUrl: url,
         evolutionApiKey: finalApiKey,
         evolutionInstance: instance,
@@ -150,13 +150,13 @@ export async function saveViaticosConfigAction(arg1: any, arg2?: any) {
     const zona3Rate = parseFloat(formData.get("zona3Rate") as string) || 3000
 
     await db.globalConfig.upsert({
-      where: { id: "singleton" },
+      where: { id: "vendetta_config" },
       update: {
         zona2Rate,
         zona3Rate,
       },
       create: {
-        id: "singleton",
+        id: "vendetta_config",
         zona2Rate,
         zona3Rate,
       }
@@ -182,7 +182,7 @@ export async function saveSocialConfigAction(arg1: any, arg2?: any) {
     const whatsappUrl = formData.get("whatsappUrl") as string
 
     await db.globalConfig.upsert({
-      where: { id: "singleton" },
+      where: { id: "vendetta_config" },
       update: {
         facebookUrl,
         instagramUrl,
@@ -190,7 +190,7 @@ export async function saveSocialConfigAction(arg1: any, arg2?: any) {
         whatsappUrl,
       },
       create: {
-        id: "singleton",
+        id: "vendetta_config",
         facebookUrl,
         instagramUrl,
         tiktokUrl,
@@ -219,7 +219,7 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
     const msgTemplateFollowUp = formData.get("msgTemplateFollowUp") as string
 
     await db.globalConfig.upsert({
-      where: { id: "singleton" },
+      where: { id: "vendetta_config" },
       update: {
         msgTemplateGig,
         msgTemplateQuote,
@@ -227,7 +227,7 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
         msgTemplateFollowUp,
       },
       create: {
-        id: "singleton",
+        id: "vendetta_config",
         msgTemplateGig,
         msgTemplateQuote,
         msgTemplateEventClose,

@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic"
 export async function POST(req: NextRequest) {
   const body = await req.text()
 
-  const config = await db.globalConfig.findUnique({ where: { id: "singleton" } })
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   const secret = config?.evolutionWebhookSecret || process.env.EVOLUTION_WEBHOOK_SECRET || null
 
   if (secret) {

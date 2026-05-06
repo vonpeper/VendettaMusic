@@ -51,7 +51,8 @@ export default async function AdminDashboardPage() {
         location: true, 
         package: true,
         contracts: true,
-        bookingRequest: true
+        bookingRequest: true,
+        musicians: true
       }
     }),
     db.bandEvent.findMany({
@@ -85,7 +86,7 @@ export default async function AdminDashboardPage() {
     db.bookingRequest.findMany({
       select: { id: true, eventId: true, clientName: true, status: true, shortId: true }
     }),
-    (db as any).inboxItem ? db.inboxItem.count({ where: { status: "pending" } }) : Promise.resolve(0),
+    (db as any).inboxItem?.count?.({ where: { status: "pending" } }).catch(() => 0) || 0,
     // Data for Quick Actions
     db.clientProfile.findMany({ include: { user: true }, orderBy: { user: { name: 'asc' } } }),
     db.location.findMany({ orderBy: { name: 'asc' } }),
@@ -473,18 +474,13 @@ export default async function AdminDashboardPage() {
                   const daysUntil = Math.ceil((ev.date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
                   const contractRecord = ev.contracts?.[0]
                   const isSigned = !!contractRecord?.signedAt || contractRecord?.status === "signed"
-                  const hasContract = !!contractRecord
                   const isPaid = ev.balance <= 0
-                  const hasDeposit = ev.deposit > 0
-                  const hasAudio = !!ev.audioEngineer
+                  const allMusiciansConfirmed = ev.musicians?.length > 0 && ev.musicians.every((m: any) => m.status === "confirmed")
                   
                   const isUrgent = daysUntil <= 7
-                  const isReady = isSigned && isPaid && hasAudio
+                  const isReady = isSigned && (ev.deposit > 0 || isPaid) && allMusiciansConfirmed
                   
                   // Lógica de color de la tarjeta (Semáforo Principal)
-                  // Verde: Todo listo. 
-                  // Rojo: Falta algo y es urgente (<= 7 días).
-                  // Amarillo/Normal: Falta algo pero hay tiempo.
                   const cardBorder = isReady 
                     ? "border-green-500/40 shadow-green-500/5 bg-green-50/20" 
                     : isUrgent 
@@ -539,43 +535,44 @@ export default async function AdminDashboardPage() {
                       </div>
                       
                       <div className="grid grid-cols-3 gap-2 relative z-10">
-                        {/* CONTRATO: Verde si está firmado, Amarillo si existe o agendado, Rojo si nada */}
+                        {/* ANTICIPO: Verde si > 0 o Liquidado, Rojo si 0 */}
+                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${
+                          (ev.deposit > 0 || isPaid)
+                            ? "bg-green-500/10 border-green-500/20 text-green-600" 
+                            : "bg-red-500/10 border-red-500/20 text-red-600"
+                        }`}>
+                          {(ev.deposit > 0 || isPaid) ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} 
+                          Anticipo
+                        </div>
+
+                        {/* CONTRATO: Verde si está firmado, Rojo si no */}
                         <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${
                           isSigned 
                             ? "bg-green-500/10 border-green-500/20 text-green-600" 
-                            : (hasContract || ev.status === "scheduled" || ev.status === "confirmed")
-                              ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-600"
-                              : "bg-red-500/10 border-red-500/20 text-red-600"
+                            : "bg-red-500/10 border-red-500/20 text-red-600"
                         }`}>
-                          {(isSigned || hasContract || ev.status === "scheduled" || ev.status === "confirmed") ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} 
-                          {isSigned ? "Firmado" : (hasContract || ev.status === "scheduled" || ev.status === "confirmed") ? "Generado" : "Contrato"}
+                          {isSigned ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} 
+                          Contrato
                         </div>
 
-                        {/* PAGO: Rojo si 0, Amarillo si hay algo, Verde si completo */}
-                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${
-                          isPaid 
-                            ? "bg-green-500/10 border-green-500/20 text-green-600" 
-                            : hasDeposit 
-                              ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-600" 
-                              : "bg-red-500/10 border-red-500/20 text-red-600"
-                        }`}>
-                          {isPaid ? <CheckCircle2 className="w-3 h-3" /> : hasDeposit ? <AlertCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} Pago
-                        </div>
-
-                        {/* AUDIO: Rojo si no hay inge, Verde si hay */}
-                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${hasAudio ? "bg-green-500/10 border-green-500/20 text-green-600" : "bg-red-500/10 border-red-500/20 text-red-600"}`}>
-                          {hasAudio ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} Audio
+                        {/* MÚSICOS: Verde si confirmados, Rojo si no */}
+                        <div className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest ${allMusiciansConfirmed ? "bg-green-500/10 border-green-500/20 text-green-600" : "bg-red-500/10 border-red-500/20 text-red-600"}`}>
+                          {allMusiciansConfirmed ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />} Músicos
                         </div>
                       </div>
 
                       <div className="mt-auto space-y-2 relative z-10">
-                        {ev.balance > 0 && (
+                        {ev.balance > 0 ? (
                           <div className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border text-center ${isUrgent ? "bg-red-500/10 border-red-500/20 text-red-600" : "bg-muted/30 border-border/10 text-muted-foreground"}`}>
                             Saldo Pendiente: {MXN(ev.balance)}
                           </div>
+                        ) : (
+                          <div className="text-[10px] font-bold bg-green-500/10 border border-green-500/20 text-green-600 px-3 py-1.5 rounded-lg text-center uppercase tracking-widest">
+                            LIQUIDADO
+                          </div>
                         )}
                         {isReady && (
-                          <div className="text-[10px] font-bold bg-green-500/10 border border-green-500/20 text-green-600 px-3 py-1.5 rounded-lg text-center flex items-center justify-center gap-1.5">
+                          <div className="text-[10px] font-bold bg-green-500/10 border border-green-500/20 text-green-600 px-3 py-1.5 rounded-lg text-center flex items-center justify-center gap-1.5 shadow-sm shadow-green-500/20">
                              <CheckCircle2 className="w-3 h-3" /> LISTO PARA EL SHOW
                           </div>
                         )}

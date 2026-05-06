@@ -1,9 +1,9 @@
 #!/usr/bin/expect -f
 set timeout 60
-spawn ssh -o PreferredAuthentications=password -o StrictHostKeyChecking=no panel-prosuite "echo 'Pp55202104#' | sudo -S docker ps -a | grep vendetta"
+spawn ssh -o PreferredAuthentications=password -o StrictHostKeyChecking=no panel-prosuite "echo 'zNb+kFF7X8COrbKB' | sudo -S docker ps -a | grep vendetta"
 expect {
     "*assword:*" {
-        send "Pp55202104#\r"
+        send "zNb+kFF7X8COrbKB\r"
         exp_continue
     }
     eof
