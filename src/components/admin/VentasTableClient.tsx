@@ -127,11 +127,11 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
           </div>
           
           <Dialog>
-            <DialogTrigger render={
+            <DialogTrigger asChild>
               <Button variant="default" size="sm" className="gap-2 font-black h-9 px-4 rounded-xl bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white hover:shadow-lg hover:shadow-pink-500/30 border-none">
                 <Trash2 className="w-4 h-4" /> Eliminar Selección
               </Button>
-            } />
+            </DialogTrigger>
             <DialogContent showCloseButton={false} className="bg-card border-border/40 backdrop-blur-xl">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-red-500">
@@ -144,8 +144,10 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="mt-4">
-                <DialogClose render={<Button variant="ghost" className="rounded-xl border-border/40" />}>
-                  Cancelar
+                <DialogClose asChild>
+                  <Button variant="ghost" className="rounded-xl border-border/40">
+                    Cancelar
+                  </Button>
                 </DialogClose>
                 <Button 
                   onClick={handleBulkDelete}

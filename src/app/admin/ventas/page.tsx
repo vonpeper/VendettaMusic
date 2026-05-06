@@ -230,13 +230,13 @@ function ContratosGrid({ items, isCompleted }: { items: any[], isCompleted: bool
                 <Button 
                   size="sm" 
                   variant="outline" 
+                  asChild
                   className="h-8 gap-2 border-green-600/30 text-green-400 hover:bg-green-600 hover:text-foreground" 
-                  render={
-                    <a href={`/api/admin/contract/${c.id}`}>
-                      <Download className="w-3 h-3" /> Contrato PDF
-                    </a>
-                  }
-                />
+                >
+                  <a href={`/api/admin/contract/${c.id}`}>
+                    <Download className="w-3 h-3" /> Contrato PDF
+                  </a>
+                </Button>
               </div>
             </div>
           </CardContent>

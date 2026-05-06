@@ -117,17 +117,17 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             <div className="flex flex-wrap gap-3">
               <ContractSignedButton 
                 bookingId={booking.id} 
-                isSigned={booking.event?.contracts?.some((c: any) => c.status === "signed")} 
+                isSigned={!!booking.event?.contracts?.some((c: any) => c.status === "signed")} 
               />
               <Button 
                 variant="outline"
+                asChild
                 className={`${booking.status === "pendiente" ? "border-blue-600/50 text-blue-400 hover:bg-blue-600" : "border-green-600/50 text-green-400 hover:bg-green-600"} gap-2 h-11 px-6 font-bold rounded-xl whitespace-nowrap hover:text-white transition-all`} 
-                render={
-                  <a href={`/api/admin/contract/${booking.id}`}>
-                    <Download className="w-5 h-5" /> {booking.status === "pendiente" ? "Cotización PDF" : "Contrato PDF"}
-                  </a>
-                } 
-              />
+              >
+                <a href={`/api/admin/contract/${booking.id}`}>
+                  <Download className="w-5 h-5" /> {booking.status === "pendiente" ? "Cotización PDF" : "Contrato PDF"}
+                </a>
+              </Button>
             </div>
           )}
         </div>
@@ -298,13 +298,13 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 <div className="pt-2">
                   <Button 
                     variant="outline" 
+                    asChild
                     className="w-full border-primary/40 text-primary hover:bg-primary hover:text-white transition-all rounded-xl h-12 gap-2 font-black uppercase tracking-widest group shadow-md" 
-                    render={
-                      <a href={`https://wa.me/${booking.clientPhone.replace(/\D/g,'')}`} target="_blank">
-                        Contactar WhatsApp <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100" />
-                      </a>
-                    }
-                  />
+                  >
+                    <a href={`https://wa.me/${booking.clientPhone.replace(/\D/g,'')}`} target="_blank">
+                      Contactar WhatsApp <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100" />
+                    </a>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

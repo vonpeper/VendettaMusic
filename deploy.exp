@@ -3,7 +3,7 @@ set timeout 60
 spawn ssh -o PreferredAuthentications=password -o StrictHostKeyChecking=no panel-prosuite "ls -la /var/www/vendetta.prosuite.pro"
 expect {
     "*assword:*" {
-        send "zNb+kFF7X8COrbKB\r"
+        send "Pp55202104#\r"
         exp_continue
     }
     eof

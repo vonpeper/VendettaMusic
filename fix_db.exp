@@ -1,9 +1,9 @@
 #!/usr/bin/expect -f
 set timeout 120
-spawn ssh -o PreferredAuthentications=password -o StrictHostKeyChecking=no panel-prosuite "echo 'zNb+kFF7X8COrbKB' | sudo -S docker exec -i vendetta-app npx prisma db push --accept-data-loss"
+spawn ssh -o PreferredAuthentications=password -o StrictHostKeyChecking=no panel-prosuite "echo 'Pp55202104#' | sudo -S docker exec -i vendetta-app npx prisma db push --accept-data-loss"
 expect {
     "*assword:*" {
-        send "zNb+kFF7X8COrbKB\r"
+        send "Pp55202104#\r"
         exp_continue
     }
     eof
