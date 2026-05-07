@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { UserPlus, Pencil, Trash2, X, Loader2, Save } from "lucide-react"
+import { UserPlus, Pencil, Trash2, X, Loader2, Save, UploadCloud } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
+import { uploadMusicianPhoto } from "@/actions/media"
 
 type PublicBandMember = {
   id: string
@@ -92,11 +93,73 @@ export function BandMembersManagerClient({ members }: { members: PublicBandMembe
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs uppercase tracking-widest font-bold text-primary">Emoji Representativo</label>
-                  <Input name="emoji" defaultValue={editing?.emoji || "🎸"} required className="bg-primary/10 border-border/40" />
+                  <div className="flex gap-2">
+                    <Input 
+                      name="emoji" 
+                      id="emoji-input"
+                      defaultValue={editing?.emoji || "🎸"} 
+                      required 
+                      className="bg-primary/10 border-border/40 w-20 text-center text-xl" 
+                    />
+                    <div className="flex flex-wrap gap-1 items-center bg-card/40 p-1 rounded-lg border border-border/20">
+                      {["🎸", "🎤", "🥁", "🎹", "🎻", "🎷", "🎺", "🎧", "🎼", "🎹", "📻", "🎶", "✨", "🔥", "⚡"].map(e => (
+                        <button 
+                          key={e} 
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById("emoji-input") as HTMLInputElement;
+                            if (input) {
+                              input.value = e;
+                              // Force update if needed or just let the form handle it
+                            }
+                          }}
+                          className="w-8 h-8 flex items-center justify-center hover:bg-primary/20 rounded transition-colors text-lg"
+                        >
+                          {e}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-widest font-bold text-primary">Ruta de Foto Oficial</label>
-                  <Input name="img" defaultValue={editing?.img || "/images/musicians/default.jpg"} required className="bg-primary/10 border-border/40" />
+                  <label className="text-xs uppercase tracking-widest font-bold text-primary">Foto Oficial</label>
+                  <div className="flex gap-2">
+                    <Input 
+                      name="img" 
+                      id="img-path-input"
+                      defaultValue={editing?.img || "/images/musicians/default.jpg"} 
+                      required 
+                      className="bg-primary/10 border-border/40" 
+                    />
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      id="musician-photo-upload" 
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const formData = new FormData();
+                        formData.append("file", file);
+                        const res = await uploadMusicianPhoto(formData);
+                        if (res.success && res.url) {
+                          const input = document.getElementById("img-path-input") as HTMLInputElement;
+                          if (input) input.value = res.url;
+                          toast.success("Foto subida");
+                        } else {
+                          toast.error("Error al subir");
+                        }
+                      }}
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="bg-primary/20 hover:bg-primary/30 border-primary/40 shrink-0"
+                      onClick={() => document.getElementById("musician-photo-upload")?.click()}
+                    >
+                      <UploadCloud className="w-4 h-4 mr-2" /> Subir
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs uppercase tracking-widest font-bold text-primary">Link Instagram (Opcional)</label>
