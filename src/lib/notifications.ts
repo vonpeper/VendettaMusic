@@ -403,7 +403,7 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     return
   }
 
-  console.log("📋 PASE DE LISTA PARA CONVOCATORIA:", allRecipients.map(r => `${r.name} (${r.instrument})`).join(", "))
+  console.log("📋 PASE DE LISTA PARA CONVOCATORIA:", allRecipients.map((r: any) => `${r.name} (${r.instrument})`).join(", "))
 
   // Obtenemos la configuración para el número del Admin (Sandbox)
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
