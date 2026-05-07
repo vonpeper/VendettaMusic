@@ -178,3 +178,36 @@ export async function markContractAsSignedAction(bookingId: string) {
     return { success: false, error: "Error al firmar el contrato." }
   }
 }
+
+export async function sendAutoFollowUpAction(id: string, type: "booking" | "quote", phone: string, clientName: string) {
+  try {
+    const { notifyWhatsApp } = await import("@/lib/notifications")
+    
+    // 1. Send WhatsApp
+    const firstName = clientName.split(" ")[0]
+    await notifyWhatsApp({
+      to: phone,
+      type: "client_followup",
+      data: { clientName: firstName }
+    })
+
+    // 2. Increment counter
+    if (type === "booking") {
+      await db.bookingRequest.update({
+        where: { id },
+        data: { followUpCount: { increment: 1 } }
+      })
+    } else {
+      await db.quote.update({
+        where: { id },
+        data: { followUpCount: { increment: 1 } }
+      })
+    }
+
+    revalidatePath("/admin/ventas")
+    return { success: true }
+  } catch (error) {
+    console.error("Error in sendAutoFollowUpAction:", error)
+    return { success: false, error: "Error al enviar el seguimiento automático" }
+  }
+}
