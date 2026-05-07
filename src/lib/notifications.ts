@@ -409,7 +409,7 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     phone: [p.whatsapp, p.phone].find((num: any) => num && num.trim() !== ""),
     instrument: p.instrument || "",
     currentStatus: p.eventMusicians[0]?.status || "pending"
-  })).filter((r: any) => r.currentStatus === "pending")
+  }).filter((r: any) => r.currentStatus === "pending")
 
   console.log(`📣 notifyMusicians: Iniciando convocatoria para Evento ${eventId}. Titulares a notificar: ${allRecipients.length}`)
 
@@ -422,48 +422,129 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
 
   // Obtenemos la configuración para el número del Admin (Sandbox)
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+  const sandboxRows: any[] = await db.$queryRaw`SELECT isSandbox FROM GlobalConfig WHERE id = 'vendetta_config' LIMIT 1`
+  const isSandbox = sandboxRows.length > 0 ? Boolean(sandboxRows[0].isSandbox) : false
+
+  const baseUrl = getAppUrl()
+
+  // Pre-calcular fecha formateada desde el evento
+  const eventDate = gigDetails.date
+    ? (typeof gigDetails.date === "string" && gigDetails.date.includes("de")
+        ? gigDetails.date
+        : formatDateMX(new Date(gigDetails.date), "d 'de' MMMM"))
+    : "Por confirmar"
+
+  const ceremonyLabel: Record<string, string> = {
+    boda: "💒 Boda", xv_anos: "👸 XV Años", cumpleanos: "🎂 Cumpleaños",
+    corporativo: "🏢 Evento Corp", festival: "🎪 Festival", happening: "🎵 Happening",
+    privado: "🏠 Privado", bar: "🍺 Bar / Venue", otro: "📋 Otro",
+  }
+
+  const dressCodeMap: Record<string, string> = {
+    "formal": "🎩 Formal",
+    "formal_casual": "👔 Formal Casual",
+    "rock": "🎸 Rock / Casual",
+    "nocturno": "🌙 Concierto Nocturno"
+  }
 
   for (const r of allRecipients) {
     if (!r.phone) continue
 
-    // Lógica de prioridad para Ingenieros
+    // Ingenieros de Audio: convocatoria manual
     if (r.instrument.toLowerCase().includes("ingeniero") || r.instrument.toLowerCase().includes("audio")) {
       console.log(`⏭️ Saltando a ${r.name} (${r.instrument}): Convocatoria manual.`)
       continue
     }
 
-    // Mapeo de vestimenta para que salga el texto bonito
-    const dressCodeMap: Record<string, string> = {
-      "formal": "🎩 Formal",
-      "formal_casual": "👔 Formal Casual",
-      "rock": "🎸 Rock / Casual",
-      "nocturno": "🌙 Concierto Nocturno"
-    }
     const finalDressCode = dressCodeMap[gigDetails.dressCode] || gigDetails.dressCode || "Por definir"
+    const eventName = gigDetails.clientName || gigDetails.eventName || "Evento Vendetta"
+    const confirmLink = `${baseUrl}/confirmar/${r.id}/${eventId}`
 
-    // --- MODO SANDBOX: DESVÍO A ADMINISTRADOR ---
-    const sandboxRecipient = config?.adminWhatsapp || "7222417045"
-    
-    console.log(`🧪 [SANDBOX] Desviando convocatoria de ${r.name} -> ADMIN (${sandboxRecipient})`)
-    console.log(`📝 [DEBUG] Datos Crudos:`, {
-      llegada: gigDetails.arrivalTime,
-      montaje: gigDetails.setupTime,
-      vestimenta: gigDetails.dressCode
-    })
+    // Determinar destinatario real (respetando sandbox)
+    const realRecipient = isSandbox
+      ? (config?.adminWhatsapp || "7222417045")
+      : r.phone
 
-    await dispatchNotification({
-      type: "MUSICIAN_GIG",
-      to: sandboxRecipient,
-      bookingId: event?.bookingRequest?.id,
-      eventId: eventId,
-      customData: {
-        notes: gigDetails.musicianNotes || "Ninguna",
-        arrivalTime: gigDetails.arrivalTime || "Por definir",
-        setupTime: gigDetails.setupTime || "Por definir",
-        dressCode: finalDressCode,
-        confirmLink: `${getAppUrl()}/confirmar/${r.id}/${eventId}`
+    if (isSandbox) {
+      console.log(`🧪 [SANDBOX] Desviando convocatoria de ${r.name} (${r.phone}) -> ADMIN (${realRecipient})`)
+    } else {
+      console.log(`📤 Enviando convocatoria a ${r.name} (${r.instrument}) -> ${realRecipient}`)
+    }
+
+    // Obtener template de la DB o usar el default
+    const dbTemplate = config?.msgTemplateGig
+    const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG")
+    const template = isOldTemplate
+      ? `🎸 *NUEVA CONVOCATORIA: {{eventName}}*
+  
+📅 *Fecha:* {{date}}
+🎉 *Tipo:* {{ceremony}}
+📍 *Lugar:* {{location}}
+⏱️ *Montaje:* {{setupTime}}
+🚗 *Llegada músicos:* {{arrivalTime}}
+👔 *Vestimenta:* {{dressCode}}
+📝 *Notas:* {{notes}}
+
+🔗 *Confirma tu asistencia aquí:*
+{{confirmLink}}`
+      : dbTemplate
+
+    // Sustituir variables directamente sin pasar bookingId (evita sobreescritura)
+    const message = template
+      .replace(/{{eventName}}/g, eventName)
+      .replace(/{{date}}/g, eventDate)
+      .replace(/{{ceremony}}/g, ceremonyLabel[gigDetails.ceremonyType || gigDetails.venueType || ""] || gigDetails.ceremonyType || "Show")
+      .replace(/{{location}}/g, gigDetails.locationName || gigDetails.address || "Por confirmar")
+      .replace(/{{setupTime}}/g, gigDetails.setupTime || gigDetails.performanceStart || "Por definir")
+      .replace(/{{arrivalTime}}/g, gigDetails.arrivalTime || gigDetails.performanceStart || "Por definir")
+      .replace(/{{dressCode}}/g, finalDressCode)
+      .replace(/{{notes}}/g, gigDetails.musicianNotes || "Ninguna")
+      .replace(/{{confirmLink}}/g, confirmLink)
+
+    // Enviar directamente via Evolution sin pasar por dispatchNotification
+    // (para evitar que el bookingId sobreescriba los datos ya resueltos)
+    const { db: dbInner } = await import("./db")
+    const cfg2 = config // ya lo tenemos
+    const evolutionUrl = (cfg2 as any)?.evolutionApiUrl || process.env.EVOLUTION_API_URL
+    const evolutionKey = (cfg2 as any)?.evolutionApiKey || process.env.EVOLUTION_API_KEY
+    const evolutionInstance = (cfg2 as any)?.evolutionInstance || process.env.EVOLUTION_INSTANCE_NAME
+
+    if (!evolutionUrl || !evolutionKey || !evolutionInstance) {
+      console.error(`❌ Evolution API no configurada. URL: ${evolutionUrl}, Instance: ${evolutionInstance}`)
+      continue
+    }
+
+    const cleanPhone = realRecipient.replace(/\D/g, "")
+    const jid = cleanPhone.length === 10 ? `52${cleanPhone}@s.whatsapp.net` : `${cleanPhone}@s.whatsapp.net`
+
+    try {
+      const resp = await fetch(`${evolutionUrl}/message/sendText/${evolutionInstance}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": evolutionKey },
+        body: JSON.stringify({ number: jid, text: message })
+      })
+
+      if (resp.ok) {
+        console.log(`✅ Convocatoria enviada a ${r.name} (${r.instrument})`)
+        // Registrar notificación
+        await dbInner.notification.create({
+          data: {
+            type: "MUSICIAN_GIG_ANNOUNCE",
+            channel: "whatsapp",
+            recipient: realRecipient,
+            status: "sent",
+            message: message.substring(0, 500),
+            eventId: eventId,
+            bookingRequestId: event?.bookingRequest?.id || null,
+          }
+        }).catch(() => {})
+      } else {
+        const err = await resp.text()
+        console.error(`❌ Error Evolution para ${r.name}:`, err)
       }
-    })
+    } catch (err: any) {
+      console.error(`❌ Fallo de red al notificar a ${r.name}:`, err?.message)
+    }
   }
 
   await db.event.update({ where: { id: eventId }, data: { notificationSent: true } })
