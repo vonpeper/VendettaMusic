@@ -147,11 +147,16 @@ export async function resendNotificationAction(bookingId: string, type: "admin" 
       const gigDetails = {
         clientName: booking.clientName,
         date: booking.event.date,
-        ceremonyType: booking.event.ceremonyType,
+        ceremonyType: booking.event.ceremonyType || booking.venueType,
         locationName: booking.event.location?.name || booking.address,
+        address: booking.address,
         performanceStart: booking.event.performanceStart,
         performanceEnd: booking.event.performanceEnd,
         packageName: booking.event.package?.name || booking.packageName,
+        dressCode: (booking.event as any).dressCode || "",
+        arrivalTime: (booking.event as any).arrivalTime || "",
+        setupTime: (booking.event as any).setupTime || "",
+        musicianNotes: (booking.event as any).musicianNotes || (booking as any).adminNote || "",
         bookingRequestId: bookingId
       }
       await notifyMusicians(booking.eventId, gigDetails, db)
