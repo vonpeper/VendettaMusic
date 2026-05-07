@@ -3,6 +3,7 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { notifyMusicians } from "@/lib/notifications"
+import { assignDefaultMusicians } from "@/lib/musicians"
 import crypto from "crypto"
 
 export async function updateEventAction(id: string, _prev: any, formData: FormData) {
@@ -320,6 +321,9 @@ export async function createEventAction(_prev: any, formData: FormData) {
         isPublic: event.isPublic,
       }
     })
+
+    // Asignar automáticamente los músicos titulares al evento
+    await assignDefaultMusicians(event.id, db)
 
     // Sincronizar con Quote (Legacy) si existe
     if (event.quoteId) {

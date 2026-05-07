@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 import { dispatchNotification, notifyMusicians } from "@/lib/notifications"
+import { assignDefaultMusicians } from "@/lib/musicians"
 import { calcularViatcos } from "@/lib/viaticos"
 import { findOrCreateClient } from "@/lib/clients"
 import { formatDateMX } from "@/lib/utils"
@@ -257,22 +258,16 @@ export async function PATCH(req: NextRequest) {
         }
       }
 
-      // 5. Crear filas EventMusician para los músicos convocados
-      //    (necesario para que /confirmar/<musicianId>/<eventId> y el webhook "CONFIRMO" puedan marcarlos)
+      // 5. Asignar automáticamente los músicos titulares al evento
+      await assignDefaultMusicians(eventId as string, db)
+
+      // Obtener IDs de los asignados para notificar
       const targetMusicianIds: string[] = Array.isArray(musicianIds) && musicianIds.length > 0
         ? musicianIds
-        : (await db.musicianProfile.findMany({
-            where: { whatsapp: { not: null } },
-            select: { id: true },
-          })).map(m => m.id)
-
-      for (const mId of targetMusicianIds) {
-        await db.eventMusician.upsert({
-          where:  { id: `${eventId}-${mId}` }, // determinístico → idempotente
-          create: { id: `${eventId}-${mId}`, eventId: eventId as string, musicianId: mId, status: "pending" },
-          update: { status: "pending" },
-        }).catch(e => console.error("EventMusician upsert:", e))
-      }
+        : (await db.eventMusician.findMany({
+            where: { eventId: eventId as string },
+            select: { musicianId: true }
+          })).map((em: any) => em.musicianId)
 
       // 6. Notificar a los músicos (template + confirmLink por músico) — único lugar central
       const gig = {
