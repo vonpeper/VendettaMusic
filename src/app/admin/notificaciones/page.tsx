@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { formatDateTimeMX } from "@/lib/utils"
 import { 
   MessageSquare, CheckCircle2, Clock, AlertCircle, 
   Settings, History, FileText, Smartphone, ShieldCheck,
@@ -391,7 +392,7 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                       notifications.map((notif) => (
                         <tr key={notif.id} className="hover:bg-blue-600/5 transition-colors group">
                           <td className="px-6 py-4 text-sm font-medium text-foreground whitespace-nowrap">
-                            {format(notif.createdAt, "d 'de' MMM, HH:mm", { locale: es })}
+                            <span className="capitalize">{formatDateTimeMX(notif.createdAt)}</span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-xs font-bold text-foreground truncate">{getTypeLabel(notif.type)}</span>

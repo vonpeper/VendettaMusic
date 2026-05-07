@@ -39,6 +39,32 @@ export function formatDateMX(dateInput: Date | string | null | undefined, format
   }
 }
 
+/**
+ * Formatea la hora específicamente para el horario de México (CST/CDT).
+ * Resuelve el problema de desfase en los logs.
+ */
+export function formatTimeMX(dateInput: Date | string | null | undefined) {
+  if (!dateInput) return "--:--"
+  try {
+    const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+    return d.toLocaleTimeString("es-MX", {
+      timeZone: "America/Mexico_City",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    })
+  } catch (err) {
+    return "--:--"
+  }
+}
+
+export function formatDateTimeMX(dateInput: Date | string | null | undefined) {
+  if (!dateInput) return ""
+  const datePart = formatDateMX(dateInput, "d 'de' MMM")
+  const timePart = formatTimeMX(dateInput)
+  return `${datePart}, ${timePart}`
+}
+
 export function formatCurrency(amount: number) {
   try {
     return new Intl.NumberFormat("es-MX", {

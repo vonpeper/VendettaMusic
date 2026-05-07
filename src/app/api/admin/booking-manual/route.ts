@@ -163,6 +163,7 @@ export async function POST(req: NextRequest) {
           venueType:        venueType || "salon",
           mapsLink:         mapsLink || null,
           ceremonyType:     venueType || "salon",
+          totalIncome:      normalizedBaseAmount, // Asegurar que el ingreso no sea 0
           clientId:         clientId,
           locationId:       finalLocationId || null,
           isPublic:         Boolean(isPublic),
