@@ -298,3 +298,45 @@ export async function updateSandboxModeAction(isActive: boolean) {
     return { success: false, message: `Error de base de datos: ${error.message || 'Desconocido'}` }
   }
 }
+
+export async function testEvolutionConnectionAction() {
+  const u = await requireAdmin(); if (u) return u
+  try {
+    const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+    if (!config?.evolutionUrl || !config?.evolutionApiKey) {
+      return { success: false, message: "API no configurada en la base de datos" }
+    }
+
+    let baseUrl = config.evolutionUrl
+    if (!baseUrl.startsWith("http")) baseUrl = `https://${baseUrl}`
+    baseUrl = baseUrl.replace(/\/$/, "")
+
+    const url = `${baseUrl}/instance/connectionState/${config.evolutionInstance || "vendetta_admin"}`
+    
+    console.log(`📡 [TEST] Conectando a: ${url}`)
+    
+    const resp = await fetch(url, {
+      method: "GET",
+      headers: { "apikey": config.evolutionApiKey },
+      // Timeout corto para no colgar el servidor
+      signal: AbortSignal.timeout(5000)
+    })
+
+    if (!resp.ok) {
+      const err = await resp.text()
+      return { success: false, message: `Error de API (${resp.status}): ${err.substring(0, 50)}` }
+    }
+
+    const data = await resp.json()
+    const state = data.instance?.state || "unknown"
+
+    return { 
+      success: true, 
+      message: `Conexión exitosa. Estado: ${state}`,
+      state 
+    }
+  } catch (error: any) {
+    console.error("❌ Error en testEvolutionConnectionAction:", error)
+    return { success: false, message: `Error de red/servidor: ${error.message}` }
+  }
+}

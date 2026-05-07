@@ -368,8 +368,18 @@ export async function sendWhatsApp(
 export async function notifyMusicians(eventId: string, gigDetails: any, db: any, targetMusicianIds?: string[]) {
   const event = await db.event.findUnique({ 
     where: { id: eventId },
-    include: { bookingRequest: true }
+    include: { bookingRequest: true, musicians: true }
   })
+
+  // Log de inicio
+  await db.notification.create({
+    data: {
+      type: "SYSTEM_DEBUG",
+      channel: "log",
+      message: `notifyMusicians iniciado para ${eventId}. Músicos en relación: ${event?.musicians?.length || 0}`,
+      status: "info"
+    }
+  }).catch(() => {})
   
   // 1. Resolver qué músicos notificar:
   //    - Si se pasan IDs específicos, usarlos.
@@ -409,12 +419,14 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     phone: [p.whatsapp, p.phone].find((num: any) => num && num.trim() !== ""),
     instrument: p.instrument || "",
     currentStatus: p.eventMusicians[0]?.status || "pending"
-  })).filter((r: any) => r.currentStatus === "pending")
+  })).filter((r: any) => r.currentStatus === "pending" || r.currentStatus === "confirmed" || r.currentStatus === "rejected") 
+  // Nota: Permitimos re-enviar incluso si ya respondieron si se solicita explícitamente
 
-  console.log(`📣 notifyMusicians: Iniciando convocatoria para Evento ${eventId}. Titulares a notificar: ${allRecipients.length}`)
+  console.log(`📣 notifyMusicians: Iniciando convocatoria para Evento ${eventId}. Destinatarios filtrados: ${allRecipients.length}`)
 
   if (allRecipients.length === 0) {
-    console.warn("⚠️ No se encontraron destinatarios válidos (titulares o suplentes).")
+    const reason = profiles.length === 0 ? "No hay perfiles activos con teléfono" : "Todos los músicos ya tienen estatus distinto a pending"
+    console.warn(`⚠️ No se encontraron destinatarios válidos para el evento ${eventId}. Razón: ${reason}`)
     return
   }
 
@@ -505,11 +517,9 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
 
     // Enviar directamente via Evolution sin pasar por dispatchNotification
     // (para evitar que el bookingId sobreescriba los datos ya resueltos)
-    const { db: dbInner } = await import("./db")
-    const cfg2 = config // ya lo tenemos
-    const evolutionUrl = (cfg2 as any)?.evolutionApiUrl || process.env.EVOLUTION_API_URL
-    const evolutionKey = (cfg2 as any)?.evolutionApiKey || process.env.EVOLUTION_API_KEY
-    const evolutionInstance = (cfg2 as any)?.evolutionInstance || process.env.EVOLUTION_INSTANCE_NAME
+    const evolutionUrl = (config as any)?.evolutionUrl || process.env.EVOLUTION_API_URL
+    const evolutionKey = (config as any)?.evolutionApiKey || process.env.EVOLUTION_API_KEY
+    const evolutionInstance = (config as any)?.evolutionInstance || process.env.EVOLUTION_INSTANCE_NAME
 
     if (!evolutionUrl || !evolutionKey || !evolutionInstance) {
       console.error(`❌ Evolution API no configurada. URL: ${evolutionUrl}, Instance: ${evolutionInstance}`)
@@ -528,10 +538,10 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
 
       if (resp.ok) {
         console.log(`✅ Convocatoria enviada a ${r.name} (${r.instrument})`)
-        // Registrar notificación
-        await dbInner.notification.create({
+        // Registrar notificación exitosa
+        await db.notification.create({
           data: {
-            type: "MUSICIAN_GIG_ANNOUNCE",
+            type: "MUSICIAN_GIG",
             channel: "whatsapp",
             recipient: realRecipient,
             status: "sent",
@@ -543,6 +553,18 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
       } else {
         const err = await resp.text()
         console.error(`❌ Error Evolution para ${r.name}:`, err)
+        // Registrar notificación fallida
+        await db.notification.create({
+          data: {
+            type: "MUSICIAN_GIG",
+            channel: "whatsapp",
+            recipient: realRecipient,
+            status: "failed",
+            message: `ERROR: ${err.substring(0, 100)} | MSG: ${message.substring(0, 300)}`,
+            eventId: eventId,
+            bookingRequestId: event?.bookingRequest?.id || null,
+          }
+        }).catch(() => {})
       }
     } catch (err: any) {
       console.error(`❌ Fallo de red al notificar a ${r.name}:`, err?.message)

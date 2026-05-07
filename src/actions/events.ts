@@ -44,7 +44,7 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
         deposit,
         balance: amount - deposit,
         ivaAmount: parseFloat(data.ivaAmount as string || "0"),
-        totalIncome: parseFloat(data.totalIncome as string || "0"),
+        totalIncome: parseFloat(data.totalIncome as string || "0") || amount,
         paymentMethod: (data.paymentMethod as string) || (data.depositMethod as string) || null,
         paymentRef: (data.paymentRef as string) || null,
         status: (data.status as string) || "scheduled",
@@ -92,6 +92,15 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
         where: { eventId: id },
         data: {
           status: (data.status as string) || "scheduled",
+          requestedDate: dateValue,
+          startTime: (data.performanceStart as string) || "21:00",
+          endTime: (data.performanceEnd as string) || "23:00",
+          baseAmount: amount,
+          depositAmount: deposit,
+          venueType: (data.ceremonyType as string) || "salon",
+          clientName: (data.customName as string) || undefined,
+          isPublic: data.isPublic === "on" || data.isPublic === "true",
+          adminNote: (data.musicianNotes as string) || undefined,
           ...(data.status === "completado" ? { paymentStatus: "paid" } : {})
         }
       })
@@ -140,6 +149,13 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
     const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true") || (updatedEvent?.status === "agendado" && !updatedEvent?.notificationSent)
 
     if (shouldNotify && updatedEvent) {
+      // ASEGURAR QUE HAYA MÚSICOS: Si no hay músicos asignados, intentar asignar los titulares por default
+      const currentMusicians = await db.eventMusician.count({ where: { eventId: id } })
+      if (currentMusicians === 0) {
+        console.log(`🤖 updateEventAction: No se encontraron músicos para el evento ${id}. Asignando titulares por default...`)
+        await assignDefaultMusicians(id, db).catch(e => console.error("Error auto-assigning musicians in updateEventAction:", e))
+      }
+
       const gigDetails = {
         clientName: data.customName as string || updatedEvent.client?.user?.name || "Sin Nombre",
         date: dateValue || updatedEvent.date,
@@ -157,6 +173,16 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
         isPublic: updatedEvent.isPublic,
         packageName: updatedEvent.package?.name || "Paquete Personalizado"
       }
+      // LOG DE INTENTO (Breadcrumb)
+      await db.notification.create({
+        data: {
+          type: "SYSTEM_DEBUG",
+          channel: "log",
+          message: `Intentando notificar evento ${id}. Músicos encontrados en count: ${currentMusicians}`,
+          status: "info"
+        }
+      }).catch(() => {})
+
       await notifyMusicians(id, gigDetails, db)
     }
 
@@ -241,7 +267,7 @@ export async function createEventAction(_prev: any, formData: FormData) {
         deposit,
         balance: amount - deposit,
         ivaAmount: parseFloat(data.ivaAmount as string || "0"),
-        totalIncome: parseFloat(data.totalIncome as string || "0"),
+        totalIncome: parseFloat(data.totalIncome as string || "0") || amount,
         paymentMethod: (data.paymentMethod as string) || (data.depositMethod as string) || null,
         paymentRef: (data.paymentRef as string) || null,
         ceremonyType: (data.ceremonyType as string) || "show",
@@ -353,6 +379,9 @@ export async function createEventAction(_prev: any, formData: FormData) {
     const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true") || (event.status === "agendado")
 
     if (shouldNotify) {
+      // ASEGURAR QUE HAYA MÚSICOS
+      await assignDefaultMusicians(event.id, db).catch(e => console.error("Error auto-assigning musicians in createEventAction:", e))
+      
       const gigDetails = {
         clientName: data.customName as string || event.client?.user?.name || "Sin Nombre",
         date: event.date,
@@ -497,6 +526,9 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
     }
 
     if (newStatus === "agendado") {
+      // 1. Asignar automáticamente los músicos titulares si es necesario
+      await assignDefaultMusicians(id, db).catch(e => console.error("Error auto-assigning musicians:", e))
+
       const fullEvent = await db.event.findUnique({
         where: { id },
         include: { location: true, package: true, client: { include: { user: true } } }

@@ -6,7 +6,7 @@ import { db } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Inbox, MessageSquare, AlertCircle, Clock, User, Phone, CheckCircle2, Filter } from "lucide-react"
-import { formatDateMX } from "@/lib/utils"
+import { formatDateMX, formatDateTimeMX } from "@/lib/utils"
 import { InboxItemActions } from "@/components/admin/InboxItemActions"
 import Link from "next/link"
 
@@ -108,7 +108,7 @@ export default async function InboxPage() {
                               )}
                               <span className="text-xs text-muted-foreground flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
-                                {formatDateMX(item.createdAt, "d MMM, HH:mm")}
+                                <span className="capitalize">{formatDateTimeMX(item.createdAt)}</span>
                               </span>
                             </div>
                             <div className="flex items-center gap-3 mt-2">
