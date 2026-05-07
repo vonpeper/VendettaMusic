@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
-import { notifyWhatsApp, notifyClientBookingClosed, notifyMusicians } from "@/lib/notifications"
+import { dispatchNotification, notifyMusicians } from "@/lib/notifications"
 import { calcularViatcos } from "@/lib/viaticos"
 import { findOrCreateClient } from "@/lib/clients"
 import { formatDateMX } from "@/lib/utils"
@@ -131,27 +131,10 @@ export async function POST(req: NextRequest) {
     console.log("✅ Booking creado exitosamente:", booking.id, "shortId:", shortId)
 
     try {
-      const adminPhone = config?.adminWhatsapp || process.env.ADMIN_WHATSAPP_NUMBER
-      if (adminPhone) {
-        const baseUrl = getAppUrl()
-        const adminLink = `${baseUrl}/admin/bookings/${booking.id}`
-        
-        await notifyWhatsApp({
-          to: adminPhone,
-          type: "admin_booking",
-          data: {
-            folio:       shortId,
-            clientName:  clientName,
-            clientPhone: clientPhone,
-            clientEmail: clientEmail || "N/A",
-            date:        formatDateMX(cleanDate, "EEEE, d 'de' MMMM"),
-            time:        `${startTime} — ${endTime} hrs`,
-            package:     packageName,
-            location:    `${body.street || ""} ${body.houseNumber || ""}, ${body.colonia || ""}, CP ${zipCode || ""}, ${city}`,
-            adminLink:   adminLink
-          }
-        })
-      }
+      await dispatchNotification({
+        type: "ADMIN_NEW_BOOKING",
+        bookingId: booking.id
+      })
     } catch (notifyErr) {
       console.error("⚠️ Error silencioso enviando notificación admin:", notifyErr)
     }
@@ -179,82 +162,100 @@ export async function PATCH(req: NextRequest) {
     if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
     if (action === "confirm") {
-      // 1. Crear o Vincular Lugar (Location)
-      const { findOrCreateLocation } = await import("@/lib/locations")
-      const locationId = await findOrCreateLocation({
-        name:     booking.packageName || "Lugar del Evento",
-        address:  `${booking.calle || ""} ${booking.numero || ""}`.trim() || booking.address,
-        colonia:  booking.colonia,
-        municipio: booking.municipio || booking.city,
-        city:      booking.city,
-        state:     booking.state,
-        mapsLink:  booking.mapsLink
-      })
+      let eventId = booking.eventId
 
-      // 2. Actualizar status del booking
-      await db.bookingRequest.update({
-        where: { id: bookingId },
-        data:  { status: "agendado", adminNote: adminNote || null } // Nuevo estándar: agendado
-      })
+      if (!eventId) {
+        // 1. Crear o Vincular Lugar (Location)
+        const { findOrCreateLocation } = await import("@/lib/locations")
+        const locationId = await findOrCreateLocation({
+          name:     booking.packageName || "Lugar del Evento",
+          address:  `${booking.calle || ""} ${booking.numero || ""}`.trim() || booking.address,
+          colonia:  booking.colonia,
+          municipio: booking.municipio || booking.city,
+          city:      booking.city,
+          state:     booking.state,
+          mapsLink:  booking.mapsLink
+        })
 
-      // 3. Crear Cotización (Legacy compatibility)
-      const quoteId = crypto.randomUUID()
-      let quoteCreated = false
-      
-      if (booking.clientId) {
-        await db.quote.create({
-          data: {
-            id: quoteId,
-            clientId: booking.clientId,
-            status: "agendado",
-            totalEstimated: booking.baseAmount,
-            guestCount: booking.guestCount,
-            ceremonyType: booking.venueType,
-            notes: booking.adminNote || "",
-            eventDate: booking.requestedDate,
-            items: {
-              create: [
-                {
-                  description: `Confirmación Web: ${booking.packageName}`,
-                  quantity: 1,
-                  unitCost: booking.baseAmount
-                }
-              ]
+        // 2. Actualizar status del booking
+        await db.bookingRequest.update({
+          where: { id: bookingId },
+          data:  { status: "agendado", adminNote: adminNote || null }
+        })
+
+        // 3. Crear Cotización (Legacy compatibility)
+        const quoteId = crypto.randomUUID()
+        let quoteCreated = false
+        
+        if (booking.clientId) {
+          await db.quote.create({
+            data: {
+              id: quoteId,
+              clientId: booking.clientId,
+              status: "agendado",
+              totalEstimated: booking.baseAmount,
+              guestCount: booking.guestCount,
+              ceremonyType: booking.venueType,
+              notes: booking.adminNote || "",
+              eventDate: booking.requestedDate,
+              items: {
+                create: [
+                  {
+                    description: `Confirmación Web: ${booking.packageName}`,
+                    quantity: 1,
+                    unitCost: booking.baseAmount
+                  }
+                ]
+              }
             }
+          })
+          quoteCreated = true
+        }
+
+        // 4. Crear Event automáticamente
+        const event = await db.event.create({
+          data: {
+            quoteId:          quoteCreated ? quoteId : null,
+            date:             booking.requestedDate,
+            guestCount:       booking.guestCount,
+            performanceStart: booking.startTime,
+            performanceEnd:   booking.endTime,
+            amount:           booking.baseAmount,
+            deposit:          booking.depositAmount,
+            balance:          booking.baseAmount - booking.depositAmount,
+            depositMethod:    booking.paymentMethod,
+            status:           "agendado",
+            venueType:        booking.venueType,
+            mapsLink:         booking.mapsLink,
+            ceremonyType:     booking.venueType,
+            clientId:         booking.clientId,
+            locationId:       locationId,
+            isPublic:         booking.isPublic,
+            clientProvidesAudio: booking.clientProvidesAudio,
+            musicianNotes:    adminNote || booking.adminNote || null,
+            source:           "funnel"
           }
         })
-        quoteCreated = true
-      }
+        eventId = event.id
 
-      // 4. Crear Event automáticamente
-      const event = await db.event.create({
-        data: {
-          quoteId:          quoteCreated ? quoteId : null, // Vincular a la cotización
-          date:             booking.requestedDate,
-          guestCount:       booking.guestCount,
-          performanceStart: booking.startTime,
-          performanceEnd:   booking.endTime,
-          amount:           booking.baseAmount,
-          deposit:          booking.depositAmount,
-          balance:          booking.baseAmount - booking.depositAmount,
-          depositMethod:    booking.paymentMethod,
-          status:           "agendado", // Nuevo estándar: agendado
-          venueType:        booking.venueType,
-          mapsLink:         booking.mapsLink,
-          ceremonyType:     booking.venueType,
-          clientId:         booking.clientId,
-          locationId:       locationId, // Vínculo real al catálogo
-          isPublic:         booking.isPublic,
-          clientProvidesAudio: booking.clientProvidesAudio,
-          source:           "funnel"
+        // 5. Vincular booking con el eventId
+        await db.bookingRequest.update({
+          where: { id: bookingId },
+          data:  { eventId: eventId }
+        })
+      } else {
+        // Si ya existe, solo actualizamos notas si hay nuevas
+        if (adminNote) {
+          await db.bookingRequest.update({
+            where: { id: bookingId },
+            data: { adminNote }
+          })
+          await db.event.update({
+            where: { id: eventId },
+            data: { musicianNotes: adminNote }
+          })
         }
-      })
-
-      // 4. Actualizar booking con el eventId
-      await db.bookingRequest.update({
-        where: { id: bookingId },
-        data:  { eventId: event.id }
-      })
+      }
 
       // 5. Crear filas EventMusician para los músicos convocados
       //    (necesario para que /confirmar/<musicianId>/<eventId> y el webhook "CONFIRMO" puedan marcarlos)
@@ -267,8 +268,8 @@ export async function PATCH(req: NextRequest) {
 
       for (const mId of targetMusicianIds) {
         await db.eventMusician.upsert({
-          where:  { id: `${event.id}-${mId}` }, // determinístico → idempotente
-          create: { id: `${event.id}-${mId}`, eventId: event.id, musicianId: mId, status: "pending" },
+          where:  { id: `${eventId}-${mId}` }, // determinístico → idempotente
+          create: { id: `${eventId}-${mId}`, eventId: eventId as string, musicianId: mId, status: "pending" },
           update: { status: "pending" },
         }).catch(e => console.error("EventMusician upsert:", e))
       }
@@ -285,13 +286,18 @@ export async function PATCH(req: NextRequest) {
         packageName:      booking.packageName,
         isPublic:         booking.isPublic,
       }
-      await notifyMusicians(event.id, gig, db, targetMusicianIds)
+      await notifyMusicians(eventId as string, gig, db, targetMusicianIds)
         .catch(e => console.error("notifyMusicians:", e))
       
-      // 7. Notificar al CLIENTE (Cierre de venta)
-      await notifyClientBookingClosed(booking).catch(e => console.error("Error notificado cliente closure:", e))
+      // 7. Notificar al CLIENTE (Push Confirmation) — Solo si es la primera vez que se agenda
+      if (!booking.eventId) {
+        await dispatchNotification({
+          type: "CLIENT_CONFIRMED",
+          bookingId: bookingId
+        }).catch(e => console.error("Error notificado cliente closure:", e))
+      }
 
-      return NextResponse.json({ success: true, eventId: event.id })
+      return NextResponse.json({ success: true, eventId: eventId })
     }
 
     if (action === "cancel" || action === "reject") {
@@ -363,6 +369,7 @@ export async function PUT(req: NextRequest) {
           mapsLink:         booking.mapsLink,
           isPublic:         booking.isPublic,
           clientProvidesAudio: booking.clientProvidesAudio,
+          musicianNotes:    booking.adminNote || null,
         }
       })
     }

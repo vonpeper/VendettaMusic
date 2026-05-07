@@ -253,7 +253,7 @@ export default function LocationsManager() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <div className="w-8 h-8 bg-blue-600/10 rounded-lg flex items-center justify-center group-hover:bg-blue-600/20 transition-colors">
                       <MapPin className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
                     </div>
                     <div>

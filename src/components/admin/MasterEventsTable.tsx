@@ -74,7 +74,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
           <TabsList className="bg-card border border-border/40 p-1 h-11">
-            <TabsTrigger value="todos" className="px-5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white font-bold">
+            <TabsTrigger value="todos" className="px-5 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white font-bold">
               Todos
             </TabsTrigger>
             <TabsTrigger value="agendado" className="px-5 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white font-bold">
@@ -93,7 +93,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
           variant={showCurrentMonth ? "default" : "outline"}
           onClick={() => setShowCurrentMonth(!showCurrentMonth)}
           className={`gap-2 h-11 px-6 rounded-xl font-bold transition-all ${
-            showCurrentMonth ? "bg-primary text-white shadow-lg shadow-primary/20" : "border-border/40 text-muted-foreground"
+            showCurrentMonth ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "border-border/40 text-muted-foreground"
           }`}
         >
           <Calendar className="w-4 h-4" />
@@ -101,17 +101,17 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
         </Button>
       </div>
 
-      <div className="border border-border/40 rounded-xl bg-card overflow-hidden shadow-sm px-6">
+      <div className="border border-border/40 rounded-xl bg-card overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <Table className="min-w-[1400px]">
             <TableHeader>
-              <tr className="bg-primary/10 border-b border-border/40">
-                <TableHead className="text-primary font-bold w-24 py-5 pl-6">Fecha</TableHead>
-                <TableHead className="font-bold">Evento, Identidad y Estatus</TableHead>
-                <TableHead className="font-bold">Horario y Logística</TableHead>
-                <TableHead className="font-bold text-center">Staff</TableHead>
-                <TableHead className="font-bold">Finanzas</TableHead>
-                <TableHead className="text-right pr-10 font-bold">Acciones</TableHead>
+              <tr className="bg-blue-600/10 border-b border-border/40">
+                <TableHead className="text-blue-600 font-bold w-24 py-5 pl-8">Fecha</TableHead>
+                <TableHead className="font-bold py-5">Evento, Identidad y Estatus</TableHead>
+                <TableHead className="font-bold py-5">Horario y Logística</TableHead>
+                <TableHead className="font-bold text-center py-5">Staff</TableHead>
+                <TableHead className="font-bold py-5">Finanzas</TableHead>
+                <TableHead className="text-right pr-8 font-bold py-5">Acciones</TableHead>
               </tr>
             </TableHeader>
             <TableBody>
@@ -130,11 +130,11 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                                       eventDate.getUTCFullYear() === now.getFullYear()
                 
                 return (
-                  <TableRow key={evt.id} className="border-border/40 align-top hover:bg-black/[0.01] transition-colors">
+                  <TableRow key={evt.id} className="border-border/40 align-top hover:bg-blue-600/5 transition-colors">
                     {/* Fecha */}
-                    <TableCell className="py-6 pl-6">
+                    <TableCell className="py-6 pl-8">
                       <div className={`w-14 h-14 rounded-lg flex flex-col justify-center items-center shadow-sm ${
-                        isCurrentMonth ? "bg-primary text-white" : "bg-white border border-border text-foreground"
+                        isCurrentMonth ? "bg-blue-600 text-white" : "bg-white border border-border text-foreground"
                       }`}>
                         <span className="text-[10px] font-bold uppercase leading-none">
                           {eventDate.toLocaleString("es-MX", { month: "short", timeZone: "UTC" })}
@@ -152,7 +152,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                         {evt.bookingRequest ? (
                           <Link 
                             href={`/admin/ventas/${evt.bookingRequest.id}`}
-                            className="hover:text-primary transition-colors flex items-center gap-2"
+                            className="hover:text-blue-600 transition-colors flex items-center gap-2"
                           >
                             {evt.customName || evt.client?.user?.name || "Sin nombre"}
                             <Info className="w-3.5 h-3.5 opacity-30" />
@@ -169,7 +169,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                           </div>
                         )}
                         {!!evt.ceremonyType && (
-                          <div className="text-[10px] font-bold text-primary uppercase tracking-tighter bg-primary/15 px-2 py-0.5 rounded border border-primary/20">
+                          <div className="text-[10px] font-bold text-blue-600 uppercase tracking-tighter bg-blue-600/15 px-2 py-0.5 rounded border border-blue-600/20">
                             {evt.ceremonyType.replace("_", " ")}
                           </div>
                         )}
@@ -187,7 +187,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                           </div>
                         )}
                         {evt.package && (
-                          <div className="text-[10px] text-primary font-black uppercase tracking-wider flex items-center gap-1.5">
+                          <div className="text-[10px] text-blue-600 font-black uppercase tracking-wider flex items-center gap-1.5">
                             <span className="opacity-60 text-xs">📦</span> {evt.package.name}
                           </div>
                         )}
@@ -213,7 +213,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                           </div>
                         )}
                         {evt.performanceStart && (
-                          <div className="text-foreground font-black text-sm bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg w-fit shadow-sm">
+                          <div className="text-foreground font-black text-sm bg-blue-600/10 border border-blue-600/20 px-3 py-1.5 rounded-lg w-fit shadow-sm">
                             ⚡️ {evt.performanceStart}{evt.performanceEnd ? ` — ${evt.performanceEnd}` : ""}
                           </div>
                         )}
@@ -237,7 +237,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                                   className={`h-full transition-all ${
                                     evt.musicians.filter((m: any) => m.status === 'confirmed').length === evt.musicians.length 
                                     ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.3)]" 
-                                    : "bg-primary"
+                                    : "bg-blue-600"
                                   }`}
                                   style={{ width: `${(evt.musicians.filter((m: any) => m.status === 'confirmed').length / evt.musicians.length) * 100}%` }}
                                 />
@@ -301,7 +301,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
 
 
                     {/* Acciones */}
-                    <TableCell className="py-6 text-right pr-10">
+                    <TableCell className="py-6 text-right pr-8">
                       <div className="flex items-center gap-1.5 justify-end">
                         <NotifyEventButton
                           eventId={evt.id}
@@ -363,7 +363,7 @@ function StatusSwitcher({ status, id, onStatusChange, isUpdating }: {
           <DropdownMenuItem 
             key={key}
             onClick={() => onStatusChange(id, key)}
-            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-primary/10"
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-blue-600/10"
           >
             <div className={`w-2 h-2 rounded-full ${value.color.split(' ')[0].replace('text-', 'bg-')}`} />
             {value.label}

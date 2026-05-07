@@ -60,7 +60,7 @@ export default async function AdminEventosPage() {
   return (
     <div className="p-8 bg-background min-h-full">
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-heading font-bold text-foreground tracking-tight">
             Registro Maestro de Eventos
@@ -70,6 +70,7 @@ export default async function AdminEventosPage() {
           </p>
         </div>
         <NuevoEventoButton
+          variant="compact"
           clients={clientsMapped}
           locations={locations}
           packages={packages}

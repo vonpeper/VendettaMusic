@@ -4,6 +4,7 @@ import { CheckCircle2, Clock, XCircle, MapPin, Calendar, Package, Receipt, Arrow
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { RockBackground } from "@/components/funnel/RockBackground"
+import { ContractSigner } from "@/components/funnel/ContractSigner"
 import { formatDateMX } from "@/lib/utils"
 
 export const dynamic = 'force-dynamic'
@@ -115,15 +116,21 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                     </div>
                   </div>
                 </div>
-
-                {mainBooking.adminNote && (
-                  <div className="p-6 rounded-3xl bg-primary/5 border border-primary/20">
-                    <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">Nota del Administrador</div>
-                    <p className="text-sm text-gray-300 italic leading-relaxed">"{mainBooking.adminNote}"</p>
-                  </div>
-                )}
               </div>
             </div>
+
+            {/* SECCIÓN DE CONTRATO LEGAL */}
+            {mainBooking.status === "agendado" && (
+              <ContractSigner 
+                bookingId={mainBooking.id}
+                clientName={mainBooking.clientName}
+                shortId={mainBooking.shortId || ""}
+                isSigned={!!mainBooking.clientSignature}
+                signedAt={mainBooking.signedAt}
+                clientSignature={mainBooking.clientSignature}
+                adminSignature={mainBooking.adminSignature}
+              />
+            )}
           </div>
 
           {/* Columna Derecha: Mi Historial / Otros Eventos */}

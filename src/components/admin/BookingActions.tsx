@@ -12,20 +12,26 @@ export function BookingActions({
   bookingId, 
   clientName, 
   musicians = [],
-  forceSync = false 
+  forceSync = false,
+  isAlreadyScheduled = false,
+  currentMusicianIds = []
 }: { 
   bookingId: string; 
   clientName: string;
   musicians?: any[];
   forceSync?: boolean;
+  isAlreadyScheduled?: boolean;
+  currentMusicianIds?: string[];
 }) {
   const [note,    setNote]    = useState("")
   const [loading, setLoading] = useState<"confirm" | "reject" | "sync" | null>(null)
   const [done,    setDone]    = useState(false)
   const [selectedMusicians, setSelectedMusicians] = useState<string[]>(
-    musicians
-      .filter(m => !["Ingeniero de Audio", "Técnico", "Staff", "Proveedor"].includes(m.instrument || ""))
-      .map(m => m.id)
+    currentMusicianIds.length > 0 
+      ? currentMusicianIds 
+      : musicians
+          .filter(m => !["Ingeniero de Audio", "Técnico", "Staff", "Proveedor"].includes(m.instrument || ""))
+          .map(m => m.id)
   )
   const router = useRouter()
 
@@ -94,7 +100,7 @@ export function BookingActions({
           <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
             <Users className="w-3 h-3" /> Convocar Músicos (WhatsApp)
           </label>
-          <span className="text-[10px] font-bold text-primary">{selectedMusicians.length} Seleccionados</span>
+          <span className="text-[10px] font-bold text-blue-600">{selectedMusicians.length} Seleccionados</span>
         </div>
         <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1 scrollbar-hide">
           {musicians.map(m => {
@@ -107,7 +113,7 @@ export function BookingActions({
                 className={cn(
                   "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold transition-all",
                   isSelected 
-                    ? "bg-primary/20 border-primary text-primary" 
+                    ? "bg-blue-600/20 border-blue-600 text-blue-600" 
                     : "bg-background border-border/40 text-muted-foreground opacity-60 hover:opacity-100"
                 )}
               >
@@ -127,7 +133,7 @@ export function BookingActions({
           onChange={e => setNote(e.target.value)}
           placeholder="Ej: Ya hablé con el cliente por WA, todo listo para el montaje."
           rows={3}
-          className="w-full text-sm bg-background border border-border/40 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none transition-all"
+          className="w-full text-sm bg-background border border-border/40 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-600/50 resize-none transition-all"
         />
       </div>
       <div className="flex gap-3">
@@ -140,7 +146,7 @@ export function BookingActions({
             ? <Loader2 className="w-4 h-4 animate-spin" />
             : <Check className="w-4 h-4" />
           }
-          Confirmar
+          {isAlreadyScheduled ? "Actualizar Staff" : "Confirmar"}
         </Button>
         <Button
           onClick={() => handleAction("reject")}

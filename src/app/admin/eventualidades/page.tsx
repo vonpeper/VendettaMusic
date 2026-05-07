@@ -1,5 +1,7 @@
 import { db } from "@/lib/db"
 import { BandEventsClient } from "@/components/admin/BandEventsClient"
+import { Button } from "@/components/ui/button"
+import { Download } from "lucide-react"
 
 export default async function EventualidadesPage() {
   // Fetch from the NEW consolidated table
@@ -83,6 +85,15 @@ export default async function EventualidadesPage() {
             Control unificado de shows, eventualidades e ingresos de Vendetta.
           </p>
         </div>
+        <Button 
+          variant="outline" 
+          asChild
+          className="border-border/40 hover:bg-muted gap-2 h-11 px-6 rounded-xl font-bold transition-all shadow-sm"
+        >
+          <a href="/api/admin/export?type=events" download>
+            <Download className="w-5 h-5" /> Exportar a Excel
+          </a>
+        </Button>
       </div>
 
       <BandEventsClient events={allEvents as any} currentAnticipos={currentAnticipos} />

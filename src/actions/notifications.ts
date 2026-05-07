@@ -100,3 +100,72 @@ export async function sendTestNotificationAction(target: "admin" | "musician" | 
     return { success: false, error: error.message }
   }
 }
+
+export async function resendNotificationAction(bookingId: string, type: "admin" | "musician" | "client") {
+  const session = await auth()
+  if (!session?.user || !["ADMIN"].includes(session.user.role as string)) {
+    return { success: false, error: "No autorizado" }
+  }
+
+  try {
+    const booking = await db.bookingRequest.findUnique({
+      where: { id: bookingId },
+      include: { 
+        event: { 
+          include: { 
+            location: true,
+            package: true
+          } 
+        } 
+      }
+    })
+
+    if (!booking) return { success: false, error: "Reserva no encontrada" }
+
+    const { dispatchNotification, notifyMusicians } = await import("@/lib/notifications")
+    const firstName = booking.clientName.split(" ")[0]
+
+    if (type === "admin") {
+      await dispatchNotification({
+        type: "ADMIN_NEW_BOOKING",
+        bookingId: bookingId
+      })
+    } else if (type === "client") {
+      const cleanPhone = (booking.clientPhone || "").replace(/\D/g, "")
+      if (!cleanPhone || cleanPhone.length < 10 || cleanPhone === "5500000000") {
+        return { success: false, error: "El cliente no tiene un número de contacto válido registrado (actualmente es un marcador de posición)." }
+      }
+      const notificationType = (booking.status === "agendado" || booking.status === "completado") 
+        ? "CLIENT_CONFIRMED" 
+        : "CLIENT_QUOTE"
+
+      await dispatchNotification({
+        type: notificationType,
+        bookingId: bookingId
+      })
+    } else if (type === "musician" && booking.eventId && booking.event) {
+      const gigDetails = {
+        clientName: booking.clientName,
+        date: booking.event.date,
+        ceremonyType: booking.event.ceremonyType,
+        locationName: booking.event.location?.name || booking.address,
+        performanceStart: booking.event.performanceStart,
+        performanceEnd: booking.event.performanceEnd,
+        packageName: booking.event.package?.name || booking.packageName,
+        bookingRequestId: bookingId
+      }
+      await notifyMusicians(booking.eventId, gigDetails, db)
+    }
+
+    revalidatePath("/admin/ventas")
+    
+    if (type === "musician") {
+      return { success: true, message: "Proceso de notificación a músicos completado. Revisa la terminal para detalles de envío." }
+    }
+
+    return { success: true }
+  } catch (error: any) {
+    console.error("Error resending notification:", error)
+    return { success: false, error: error.message }
+  }
+}

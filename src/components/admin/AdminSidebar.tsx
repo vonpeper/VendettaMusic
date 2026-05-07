@@ -8,7 +8,7 @@ import {
   Users, Calendar, Settings, LogOut, FileText, Music, 
   LayoutDashboard, TrendingUp, ShoppingBag, Image as LucideImage, 
   Truck, Mic, Shield, Bell, Inbox, ChevronDown, ChevronRight,
-  BarChart3, Wallet, XCircle
+  BarChart3, Wallet, XCircle, BookOpen
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
@@ -89,6 +89,14 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
       ]
     },
     {
+      title: "COMUNICACIÓN",
+      id: "comms",
+      icon: Bell,
+      items: [
+        { name: "Mensajería", href: "/admin/notificaciones", icon: Bell },
+      ]
+    },
+    {
       title: "PRODUCCIÓN",
       id: "talento",
       icon: Music,
@@ -114,15 +122,6 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
       ]
     },
     {
-      title: "MENSAJES",
-      id: "comunicacion",
-      icon: Bell,
-      items: [
-        { name: "Notificaciones", href: "/admin/notificaciones", icon: Bell },
-        { name: "Bandeja Atención", href: "/admin/inbox", icon: Inbox, badgeCount: pendingInbox },
-      ]
-    },
-    {
       title: "AJUSTES",
       id: "configuracion",
       icon: Settings,
@@ -137,6 +136,14 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
       icon: LucideImage,
       items: [
         { name: "Banners & Galería", href: "/admin/media", icon: LucideImage, adminOnly: true },
+      ]
+    },
+    {
+      title: "AYUDA",
+      id: "help",
+      icon: BookOpen,
+      items: [
+        { name: "Documentación", href: "/admin/documentacion", icon: BookOpen },
       ]
     },
     {
@@ -271,7 +278,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                               )} />
                               <span className="flex-1 truncate">{item.name}</span>
                               {item.badgeCount ? (
-                                <span className="px-1.5 py-0.5 rounded-full bg-white text-[10px] font-bold text-pink-600">
+                                <span className="px-1.5 py-0.5 rounded-full bg-white text-[10px] font-bold text-primary">
                                   {item.badgeCount}
                                 </span>
                               ) : null}

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import { db } from "@/lib/db"
 import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction, saveBankConfigAction, saveEvolutionWebhookSecretAction } from "@/actions/config"
 import { Button } from "@/components/ui/button"
@@ -7,8 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MessageCircle, Calendar, Settings, ShieldCheck, Mail, ArrowRight, ExternalLink, Share2, FileText, Plug, Map, Loader2 } from "lucide-react"
+import { MessageCircle, Calendar, Settings, ShieldCheck, Mail, ArrowRight, ExternalLink, Share2, FileText, Plug, Map, Loader2, MessageSquare } from "lucide-react"
 import { ConfigFormWrapper } from "@/components/admin/ConfigFormWrapper"
+import { SandboxToggle } from "@/components/admin/SandboxToggle"
+import { AdminSignatureManager } from "@/components/admin/AdminSignatureManager"
 
 export default async function AdminConfiguracionPage() {
   const session = await auth()
@@ -40,15 +43,11 @@ export default async function AdminConfiguracionPage() {
             <Plug className="w-4 h-4" />
             Integraciones
           </TabsTrigger>
-          <TabsTrigger value="whatsapp" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 font-bold">
-            <MessageCircle className="w-4 h-4" />
-            Plantillas Wa
-          </TabsTrigger>
-          <TabsTrigger value="viaticos" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-400 font-bold">
+          <TabsTrigger value="viaticos" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold">
             <Map className="w-4 h-4" />
             Viáticos
           </TabsTrigger>
-          <TabsTrigger value="redes" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-pink-500/20 data-[state=active]:text-pink-400 font-bold">
+          <TabsTrigger value="redes" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 font-bold">
             <Share2 className="w-4 h-4" />
             Redes Sociales
           </TabsTrigger>
@@ -65,17 +64,26 @@ export default async function AdminConfiguracionPage() {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-foreground">WhatsApp (Evolution API)</h2>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <div className={`w-2 h-2 rounded-full ${config?.evolutionApiKey ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`} />
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-                        {config?.evolutionApiKey ? 'Configurado' : 'Sin Configurar'}
-                      </span>
+                    <div className="flex items-center gap-3 mt-1">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-2 h-2 rounded-full ${config?.evolutionApiKey ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`} />
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                          {config?.evolutionApiKey ? 'Conectado' : 'Sin Configurar'}
+                        </span>
+                      </div>
+                      {config?.isSandbox && (
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
+                          <ShieldCheck className="w-3 h-3 text-indigo-400" />
+                          <span className="text-[9px] text-indigo-400 font-black uppercase tracking-tighter">Entorno de Pruebas</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <ConfigFormWrapper action={saveEvolutionConfigAction} className="space-y-4">
-                  <div className="space-y-2">
+                <div className="space-y-6">
+                  <ConfigFormWrapper action={saveEvolutionConfigAction} className="space-y-4">
+                    <div className="space-y-2">
                     <Label htmlFor="url">Evolution API URL</Label>
                     <Input id="url" name="url" defaultValue={config?.evolutionUrl || ""} 
                       placeholder="https://tu-api-evolution.com" className="bg-card border-border/40" />
@@ -124,10 +132,20 @@ export default async function AdminConfiguracionPage() {
                   )}
                 </div>
 
-                <p className="text-[11px] text-muted-foreground mt-4 leading-relaxed">
-                  ⚠️ Las notificaciones automáticas se enviarán a través de la instancia configurada arriba.
-                </p>
+                <div className="mt-4 pt-4 border-t border-border/40 flex flex-col gap-3">
+                  <Link href="/admin/notificaciones" className="w-full">
+                    <Button variant="outline" className="w-full border-primary/30 hover:bg-primary/10 text-primary group h-10 font-bold text-xs">
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Ver Historial de Mensajes Enviados
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+                    ⚠️ Las notificaciones automáticas se enviarán a través de la instancia configurada arriba.
+                  </p>
+                </div>
               </div>
+            </div>
               
               <div className="bg-blue-600/5 border border-blue-500/20 rounded-2xl p-6">
                  <div className="flex items-center gap-3 text-blue-400 mb-3">
@@ -284,89 +302,31 @@ export default async function AdminConfiguracionPage() {
                 </ConfigFormWrapper>
               </div>
             </section>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="whatsapp" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
-          <section>
-            <div className="bg-card border border-border/40 rounded-2xl p-8 backdrop-blur-sm">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-green-400" />
+            {/* Firma Digital Corporativa */}
+            <section className="space-y-6 pt-10 border-t border-border/40">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <ShieldCheck className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-heading font-bold text-foreground">Plantillas de Mensajes (WhatsApp)</h2>
-                  <p className="text-sm text-muted-foreground">Configura los textos que se envían automáticamente a clientes y músicos.</p>
+                  <h2 className="text-2xl font-heading font-bold text-foreground">Firma Digital Corporativa</h2>
+                  <p className="text-sm text-muted-foreground">Esta firma aparecerá automáticamente en todos los contratos que tus clientes firmen.</p>
                 </div>
               </div>
-
-              <div className="mb-6 p-4 bg-card border border-border/40 rounded-xl">
-                <p className="text-xs text-muted-foreground mb-2 font-bold uppercase tracking-wider">Variables Disponibles:</p>
-                <div className="flex flex-wrap gap-2">
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{clientName}}`}</code>
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{date}}`}</code>
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{ceremony}}`}</code>
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{location}}`}</code>
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{time}}`}</code>
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{package}}`}</code>
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{total}}`}</code>
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{notes}}`}</code>
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{confirmLink}}`}</code>
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{followUpCount}}`}</code>
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{folio}}`}</code>
-                  <code className="text-[11px] bg-primary/20 px-2 py-1 rounded text-primary font-bold">{`{{bookingLink}}`}</code>
-                </div>
+              
+              <div className="bg-card border border-border/40 rounded-2xl p-8 max-w-2xl">
+                 <AdminSignatureManager initialSignature={config?.adminSignature || null} />
               </div>
-
-              <ConfigFormWrapper action={saveMessageTemplatesAction} className="grid grid-cols-1 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="msgTemplateGig" className="text-foreground font-bold text-lg">Músicos: Nuevo Gig (Convocatoria)</Label>
-                  <p className="text-xs text-muted-foreground mb-2">Mensaje que reciben los músicos cuando se crea un nuevo evento.</p>
-                  <Textarea id="msgTemplateGig" name="msgTemplateGig" rows={8}
-                    defaultValue={(config as any)?.msgTemplateGig || `🎸 *NUEVO GIG — VENDETTA* 🎸\n\n📅 *Fecha:* {{date}}\n👤 *Cliente:* {{clientName}}\n🎉 *Tipo de evento:* {{ceremony}}\n📍 *Ubicación:* {{location}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n📝 *Notas:* {{notes}}\n\n{{confirmLink}}\n— Administración Vendetta`} 
-                    className="bg-card border-border/40 text-foreground font-mono text-sm" />
-                </div>
-
-                <div className="space-y-2 pt-4 border-t border-border/40">
-                  <Label htmlFor="msgTemplateQuote" className="text-foreground font-bold text-lg">Cliente: Envío de Cotización</Label>
-                  <p className="text-xs text-muted-foreground mb-2">Mensaje enviado al cliente junto con el PDF de su cotización.</p>
-                  <Textarea id="msgTemplateQuote" name="msgTemplateQuote" rows={6}
-                    defaultValue={(config as any)?.msgTemplateQuote || `Hola {{clientName}}, somos *Vendetta Live Music* 🎸.\n\nTe compartimos la cotización para tu evento el próximo *{{date}}*.\nEl total de tu inversión sería de *{{total}}* MXN por el paquete *{{package}}*.\n\nQuedamos a tus órdenes para cualquier duda o para agendar una llamada y platicar los detalles.`} 
-                    className="bg-card border-border/40 text-foreground font-mono text-sm" />
-                </div>
-
-                <div className="space-y-2 pt-4 border-t border-border/40">
-                  <Label htmlFor="msgTemplateEventClose" className="text-foreground font-bold text-lg">Cliente: Confirmación de Evento (Cierre)</Label>
-                  <p className="text-xs text-muted-foreground mb-2">Mensaje enviado cuando el cliente hace su anticipo y cerramos la fecha.</p>
-                  <Textarea id="msgTemplateEventClose" name="msgTemplateEventClose" rows={6}
-                    defaultValue={(config as any)?.msgTemplateEventClose || `¡Felicidades {{clientName}}! 🎉\n\nHemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.\n\nFolio de seguimiento: *{{folio}}*\nConsulta el estatus y descarga tu contrato aquí:\n{{bookingLink}}\n\n¡Gracias por confiar en *Vendetta*! 🎸`} 
-                    className="bg-card border-border/40 text-foreground font-mono text-sm" />
-                </div>
-
-                <div className="space-y-2 pt-4 border-t border-border/40">
-                  <Label htmlFor="msgTemplateFollowUp" className="text-foreground font-bold text-lg">Cliente: Seguimiento de Pipeline</Label>
-                  <p className="text-xs text-muted-foreground mb-2">Mensaje enviado al presionar el botón de "Seguimiento" en el panel de ventas.</p>
-                  <Textarea id="msgTemplateFollowUp" name="msgTemplateFollowUp" rows={6}
-                    defaultValue={(config as any)?.msgTemplateFollowUp || `Hola {{clientName}}, te escribo de *Vendetta Music* 🎸 para dar seguimiento a tu cotización. ¿Pudiste revisarla? Seguimos a tus órdenes para apartar la fecha.`} 
-                    className="bg-card border-border/40 text-foreground font-mono text-sm" />
-                </div>
-
-                <div className="mt-4">
-                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-500 font-bold h-12 text-white">
-                    Guardar Plantillas
-                  </Button>
-                </div>
-              </ConfigFormWrapper>
-            </div>
-          </section>
+            </section>
+          </div>
         </TabsContent>
 
         <TabsContent value="viaticos" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
           <section>
             <div className="bg-card border border-border/40 rounded-2xl p-8 backdrop-blur-sm">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <Map className="w-6 h-6 text-primary" />
+                <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center">
+                  <Map className="w-6 h-6 text-amber-400" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-heading font-bold text-foreground">Tabulador de Viáticos Fijos</h2>
@@ -417,8 +377,8 @@ export default async function AdminConfiguracionPage() {
           <section>
             <div className="bg-card border border-border/40 rounded-2xl p-8 backdrop-blur-sm">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center">
-                  <Share2 className="w-6 h-6 text-pink-400" />
+                <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center">
+                  <Share2 className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-heading font-bold text-foreground">Redes Sociales</h2>
@@ -452,7 +412,7 @@ export default async function AdminConfiguracionPage() {
                     className="bg-card border-border/40 text-foreground" />
                 </div>
                 <div className="md:col-span-2">
-                  <Button type="submit" className="w-full bg-pink-600 hover:bg-pink-500 font-bold h-12 text-white">
+                  <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 font-bold h-12 text-white">
                     Guardar Redes Sociales
                   </Button>
                 </div>

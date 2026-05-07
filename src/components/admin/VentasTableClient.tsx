@@ -11,8 +11,15 @@ import {
   CheckSquare, 
   Square, 
   Calendar, 
-  ChevronRight 
+  ChevronRight,
+  ShieldAlert,
+  UserCheck,
+  Users,
+  MoreHorizontal,
+  MessageSquare,
+  Eye
 } from "lucide-react"
+import { resendNotificationAction } from "@/actions/notifications"
 import { Button } from "@/components/ui/button"
 import { 
   Dialog, 
@@ -27,7 +34,10 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { formatDateMX, formatCurrency } from "@/lib/utils"
@@ -48,6 +58,11 @@ interface Booking {
   clientPhone: string
   followUpCount: number
   clientEmail?: string | null
+  notifications?: {
+    admin: string
+    client: string
+    musicians: string
+  }
 }
 
 export function VentasTableClient({ items, followUpTemplate }: { items: Booking[], followUpTemplate?: string | null }) {
@@ -118,12 +133,12 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
     <div className="space-y-4">
       {/* Barra de Acciones Masivas */}
       {selectedIds.size > 0 && (
-        <div className="bg-primary/10 border border-primary/20 p-4 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+        <div className="bg-blue-600/10 border border-blue-600/20 p-4 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+            <div className="w-8 h-8 rounded-lg bg-blue-600/20 flex items-center justify-center text-blue-600 font-bold text-sm">
               {selectedIds.size}
             </div>
-            <p className="text-sm font-medium text-primary">Elementos seleccionados</p>
+            <p className="text-sm font-medium text-blue-600">Elementos seleccionados</p>
           </div>
           
           <Dialog>
@@ -165,55 +180,58 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
       <div className="bg-card border border-border/40 rounded-2xl overflow-hidden shadow-sm">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-muted/30 border-b border-border/40">
+            <tr className="bg-blue-600/10 border-b border-border/40">
               <th className="px-6 py-4 w-12 text-center">
                 <button 
                   onClick={toggleSelectAll}
-                  className="w-5 h-5 mx-auto rounded border border-border/40 flex items-center justify-center hover:border-primary/50 transition-colors"
+                  className="w-5 h-5 mx-auto rounded border border-border/40 flex items-center justify-center hover:border-blue-600/50 transition-colors"
                 >
                   {selectedIds.size === items.length ? (
-                    <CheckSquare className="w-4 h-4 text-primary fill-primary/10" />
+                    <CheckSquare className="w-4 h-4 text-blue-600 fill-blue-600/10" />
                   ) : selectedIds.size > 0 ? (
-                    <div className="w-2.5 h-0.5 bg-primary" />
+                    <div className="w-2.5 h-0.5 bg-blue-600" />
                   ) : (
                     <Square className="w-4 h-4 text-gray-600" />
                   )}
                 </button>
               </th>
-              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Cliente / ID</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Evento / Paquete</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Monto Total</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-center">Estado</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-right">Acción</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-blue-600 uppercase tracking-widest">Cliente / ID</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-blue-600 uppercase tracking-widest">Evento / Paquete</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-blue-600 uppercase tracking-widest">Monto Total</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-blue-600 uppercase tracking-widest text-center">Estado</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-blue-600 uppercase tracking-widest text-right">Opciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
             {items.map(reserva => (
               <tr 
                 key={reserva.id} 
-                className={`hover:bg-primary/10 transition-colors group ${selectedIds.has(reserva.id) ? 'bg-primary/10' : ''}`}
+                className={`hover:bg-blue-600/5 transition-colors group ${selectedIds.has(reserva.id) ? 'bg-blue-600/5' : ''}`}
               >
                 <td className="px-6 py-4">
                   <button 
                     onClick={() => toggleSelect(reserva.id)}
-                    className="w-5 h-5 rounded border border-border/40 flex items-center justify-center hover:border-primary/50 transition-colors"
+                    className="w-5 h-5 rounded border border-border/40 flex items-center justify-center hover:border-blue-600/50 transition-colors"
                   >
                     {selectedIds.has(reserva.id) ? (
-                      <CheckSquare className="w-4 h-4 text-primary fill-primary/10" />
+                      <CheckSquare className="w-4 h-4 text-blue-600 fill-blue-600/10" />
                     ) : (
                       <Square className="w-4 h-4 text-gray-600" />
                     )}
                   </button>
                 </td>
-                <td className="px-6 py-4" onClick={() => toggleSelect(reserva.id)}>
-                  <div className="font-bold text-foreground flex items-center gap-2">
+                <td className="px-6 py-4">
+                  <Link 
+                    href={`/admin/ventas/${reserva.id}`}
+                    className="font-bold text-foreground hover:text-primary hover:underline transition-colors block"
+                  >
                     {reserva.clientName}
-                  </div>
+                  </Link>
                   <div className="text-[10px] text-muted-foreground font-mono mt-0.5">{reserva.shortId || "S/F"}</div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-sm text-foreground flex items-center gap-2">
-                    <Calendar className="w-3 h-3 text-primary" />
+                    <Calendar className="w-3 h-3 text-blue-600" />
                     {formatDateMX(reserva.requestedDate, "dd/MM/yyyy")}
                   </div>
                   <div className="text-[10px] text-muted-foreground mt-0.5">{reserva.packageName}</div>
@@ -238,29 +256,156 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                   />
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    {(reserva.status === "pendiente" || reserva.status === "pending") && (
-                      <FollowUpButton 
-                        id={reserva.id}
-                        type="booking"
-                        phone={reserva.clientPhone}
-                        clientName={reserva.clientName}
-                        currentCount={reserva.followUpCount}
-                        template={followUpTemplate ?? undefined}
-                      />
-                    )}
-                    <Link href={`/admin/ventas/${reserva.id}`}>
-                      <Button variant="default" size="sm" className="h-8 px-3 text-[10px] uppercase font-black gap-1 rounded-lg bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white hover:shadow-md transition-all border-none">
-                        Ver <ChevronRight className="w-3 h-3" />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted/50 rounded-lg">
+                        <MoreHorizontal className="h-4 w-4" />
                       </Button>
-                    </Link>
-                  </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-64 bg-background/95 backdrop-blur-md border-border/40 shadow-xl rounded-xl p-2">
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel className="text-[10px] uppercase font-black text-muted-foreground px-2 py-1.5">Gestión de Evento</DropdownMenuLabel>
+                        
+                        <Link href={`/admin/ventas/${reserva.id}`}>
+                          <DropdownMenuItem className="gap-3 cursor-pointer rounded-lg focus:bg-blue-600/10 py-2.5">
+                            <Eye className="w-4 h-4 text-blue-600" />
+                            <div className="flex flex-col">
+                              <span className="text-xs font-semibold text-foreground/80">Ver Detalles Completos</span>
+                              <span className="text-[9px] text-muted-foreground">Logística, pagos y contratos</span>
+                            </div>
+                          </DropdownMenuItem>
+                        </Link>
+
+                        {(reserva.status === "pendiente" || reserva.status === "pending") && (
+                          <DropdownMenuItem 
+                            className="gap-3 cursor-pointer rounded-lg focus:bg-green-500/10 py-2.5"
+                            onClick={() => handleStatusChange(reserva.id, 'agendado')}
+                          >
+                            <UserCheck className="w-4 h-4 text-green-600" />
+                            <div className="flex flex-col">
+                              <span className="text-xs font-semibold text-green-600">Confirmar y Agendar</span>
+                              <span className="text-[9px] text-muted-foreground">Mover a eventos confirmados</span>
+                            </div>
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuGroup>
+
+                      <DropdownMenuSeparator className="bg-border/40 my-1" />
+                      
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel className="text-[10px] uppercase font-black text-muted-foreground px-2 py-1.5">Comunicación (WhatsApp)</DropdownMenuLabel>
+                        
+                        <div className="space-y-0.5">
+                          <NotificationSemaphore 
+                            bookingId={reserva.id}
+                            stats={reserva.notifications}
+                            variant="dropdown"
+                          />
+                          <FollowUpButton 
+                            id={reserva.id}
+                            type="booking"
+                            phone={reserva.clientPhone}
+                            clientName={reserva.clientName}
+                            currentCount={reserva.followUpCount}
+                            template={followUpTemplate ?? undefined}
+                            variant="dropdown"
+                          />
+                        </div>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+    </div>
+  )
+}
+
+function NotificationSemaphore({ bookingId, stats, variant = "default" }: { bookingId: string, stats?: any, variant?: "default" | "dropdown" }) {
+  const [loading, setLoading] = useState<string | null>(null)
+
+  const handleResend = async (type: "admin" | "client" | "musician") => {
+    setLoading(type)
+    try {
+      const res = await resendNotificationAction(bookingId, type)
+      if (res.success) toast.success(res.message || `Notificación de ${type} reenviada`)
+      else toast.error(res.error || "Error al reenviar")
+    } catch {
+      toast.error("Error de conexión")
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    if (status === 'sent') return 'text-green-500 bg-green-500/10 border-green-500/20'
+    if (status === 'failed') return 'text-red-500 bg-red-500/10 border-red-500/20 animate-pulse cursor-pointer hover:bg-red-500/20'
+    return 'text-muted-foreground bg-muted/10 border-border/20 cursor-pointer hover:bg-blue-600/10'
+  }
+
+  if (variant === "dropdown") {
+    return (
+      <>
+        <DropdownMenuItem 
+          className="gap-2 cursor-pointer rounded-lg focus:bg-primary/10"
+          onClick={() => handleResend('musician')}
+          disabled={loading === 'musician'}
+        >
+          {loading === 'musician' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className={`w-4 h-4 ${stats?.musicians === 'sent' ? 'text-green-500' : 'text-muted-foreground'}`} />}
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold">Notificar Músicos (WhatsApp)</span>
+            <span className="text-[9px] text-muted-foreground">Envía convocatoria con horarios y vestimenta</span>
+          </div>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem 
+          className="gap-2 cursor-pointer rounded-lg focus:bg-primary/10"
+          onClick={() => handleResend('client')}
+        >
+          {loading === 'client' ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className={`w-4 h-4 ${stats?.client === 'sent' ? 'text-green-500' : 'text-muted-foreground'}`} />}
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold">Enviar Cotización / Seguimiento</span>
+            <span className="text-[9px] text-muted-foreground">Envía link de estatus al cliente</span>
+          </div>
+        </DropdownMenuItem>
+      </>
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-1.5">
+      {/* Admin */}
+      <button 
+        onClick={() => handleResend('admin')}
+        disabled={loading === 'admin'}
+        title="Admin: Aviso de venta"
+        className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all ${getStatusColor(stats?.admin)}`}
+      >
+        {loading === 'admin' ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+      </button>
+
+      {/* Client */}
+      <button 
+        onClick={() => handleResend('client')}
+        disabled={loading === 'client'}
+        title="Cliente: Cotización / Seguimiento"
+        className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all ${getStatusColor(stats?.client)}`}
+      >
+        {loading === 'client' ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />}
+      </button>
+
+      {/* Musicians */}
+      <button 
+        onClick={() => handleResend('musician')}
+        disabled={loading === 'musician'}
+        title="Músicos: Convocatoria"
+        className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all ${getStatusColor(stats?.musicians)}`}
+      >
+        {loading === 'musician' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Users className="w-3.5 h-3.5" />}
+      </button>
     </div>
   )
 }
@@ -297,7 +442,7 @@ function StatusSwitcher({ status, id, onStatusChange, isUpdating }: {
           <DropdownMenuItem 
             key={key}
             onClick={() => onStatusChange(id, key)}
-            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-primary/10"
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-blue-600/10"
           >
             <div className={`w-2 h-2 rounded-full ${value.color.split(' ')[0].replace('text-', 'bg-')}`} />
             {value.label}

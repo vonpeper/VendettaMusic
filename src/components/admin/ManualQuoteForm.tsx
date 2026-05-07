@@ -73,7 +73,9 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
     adminNote: "Cotización manual registrada por administrador.",
     depositConfirmed: false,
     clientProvidesAudio: false,
-    locationId: ""
+    locationId: "",
+    venueName: "",
+    venuePhone: ""
   })
 
   const handlePackageChange = (id: string | null) => {
@@ -95,17 +97,17 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
     if (!id) return
     const loc = locations.find(l => l.id === id)
     if (loc) {
-      // Intentar parsear dirección básica
-      const [calle, ...rest] = loc.address.split(",")
       setFormData(prev => ({
         ...prev,
         locationId: id,
-        calle: calle.trim(),
+        venueName: loc.name || "",
+        calle: loc.address || "",
         numero: "", 
-        colonia: rest[0]?.trim() || "",
+        colonia: "",
         municipio: loc.city || "",
         state: loc.state || "Estado de México",
-        mapsLink: loc.mapsLink || ""
+        mapsLink: loc.mapsLink || "",
+        venuePhone: loc.phone || ""
       }))
     }
   }
@@ -256,6 +258,15 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
               </Select>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-4 space-y-2">
+                <Label>Nombre del Lugar (Salón, Jardín, etc)</Label>
+                <Input 
+                  required 
+                  value={formData.venueName} 
+                  onChange={e => setFormData({...formData, venueName: e.target.value})}
+                  placeholder="Ej. Hacienda del Sol"
+                />
+              </div>
               <div className="md:col-span-2 space-y-2">
                 <Label>Calle</Label>
                 <Input 
@@ -296,13 +307,34 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
                   onChange={e => setFormData({...formData, state: e.target.value})}
                 />
               </div>
-              <div className="md:col-span-4 space-y-2">
+              <div className="md:col-span-3 space-y-2">
                 <Label>Link de Google Maps (Opcional)</Label>
                 <Input 
-                  value={formData.mapsLink} 
-                  onChange={e => setFormData({...formData, mapsLink: e.target.value})}
-                  placeholder="https://maps.app.goo.gl/..."
+                   value={formData.mapsLink} 
+                   onChange={e => setFormData({...formData, mapsLink: e.target.value})}
+                   placeholder="https://maps.app.goo.gl/..."
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Teléfono del Salón (WhatsApp)</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    value={formData.venuePhone} 
+                    onChange={e => setFormData({...formData, venuePhone: e.target.value})}
+                    placeholder="55..."
+                  />
+                  {formData.venuePhone && (
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => window.open(`https://wa.me/${formData.venuePhone.replace(/\D/g, "")}`, "_blank")}
+                      className="bg-green-600/10 border-green-600/20 text-green-500 hover:bg-green-600/20"
+                    >
+                      <Phone className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -413,7 +445,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
                 </Select>
               </div>
               <div className="md:col-span-3 space-y-4 pt-4 border-t border-border/40">
-                <label className="flex items-center gap-4 cursor-pointer p-4 bg-primary/10 border border-primary/20 rounded-2xl group transition-all hover:bg-primary/10">
+                <label className="flex items-center gap-4 cursor-pointer p-4 bg-blue-600/5 border border-border/40 rounded-2xl group transition-all hover:bg-blue-600/10">
                   <input 
                     type="checkbox" 
                     checked={formData.depositConfirmed} 

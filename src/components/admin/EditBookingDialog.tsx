@@ -45,6 +45,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
     hasPista:      booking.hasPista      || false,
     hasRobot:      booking.hasRobot      || false,
     viaticosAmount: booking.viaticosAmount || 0,
+    adminNote:      booking.adminNote || "",
   })
 
   async function handleUpdate(e: React.FormEvent) {
@@ -323,6 +324,17 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
                 />
               </div>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="adminNote">Notas Administrativas / Músicos</Label>
+            <textarea 
+              id="adminNote"
+              value={formData.adminNote}
+              onChange={e => setFormData({...formData, adminNote: e.target.value})}
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="Instrucciones especiales para el staff..."
+            />
           </div>
 
           <DialogFooter className="pt-4">

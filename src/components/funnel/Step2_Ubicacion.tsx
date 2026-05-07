@@ -34,52 +34,6 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
     city ? calcularViatcos(city, state, viaticosConfig) : null
   )
   const [error, setError] = useState("")
-  const [isLocating, setIsLocating] = useState(false)
-
-  async function handleGeolocate() {
-    if (typeof window === "undefined" || !navigator.geolocation) {
-      setError("Tu navegador no soporta geolocalización.")
-      return
-    }
-
-    setIsLocating(true)
-    setError("")
-
-    try {
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        try {
-          const { latitude, longitude } = pos.coords
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-          if (!res.ok) throw new Error("API Maps error")
-          const data = await res.json()
-          
-          const geoCity = data.address?.city || data.address?.town || data.address?.village || data.address?.county || ""
-          const geoState = data.address?.state || ""
-          const geoZip = data.address?.postcode || ""
-          const geoStreet = data.address?.road || ""
-          const geoSuburb = data.address?.suburb || data.address?.neighbourhood || ""
-
-          if (geoCity) setCity(geoCity)
-          if (geoState) setState(geoState)
-          if (geoZip) setZipCode(geoZip)
-          if (geoStreet) setStreet(geoStreet)
-          if (geoSuburb) setColonia(geoSuburb)
-        } catch (err) {
-          console.error("Geocoding failed:", err)
-          setError("No pudimos obtener la dirección exacta. Por favor escríbela manualmente.")
-        } finally {
-          setIsLocating(false)
-        }
-      }, (err) => {
-        console.error("GPS error callback:", err)
-        setError("Error de GPS o permiso denegado. Por favor escribe tu municipio manualmente.")
-        setIsLocating(false)
-      }, { timeout: 8000, enableHighAccuracy: false })
-    } catch (criticalErr) {
-      console.error("Critical geolocation error:", criticalErr)
-      setIsLocating(false)
-    }
-  }
 
   // Auto-verificar si cambia la ciudad
   useEffect(() => {
@@ -152,20 +106,9 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
       <div className="space-y-5 mb-6">
         {/* Zona Check (Municipio/Estado) */}
         <div className="bg-card/30 p-5 rounded-2xl border border-white/5 space-y-4">
-           <div className="flex items-center justify-between mb-2">
              <div className="flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
                <MapPin className="w-3 h-3" /> 1. Verificación de Zona
              </div>
-             <Button 
-               variant="outline" 
-               size="sm" 
-               onClick={handleGeolocate} 
-               disabled={isLocating}
-               className="h-8 text-xs bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
-             >
-               {isLocating ? "📍 Localizando..." : "📍 Usar mi ubicación actual"}
-             </Button>
-           </div>
            <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="city" className="text-white font-bold text-xs uppercase tracking-wider">Municipio / Delegación</Label>

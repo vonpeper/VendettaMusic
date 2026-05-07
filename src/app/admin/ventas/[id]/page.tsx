@@ -24,7 +24,7 @@ import {
   Users
 } from "lucide-react"
 import Link from "next/link"
-import { formatDateMX } from "@/lib/utils"
+import { formatDateMX, cn } from "@/lib/utils"
 import { MusicianStatusList } from "@/components/admin/MusicianStatusList"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
@@ -107,7 +107,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     <div className="p-8 bg-background min-h-screen">
       <div className="max-w-5xl mx-auto">
         {/* Breadcrumbs / Back Link */}
-        <Link href="/admin/ventas" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6 text-sm font-medium">
+        <Link href="/admin/ventas" className="flex items-center gap-2 text-muted-foreground hover:text-blue-600 transition-colors mb-6 text-sm font-medium">
           <ArrowLeft className="w-4 h-4" /> Volver al Centro de Ventas
         </Link>
 
@@ -130,7 +130,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               <Button 
                 variant="outline"
                 asChild
-                className={`${booking.status === "pendiente" ? "border-blue-600/50 text-blue-400 hover:bg-blue-600" : "border-green-600/50 text-green-400 hover:bg-green-600"} gap-2 h-11 px-6 font-bold rounded-xl whitespace-nowrap hover:text-white transition-all`} 
+                className={`${booking.status === "pendiente" ? "border-primary/50 text-primary hover:bg-primary" : "border-green-600/50 text-green-400 hover:bg-green-600"} gap-2 h-11 px-6 font-bold rounded-xl whitespace-nowrap hover:text-white transition-all`} 
               >
                 <a href={`/api/admin/contract/${booking.id}`}>
                   <Download className="w-5 h-5" /> {booking.status === "pendiente" ? "Cotización PDF" : "Contrato PDF"}
@@ -148,7 +148,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
               <CardHeader className="bg-muted/30 border-b border-border/40">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Package className="w-5 h-5 text-primary" /> Detalles del Evento
+                  <Package className="w-5 h-5 text-blue-600" /> Detalles del Evento
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -157,16 +157,16 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Paquete Solicitado</div>
                     <div className="flex items-center gap-2">
                       <div className="text-lg font-black text-foreground">{booking.packageName}</div>
-                      <Badge variant="outline" className="border-primary/40 text-primary bg-primary/10 uppercase text-[9px] font-black tracking-tighter shadow-sm">
+                      <Badge variant="outline" className="border-blue-600/40 text-blue-600 bg-blue-600/10 uppercase text-[9px] font-black tracking-tighter shadow-sm">
                         {booking.venueType || 'Salón'}
                       </Badge>
                     </div>
-                    <div className="text-sm text-primary font-bold mt-1 tracking-tight">{booking.guestCount} invitados aproximados</div>
+                    <div className="text-sm text-blue-600 font-bold mt-1 tracking-tight">{booking.guestCount} invitados aproximados</div>
                   </div>
                   <div className="pt-4 border-t border-border/40">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Fecha y Horario</div>
                     <div className="text-base text-foreground flex items-center gap-2 font-black">
-                      <Calendar className="w-4 h-4 text-primary" /> {formatDateMX(booking.requestedDate, "EEEE, d 'de' MMMM")}
+                      <Calendar className="w-4 h-4 text-blue-600" /> {formatDateMX(booking.requestedDate, "EEEE, d 'de' MMMM")}
                     </div>
                     <div className="text-sm text-muted-foreground font-mono mt-1 font-bold">
                       {booking.startTime} hrs — {booking.endTime} hrs
@@ -177,7 +177,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   <div>
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Ubicación</div>
                     <div className="text-base text-foreground flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-primary shrink-0 mt-1" />
+                      <MapPin className="w-4 h-4 text-blue-600 shrink-0 mt-1" />
                       <div>
                         <div className="font-black">{booking.city}, {booking.state}</div>
                         <div className="text-sm text-muted-foreground mt-1 leading-relaxed font-medium">{booking.address}</div>
@@ -186,7 +186,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                              <a 
                                href={booking.mapsLink} 
                                target="_blank" 
-                               className="text-[10px] text-primary hover:underline flex items-center gap-1 font-black uppercase tracking-wider"
+                               className="text-[10px] text-blue-600 hover:underline flex items-center gap-1 font-black uppercase tracking-wider"
                              >
                                <ExternalLink className="w-3 h-3" /> Ver en Google Maps
                              </a>
@@ -206,10 +206,10 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
 
             {/* Servicios Personalizados */}
             {(booking.bandHours! > 0 || booking.djHours! > 0 || booking.packageName.toLowerCase().includes("arma") || booking.packageName.toLowerCase().includes("personal")) && (
-              <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden border-l-4 border-l-primary">
-                <CardHeader className="bg-primary/10 border-b border-border/40">
+              <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden border-l-4 border-l-blue-600">
+                <CardHeader className="bg-blue-600/10 border-b border-border/40">
                   <CardTitle className="text-lg flex items-center gap-2 font-black">
-                    <Sparkles className="w-5 h-5 text-primary" /> Configuración de Show
+                    <Sparkles className="w-5 h-5 text-blue-600" /> Configuración de Show
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
@@ -217,23 +217,23 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                     <div className="space-y-1">
                       <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Música en Vivo</div>
                       <div className="text-sm font-black flex items-center gap-2 text-foreground">
-                        <Music2 className="w-3.5 h-3.5 text-primary" /> {booking.bandHours} Horas
+                        <Music2 className="w-3.5 h-3.5 text-blue-600" /> {booking.bandHours} Horas
                       </div>
                     </div>
                     
                     <div className="space-y-1">
                       <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Servicio de DJ</div>
                       <div className="text-sm font-black flex items-center gap-2 text-foreground">
-                        <Disc className="w-3.5 h-3.5 text-primary" /> {booking.djHours! > 0 ? `${booking.djHours} Horas ${booking.isDjWithTvs ? '(Con Pantallas)' : '(Solo Audio)'}` : 'No solicitado'}
+                        <Disc className="w-3.5 h-3.5 text-blue-600" /> {booking.djHours! > 0 ? `${booking.djHours} Horas ${booking.isDjWithTvs ? '(Con Pantallas)' : '(Solo Audio)'}` : 'No solicitado'}
                       </div>
                     </div>
 
                     <div className="space-y-1">
                       <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Extras y Montaje</div>
                       <div className="flex flex-wrap gap-1.5 mt-1">
-                        {booking.hasTemplete && <Badge variant="outline" className="text-[9px] font-black border-primary/20 bg-primary/10 text-primary">TEMPLETE</Badge>}
-                        {booking.hasPista && <Badge variant="outline" className="text-[9px] font-black border-primary/20 bg-primary/10 text-primary">PISTA LED</Badge>}
-                        {booking.hasRobot && <Badge variant="outline" className="text-[9px] font-black border-primary/20 bg-primary/10 text-primary">ROBOT LED</Badge>}
+                        {booking.hasTemplete && <Badge variant="outline" className="text-[9px] font-black border-blue-600/20 bg-blue-600/10 text-blue-600">TEMPLETE</Badge>}
+                        {booking.hasPista && <Badge variant="outline" className="text-[9px] font-black border-blue-600/20 bg-blue-600/10 text-blue-600">PISTA LED</Badge>}
+                        {booking.hasRobot && <Badge variant="outline" className="text-[9px] font-black border-blue-600/20 bg-blue-600/10 text-blue-600">ROBOT LED</Badge>}
                         {!booking.hasTemplete && !booking.hasPista && !booking.hasRobot && <span className="text-xs text-muted-foreground italic font-medium">Sin extras</span>}
                       </div>
                     </div>
@@ -246,18 +246,18 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
               <CardHeader className="bg-muted/30 border-b border-border/40">
                 <CardTitle className="text-lg flex items-center gap-2 font-black">
-                  <CreditCard className="w-5 h-5 text-primary" /> Información Financiera
+                  <CreditCard className="w-5 h-5 text-blue-600" /> Información Financiera
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20">
+                  <div className="p-4 rounded-2xl bg-blue-600/10 border border-blue-600/20">
                     <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Subtotal Servicio</div>
                     <div className="text-xl font-black text-foreground">{MXN(booking.baseAmount)}</div>
                   </div>
-                  <div className="p-4 rounded-2xl bg-primary/15 border border-primary/30">
-                    <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Anticipo Pactado</div>
-                    <div className="text-xl font-black text-primary">{MXN(booking.depositAmount)}</div>
+                  <div className="p-4 rounded-2xl bg-blue-600/15 border border-blue-600/30">
+                    <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Anticipo Pactado</div>
+                    <div className="text-xl font-black text-blue-600">{MXN(booking.depositAmount)}</div>
                   </div>
                   <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20">
                     <div className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Estado de Pago</div>
@@ -279,27 +279,27 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           {/* Columna Derecha: Cliente y Acciones Administrativas */}
           <div className="space-y-8">
             {/* Tarjeta del Cliente */}
-            <Card className="bg-card border-primary/20 shadow-xl shadow-primary/5">
+            <Card className="bg-card border-blue-600/20 shadow-xl shadow-blue-600/5">
               <CardHeader>
-                <CardTitle className="text-[11px] font-black text-primary uppercase tracking-[0.2em]">Datos del Solicitante</CardTitle>
+                <CardTitle className="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em]">Datos del Solicitante</CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center shadow-inner">
-                    <User className="text-primary w-6 h-6" />
+                  <div className="w-12 h-12 rounded-2xl bg-blue-600/15 border border-blue-600/30 flex items-center justify-center shadow-inner">
+                    <User className="text-blue-600 w-6 h-6" />
                   </div>
                   <div>
                     <div className="text-xl font-black text-foreground tracking-tighter">{booking.clientName}</div>
-                    <div className="text-xs text-muted-foreground font-bold">Origen: <span className="text-primary font-black uppercase tracking-widest">{booking.source || 'WEB'}</span></div>
+                    <div className="text-xs text-muted-foreground font-bold">Origen: <span className="text-blue-600 font-black uppercase tracking-widest">{booking.source || 'WEB'}</span></div>
                   </div>
                 </div>
                 <div className="space-y-3 pt-4 border-t border-border/40">
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group font-bold">
-                    <Phone className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-blue-600 transition-colors group font-bold">
+                    <Phone className="w-4 h-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
                     <a href={`tel:${booking.clientPhone}`}>{booking.clientPhone}</a>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group font-bold">
-                    <Mail className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-blue-600 transition-colors group font-bold">
+                    <Mail className="w-4 h-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
                     <a href={`mailto:${booking.clientEmail}`}>{booking.clientEmail}</a>
                   </div>
                 </div>
@@ -307,7 +307,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   <Button 
                     variant="outline" 
                     asChild
-                    className="w-full border-primary/40 text-primary hover:bg-primary hover:text-white transition-all rounded-xl h-12 gap-2 font-black uppercase tracking-widest group shadow-md" 
+                    className="w-full border-blue-600/40 text-blue-600 hover:bg-blue-600 hover:text-white transition-all rounded-xl h-12 gap-2 font-black uppercase tracking-widest group shadow-md" 
                   >
                     <a href={`https://wa.me/${booking.clientPhone.replace(/\D/g,'')}`} target="_blank">
                       Contactar WhatsApp <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100" />
@@ -317,17 +317,28 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               </CardContent>
             </Card>
 
-            {/* Acciones de Control */}
-            {booking.status === "pendiente" && (
-              <Card className="bg-card border-yellow-500/20 shadow-2xl shadow-yellow-500/10">
+            {/* Gestión de Staff (Siempre visible si está agendado o pendiente) */}
+            {(booking.status === "pendiente" || booking.status === "agendado") && (
+              <Card className={cn(
+                "bg-card shadow-2xl",
+                booking.status === "pendiente" ? "border-yellow-500/20 shadow-yellow-500/10" : "border-blue-600/20 shadow-blue-600/5"
+              )}>
                 <CardHeader>
-                  <CardTitle className="text-xs font-black text-yellow-500 uppercase tracking-widest">Acciones Administrativas</CardTitle>
+                  <CardTitle className={cn(
+                    "text-[10px] font-black uppercase tracking-widest",
+                    booking.status === "pendiente" ? "text-yellow-500" : "text-blue-600"
+                  )}>
+                    {booking.status === "pendiente" ? "Acciones Administrativas" : "Gestión de Staff y Logística"}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <BookingActions 
                     bookingId={booking.id} 
                     clientName={booking.clientName} 
                     musicians={musicians}
+                    isAlreadyScheduled={!!booking.eventId}
+                    // Pasamos los IDs actuales para que aparezcan seleccionados
+                    currentMusicianIds={booking.event?.musicians?.map((m: any) => m.musicianId) || []}
                   />
                 </CardContent>
               </Card>
@@ -341,20 +352,6 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 <CardContent className="space-y-4">
                   <p className="text-xs text-muted-foreground font-medium">Esta reserva está confirmada pero aún no se ha generado el evento oficial en la agenda.</p>
                   <BookingActions bookingId={booking.id} clientName={booking.clientName} forceSync={true} />
-                </CardContent>
-              </Card>
-            )}
-
-            {booking.status === "agendado" && booking.eventId && (
-              <Card className="bg-green-500/5 border-green-500/20">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
-                    <div>
-                      <div className="text-sm font-black text-green-600 uppercase tracking-tight">Solicitud Confirmada</div>
-                      <p className="text-xs text-muted-foreground mt-1 font-medium leading-relaxed">Este registro ya se encuentra en la agenda oficial como un evento asegurado.</p>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             )}
@@ -374,9 +371,9 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             )}
 
             {booking.adminNote && (
-              <div className="p-5 bg-primary/10 border border-primary/20 rounded-2xl shadow-sm">
-                <div className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-sm shadow-primary/50" /> Bitácora Administrativa
+              <div className="p-5 bg-blue-600/10 border border-blue-600/20 rounded-2xl shadow-sm">
+                <div className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shadow-sm shadow-blue-600/50" /> Bitácora Administrativa
                 </div>
                 <p className="text-sm text-foreground/80 italic font-medium leading-relaxed">"{booking.adminNote}"</p>
               </div>
@@ -387,7 +384,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
                 <CardHeader className="bg-muted/30 border-b border-border/40">
                   <CardTitle className="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2">
-                    <Users className="w-4 h-4 text-primary" /> Estatus del Staff
+                    <Users className="w-4 h-4 text-blue-600" /> Estatus del Staff
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">

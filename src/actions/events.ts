@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { buildGigMessage, notifyMusicians } from "@/lib/notifications"
+import { notifyMusicians } from "@/lib/notifications"
 import crypto from "crypto"
 
 export async function updateEventAction(id: string, _prev: any, formData: FormData) {
@@ -136,7 +136,6 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
     revalidatePath("/")
 
     // Notificación automática
-    let gigMessage = ""
     const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true") || (updatedEvent?.status === "agendado" && !updatedEvent?.notificationSent)
 
     if (shouldNotify && updatedEvent) {
@@ -149,18 +148,19 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
         locationAddress: updatedEvent.location?.address || "",
         performanceStart: updatedEvent.performanceStart,
         performanceEnd: updatedEvent.performanceEnd,
+        arrivalTime: (data.arrivalTime as string) || updatedEvent.arrivalTime,
+        setupTime: (data.setupTime as string) || updatedEvent.setupTime,
+        dressCode: (data.dressCode as string) || updatedEvent.dressCode,
         musicianNotes: updatedEvent.musicianNotes,
         isPublic: updatedEvent.isPublic,
         packageName: updatedEvent.package?.name || "Paquete Personalizado"
       }
-      gigMessage = buildGigMessage(gigDetails)
       await notifyMusicians(id, gigDetails, db)
     }
 
     return { 
       success: true, 
-      message: "Evento actualizado correctamente",
-      gigMessage 
+      message: "Evento actualizado correctamente"
     }
   } catch (error: any) {
     console.error("Error updating event:", error)
@@ -344,7 +344,6 @@ export async function createEventAction(_prev: any, formData: FormData) {
     revalidatePath("/")
 
     // Notificación automática
-    let gigMessage = ""
     const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true") || (event.status === "agendado")
 
     if (shouldNotify) {
@@ -357,19 +356,20 @@ export async function createEventAction(_prev: any, formData: FormData) {
         locationAddress: event.location?.address || "",
         performanceStart: event.performanceStart,
         performanceEnd: event.performanceEnd,
+        arrivalTime: event.arrivalTime,
+        setupTime: event.setupTime,
+        dressCode: event.dressCode,
         musicianNotes: event.musicianNotes,
         isPublic: event.isPublic,
         packageName: packageName
       }
-      gigMessage = buildGigMessage(gigDetails)
       await notifyMusicians(event.id, gigDetails, db)
     }
 
     return { 
       success: true, 
       message: "Evento creado exitosamente", 
-      eventId: event.id,
-      gigMessage 
+      eventId: event.id
     }
   } catch (error: any) {
     console.error("Error creating event:", error)
@@ -379,10 +379,38 @@ export async function createEventAction(_prev: any, formData: FormData) {
 
 export async function notifyEventAction(id: string) {
   try {
+    const event = await db.event.findUnique({
+      where: { id },
+      include: { location: true, package: true, client: { include: { user: true } } }
+    })
+
+    if (!event) return { success: false, error: "Evento no encontrado" }
+
+    const gigDetails = {
+      clientName: event.customName || event.client?.user?.name || "Sin Nombre",
+      date: event.date,
+      ceremonyType: event.ceremonyType,
+      guestCount: event.guestCount || 0,
+      locationName: event.location?.name || "Por definir",
+      locationAddress: event.location?.address || "",
+      performanceStart: event.performanceStart,
+      performanceEnd: event.performanceEnd,
+      arrivalTime: event.arrivalTime,
+      setupTime: event.setupTime,
+      dressCode: event.dressCode,
+      musicianNotes: event.musicianNotes,
+      isPublic: event.isPublic,
+      packageName: event.package?.name || "Paquete Personalizado"
+    }
+
+    // Enviamos la notificación real
+    await notifyMusicians(id, gigDetails, db)
+
     await db.event.update({
       where: { id },
       data: { notificationSent: true }
     })
+
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/eventualidades")
     revalidatePath("/")
@@ -474,6 +502,9 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
           locationAddress: fullEvent.location?.address || "",
           performanceStart: fullEvent.performanceStart,
           performanceEnd: fullEvent.performanceEnd,
+          arrivalTime: fullEvent.arrivalTime,
+          setupTime: fullEvent.setupTime,
+          dressCode: fullEvent.dressCode,
           musicianNotes: fullEvent.musicianNotes,
           isPublic: fullEvent.isPublic,
           packageName: fullEvent.package?.name || "Paquete Personalizado"

@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic"
 import { db } from "@/lib/db"
 import { NuevoClienteButton } from "@/components/admin/ClienteActions"
-import { Users, FileQuestion, FileText, Building2, Calendar } from "lucide-react"
+import { Users, FileQuestion, FileText, Building2, Calendar, Download } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
 import LocationsManager from "@/components/admin/LocationsClient"
 import { ClientesTableClient } from "@/components/admin/ClientesTableClient"
 
@@ -86,7 +87,15 @@ export default async function AdminClientesPage() {
             ))}
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
+            <Button 
+              asChild
+              className="bg-green-600 hover:bg-green-700 text-white font-bold h-11 px-6 rounded-xl transition-all shadow-lg shadow-green-900/20"
+            >
+              <a href="/api/admin/export?type=clients" download>
+                <Download className="w-5 h-5 mr-2" /> Exportar a Excel
+              </a>
+            </Button>
             <NuevoClienteButton />
           </div>
 

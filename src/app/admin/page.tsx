@@ -222,7 +222,7 @@ export default async function AdminDashboardPage() {
         />
         
         <Link href="/admin/ventas?new=quote" className="no-underline">
-          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-primary/40 hover:border-primary hover:bg-primary/10 rounded-xl group transition-all">
+          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-blue-600/40 hover:border-blue-600 hover:bg-blue-600/10 rounded-xl group transition-all">
             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
               <FilePlus className="w-4 h-4" />
             </div>
@@ -360,7 +360,7 @@ export default async function AdminDashboardPage() {
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="w-5 h-5 text-primary" />
+                  <Calendar className="w-5 h-5 text-blue-600" />
                   <span className="text-sm font-bold uppercase tracking-widest">Próximos en Agenda</span>
                 </div>
                 {upcomingEvents.length === 0 ? (
@@ -415,11 +415,11 @@ export default async function AdminDashboardPage() {
                     <Link 
                       key={q.id} 
                       href={`/admin/ventas/${q.id}`}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/10 hover:border-primary/40 hover:bg-white transition-all shadow-sm group cursor-pointer no-underline text-inherit active:scale-[0.98]"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/10 hover:border-blue-600/40 hover:bg-white transition-all shadow-sm group cursor-pointer no-underline text-inherit active:scale-[0.98]"
                       title="Ver detalles de la negociación"
                     >
                       <div className="w-10 h-10 rounded-lg bg-white border border-border/40 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                        <FileText className="w-4 h-4 text-primary" />
+                        <FileText className="w-4 h-4 text-blue-600" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-black text-foreground text-sm truncate uppercase tracking-tight">
@@ -491,7 +491,7 @@ export default async function AdminDashboardPage() {
                     ? "bg-green-600 text-white border-green-700"
                     : isUrgent
                       ? "bg-red-600 text-white border-red-700"
-                      : "bg-primary text-white border-primary"
+                      : "bg-blue-600 text-white border-blue-700"
 
                   const linkedBooking = ev.bookingRequest || (confirmedBookings as any[]).find(b => 
                     b.eventId === ev.id || 
@@ -522,7 +522,7 @@ export default async function AdminDashboardPage() {
                           <div className="font-black text-foreground text-sm uppercase tracking-tight flex flex-wrap items-center gap-1.5">
                             {ev.client?.user?.name ?? ev.customName ?? "Cliente"}
                             {linkedBooking && (
-                              <span className="text-[10px] font-black bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white px-2 py-0.5 rounded-full shadow-sm">
+                              <span className="text-[10px] font-black bg-gradient-to-r from-blue-600 to-blue-800 text-white px-2 py-0.5 rounded-full shadow-sm">
                                 {linkedBooking.shortId}
                               </span>
                             )}

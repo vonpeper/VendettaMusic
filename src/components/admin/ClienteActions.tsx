@@ -75,7 +75,7 @@ export function NuevoClienteButton() {
   return (
     <>
       {showForm && <ClienteForm onClose={() => setShowForm(false)} />}
-      <Button onClick={() => setShowForm(true)} className="font-bold text-white">
+      <Button onClick={() => setShowForm(true)} className="bg-primary hover:bg-primary/90 font-bold text-white h-11 px-6 rounded-xl shadow-lg shadow-primary/20">
         + Añadir Cliente
       </Button>
     </>

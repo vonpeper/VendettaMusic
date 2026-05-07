@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 import { findOrCreateClient } from "@/lib/clients"
+import { findOrCreateLocation } from "@/lib/locations"
 import crypto from "crypto"
 import { auth } from "@/lib/auth"
 
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
       calle, numero, colonia, municipio, state,
       venueType, mapsLink, isPublic,
       depositConfirmed, clientProvidesAudio,
-      locationId // Capturamos locationId si viene del catálogo
+      locationId, venueName, venuePhone
     } = data
     
     // Safeguards for numeric fields
@@ -64,6 +65,26 @@ export async function POST(req: NextRequest) {
     const dateObj = new Date(`${dateStr}T12:00:00`)
     if (isNaN(dateObj.getTime())) {
       return NextResponse.json({ success: false, error: `Fecha inválida: ${requestedDate}` }, { status: 400 })
+    }
+
+    // --- [NUEVO] Asegurar que el Lugar (Location) esté en el catálogo ---
+    let finalLocationId = locationId
+    if (!finalLocationId && venueName && calle) {
+      finalLocationId = await findOrCreateLocation({
+        name: venueName,
+        address: `${calle} ${numero || ""}, ${colonia || ""}`.trim(),
+        city: municipio,
+        state: state,
+        mapsLink: mapsLink
+      })
+
+      // Si tenemos teléfono del lugar, actualizarlo en la locación
+      if (venuePhone && finalLocationId) {
+        await db.location.update({
+          where: { id: finalLocationId },
+          data: { phone: venuePhone }
+        }).catch(() => {})
+      }
     }
 
     // --- [NUEVO] Crear Cotización (Quote) ---
@@ -142,9 +163,10 @@ export async function POST(req: NextRequest) {
           mapsLink:         mapsLink || null,
           ceremonyType:     venueType || "salon",
           clientId:         clientId,
-          locationId:       locationId || null,
+          locationId:       finalLocationId || null,
           isPublic:         Boolean(isPublic),
           clientProvidesAudio: Boolean(clientProvidesAudio),
+          musicianNotes:    adminNote || null,
         }
       })
 

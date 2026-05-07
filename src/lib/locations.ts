@@ -14,26 +14,21 @@ export async function findOrCreateLocation(data: {
   mapsLink?: string | null
 }) {
   const { name, address, city, state, colonia, municipio, mapsLink } = data
+  const normalizedName = name?.trim() || "Sin Nombre"
 
-  // 1. Intentar buscar por nombre exacto (case insensitive si es posible, aquí usamos normalizado)
-  const normalizedName = name.trim()
-  
-  if (normalizedName === "" || normalizedName === "Sin Nombre") {
-    // Si no hay nombre, intentamos buscar por dirección
-    if (address && address.trim() !== "") {
-       const existingByAddr = await db.location.findFirst({
-         where: { address: address.trim() }
-       })
-       if (existingByAddr) return existingByAddr.id
-    }
-    return null
-  }
-
+  // 1. Búsqueda rigurosa para evitar duplicados
   const existing = await db.location.findFirst({
     where: {
       OR: [
-        { name: { contains: normalizedName } },
-        { address: address?.trim() || "---" }
+        // Coincidencia exacta de nombre en la misma ciudad
+        { 
+          AND: [
+            { name: { equals: normalizedName, mode: 'insensitive' } },
+            { city: { equals: city || municipio || "---", mode: 'insensitive' } }
+          ]
+        },
+        // O dirección exacta
+        { address: { equals: address?.trim() || "---", mode: 'insensitive' } }
       ]
     }
   })
