@@ -23,12 +23,12 @@ export async function findOrCreateLocation(data: {
         // Coincidencia exacta de nombre en la misma ciudad
         { 
           AND: [
-            { name: { equals: normalizedName, mode: 'insensitive' } },
-            { city: { equals: city || municipio || "---", mode: 'insensitive' } }
+            { name: { equals: normalizedName } },
+            { city: { equals: city || municipio || "---" } }
           ]
         },
         // O dirección exacta
-        { address: { equals: address?.trim() || "---", mode: 'insensitive' } }
+        { address: { equals: address?.trim() || "---" } }
       ]
     }
   })
