@@ -15,6 +15,7 @@ export async function assignDefaultMusicians(eventId: string, db: any): Promise<
     const titulares = await db.musicianProfile.findMany({
       where: {
         status: "active",
+        isTitular: true, // Solo titulares por default
         NOT: {
           instrument: { in: STAFF_INSTRUMENTS }
         }

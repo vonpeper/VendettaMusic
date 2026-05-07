@@ -132,6 +132,17 @@ export function AddMusicianForm() {
               className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           </div>
+
+          <label className="flex items-center gap-3 cursor-pointer p-3 bg-primary/5 rounded-xl border border-primary/10">
+            <input type="checkbox" name="isTitular" value="true" className="sr-only peer" defaultChecked />
+            <div className="relative w-10 h-5 bg-primary/10 rounded-full peer-checked:bg-primary transition-colors">
+              <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+            </div>
+            <div>
+              <span className="text-sm font-bold text-foreground">Músico Titular</span>
+              <p className="text-[10px] text-muted-foreground">Recibe notificaciones automáticas de shows.</p>
+            </div>
+          </label>
           <div className="pt-2 flex justify-end">
             <Button type="submit" disabled={loading} className="w-full text-white">
               {loading ? "Guardando..." : "Guardar Personal"}

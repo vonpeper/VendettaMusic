@@ -159,6 +159,17 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
                 <textarea name="notes" defaultValue={musician.notes} rows={3} className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground" />
               </div>
 
+              <label className="flex items-center gap-3 cursor-pointer p-3 bg-primary/5 rounded-xl border border-primary/10">
+                <input type="checkbox" name="isTitular" value="true" className="sr-only peer" defaultChecked={musician.isTitular} />
+                <div className="relative w-10 h-5 bg-primary/10 rounded-full peer-checked:bg-primary transition-colors">
+                  <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                </div>
+                <div>
+                  <span className="text-sm font-bold text-foreground text-primary">Músico Titular / Staff Prioritario</span>
+                  <p className="text-[10px] text-muted-foreground">Si está marcado, recibirá notificaciones automáticas de convocatoria para cada show.</p>
+                </div>
+              </label>
+
               <div className="flex justify-between items-center pt-4 border-t border-border/40">
                 <button 
                   type="button" 

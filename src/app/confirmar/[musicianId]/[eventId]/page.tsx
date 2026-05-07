@@ -43,12 +43,19 @@ export default async function ConfirmationPage({
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-card border border-green-500/30 rounded-3xl p-8 text-center shadow-2xl">
+          <div className="flex justify-center mb-8">
+            <img 
+              src="/images/logo-vendetta-horizontal.png" 
+              alt="Vendetta Music" 
+              className="h-10 w-auto object-contain"
+            />
+          </div>
           <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-10 h-10 text-green-400" />
           </div>
           <h1 className="text-3xl font-heading font-black text-white mb-2">¡Asistencia Confirmada!</h1>
           <p className="text-gray-400 mb-8">
-            Gracias {musician.user?.name || "Músico"}, tu asistencia para el evento con **{event.customName || "Vendetta"}** ha sido registrada correctamente.
+            Gracias {musician.user?.name || "Músico"}, tu asistencia para el evento con {event.customName || "Vendetta"} ha sido registrada correctamente.
           </p>
           <div className="space-y-4">
              <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-left">
@@ -79,6 +86,13 @@ export default async function ConfirmationPage({
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-card border border-red-500/30 rounded-3xl p-8 text-center shadow-2xl">
+          <div className="flex justify-center mb-8">
+            <img 
+              src="/images/logo-vendetta-horizontal.png" 
+              alt="Vendetta Music" 
+              className="h-10 w-auto object-contain"
+            />
+          </div>
           <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
              <span className="text-4xl">❌</span>
           </div>
@@ -100,6 +114,13 @@ export default async function ConfirmationPage({
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-card border border-white/10 rounded-3xl p-8 shadow-2xl">
+        <div className="flex justify-center mb-8">
+          <img 
+            src="/images/logo-vendetta-horizontal.png" 
+            alt="Vendetta Music" 
+            className="h-10 w-auto object-contain"
+          />
+        </div>
         <div className="text-center mb-8">
           <div className="bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
              <span className="text-2xl">🤘</span>

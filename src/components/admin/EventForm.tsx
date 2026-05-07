@@ -5,7 +5,10 @@ import { createEventAction, updateEventAction } from "@/actions/events"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, CheckCircle2, AlertCircle, Bell, MessageCircle, Copy, Check } from "lucide-react"
+import { X, CheckCircle2, AlertCircle, Bell, MessageCircle, Copy, Check, Users, Send, Loader2 } from "lucide-react"
+import Image from "next/image"
+import { notifySingleMusicianAction } from "@/actions/events"
+import { toast } from "sonner"
 
 const CEREMONY_TYPES = [
   { value: "boda",       label: "💒 Boda" },
@@ -38,6 +41,7 @@ interface EventFormProps {
   locations: { id: string; name: string }[]
   packages: { id: string; name: string; baseCostPerHour: number; minDuration: number }[]
   staff?: { id: string; name: string }[]
+  allMusicians?: { id: string; name: string; instrument: string; isTitular: boolean }[]
   initialData?: any
 }
 
@@ -58,11 +62,42 @@ function SelectField({ id, name, label, options, defaultValue, required }: {
   )
 }
 
-export function EventForm({ onClose, clients, locations, packages, staff = [], initialData }: EventFormProps) {
+export function EventForm({ onClose, clients, locations, packages, staff = [], allMusicians = [], initialData }: EventFormProps) {
   const action = initialData ? updateEventAction.bind(null, initialData.id) : createEventAction
   const [state, formAction, isPending] = useActionState(action, null) as [any, any, boolean]
   const [sendNotif, setSendNotif] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [notifyingIds, setNotifyingIds] = useState<string[]>([])
+
+  const currentMusicianIds = initialData?.musicians?.map((m: any) => m.musicianId) || []
+  const [selectedMusicians, setSelectedMusicians] = useState<string[]>(
+    currentMusicianIds.length > 0 
+      ? currentMusicianIds 
+      : allMusicians.filter(m => m.isTitular).map(m => m.id)
+  )
+
+  const toggleMusician = (id: string) => {
+    setSelectedMusicians(prev => 
+      prev.includes(id) ? prev.filter(mid => mid !== id) : [...prev, id]
+    )
+  }
+
+  async function handleNotifySingle(musicianId: string) {
+    if (!initialData?.id) return
+    setNotifyingIds(prev => [...prev, musicianId])
+    try {
+      const res = await notifySingleMusicianAction(initialData.id, musicianId)
+      if (res.success) {
+        toast.success("Notificación enviada")
+      } else {
+        toast.error(res.error || "Error al enviar")
+      }
+    } catch (err) {
+      toast.error("Error de conexión")
+    } finally {
+      setNotifyingIds(prev => prev.filter(id => id !== musicianId))
+    }
+  }
 
   function copyGigMessage() {
     if (state?.gigMessage) {
@@ -121,16 +156,27 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
       <div className="bg-card border border-border/40 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[94vh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border/40 sticky top-0 bg-card z-10">
-          <div>
-            <h2 className="text-2xl font-heading font-bold text-foreground">
-              {initialData ? `Editando Evento: ${initialData.client?.user?.name || ''}` : "Nuevo Show / Evento"}
-            </h2>
-            <p className="text-muted-foreground text-sm mt-0.5">El evento se sincronizará automáticamente con Eventualidades.</p>
+        <div className="border-b border-border/40 sticky top-0 bg-card z-10">
+          <div className="p-4 flex justify-center bg-black/20">
+             <Image 
+               src="/images/logo-vendetta-horizontal.png" 
+               alt="Vendetta Music" 
+               width={180} 
+               height={45} 
+               className="h-10 w-auto object-contain"
+             />
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground">
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <h2 className="text-2xl font-heading font-bold text-foreground">
+                {initialData ? `Editando Evento: ${initialData.client?.user?.name || ''}` : "Nuevo Show / Evento"}
+              </h2>
+              <p className="text-muted-foreground text-sm mt-0.5">El evento se sincronizará automáticamente con Eventualidades.</p>
+            </div>
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {state && !state.success && (
@@ -274,6 +320,61 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], i
               <SelectField id="audioEngineer" name="audioEngineer" label="Ingeniero en Audio / Staff Asignado"
                 defaultValue={initialData?.audioEngineer || ""}
                 options={[{ value: "", label: "Ninguno" }, ...staff.map(s => ({ value: s.name, label: s.name }))]} />
+            </div>
+
+            {/* Gestión de Músicos Individual */}
+            <div className="mt-8 space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-primary font-bold flex items-center gap-2">
+                  <Users className="w-4 h-4" /> Convocatoria de Personal (Staff / Músicos)
+                </Label>
+                <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
+                  {selectedMusicians.length} Seleccionados
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-1 border border-border/20 rounded-xl bg-black/5">
+                {allMusicians.map(m => {
+                  const isSelected = selectedMusicians.includes(m.id)
+                  const isNotifying = notifyingIds.includes(m.id)
+                  return (
+                    <div key={m.id} className={`flex items-center justify-between p-2 rounded-lg border transition-all ${isSelected ? 'bg-primary/5 border-primary/30' : 'bg-card border-transparent opacity-60'}`}>
+                      <label className="flex items-center gap-3 cursor-pointer flex-1">
+                        <input 
+                          type="checkbox" 
+                          name="musicianIds" 
+                          value={m.id} 
+                          checked={isSelected}
+                          onChange={() => toggleMusician(m.id)}
+                          className="sr-only" 
+                        />
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className={`text-xs font-bold ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{m.name}</span>
+                          <span className="text-[9px] text-muted-foreground uppercase">{m.instrument} {m.isTitular && "• Titular"}</span>
+                        </div>
+                      </label>
+                      
+                      {initialData && isSelected && (
+                        <button
+                          type="button"
+                          onClick={() => handleNotifySingle(m.id)}
+                          disabled={isNotifying}
+                          title="Enviar convocatoria individual por WhatsApp"
+                          className="p-1.5 rounded-md hover:bg-primary/20 text-primary transition-colors disabled:opacity-50"
+                        >
+                          {isNotifying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground italic">
+                Los músicos seleccionados serán vinculados al show. Puedes enviar notificaciones individuales usando el botón de avión de papel 🚀.
+              </p>
             </div>
           </fieldset>
 

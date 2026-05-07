@@ -29,7 +29,7 @@ const DRESS_LABELS: Record<string, string> = {
   nocturno:      "🌙 Nocturno",
 }
 
-export function MasterEventsTable({ events, clients, locations, packages, staff }: any) {
+export function MasterEventsTable({ events, clients, locations, packages, staff, allMusicians = [] }: any) {
   const [activeTab, setActiveTab] = useState("todos")
   const [showCurrentMonth, setShowCurrentMonth] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
@@ -313,6 +313,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff 
                           locations={locations}
                           packages={packages}
                           staff={staff}
+                          allMusicians={allMusicians}
                           showText={false}
                         />
                         <DeleteEventoButton

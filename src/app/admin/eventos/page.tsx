@@ -55,6 +55,13 @@ export default async function AdminEventosPage() {
     )
     .map(p => ({ id: p.id, name: p.user.name ?? "Sin nombre" }))
 
+  const allMusiciansMapped = musicianProfiles.map(p => ({ 
+    id: p.id, 
+    name: p.user.name ?? "Sin nombre",
+    instrument: p.instrument || "Músico",
+    isTitular: p.isTitular
+  }))
+
   const now = new Date()
 
   return (
@@ -75,6 +82,7 @@ export default async function AdminEventosPage() {
           locations={locations}
           packages={packages}
           staff={staffMapped}
+          allMusicians={allMusiciansMapped}
         />
       </div>
 
@@ -84,6 +92,7 @@ export default async function AdminEventosPage() {
         locations={locations}
         packages={packages}
         staff={staffMapped}
+        allMusicians={allMusiciansMapped}
       />
     </div>
   )
