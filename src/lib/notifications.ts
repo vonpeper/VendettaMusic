@@ -66,7 +66,7 @@ export async function dispatchNotification({
         time: booking.startTime || "Por confirmar",
         location: booking.event?.location?.name || booking.address || "Por confirmar",
         package: booking.event?.package?.name || booking.packageName || "Personalizado",
-        ceremony: booking.ceremonyType || "Show",
+        ceremony: booking.venueType || booking.event?.ceremonyType || "Show",
         arrivalTime: booking.event?.arrivalTime || "Por definir",
         setupTime: booking.event?.setupTime || "Por definir",
         dressCode: (() => {
