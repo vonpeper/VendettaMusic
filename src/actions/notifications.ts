@@ -43,7 +43,7 @@ export async function sendTestNotificationAction(target: "admin" | "musician" | 
         include: { user: true }
       })
       
-      const phoneToUse = musician?.whatsapp || musician?.phone || musician?.user?.phone
+      const phoneToUse = musician?.whatsapp || musician?.phone
       
       if (!musician || !phoneToUse) {
         return { success: false, error: "No hay músicos con teléfono registrado" }
