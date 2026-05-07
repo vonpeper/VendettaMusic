@@ -248,7 +248,17 @@ function ContratosGrid({ items, isCompleted }: { items: any[], isCompleted: bool
               </div>
             </div>
             <CardTitle className="text-base mt-2 flex items-center gap-2">
-              <User className="w-4 h-4 text-blue-600" /> {c.clientName}
+              <User className="w-4 h-4 text-blue-600" />
+              <div>
+                {(c as any).event?.customName ? (
+                  <>
+                    <span className="font-black">{(c as any).event.customName}</span>
+                    <span className="text-xs text-muted-foreground font-normal ml-1">· {c.clientName}</span>
+                  </>
+                ) : (
+                  c.clientName
+                )}
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

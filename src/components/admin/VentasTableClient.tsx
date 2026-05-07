@@ -58,6 +58,9 @@ interface Booking {
   clientPhone: string
   followUpCount: number
   clientEmail?: string | null
+  event?: {
+    customName?: string | null
+  } | null
   notifications?: {
     admin: string
     client: string
@@ -225,8 +228,11 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                     href={`/admin/ventas/${reserva.id}`}
                     className="font-bold text-foreground hover:text-primary hover:underline transition-colors block"
                   >
-                    {reserva.clientName}
+                    {reserva.event?.customName || reserva.clientName}
                   </Link>
+                  {reserva.event?.customName && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{reserva.clientName}</div>
+                  )}
                   <div className="text-[10px] text-muted-foreground font-mono mt-0.5">{reserva.shortId || "S/F"}</div>
                 </td>
                 <td className="px-6 py-4">
