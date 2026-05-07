@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { UserPlus, Pencil, Trash2, X, Loader2, Save, UploadCloud } from "lucide-react"
 import { toast } from "sonner"
-import Image from "next/image"
 import { uploadMusicianPhoto } from "@/actions/media"
 
 type PublicBandMember = {
@@ -205,7 +204,7 @@ export function BandMembersManagerClient({ members }: { members: PublicBandMembe
             </div>
             
             <div className="h-40 relative">
-               <Image src={m.img} alt={m.name} fill className="object-cover object-top" />
+               <img src={m.img} alt={m.name} className="w-full h-full object-cover object-top" />
                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent" />
                <div className="absolute bottom-3 left-4">
                   <h3 className="font-black text-xl text-white flex items-center gap-2">{m.name} <span className="text-xl">{m.emoji}</span></h3>
