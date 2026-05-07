@@ -103,13 +103,15 @@ export default async function AdminConfiguracionPage() {
                 </ConfigFormWrapper>
                 
                 <div className="mt-6 pt-6 border-t border-border/40 space-y-3">
-                  <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl shadow-sm">
-                    <div className="space-y-2">
-                      <p className="text-[10px] text-amber-100 leading-relaxed italic">
-                        <span className="font-bold text-amber-500 underline decoration-amber-500/30">⚠️ NOTA IMPORTANTE:</span> Si el Manager te pide <strong>identificarte</strong> nada más abrirlo, usa las credenciales definidas en tu servidor (por defecto <code className="bg-zinc-800 text-amber-200 px-1.5 py-0.5 rounded border border-amber-500/20">admin / admin</code>).
+                  <div className="bg-[#FFEB3B] border-2 border-amber-600 p-4 rounded-xl shadow-lg">
+                    <div className="space-y-3">
+                      <p className="text-xs text-amber-950 leading-relaxed font-medium">
+                        <span className="font-black text-amber-900 text-sm">⚠️ NOTA IMPORTANTE:</span><br/>
+                        Si el Manager te pide <strong>identificarte</strong> usa: <code className="bg-white/50 px-2 py-0.5 rounded border border-amber-600/30 font-bold">admin / admin</code>
                       </p>
-                      <p className="text-[10px] text-amber-100/90 leading-relaxed">
-                        <span className="font-bold text-amber-500">💡 Instrucción de Conexión:</span> En el campo <span className="italic font-bold text-amber-200">Server URL</span> usa la misma URL de arriba y el API Key correspondiente.
+                      <p className="text-xs text-amber-950 leading-relaxed font-medium">
+                        <span className="font-black text-amber-900 text-sm">💡 CONEXIÓN:</span><br/>
+                        En <span className="font-bold">Server URL</span> usa la dirección de arriba y la Global API Key.
                       </p>
                     </div>
                   </div>
