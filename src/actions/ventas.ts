@@ -2,6 +2,8 @@
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { notifyMusicians } from "@/lib/notifications"
+import { formatDateMX } from "@/lib/utils"
 
 export async function markBookingAsCompleted(bookingId: string) {
   try {
@@ -45,12 +47,41 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
     })
 
     // Sincronizar con Event
-    const br = await db.bookingRequest.findUnique({ where: { id: bookingId } })
-    if (br?.eventId) {
+    const br = await db.bookingRequest.findUnique({ 
+      where: { id: bookingId },
+      include: { 
+        event: { 
+          include: { 
+            location: true,
+            package: true,
+            client: { include: { user: true } }
+          } 
+        } 
+      }
+    })
+
+    if (br?.eventId && br.event) {
       await db.event.update({
         where: { id: br.eventId },
         data: { status: newStatus }
       })
+
+      if (newStatus === "agendado" && !br.event.notificationSent) {
+        const gigDetails = {
+          clientName: br.clientName,
+          date: br.event.date,
+          ceremonyType: br.event.ceremonyType,
+          guestCount: br.event.guestCount || 0,
+          locationName: br.event.location?.name || br.address || "Por confirmar",
+          locationAddress: br.event.location?.address || "",
+          performanceStart: br.event.performanceStart,
+          performanceEnd: br.event.performanceEnd,
+          musicianNotes: br.event.musicianNotes,
+          isPublic: br.event.isPublic,
+          packageName: br.event.package?.name || br.packageName
+        }
+        await notifyMusicians(br.eventId, gigDetails, db)
+      }
     }
 
     revalidatePath("/admin/ventas")
@@ -88,7 +119,15 @@ export async function markContractAsSignedAction(bookingId: string) {
   try {
     const booking = await db.bookingRequest.findUnique({
       where: { id: bookingId },
-      include: { event: { include: { contracts: true } } }
+      include: { 
+        event: { 
+          include: { 
+            contracts: true,
+            location: true,
+            package: true
+          } 
+        } 
+      }
     })
 
     if (!booking || !booking.eventId) {
@@ -109,6 +148,25 @@ export async function markContractAsSignedAction(bookingId: string) {
           status: "signed",
         }
       })
+    }
+
+    // Notificar a músicos automáticamente al firmar contrato
+    if (booking.event && booking.event.status === "agendado") {
+      const gigDetails = {
+        clientName: booking.clientName,
+        date: booking.event.date,
+        ceremonyType: booking.event.ceremonyType,
+        guestCount: booking.event.guestCount || 0,
+        locationName: booking.event.location?.name || booking.address || "Por confirmar",
+        locationAddress: booking.event.location?.address || "",
+        performanceStart: booking.event.performanceStart,
+        performanceEnd: booking.event.performanceEnd,
+        musicianNotes: booking.event.musicianNotes,
+        isPublic: booking.event.isPublic,
+        packageName: booking.event.package?.name || booking.packageName
+      }
+      
+      await notifyMusicians(booking.eventId, gigDetails, db)
     }
 
     revalidatePath("/admin/ventas")

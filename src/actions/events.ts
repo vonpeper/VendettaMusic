@@ -70,7 +70,10 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
     })
 
     // Sincronizar con Quote (Legacy) si existe
-    const updatedEvent = await db.event.findUnique({ where: { id } })
+    const updatedEvent = await db.event.findUnique({ 
+      where: { id },
+      include: { location: true, package: true, client: { include: { user: true } } }
+    })
     if (updatedEvent?.quoteId) {
       await db.quote.update({
         where: { id: updatedEvent.quoteId },
@@ -132,19 +135,23 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
     revalidatePath("/admin/eventualidades")
     revalidatePath("/")
 
-    // Notificación opcional
+    // Notificación automática
     let gigMessage = ""
-    if (data.sendNotification === "on" || data.sendNotification === "true") {
+    const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true") || (updatedEvent.status === "agendado" && !updatedEvent.notificationSent)
+
+    if (shouldNotify) {
       const gigDetails = {
-        clientName: data.customName as string || (await db.event.findUnique({ where: { id }, include: { client: { include: { user: true } } } }))?.client?.user?.name || "Sin Nombre",
-        date: dateValue || new Date(),
-        ceremonyType: data.ceremonyType as string,
-        guestCount: parseInt(data.guestCount as string || "0"),
-        locationName: locationFree || "",
-        performanceStart: data.performanceStart as string,
-        performanceEnd: data.performanceEnd as string,
-        musicianNotes: data.musicianNotes as string,
-        isPublic: data.isPublic === "on" || data.isPublic === "true",
+        clientName: data.customName as string || updatedEvent.client?.user?.name || "Sin Nombre",
+        date: dateValue || updatedEvent.date,
+        ceremonyType: updatedEvent.ceremonyType,
+        guestCount: updatedEvent.guestCount || 0,
+        locationName: locationFree || updatedEvent.location?.name || "",
+        locationAddress: updatedEvent.location?.address || "",
+        performanceStart: updatedEvent.performanceStart,
+        performanceEnd: updatedEvent.performanceEnd,
+        musicianNotes: updatedEvent.musicianNotes,
+        isPublic: updatedEvent.isPublic,
+        packageName: updatedEvent.package?.name || "Paquete Personalizado"
       }
       gigMessage = buildGigMessage(gigDetails)
       await notifyMusicians(id, gigDetails, db)
@@ -336,9 +343,11 @@ export async function createEventAction(_prev: any, formData: FormData) {
     revalidatePath("/admin/eventualidades")
     revalidatePath("/")
 
-    // Notificación opcional
+    // Notificación automática
     let gigMessage = ""
-    if (data.sendNotification === "on" || data.sendNotification === "true") {
+    const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true") || (event.status === "agendado")
+
+    if (shouldNotify) {
       const gigDetails = {
         clientName: data.customName as string || event.client?.user?.name || "Sin Nombre",
         date: event.date,
@@ -350,6 +359,7 @@ export async function createEventAction(_prev: any, formData: FormData) {
         performanceEnd: event.performanceEnd,
         musicianNotes: event.musicianNotes,
         isPublic: event.isPublic,
+        packageName: packageName
       }
       gigMessage = buildGigMessage(gigDetails)
       await notifyMusicians(event.id, gigDetails, db)
@@ -446,6 +456,29 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
             city: evt.location?.city || "CDMX",
           }
         })
+      }
+    }
+
+    if (newStatus === "agendado") {
+      const fullEvent = await db.event.findUnique({
+        where: { id },
+        include: { location: true, package: true, client: { include: { user: true } } }
+      })
+      if (fullEvent && !fullEvent.notificationSent) {
+        const gigDetails = {
+          clientName: fullEvent.customName || fullEvent.client?.user?.name || "Sin Nombre",
+          date: fullEvent.date,
+          ceremonyType: fullEvent.ceremonyType,
+          guestCount: fullEvent.guestCount || 0,
+          locationName: fullEvent.location?.name || "",
+          locationAddress: fullEvent.location?.address || "",
+          performanceStart: fullEvent.performanceStart,
+          performanceEnd: fullEvent.performanceEnd,
+          musicianNotes: fullEvent.musicianNotes,
+          isPublic: fullEvent.isPublic,
+          packageName: fullEvent.package?.name || "Paquete Personalizado"
+        }
+        await notifyMusicians(id, gigDetails, db)
       }
     }
 
