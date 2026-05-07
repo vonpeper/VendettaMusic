@@ -71,7 +71,7 @@ export async function deleteSubstituteAction(id: string) {
   }
 }
 
-import { writeFile, mkdir } from "fs/promises"
+import { writeFile, mkdir, chmod } from "fs/promises"
 import path from "path"
 import { randomUUID } from "crypto"
 
@@ -90,6 +90,9 @@ async function handleImageUpload(file: File): Promise<string | null> {
     const filepath = path.join(uploadDir, uniqueSuffix)
     
     await writeFile(filepath, buffer)
+    // Ensure the file is publicly readable
+    await chmod(filepath, 0o644)
+    
     return relativePath
   } catch (error) {
     console.error("Error saving image:", error)
