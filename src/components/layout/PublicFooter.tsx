@@ -54,7 +54,6 @@ export async function PublicFooter() {
             <ul className="space-y-5">
               {[
                 ["Inicio", "/"],
-                ["Nosotros", "/nosotros"],
                 ["Servicios", "/servicios"],
                 ["Paquetes", "/#paquetes"],
                 ["Fechas", "/noticias"],
