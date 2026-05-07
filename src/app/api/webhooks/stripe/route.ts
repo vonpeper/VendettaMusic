@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 import { stripe } from "@/lib/stripe"
 import type Stripe from "stripe"
 import { findOrCreateLocation } from "@/lib/locations"
-import { notifyClientBookingClosed, sendWhatsApp, buildGigMessage, notifyMusicians } from "@/lib/notifications"
+import { dispatchNotification, notifyMusicians } from "@/lib/notifications"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -212,7 +212,10 @@ async function confirmBookingFromPayment(bookingId: string) {
     })
   }
 
-  await notifyClientBookingClosed(booking).catch(e =>
+  await dispatchNotification({ 
+    type: "CLIENT_CONFIRMED", 
+    bookingId: booking.id 
+  }).catch(e =>
     console.error("notifyClientBookingClosed:", e)
   )
 

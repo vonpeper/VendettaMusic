@@ -146,6 +146,22 @@ Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/pri
 🔗 *Confirma tu asistencia aquí:*
 {{confirmLink}}` : dbTemplate
       break
+
+    case "MUSICIAN_REHEARSAL":
+      template = `🥁 *NUEVO ENSAYO — VENDETTA* 🥁
+ 
+📅 *Fecha y Hora:* {{date}}
+📍 *Lugar:* {{location}}
+ 
+📝 *Tarea / Notas:* 
+{{notes}}
+ 
+🎶 *Repertorio a ensayar:*
+{{songsList}}
+ 
+⚠️ Confirma de recibido respondiendo este mensaje.
+— Administración Vendetta`
+      break
   }
 
   // --- MODO SANDBOX GLOBAL: DESVÍO DE TODOS LOS MENSAJES ---
@@ -175,6 +191,8 @@ Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/pri
     .replace(/{{bookingLink}}/g, payload.bookingLink || "")
     .replace(/{{statusLink}}/g, payload.statusLink || payload.bookingLink || "")
     .replace(/{{adminLink}}/g, payload.adminLink || "")
+    .replace(/{{notes}}/g, payload.notes || "Ninguna")
+    .replace(/{{songsList}}/g, payload.songsList || "No se especificaron canciones.")
     .replace(/\\n/g, "\n") // Convertir \n literales en saltos de línea reales
 
   // Añadir prefijo de sandbox si aplica
