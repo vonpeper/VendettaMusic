@@ -13,12 +13,13 @@ import {
   Download, 
   Clock, 
   User, 
+  Users,
   AlertCircle 
 } from "lucide-react"
 import { VentasTableClient } from "@/components/admin/VentasTableClient"
 import { MarkCompletedButton } from "@/components/admin/MarkCompletedButton"
 import Link from "next/link"
-import { formatDateMX } from "@/lib/utils"
+import { formatDateMX, cn } from "@/lib/utils"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 
@@ -65,7 +66,14 @@ export default async function AdminVentasPage() {
   // 3. Fetch de datos unificados
   const [bookings, quotes, expiredStats, config] = await Promise.all([
     db.bookingRequest.findMany({ 
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
+      include: {
+        event: {
+          include: {
+            musicians: true
+          }
+        }
+      }
     }),
     db.quote.findMany({ include: { client: { include: { user: true } } }, orderBy: { createdAt: "desc" } }),
     db.bookingRequest.aggregate({
@@ -75,11 +83,32 @@ export default async function AdminVentasPage() {
     db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   ])
 
+  // 4. Obtener estados de notificaciones para el semáforo
+  const bookingIds = bookings.map(b => b.id)
+  const notifications = await db.notification.findMany({
+    where: { bookingRequestId: { in: bookingIds } },
+    select: { bookingRequestId: true, type: true, status: true },
+    orderBy: { createdAt: 'desc' }
+  })
+
+  // Agrupar notificaciones por booking
+  const itemsWithNotifications = bookings.map(b => {
+    const bNotifs = notifications.filter(n => n.bookingRequestId === b.id)
+    return {
+      ...b,
+      notifications: {
+        admin: bNotifs.find(n => n.type === 'ADMIN_NEW_BOOKING')?.status || 'none',
+        client: bNotifs.find(n => n.type === 'CLIENT_FOLLOWUP' || n.type === 'CLIENT_CONFIRMED')?.status || 'none',
+        musicians: bNotifs.find(n => n.type === 'MUSICIAN_GIG_ANNOUNCE')?.status || 'none'
+      }
+    }
+  })
+
   // Filtrado por fuente
-  const webBookings = bookings.filter(b => (b as any).source !== "manual") // Ajuste si aún no está la columna
-  const manualQuotes = bookings.filter(b => (b as any).source === "manual")
-  const confirmed = bookings.filter(b => b.status === "agendado")
-  const completados = bookings.filter(b => b.status === "completado")
+  const webBookings = itemsWithNotifications.filter(b => (b as any).source !== "manual")
+  const manualQuotes = itemsWithNotifications.filter(b => (b as any).source === "manual")
+  const confirmed = itemsWithNotifications.filter(b => b.status === "agendado")
+  const completados = itemsWithNotifications.filter(b => b.status === "completado")
   
   const potentialLoss = expiredStats._sum.baseAmount || 0
 
@@ -88,14 +117,24 @@ export default async function AdminVentasPage() {
       {/* Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-4xl font-heading font-black text-foreground tracking-tight">Centro de <span className="text-primary">Ventas</span></h1>
+          <h1 className="text-4xl font-heading font-black text-foreground tracking-tight">Centro de <span className="text-blue-600">Ventas</span></h1>
           <p className="text-muted-foreground mt-1 text-sm">Gestiona pedidos web, cotizaciones manuales y contratos legales.</p>
         </div>
-        <Link href="/admin/ventas/manual">
-          <Button className="bg-primary hover:bg-primary/90 gap-2 h-11 px-6 rounded-xl font-bold shadow-lg shadow-primary/20 text-white">
-            <Plus className="w-5 h-5" /> Nueva Cotización Manual
+        <div className="flex gap-3">
+          <Button 
+            asChild
+            className="bg-muted-foreground/10 hover:bg-muted-foreground/20 text-foreground border border-border/40 gap-2 h-11 px-6 rounded-xl font-bold transition-all"
+          >
+            <a href="/api/admin/export?type=bookings" download>
+              <Download className="w-5 h-5" /> Exportar Excel
+            </a>
           </Button>
-        </Link>
+          <Link href="/admin/ventas/manual">
+            <Button className="bg-blue-600 hover:bg-blue-700 gap-2 h-11 px-6 rounded-xl font-bold shadow-lg shadow-blue-600/20 text-white">
+              <Plus className="w-5 h-5" /> Nueva Cotización Manual
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Métricas Rápidas */}
@@ -111,7 +150,7 @@ export default async function AdminVentasPage() {
         </Card>
         <Card className="bg-card border-border/20 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-primary">Conversión Funnel</CardDescription>
+            <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Conversión Funnel</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-foreground">
@@ -133,10 +172,10 @@ export default async function AdminVentasPage() {
 
       <Tabs defaultValue="bookings" className="space-y-6">
         <TabsList className="bg-card border border-border/40 p-1 h-12 rounded-xl">
-          <TabsTrigger value="bookings" className="gap-2 px-6 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#E91E63] data-[state=active]:to-[#D81B60] data-[state=active]:text-white data-[state=active]:shadow-lg">
+          <TabsTrigger value="bookings" className="gap-2 px-6 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-800 data-[state=active]:text-white data-[state=active]:shadow-lg">
             <ShoppingBag className="w-4 h-4" /> Bookings (Web)
           </TabsTrigger>
-          <TabsTrigger value="cotizaciones" className="gap-2 px-6 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#E91E63] data-[state=active]:to-[#D81B60] data-[state=active]:text-white data-[state=active]:shadow-lg">
+          <TabsTrigger value="cotizaciones" className="gap-2 px-6 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-800 data-[state=active]:text-white data-[state=active]:shadow-lg">
             <FileText className="w-4 h-4" /> Cotizaciones (Manual)
           </TabsTrigger>
           <TabsTrigger value="contratos" className="gap-2 px-6 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
@@ -153,8 +192,8 @@ export default async function AdminVentasPage() {
 
         <TabsContent value="cotizaciones" className="space-y-4">
           <div className="space-y-6">
-            <div className="bg-primary/10 border border-primary/20 p-4 rounded-xl flex items-center gap-4">
-              <AlertCircle className="text-primary w-5 h-5" />
+            <div className="bg-blue-600/10 border border-blue-600/20 p-4 rounded-xl flex items-center gap-4">
+              <AlertCircle className="text-blue-600 w-5 h-5" />
               <p className="text-sm text-muted-foreground">Aquí se listan las cotizaciones creadas manualmente por el equipo de Vendetta y registros legacy (Quotes).</p>
             </div>
             <VentasTableClient items={manualQuotes} followUpTemplate={config?.msgTemplateFollowUp} />
@@ -209,16 +248,44 @@ function ContratosGrid({ items, isCompleted }: { items: any[], isCompleted: bool
               </div>
             </div>
             <CardTitle className="text-base mt-2 flex items-center gap-2">
-              <User className="w-4 h-4 text-primary" /> {c.clientName}
+              <User className="w-4 h-4 text-blue-600" /> {c.clientName}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Calendar className="w-3 h-3 text-muted-foreground" /> {formatDateMX(c.requestedDate, "d 'de' MMMM")}
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3 text-muted-foreground" /> {c.startTime} a {c.endTime} HRS
+              </div>
+              
+              {/* Semáforo de Staff */}
+              <div className="pt-2">
+                {c.event?.musicians && c.event.musicians.length > 0 ? (
+                  <div className="flex items-center justify-between bg-black/20 p-2 rounded-lg border border-border/20">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-3.5 h-3.5 text-blue-600" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Logística Staff</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className={cn(
+                        "h-1.5 w-1.5 rounded-full animate-pulse",
+                        c.event.musicians.every((m: any) => m.status === "confirmed") ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.6)]"
+                      )} />
+                      <span className={cn(
+                        "text-[10px] font-bold",
+                        c.event.musicians.every((m: any) => m.status === "confirmed") ? "text-green-500" : "text-yellow-500"
+                      )}>
+                        {c.event.musicians.filter((m: any) => m.status === "confirmed").length}/{c.event.musicians.length}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground bg-black/10 p-2 rounded-lg border border-dashed border-border/40">
+                    <AlertCircle className="w-3 h-3" /> Sin staff asignado
+                  </div>
+                )}
               </div>
             </div>
             <div className="pt-2 border-t border-border/40 flex items-center justify-between">

@@ -1,62 +1,270 @@
 /**
- * Generador de mensajes de Gig y cliente de WhatsApp vía Evolution API v2.
- *
- * Configuración (DB > env vars):
- *   GlobalConfig.evolutionUrl, evolutionApiKey, evolutionInstance
- *   o EVOLUTION_BASE_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE
+ * Cerebro Central de Notificaciones Vendetta
+ * Responsable de la lógica Push via WhatsApp (Evolution API)
  */
 import { formatDateMX } from "./utils"
 import { getAppUrl } from "./url"
 
-export interface GigDetails {
-  clientName: string
-  date: Date
-  ceremonyType?: string | null
-  guestCount?: number
-  locationName?: string | null
-  locationAddress?: string | null
-  performanceStart?: string | null
-  performanceEnd?: string | null
-  dressCode?: string | null
-  packageName?: string | null
-  musicianNotes?: string | null
-  isPublic?: boolean
-}
-
-export interface ClientNotificationDetails {
-  clientName: string
-  date: Date
-  folio?: string
-  bookingLink?: string
-  total?: number
-}
-
-export interface RehearsalNotificationDetails {
-  date: Date
-  location: string
-  notes?: string
-  songsList?: string
-}
-
-const DRESS_CODE_LABELS: Record<string, string> = {
-  formal:        "🎩 Formal",
-  formal_casual: "👔 Formal Casual",
-  rock:          "🎸 Rock / Casual",
-  nocturno:      "🌙 Concierto Nocturno",
-}
+export type NotificationType = 
+  | "ADMIN_NEW_BOOKING"   // Aviso al jefe de nueva venta web
+  | "CLIENT_QUOTE"       // Envío de cotización inicial
+  | "CLIENT_FOLLOWUP"    // Seguimiento de venta pendiente
+  | "CLIENT_CONFIRMED"   // Aviso de fecha bloqueada (agendado)
+  | "MUSICIAN_GIG"       // Convocatoria a músicos
+  | "MUSICIAN_REHEARSAL" // Aviso de ensayo
 
 const CEREMONY_LABELS: Record<string, string> = {
-  boda:          "💒 Boda",
-  xv_anos:       "👸 XV Años",
-  cumpleanos:    "🎂 Cumpleaños",
-  corporativo:   "🏢 Evento Corporativo",
-  festival:      "🎪 Festival",
-  happening:     "🎵 Happening",
-  privado:       "🏠 Privado",
-  otro:          "📋 Otro",
+  boda: "💒 Boda", xv_anos: "👸 XV Años", cumpleanos: "🎂 Cumpleaños",
+  corporativo: "🏢 Evento Corp", festival: "🎪 Festival", happening: "🎵 Happening",
+  privado: "🏠 Privado", otro: "📋 Otro",
 }
 
-export function parseTemplate(template: string, data: Record<string, string>): string {
+/**
+ * Función Maestra: El único punto de entrada para notificaciones
+ */
+export async function dispatchNotification({
+  type,
+  to,
+  bookingId,
+  eventId,
+  customData = {}
+}: {
+  type: NotificationType
+  to?: string
+  bookingId?: string
+  eventId?: string
+  customData?: Record<string, any>
+}) {
+  const { db } = await import("./db")
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+  const baseUrl = getAppUrl()
+
+  if (!config) {
+    console.error("❌ ERROR CRÍTICO: No existe el registro 'vendetta_config' en GlobalConfig.")
+    return null
+  }
+
+  // 1. Resolver Destinatario y Datos base
+  let recipient = to
+  let payload: Record<string, string> = { ...customData }
+
+  // Si tenemos bookingId, cargamos datos para las plantillas automáticamente
+  if (bookingId && !payload.clientName) {
+    const booking = await db.bookingRequest.findUnique({ 
+      where: { id: bookingId },
+      include: { event: { include: { location: true, package: true } } }
+    })
+    if (booking) {
+      payload = {
+        ...payload,
+        folio: booking.shortId || "S/F",
+        clientName: booking.clientName.split(" ")[0],
+        fullName: booking.clientName,
+        eventName: booking.clientName, // Usamos el nombre del cliente como nombre de evento por ahora
+        date: formatDateMX(booking.requestedDate, "d 'de' MMMM"),
+        fullDate: formatDateMX(booking.requestedDate, "EEEE, d 'de' MMMM"),
+        time: booking.startTime || "Por confirmar",
+        location: booking.event?.location?.name || booking.address || "Por confirmar",
+        package: booking.event?.package?.name || booking.packageName || "Personalizado",
+        ceremony: booking.ceremonyType || "Show",
+        arrivalTime: booking.event?.arrivalTime || "Por definir",
+        setupTime: booking.event?.setupTime || "Por definir",
+        dressCode: (() => {
+          const map: Record<string, string> = {
+            "formal": "🎩 Formal",
+            "formal_casual": "👔 Formal Casual",
+            "rock": "🎸 Rock / Casual",
+            "nocturno": "🌙 Concierto Nocturno"
+          }
+          return map[booking.event?.dressCode || ""] || booking.event?.dressCode || "Por definir"
+        })(),
+        adminLink: `${baseUrl}/admin/ventas/${bookingId}`,
+        statusLink: `${baseUrl}/status/${booking.shortId}`,
+        bookingLink: `${baseUrl}/status/${booking.shortId}`,
+        total: booking.baseAmount?.toLocaleString("es-MX") || "0"
+      }
+      if (!recipient && type.startsWith("CLIENT")) recipient = booking.clientPhone
+    }
+  }
+
+  // 2. Definir Plantillas y Lógica por Tipo
+  let template = ""
+  
+  switch (type) {
+    case "ADMIN_NEW_BOOKING":
+      recipient = config?.adminWhatsapp || recipient
+      template = `🎸 *NUEVO PEDIDO — VENDETTA* 🎸\nID: {{folio}}\n\n👤 *Cliente:* {{fullName}}\n📅 *Fecha:* {{date}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n✅ Verifica en: {{adminLink}}`
+      break
+
+      template = config?.msgTemplateQuote || `Hola {{clientName}}, somos *Vendetta Live Music* 🎸.
+
+Es un gusto saludarte. Te compartimos adjunta la propuesta exclusiva para tu evento el próximo *{{date}}*.
+
+Revisamos cada detalle para asegurar que la música sea inolvidable. Quedamos a tus órdenes para agendar una breve llamada y pulir los detalles.
+
+¡Rock on! 🤘
+
+—
+Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`
+      break
+
+    case "CLIENT_FOLLOWUP":
+      template = config?.msgTemplateFollowUp || `Hola {{clientName}}, te escribo de *Vendetta Music* 🎸 para dar seguimiento a tu cotización. ¿Pudiste revisarla? Seguimos a tus órdenes.`
+      break
+
+    case "CLIENT_CONFIRMED":
+      template = config?.msgTemplateEventClose || `¡Felicidades {{clientName}}! 🎉
+
+Hemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.
+
+*Folio:* {{shortId}}
+
+Puedes consultar el estatus de tu evento y descargar tu contrato firmado aquí:
+{{bookingLink}}
+
+¡Gracias por confiar en *Vendetta* para este día tan especial! 🎸
+
+—
+Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`
+      break
+
+    case "MUSICIAN_GIG":
+      // Forzamos la nueva plantilla si la de la DB es la antigua
+      const dbTemplate = config?.msgTemplateGig
+      const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG")
+      
+      template = isOldTemplate ? `🎸 *NUEVA CONVOCATORIA: {{eventName}}*
+  
+📅 *Fecha:* {{date}}
+🎉 *Tipo:* {{ceremony}}
+📍 *Lugar:* {{location}}
+⏱️ *Montaje:* {{setupTime}}
+🚗 *Llegada músicos:* {{arrivalTime}}
+👔 *Vestimenta:* {{dressCode}}
+📝 *Notas:* {{notes}}
+
+🔗 *Confirma tu asistencia aquí:*
+{{confirmLink}}` : dbTemplate
+      break
+  }
+
+  // --- MODO SANDBOX GLOBAL: DESVÍO DE TODOS LOS MENSAJES ---
+  const sandboxConfigs: any[] = await db.$queryRaw`SELECT isSandbox FROM GlobalConfig WHERE id = 'vendetta_config' LIMIT 1`
+  const isSandbox = sandboxConfigs.length > 0 ? Boolean(sandboxConfigs[0].isSandbox) : false
+  if (isSandbox && type !== "ADMIN_NEW_BOOKING") {
+    const sandboxRecipient = config?.adminWhatsapp || "7222417045"
+    console.log(`🧪 [SANDBOX GLOBAL] Desviando [${type}] de ${recipient} -> ADMIN (${sandboxRecipient})`)
+    recipient = sandboxRecipient
+  }
+
+  if (!recipient || !template) {
+    console.warn(`⚠️ Notificación ${type} abortada: Faltan datos (Dest: ${recipient})`)
+    return null
+  }
+
+  // 3. Renderizar Mensaje
+  let finalMessage = template
+    .replace(/{{clientName}}/g, payload.clientName || "")
+    .replace(/{{fullName}}/g, payload.fullName || "")
+    .replace(/{{date}}/g, payload.date || "")
+    .replace(/{{time}}/g, payload.time || "")
+    .replace(/{{package}}/g, payload.package || "")
+    .replace(/{{total}}/g, payload.total || "")
+    .replace(/{{shortId}}/g, payload.shortId || payload.folio || "")
+    .replace(/{{folio}}/g, payload.folio || payload.shortId || "")
+    .replace(/{{bookingLink}}/g, payload.bookingLink || "")
+    .replace(/{{statusLink}}/g, payload.statusLink || payload.bookingLink || "")
+    .replace(/{{adminLink}}/g, payload.adminLink || "")
+    .replace(/\\n/g, "\n") // Convertir \n literales en saltos de línea reales
+
+  // Añadir prefijo de sandbox si aplica
+  if (isSandbox && type !== "ADMIN_NEW_BOOKING") {
+    const originalName = payload.fullName || payload.clientName || "Destinatario"
+    const label = type.startsWith("CLIENT") ? "Cliente" : "Músico"
+    finalMessage = `🧪 *[MODO SANDBOX — PRUEBA]*\n_Originalmente para: ${originalName} (${label})_\n\n${finalMessage}`
+  }
+
+  // 4. Generar PDF si es Cotización o Confirmación
+  let media: string | undefined = undefined
+  let fileName: string | undefined = undefined
+
+  if ((type === "CLIENT_QUOTE" || type === "CLIENT_CONFIRMED") && bookingId) {
+    try {
+      const { generateContractPdf } = await import("./pdf/contract-generator")
+      // Re-fetcheamos para tener los datos completos para el generador
+      const booking = await db.bookingRequest.findUnique({ 
+        where: { id: bookingId }
+      })
+
+      if (booking) {
+        // Mapeo idéntico al de la API /api/admin/contract/[id]
+        const funnelData: any = {
+          bookingId: booking.id,
+          shortId: booking.shortId || "",
+          packageId: booking.packageId || "manual-arma",
+          packageName: booking.packageName || "Paquete Personalizado",
+          packagePrice: booking.baseAmount || 0,
+          guestCount: booking.guestCount || 0,
+          venueType: booking.venueType || "salon",
+          bandHours: booking.bandHours || 2,
+          djHours:   booking.djHours || 0,
+          isDjWithTvs: booking.isDjWithTvs || false,
+          hasTemplete: booking.hasTemplete || false,
+          hasPista:    booking.hasPista || false,
+          hasRobot:    booking.hasRobot || false,
+          street: booking.calle || "",
+          houseNumber: booking.numero || "",
+          colonia: booking.colonia || "",
+          municipio: booking.municipio || booking.city || "",
+          address: booking.address || "",
+          city: booking.city || "",
+          state: booking.state || "México",
+          viaticosAmount: booking.viaticosAmount || 0,
+          requestedDate: booking.requestedDate ? booking.requestedDate.toISOString() : new Date().toISOString(),
+          startTime: booking.startTime || "21:00",
+          endTime: booking.endTime || "23:00",
+          clientName: booking.clientName || "Cliente",
+          clientPhone: booking.clientPhone || "",
+        }
+
+        const isConfirmed = type === "CLIENT_CONFIRMED"
+        const pdfBytes = await generateContractPdf(funnelData, booking.shortId || booking.id, {
+          includeLegal: isConfirmed // Si está confirmado, incluye contrato legal
+        })
+        
+        media = Buffer.from(pdfBytes).toString("base64")
+        const prefix = isConfirmed ? "Contrato" : "Cotizacion"
+        fileName = `${prefix}_Vendetta_${booking.shortId || "S-F"}.pdf`
+      }
+    } catch (err) {
+      console.error("❌ Error generando PDF para WhatsApp:", err)
+    }
+  }
+
+  // 5. Enviar y Registrar
+  const messageId = await sendWhatsApp(recipient, finalMessage, payload.fullName || recipient, media, fileName)
+  
+  await db.notification.create({
+    data: {
+      bookingRequestId: bookingId || null,
+      eventId: eventId || null,
+      type: type.toLowerCase(),
+      channel: "whatsapp",
+      recipient,
+      message: finalMessage,
+      status: messageId ? "sent" : "failed",
+      messageId: messageId || null,
+      category: "push_notification"
+    }
+  }).catch(e => console.error("Error logging notification:", e))
+
+  return messageId
+}
+
+/**
+ * Función auxiliar para reemplazar {{variables}}
+ */
+function parseTemplate(template: string, data: Record<string, string>): string {
   let result = template
   for (const [key, value] of Object.entries(data)) {
     result = result.replace(new RegExp(`{{${key}}}`, 'g'), value || "")
@@ -64,404 +272,174 @@ export function parseTemplate(template: string, data: Record<string, string>): s
   return result
 }
 
-const DEFAULT_GIG_TEMPLATE = `🎸 *NUEVO GIG — VENDETTA* 🎸\n\n📅 *Fecha:* {{date}}\n👤 *Cliente:* {{clientName}}\n🎉 *Tipo de evento:* {{ceremony}}\n📍 *Ubicación:* {{location}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n📝 *Notas:* {{notes}}\n\n{{confirmLink}}\n— Administración Vendetta`
-
 /**
- * Genera el mensaje de WhatsApp formateado para los músicos basado en la plantilla
+ * Envío físico via Evolution API v2
  */
-export function buildGigMessage(gig: GigDetails, template: string = DEFAULT_GIG_TEMPLATE, musicianId?: string, eventId?: string): string {
-  const dateStr = formatDateMX(gig.date, "EEEE, d 'de' MMMM, yyyy")
-
-  const ceremony = gig.ceremonyType
-    ? CEREMONY_LABELS[gig.ceremonyType] ?? gig.ceremonyType
-    : "Evento"
-
-  const horario = gig.performanceStart
-    ? `${gig.performanceStart}${gig.performanceEnd ? ` — ${gig.performanceEnd}` : ""} hrs`
-    : "Por confirmar"
-
-  const ubicacion = gig.locationName
-    ? `${gig.locationName}${gig.locationAddress ? `, ${gig.locationAddress}` : ""}`
-    : "Por confirmar"
-
-  const baseUrl = getAppUrl()
-  const confirmLink = musicianId && eventId 
-    ? `\n✅ *CONFIRMA AQUÍ:* \n${baseUrl}/confirmar/${musicianId}/${eventId}`
-    : "\n✅ *CONFIRMACIÓN REQUERIDA:* \nResponde con la palabra *CONFIRMO*."
-
-  const notesText = gig.musicianNotes ? `${gig.musicianNotes}` : "Ninguna"
-  const isPublicText = !gig.isPublic ? `\n⚠️ *AVISO:* EVENTO PRIVADO\n` : ""
-
-  const data = {
-    clientName: gig.clientName,
-    date: dateStr,
-    ceremony: ceremony || "Evento",
-    location: ubicacion,
-    time: horario,
-    package: gig.packageName || "Por confirmar",
-    notes: notesText + isPublicText,
-    confirmLink: confirmLink,
-    total: "", // No aplica para gig
-  }
-
-  return parseTemplate(template, data)
-}
-
-/**
- * Notifica al cliente cuando su reserva ha sido confirmada/agendada
- */
-export async function notifyClientBookingClosed(booking: any) {
-  const baseUrl = getAppUrl()
-  const bookingLink = `${baseUrl}/status/${booking.shortId}`
-  
-  await notifyWhatsApp({
-    to: booking.clientPhone,
-    type: "client_closed",
-    data: {
-      clientName:  booking.clientName?.split(" ")[0] || "Cliente",
-      date:        formatDateMX(booking.requestedDate, "d 'de' MMMM, yyyy"),
-      folio:       booking.shortId || "S/F",
-      bookingLink: bookingLink,
-    },
-    eventId: booking.eventId
-  })
-}
-
-/**
- * Función central para enviar notificaciones de WhatsApp con registro en BD y reemplazo de variables.
- */
-export async function notifyWhatsApp({
-  to,
-  type,
-  templateKey,
-  data,
-  eventId,
-  saveLog = true
-}: {
-  to: string
-  type: "admin_booking" | "client_followup" | "client_closed" | "gig_created" | "rehearsal_created"
-  templateKey?: keyof any // En el futuro se puede tipar con GlobalConfig
-  data: Record<string, string>
-  eventId?: string
-  saveLog?: boolean
-}) {
-  const { db } = await import("./db")
-  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
-  
-  let template = ""
-  
-  // 1. Resolver Plantilla
-  switch (type) {
-    case "admin_booking":
-      template = `🎸 *NUEVO PEDIDO — VENDETTA* 🎸\nID Seguimiento: {{folio}}\n\n👤 *Cliente:* {{clientName}}\n📞 *Tel:* {{clientPhone}}\n📧 {{clientEmail}}\n\n📅 *Fecha:* {{date}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n📍 *Ubicación:* {{location}}\n\n✅ Verifica en: {{adminLink}}`
-      break
-    case "client_closed":
-      template = config?.msgTemplateEventClose || `¡Felicidades {{clientName}}! 🎉\n\nHemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.\n\nFolio de seguimiento: *{{folio}}*\nConsulta el estatus y descarga tu contrato aquí:\n{{bookingLink}}\n\n¡Gracias por confiar en *Vendetta*! 🎸`
-      break
-    case "gig_created":
-      template = config?.msgTemplateGig || `🎸 *NUEVO GIG — VENDETTA* 🎸\n\n📅 *Fecha:* {{date}}\n👤 *Cliente:* {{clientName}}\n🎉 *Tipo de evento:* {{ceremony}}\n📍 *Ubicación:* {{location}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n📝 *Notas:* {{notes}}\n\n{{confirmLink}}\n— Administración Vendetta`
-      break
-    case "client_followup":
-      template = config?.msgTemplateFollowUp || `Hola {{clientName}}, te escribo de *Vendetta Music* 🎸 para dar seguimiento a tu cotización. ¿Pudiste revisarla? Seguimos a tus órdenes para apartar la fecha.`
-      break
-    case "rehearsal_created":
-      template = `🥁 *NUEVO ENSAYO — VENDETTA* 🥁\n\n📅 *Fecha y Hora:* {{date}}\n📍 *Lugar:* {{location}}\n\n📝 *Tarea / Notas:* \n{{notes}}\n\n🎶 *Repertorio a ensayar:*\n{{songsList}}\n\n⚠️ Confirma de recibido respondiendo este mensaje.\n— Administración Vendetta`
-      break
-    // Aquí se pueden añadir más casos según crezca el sistema
-  }
-
-  // 2. Reemplazar Variables
-  const message = parseTemplate(template, data)
-  
-  // 3. Enviar
-  const messageId = await sendWhatsApp(to, message)
-
-  // 4. Registrar SIEMPRE en BD para tener trazabilidad y poder reintentar.
-  //    status: "sent" si Evolution aceptó el mensaje, "failed" si no (config faltante,
-  //    error 4xx/5xx, etc). El centro de notificaciones permite reenviar los failed.
-  if (saveLog) {
-    await db.notification.create({
-      data: {
-        eventId:   eventId || null,
-        type:      type,
-        channel:   "whatsapp",
-        recipient: to,
-        message,
-        status:    messageId ? "sent" : "failed",
-        messageId: messageId || null,
-        category:  "automatic_notification",
-        template:  type, // Usamos el type como nombre de la plantilla interna
-      }
-    }).catch(e => console.error("Error logging notification:", e))
-  }
-
-  return messageId
-}
-
-/**
- * Normaliza un número MX al formato E.164 sin "+":
- *  - Quita todo lo que no sea dígito
- *  - Si tiene 10 dígitos, antepone "52"
- */
-function normalizeMxPhone(input: string): string {
-  let n = input.replace(/\D/g, "")
-  if (n.length === 10) n = `52${n}`
-  return n
-}
-
-/**
- * Envía un mensaje de WhatsApp vía Evolution API v2.
- * Payload v2 plano (number + text). Single auth header (apikey).
- * Reintento exponencial sólo en 429/5xx.
- */
-export async function sendWhatsApp(to: string, message: string): Promise<string | null> {
+export async function sendWhatsApp(
+  to: string, 
+  message: string, 
+  label?: string, 
+  media?: string, 
+  fileName?: string
+): Promise<string | null> {
   const { db } = await import("./db")
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
-  const baseUrl  = config?.evolutionUrl || process.env.EVOLUTION_BASE_URL
-  const apiKey   = config?.evolutionApiKey || process.env.EVOLUTION_API_KEY
-  const instance = config?.evolutionInstance || process.env.EVOLUTION_INSTANCE || "vendetta_admin"
+  let baseUrl = config?.evolutionUrl || process.env.EVOLUTION_BASE_URL || ""
+  if (baseUrl && !baseUrl.startsWith("http")) {
+    baseUrl = `https://${baseUrl}`
+  }
+  
+  const apiKey = config?.evolutionApiKey || process.env.EVOLUTION_API_KEY
+  const instance = config?.evolutionInstance || "vendetta_admin"
 
-  if (!baseUrl || !apiKey || !baseUrl.startsWith("http")) {
-    console.warn("⚠️  Evolution API no configurada. Mensaje no enviado a", to)
+  if (!baseUrl || !apiKey || !to) return null
+
+  // Normalización Inteligente
+  let cleanNumber = to.replace(/\D/g, "")
+  if (cleanNumber.length === 10) cleanNumber = `52${cleanNumber}`
+  else if (cleanNumber.length === 11 && cleanNumber.startsWith("1")) cleanNumber = `52${cleanNumber}`
+  
+  const isMedia = !!media
+  const endpoint = isMedia ? "sendMedia" : "sendText"
+  const url = `${baseUrl.replace(/\/$/, "")}/message/${endpoint}/${encodeURIComponent(instance)}`
+  
+  console.log(`📡 Llamando a Evolution API (${endpoint}): ${url}`)
+  console.log(`📱 Destino: ${label || "Desconocido"} (${cleanNumber})`)
+
+  try {
+    const body: any = {
+      number: cleanNumber,
+      delay: 1200
+    }
+
+    if (isMedia) {
+      body.media = media
+      body.mediatype = "document"
+      body.mimetype = "application/pdf"
+      body.fileName = fileName || "Cotizacion_Vendetta.pdf"
+      body.caption = message
+    } else {
+      body.text = message
+    }
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { apikey: apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    })
+    
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}))
+      console.log(`✅ WhatsApp Enviado con éxito. ID: ${data.key?.id || "sent_ok"}`)
+      return data.key?.id || data.messageId || "sent_ok"
+    } else {
+      const errorBody = await res.text().catch(() => "Sin cuerpo de error")
+      console.error(`❌ RECHAZO DE API [${res.status}]: ${errorBody}`)
+    }
+    return null
+  } catch (err) {
+    console.error("❌ Evolution API Error:", err)
     return null
   }
-
-  const cleanNumber = normalizeMxPhone(to)
-  const url = `${baseUrl.replace(/\/$/, "")}/message/sendText/${encodeURIComponent(instance)}`
-  const payload = {
-    number: cleanNumber,
-    text: message,
-    delay: 1200,
-    linkPreview: true,
-  }
-
-  const headers = {
-    apikey: apiKey,
-    "Content-Type": "application/json",
-  }
-
-  const MAX_ATTEMPTS = 3
-  let lastError: any = null
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    try {
-      const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(payload) })
-      if (res.ok) {
-        const data = await res.json().catch(() => ({}))
-        const msgId = data.key?.id || data.messageId || data.id || "sent_ok"
-        return msgId
-      }
-      
-      // Capture error details
-      const errorText = await res.text().catch(() => res.statusText)
-      console.error(`❌ Error de Evolution API (${res.status}):`, errorText)
-      lastError = errorText
-
-      // Reintentamos solo en 429 / 5xx (errores transitorios)
-      if (res.status === 429 || res.status >= 500) {
-        if (attempt < MAX_ATTEMPTS) {
-          const backoffMs = 500 * Math.pow(2, attempt - 1) // 500, 1000, 2000
-          await new Promise(r => setTimeout(r, backoffMs))
-          continue
-        }
-      }
-      
-      // Si llegamos aquí con un 4xx (como 401 o 404), no reintentamos
-      break;
-    } catch (err: any) {
-      console.error(`❌ Excepción al contactar Evolution API (Intento ${attempt}):`, err.message)
-      lastError = err.message
-      if (attempt < MAX_ATTEMPTS) {
-        await new Promise(r => setTimeout(r, 1000))
-        continue
-      }
-    }
-  }
-  console.error("❌ Evolution API: agotados los reintentos.", lastError)
-  return null
 }
 
 /**
- * Verifica el estado de conexión de la instancia (cacheado 30s).
- * Útil para no encolar mensajes a una instancia desconectada.
+ * Notificador de Músicos optimizado (Bucle centralizado)
  */
-let connectionCache: { ts: number; connected: boolean } | null = null
-export async function isEvolutionConnected(): Promise<boolean> {
-  const now = Date.now()
-  if (connectionCache && now - connectionCache.ts < 30_000) return connectionCache.connected
-
-  const { db } = await import("./db")
-  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
-  const baseUrl  = config?.evolutionUrl || process.env.EVOLUTION_BASE_URL
-  const apiKey   = config?.evolutionApiKey || process.env.EVOLUTION_API_KEY
-  const instance = config?.evolutionInstance || process.env.EVOLUTION_INSTANCE || "vendetta_admin"
-
-  if (!baseUrl || !apiKey) {
-    connectionCache = { ts: now, connected: false }
-    return false
-  }
-  try {
-    const url = `${baseUrl.replace(/\/$/, "")}/instance/connectionState/${encodeURIComponent(instance)}`
-    const res = await fetch(url, { headers: { apikey: apiKey } })
-    if (!res.ok) {
-      connectionCache = { ts: now, connected: false }
-      return false
-    }
-    const data = await res.json().catch(() => ({}))
-    const state = data?.instance?.state || data?.state
-    const connected = state === "open" || state === "connected"
-    connectionCache = { ts: now, connected }
-    return connected
-  } catch {
-    connectionCache = { ts: now, connected: false }
-    return false
-  }
-}
-
-/**
- * Notifica a todos los músicos base sobre un nuevo Gig
- * Guarda el log de cada notification en la BD
- */
-export async function notifyMusicians(eventId: string, gig: GigDetails, db: any, musicianIds?: string[]) {
-  const whereClause: any = { phone: { not: null } }
+export async function notifyMusicians(eventId: string, gigDetails: any, db: any, targetMusicianIds?: string[]) {
+  const event = await db.event.findUnique({ 
+    where: { id: eventId },
+    include: { bookingRequest: true }
+  })
   
-  if (musicianIds && musicianIds.length > 0) {
-    whereClause.id = { in: musicianIds }
-  }
-
-  const musicians = await db.musicianProfile.findMany({
-    where: whereClause,
-    include: { user: true },
+  // 1. Obtener perfiles de los músicos solicitados
+  const profiles = await db.musicianProfile.findMany({
+    where: {
+      id: { in: targetMusicianIds },
+      OR: [{ phone: { not: null } }, { whatsapp: { not: null } }],
+      status: "active"
+    },
+    include: { 
+      user: true,
+      events: {
+        where: { eventId: eventId }
+      }
+    }
   })
 
-  if (musicians.length === 0) {
-    console.log("ℹ️  No hay músicos con teléfono registrado para notificar.")
+  // 2. Filtrar: Solo enviar a los que están "pending" (no han respondido o son nuevos)
+  //    Si el admin los seleccionó en el UI, queremos convocarlos.
+  const allRecipients = profiles.map((p: any) => ({ 
+    id: p.id, 
+    name: p.user?.name || "Músico", 
+    phone: [p.whatsapp, p.phone].find((num: any) => num && num.trim() !== ""),
+    instrument: p.instrument || "",
+    currentStatus: p.events[0]?.status || "pending"
+  })).filter((r: any) => r.currentStatus === "pending")
+
+  console.log(`📣 notifyMusicians: Iniciando convocatoria para Evento ${eventId}. Titulares a notificar: ${allRecipients.length}`)
+
+  if (allRecipients.length === 0) {
+    console.warn("⚠️ No se encontraron destinatarios válidos (titulares o suplentes).")
     return
   }
 
+  console.log("📋 PASE DE LISTA PARA CONVOCATORIA:", allRecipients.map(r => `${r.name} (${r.instrument})`).join(", "))
+
+  // Obtenemos la configuración para el número del Admin (Sandbox)
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
-  const template = config?.msgTemplateGig || `🎸 *NUEVO GIG — VENDETTA* 🎸\n\n📅 *Fecha:* {{date}}\n👤 *Cliente:* {{clientName}}\n🎉 *Tipo de evento:* {{ceremony}}\n📍 *Ubicación:* {{location}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n📝 *Notas:* {{notes}}\n\n{{confirmLink}}\n— Administración Vendetta`
 
-  for (const musician of musicians) {
-    const phone = musician.whatsapp ?? musician.phone ?? null
-    if (!phone) continue
+  for (const r of allRecipients) {
+    if (!r.phone) continue
 
-    const dateStr = formatDateMX(gig.date, "EEEE, d 'de' MMMM, yyyy")
-    const ceremony = gig.ceremonyType ? (CEREMONY_LABELS[gig.ceremonyType] ?? gig.ceremonyType) : "Evento"
-    const horario = gig.performanceStart ? `${gig.performanceStart}${gig.performanceEnd ? ` — ${gig.performanceEnd}` : ""} hrs` : "Por confirmar"
-    const ubicacion = gig.locationName ? `${gig.locationName}${gig.locationAddress ? `, ${gig.locationAddress}` : ""}` : "Por confirmar"
-    const baseUrl = getAppUrl()
-    const confirmLink = `\n✅ *CONFIRMA AQUÍ:* \n${baseUrl}/confirmar/${musician.id}/${eventId}`
-    const notesText = gig.musicianNotes ? `${gig.musicianNotes}` : "Ninguna"
-    const isPublicText = !gig.isPublic ? `\n⚠️ *AVISO:* EVENTO PRIVADO\n` : ""
+    // Lógica de prioridad para Ingenieros
+    if (r.instrument.toLowerCase().includes("ingeniero") || r.instrument.toLowerCase().includes("audio")) {
+      console.log(`⏭️ Saltando a ${r.name} (${r.instrument}): Convocatoria manual.`)
+      continue
+    }
 
-    await notifyWhatsApp({
-      to: phone,
-      type: "gig_created",
-      data: {
-        clientName: gig.clientName,
-        date: dateStr,
-        ceremony: ceremony || "Evento",
-        location: ubicacion,
-        time: horario,
-        package: gig.packageName || "Por confirmar",
-        notes: notesText + isPublicText,
-        confirmLink: confirmLink,
-      },
-      eventId
+    // Mapeo de vestimenta para que salga el texto bonito
+    const dressCodeMap: Record<string, string> = {
+      "formal": "🎩 Formal",
+      "formal_casual": "👔 Formal Casual",
+      "rock": "🎸 Rock / Casual",
+      "nocturno": "🌙 Concierto Nocturno"
+    }
+    const finalDressCode = dressCodeMap[gigDetails.dressCode] || gigDetails.dressCode || "Por definir"
+
+    // --- MODO SANDBOX: DESVÍO A ADMINISTRADOR ---
+    const sandboxRecipient = config?.adminWhatsapp || "7222417045"
+    
+    console.log(`🧪 [SANDBOX] Desviando convocatoria de ${r.name} -> ADMIN (${sandboxRecipient})`)
+    console.log(`📝 [DEBUG] Datos Crudos:`, {
+      llegada: gigDetails.arrivalTime,
+      montaje: gigDetails.setupTime,
+      vestimenta: gigDetails.dressCode
+    })
+
+    await dispatchNotification({
+      type: "MUSICIAN_GIG",
+      to: sandboxRecipient,
+      bookingId: event?.bookingRequest?.id,
+      eventId: eventId,
+      customData: {
+        notes: gigDetails.musicianNotes || "Ninguna",
+        arrivalTime: gigDetails.arrivalTime || "Por definir",
+        setupTime: gigDetails.setupTime || "Por definir",
+        dressCode: finalDressCode,
+        confirmLink: `${getAppUrl()}/confirmar/${r.id}/${eventId}`
+      }
     })
   }
 
-  // Marcar evento como notificado
-  await db.event.update({
-    where: { id: eventId },
-    data:  { notificationSent: true }
-  })
+  await db.event.update({ where: { id: eventId }, data: { notificationSent: true } })
 }
 
 /**
- * Google Calendar — stub preparado para cuando tengas las credenciales
- * Variables requeridas:
- * GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, GOOGLE_CALENDAR_ID
+ * Google Calendar Sync (Stub)
  */
-export async function syncToGoogleCalendar(event: {
-  id: string
-  title: string
-  date: Date
-  performanceStart?: string | null
-  performanceEnd?: string | null
-  locationName?: string | null
-  description?: string
-}): Promise<string | null> {
-  const clientId     = process.env.GOOGLE_CLIENT_ID
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN
-  const calendarId   = process.env.GOOGLE_CALENDAR_ID ?? "primary"
-
-  if (!clientId || !clientSecret || !refreshToken) {
-    console.log("⚠️  Google Calendar no configurado. Credenciales pendientes.")
-    return null
-  }
-
-  try {
-    const { google } = await import("googleapis")
-    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret)
-    oauth2Client.setCredentials({ refresh_token: refreshToken })
-
-    const calendar = google.calendar({ version: "v3", auth: oauth2Client })
-
-    const dateStr = event.date.toISOString().split("T")[0]
-    const startDateTime = event.performanceStart
-      ? `${dateStr}T${event.performanceStart}:00`
-      : `${dateStr}T20:00:00`
-    const endDateTime = event.performanceEnd
-      ? `${dateStr}T${event.performanceEnd}:00`
-      : `${dateStr}T23:00:00`
-
-    const gcEvent = await calendar.events.insert({
-      calendarId,
-      requestBody: {
-        summary:     event.title,
-        description: event.description,
-        location:    event.locationName ?? undefined,
-        start: { dateTime: startDateTime, timeZone: "America/Mexico_City" },
-        end:   { dateTime: endDateTime,   timeZone: "America/Mexico_City" },
-        extendedProperties: { private: { vendettaEventId: event.id } },
-      },
-    })
-
-    return gcEvent.data.id ?? null
-  } catch (err) {
-    console.error("❌ Error sincronizando con Google Calendar:", err)
-    return null
-  }
-}
-
-/**
- * Elimina un evento de Google Calendar
- */
-export async function deleteFromGoogleCalendar(calendarEventId: string): Promise<boolean> {
-  const clientId     = process.env.GOOGLE_CLIENT_ID
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN
-  const calendarId   = process.env.GOOGLE_CALENDAR_ID ?? "primary"
-
-  if (!clientId || !clientSecret || !refreshToken || !calendarEventId) {
-    return false
-  }
-
-  try {
-    const { google } = await import("googleapis")
-    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret)
-    oauth2Client.setCredentials({ refresh_token: refreshToken })
-
-    const calendar = google.calendar({ version: "v3", auth: oauth2Client })
-    await calendar.events.delete({ calendarId, eventId: calendarEventId })
-
-    console.log(`✅ Evento eliminado de Google Calendar: ${calendarEventId}`)
-    return true
-  } catch (err) {
-    console.error("❌ Error eliminando evento de Google Calendar:", err)
-    return false
-  }
+export async function syncToGoogleCalendar(event: any): Promise<string | null> {
+  // Implementación pendiente de credenciales finales
+  return null
 }

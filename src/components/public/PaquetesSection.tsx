@@ -126,26 +126,6 @@ function LocationModal({
   const [viaticos,     setViaticos]     = useState<{ isOutsideZone: boolean; amount: number; label: string; description: string } | null>(null)
   const [isLocating,   setIsLocating]   = useState(false)
 
-  async function handleGeolocate() {
-    if (!navigator.geolocation) return
-    setIsLocating(true)
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      try {
-        const { latitude, longitude } = pos.coords
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-        if (!res.ok) throw new Error("Error")
-        const data = await res.json()
-        const geoCity = data.address?.city || data.address?.town || data.address?.village || data.address?.county || ""
-        const geoState = data.address?.state || ""
-        if (geoCity) setCity(geoCity)
-        if (geoState) setState(geoState)
-      } catch (err) {
-        console.error("Geolocate error:", err)
-      } finally {
-        setIsLocating(false)
-      }
-    }, () => setIsLocating(false), { timeout: 10000 })
-  }
 
   function calcPrice() {
     const base = pkg.baseCostPerHour * pkg.minDuration
@@ -190,9 +170,6 @@ function LocationModal({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">Ingresa la ubicación para calcular viáticos y precio final.</p>
-                <Button variant="outline" size="sm" onClick={handleGeolocate} disabled={isLocating} className="h-8 text-xs bg-primary/10 border-primary/20 text-primary hover:bg-primary/20">
-                  {isLocating ? "📍 Localizando..." : "📍 Autocompletar"}
-                </Button>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Input placeholder="Ej. Metepec, Toluca..." value={city} onChange={e => setCity(e.target.value)} className="bg-white/5 border-white/15 h-11" />

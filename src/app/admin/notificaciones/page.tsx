@@ -1,165 +1,433 @@
-export const dynamic = "force-dynamic"
 
+import { db } from "@/lib/db"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { db } from "@/lib/db"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Bell, MessageCircle, AlertTriangle, CheckCircle2, Clock, Inbox, type LucideIcon } from "lucide-react"
-import { formatDateMX } from "@/lib/utils"
-import { NotificationActions } from "@/components/admin/NotificationActions"
-import { ClearNotificationsButton } from "@/components/admin/ClearNotificationsButton"
-import { TestNotificationButtons } from "@/components/admin/TestNotificationButtons"
+import Link from "next/link"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
+import { 
+  MessageSquare, CheckCircle2, Clock, AlertCircle, 
+  Settings, History, FileText, Smartphone, ShieldCheck,
+  ExternalLink, Zap, Info, ArrowRight
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { ConfigFormWrapper } from "@/components/admin/ConfigFormWrapper"
+import { Toggle } from "@/components/ui/Toggle"
+import { SandboxToggle } from "@/components/admin/SandboxToggle"
+import { saveMessageTemplatesAction } from "@/actions/config"
 
-const TYPE_LABELS: Record<string, { label: string; color: string }> = {
-  admin_booking:     { label: "Nuevo pedido (Admin)",     color: "bg-blue-500/10 text-blue-300 border-blue-500/30" },
-  client_closed:     { label: "Cierre de venta (Cliente)", color: "bg-green-500/10 text-green-300 border-green-500/30" },
-  client_followup:   { label: "Follow-up (Cliente)",       color: "bg-yellow-500/10 text-yellow-300 border-yellow-500/30" },
-  gig_created:       { label: "Convocatoria (Músico)",     color: "bg-purple-500/10 text-purple-300 border-purple-500/30" },
-  rehearsal_created: { label: "Ensayo (Músico)",           color: "bg-pink-500/10 text-pink-300 border-pink-500/30" },
-  inbound:           { label: "Mensaje entrante",           color: "bg-orange-500/10 text-orange-300 border-orange-500/30" },
-  outbound:          { label: "Mensaje saliente",           color: "bg-blue-500/10 text-blue-300 border-blue-500/30" },
-}
-
-const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
-  automatic_notification: { label: "Auto-Notif",    color: "bg-blue-500/20 text-blue-400" },
-  customer_reply:         { label: "Respuesta",     color: "bg-green-500/20 text-green-400" },
-  actionable:             { label: "Acción Req",    color: "bg-orange-500/20 text-orange-400" },
-}
-
-const STATUS_ICONS: Record<string, { icon: LucideIcon; color: string; label: string }> = {
-  pending:   { icon: Clock,          color: "text-yellow-400", label: "Pendiente" },
-  sent:      { icon: CheckCircle2,   color: "text-blue-400",   label: "Enviado" },
-  delivered: { icon: CheckCircle2,   color: "text-green-400",  label: "Entregado" },
-  read:      { icon: CheckCircle2,   color: "text-green-500",  label: "Leído" },
-  failed:    { icon: AlertTriangle,  color: "text-red-400",    label: "Falló" },
-  received:  { icon: Inbox,          color: "text-orange-400", label: "Recibido" },
-}
+export const dynamic = 'force-dynamic'
 
 export default async function NotificacionesPage() {
   const session = await auth()
-  if (!session?.user || !["ADMIN", "AGENTE"].includes(session.user.role as string)) {
+  if (!session || session.user?.role !== "ADMIN") {
     redirect("/admin")
   }
 
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   const notifications = await db.notification.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 200,
+    orderBy: { createdAt: 'desc' },
+    take: 50
   })
 
-  const counts = {
-    pending:  notifications.filter(n => n.status === "pending" || n.status === "failed").length,
-    inbound:  notifications.filter(n => n.status === "received").length,
-    today:    notifications.filter(n => {
-      const d = new Date(n.createdAt)
-      const today = new Date()
-      return d.toDateString() === today.toDateString()
-    }).length,
+  // Estadísticas simples
+  const stats = {
+    total: await db.notification.count(),
+    success: await db.notification.count({ where: { status: { in: ['sent', 'delivered', 'success'] } } }),
+    error: await db.notification.count({ where: { status: 'error' } })
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'sent':
+      case 'delivered':
+      case 'success':
+        return <span className="flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20"><CheckCircle2 className="w-3 h-3" /> Enviado</span>
+      case 'pending':
+        return <span className="flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20"><Clock className="w-3 h-3" /> Pendiente</span>
+      default:
+        return <span className="flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20"><AlertCircle className="w-3 h-3" /> Error</span>
+    }
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
-      <div className="flex justify-between items-end">
-        <div>
-          <div className="flex items-center gap-3 text-primary mb-2">
-            <Bell className="w-6 h-6" />
-            <span className="text-sm font-bold uppercase tracking-widest">Centro de Notificaciones</span>
-          </div>
-          <h1 className="text-4xl font-heading font-bold text-foreground tracking-tight">Mensajes de WhatsApp</h1>
-          <p className="text-muted-foreground mt-2 max-w-2xl">
-            Historial completo de mensajes enviados a clientes, músicos y administradores. Reenvía los que fallaron.
-          </p>
-        </div>
-        <ClearNotificationsButton />
-      </div>
-
-      <TestNotificationButtons />
-
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="bg-card border-yellow-500/20">
-          <CardContent className="pt-6">
-            <div className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest">Por Reintentar</div>
-            <div className="text-3xl font-black text-yellow-300 mt-1">{counts.pending}</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card border-orange-500/20">
-          <CardContent className="pt-6">
-            <div className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">Entrantes Sin Leer</div>
-            <div className="text-3xl font-black text-orange-300 mt-1">{counts.inbound}</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card border-primary/20">
-          <CardContent className="pt-6">
-            <div className="text-[10px] font-bold text-primary uppercase tracking-widest">Hoy</div>
-            <div className="text-3xl font-black text-foreground mt-1">{counts.today}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="bg-card border-border/40">
-        <CardHeader className="border-b border-border/40">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <MessageCircle className="w-5 h-5 text-primary" /> Últimos 200 mensajes
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {notifications.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">
-              <Bell className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p>Sin mensajes registrados todavía.</p>
+    <div className="p-8 bg-background min-h-screen pb-24">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+          <div>
+            <div className="flex items-center gap-2 text-blue-600 mb-2">
+              <Zap className="w-5 h-5 fill-blue-600" />
+              <span className="text-xs font-bold uppercase tracking-widest">Communication Hub</span>
             </div>
-          ) : (
-            <div className="divide-y divide-border/30">
-              {notifications.map(n => {
-                const typeMeta = TYPE_LABELS[n.type] || { label: n.type, color: "bg-muted text-muted-foreground" }
-                const statusMeta = STATUS_ICONS[n.status] || STATUS_ICONS.pending
-                const StatusIcon = statusMeta.icon
-                const canResend = ["failed", "pending"].includes(n.status) && n.type !== "inbound"
+            <h1 className="text-4xl font-heading font-black text-foreground tracking-tight">Centro de <span className="text-blue-600">Mensajería</span></h1>
+            <p className="text-muted-foreground mt-1 text-sm">Gestiona la comunicación VIP con tus clientes y músicos.</p>
+          </div>
+          
+          <div className="flex gap-4">
+             <Card className="bg-card border-border/20 px-4 py-2 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase text-muted-foreground leading-none mb-1">Evolution API</span>
+                  <span className="text-xs font-bold text-foreground">Conectado</span>
+                </div>
+             </Card>
+          </div>
+        </div>
 
-                return (
-                  <div key={n.id} className="p-5 hover:bg-muted/20 transition-colors">
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <Badge variant="outline" className={typeMeta.color}>{typeMeta.label}</Badge>
-                        {n.category && CATEGORY_LABELS[n.category] && (
-                          <Badge variant="outline" className={CATEGORY_LABELS[n.category].color}>
-                            {CATEGORY_LABELS[n.category].label}
-                          </Badge>
-                        )}
-                        <div className={`flex items-center gap-1.5 text-xs font-bold ${statusMeta.color}`}>
-                          <StatusIcon className="w-3.5 h-3.5" />
-                          {statusMeta.label}
-                        </div>
-                        {n.template && (
-                           <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono">
-                             {n.template}
-                           </span>
-                        )}
-                        <span className="text-[11px] text-muted-foreground">
-                          {formatDateMX(n.createdAt, "d MMM, HH:mm")}
-                        </span>
+        <Tabs defaultValue="control" className="space-y-8">
+          <TabsList className="bg-muted/50 p-1 border border-border/40 rounded-xl">
+            <TabsTrigger value="control" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Zap className="w-4 h-4" /> Centro de Control
+            </TabsTrigger>
+            <TabsTrigger value="plantillas" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <FileText className="w-4 h-4" /> Plantillas VIP
+            </TabsTrigger>
+            <TabsTrigger value="historial" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <History className="w-4 h-4" /> Historial
+            </TabsTrigger>
+          </TabsList>
+
+          {/* ================= PESTAÑA: CONTROL ================= */}
+          <TabsContent value="control" className="space-y-6 outline-none">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+               <Card className="bg-card border-border/20">
+                  <CardHeader className="pb-2">
+                  <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Mensajes Enviados</CardDescription>
+                </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-black text-foreground">{stats.total}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Total histórico</p>
+                  </CardContent>
+               </Card>
+               <Card className="bg-card border-border/20">
+                  <CardHeader className="pb-2">
+                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-green-400">Entrega Exitosa</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-black text-foreground">{Math.round((stats.success / (stats.total || 1)) * 100)}%</div>
+                    <p className="text-xs text-muted-foreground mt-1">Eficiencia de envío</p>
+                  </CardContent>
+               </Card>
+               <Card className="bg-card border-border/20">
+                  <CardHeader className="pb-2">
+                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-red-400">Errores</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-black text-foreground">{stats.error}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Requieren atención</p>
+                  </CardContent>
+               </Card>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               <section className="space-y-6">
+                 <h3 className="text-lg font-bold flex items-center gap-2 text-foreground">
+                   <ShieldCheck className="w-5 h-5 text-blue-600" /> Pruebas y Seguridad
+                 </h3>
+                 <SandboxToggle initialValue={config?.isSandbox || false} />
+                 
+                 <Card className="bg-blue-600/5 border border-blue-600/20 p-6 rounded-2xl">
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center shrink-0">
+                        <Info className="w-5 h-5 text-blue-600" />
                       </div>
-                      {canResend && <NotificationActions notificationId={n.id} />}
+                      <div className="space-y-2">
+                        <h4 className="font-bold text-foreground">¿Cómo funciona el Sandbox?</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Al activar el modo Sandbox, todos los mensajes (cotizaciones, confirmaciones, convocatorias) se desviarán automáticamente al <strong>WhatsApp del Administrador</strong>. Esto te permite validar el diseño y los datos sin que el cliente final reciba nada.
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                      <span className="font-bold text-foreground">→</span>
-                      <span className="font-mono">{n.recipient || "—"}</span>
-                      {n.eventId && (
-                        <a href={`/admin/eventos/${n.eventId}`} className="ml-auto text-primary hover:underline text-[10px] uppercase tracking-widest font-bold">
-                          Ver evento
+                 </Card>
+               </section>
+
+               <section className="space-y-6">
+                 <h3 className="text-lg font-bold flex items-center gap-2 text-foreground">
+                   <Smartphone className="w-5 h-5 text-blue-600" /> Conectividad WhatsApp
+                 </h3>
+                 <Card className="bg-card border border-border/40 p-6 rounded-2xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center">
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-foreground">Instancia Activa</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">{config?.evolutionInstance || "vendetta_admin"}</p>
+                        </div>
+                      </div>
+                      <Link href="/admin/configuracion" className="text-[10px] font-bold text-blue-600 hover:underline uppercase tracking-widest">Configurar API</Link>
+                    </div>
+
+                    <div className="pt-4 border-t border-border/40 space-y-3">
+                       <p className="text-[11px] text-muted-foreground italic">
+                         Asegúrate de que tu instancia en Evolution API esté vinculada a un dispositivo físico para garantizar el envío.
+                       </p>
+                       {config?.evolutionUrl && (
+                        <a href={`${config.evolutionUrl.replace(/\/$/, "")}/manager`} target="_blank" rel="noopener noreferrer" 
+                          className="flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors group">
+                          <span className="text-xs font-bold text-muted-foreground">Abrir Evolution Manager</span>
+                          <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
                         </a>
                       )}
                     </div>
-                    <pre className="text-xs text-foreground/80 whitespace-pre-wrap font-sans bg-background/40 p-3 rounded-lg border border-border/30 max-h-32 overflow-y-auto">
-                      {n.message}
-                    </pre>
-                  </div>
-                )
-              })}
+                 </Card>
+               </section>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </TabsContent>
+
+          {/* ================= PESTAÑA: PLANTILLAS ================= */}
+          <TabsContent value="plantillas" className="outline-none">
+            <Card className="bg-card border-border/40 rounded-2xl overflow-hidden backdrop-blur-sm">
+              <CardHeader className="bg-muted/30 border-b border-border/40 p-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-600/10 rounded-xl flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl font-black tracking-tight">Personalización de Plantillas</CardTitle>
+                    <CardDescription>Edita los mensajes automáticos que tus clientes y músicos reciben.</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-8">
+                <ConfigFormWrapper action={saveMessageTemplatesAction} className="space-y-10">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    {/* Cotización */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="msgTemplateQuote" className="text-foreground font-black uppercase tracking-widest text-xs">📄 Envío de Cotización</Label>
+                        <span className="text-[10px] text-muted-foreground italic">Cliente</span>
+                      </div>
+                      <Textarea id="msgTemplateQuote" name="msgTemplateQuote" rows={10}
+                        defaultValue={config?.msgTemplateQuote || `Hola {{clientName}}, somos *Vendetta Live Music* 🎸.
+
+Es un gusto saludarte. Te compartimos adjunta la propuesta exclusiva para tu evento el próximo *{{date}}*.
+
+Revisamos cada detalle para asegurar que la música sea inolvidable. Quedamos a tus órdenes para agendar una breve llamada y pulir los detalles.
+
+¡Rock on! 🤘
+
+—
+Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`} 
+                        placeholder="Usa {{clientName}}, {{date}}, {{total}}..."
+                        className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
+                    </div>
+
+                    {/* Confirmación */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="msgTemplateEventClose" className="text-foreground font-black uppercase tracking-widest text-xs">🎉 Confirmación de Cierre</Label>
+                        <span className="text-[10px] text-muted-foreground italic">Cliente</span>
+                      </div>
+                      <Textarea id="msgTemplateEventClose" name="msgTemplateEventClose" rows={10}
+                        defaultValue={config?.msgTemplateEventClose || `¡Felicidades {{clientName}}! 🎉
+
+Hemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.
+
+*Folio:* {{shortId}}
+
+Puedes consultar el estatus de tu evento y descargar tu contrato firmado aquí:
+{{bookingLink}}
+
+¡Gracias por confiar en *Vendetta* para este día tan especial! 🎸
+
+—
+Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`} 
+                        placeholder="Usa {{clientName}}, {{shortId}}..."
+                        className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
+                    </div>
+
+                    {/* Seguimiento */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="msgTemplateFollowUp" className="text-foreground font-black uppercase tracking-widest text-xs">🔄 Seguimiento Automático</Label>
+                        <span className="text-[10px] text-muted-foreground italic">Cliente</span>
+                      </div>
+                      <Textarea id="msgTemplateFollowUp" name="msgTemplateFollowUp" rows={6}
+                        defaultValue={config?.msgTemplateFollowUp || `Hola {{clientName}}, te escribo de *Vendetta Music* 🎸 para dar seguimiento a tu cotización. ¿Pudiste revisarla? Seguimos a tus órdenes para apartar la fecha.`} 
+                        className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
+                    </div>
+
+                    {/* Expiración Músicos (Staff) */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <Label htmlFor="msgTemplateExpiring" className="text-foreground font-black uppercase tracking-widest text-xs">⚠️ Expiración de Convocatoria</Label>
+                          <Toggle name="msgExpiringActive" defaultChecked={config?.msgExpiringActive} />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground italic">Staff</span>
+                      </div>
+                      <Textarea id="msgTemplateExpiring" name="msgTemplateExpiring" rows={6}
+                        defaultValue={config?.msgTemplateExpiring || `🎸 *RECORDATORIO — VENDETTA* 🎸
+
+{{fullName}}, tu convocatoria para el gig del *{{date}}* está por expirar ⏳. Necesitamos confirmar el line-up final hoy mismo.
+
+¿Contamos contigo? De lo contrario, tendremos que liberar el lugar para un suplente. ¡Avísanos!`} 
+                        className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
+                    </div>
+
+                    {/* Recordatorio Pre-Evento */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <Label htmlFor="msgTemplateReminder" className="text-foreground font-black uppercase tracking-widest text-xs">⏳ Recordatorio VIP (Pre-Evento)</Label>
+                          <Toggle name="msgReminderActive" defaultChecked={config?.msgReminderActive} />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground italic">Cliente</span>
+                      </div>
+                      <Textarea id="msgTemplateReminder" name="msgTemplateReminder" rows={8}
+                        defaultValue={config?.msgTemplateReminder || `¡Hola {{clientName}}! Estamos a solo 7 días de tu gran evento el *{{date}}* 🎸.
+
+En *Vendetta* ya estamos preparando todo para que la música sea perfecta. ¿Hay algún detalle de último minuto que debamos saber? ¡Nos vemos pronto!`} 
+                        className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
+                    </div>
+
+                    {/* Agradecimiento Post-Evento */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <Label htmlFor="msgTemplateThanks" className="text-foreground font-black uppercase tracking-widest text-xs">✨ Agradecimiento y Testimonial</Label>
+                          <Toggle name="msgThanksActive" defaultChecked={config?.msgThanksActive} />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground italic">Cliente</span>
+                      </div>
+                      <Textarea id="msgTemplateThanks" name="msgTemplateThanks" rows={6}
+                        defaultValue={config?.msgTemplateThanks || `¡Hola {{clientName}}! 🎉 Todavía seguimos emocionados por lo de ayer.
+
+Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña aquí para que más gente conozca la experiencia Vendetta:
+👉 *vendetta.mx/#testimoniales*
+
+¡Tu feedback es el motor de Vendetta! 🎸🤘`} 
+                        className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
+                    </div>
+
+                    {/* Músicos */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="msgTemplateGig" className="text-foreground font-black uppercase tracking-widest text-xs">🎸 Convocatoria de Músicos</Label>
+                        <span className="text-[10px] text-muted-foreground italic">Staff</span>
+                      </div>
+                      <Textarea id="msgTemplateGig" name="msgTemplateGig" rows={6}
+                        defaultValue={config?.msgTemplateGig || `🎸 *NUEVA CONVOCATORIA — VENDETTA* 🎸
+
+📅 *Fecha:* {{date}}
+👤 *Cliente:* {{fullName}}
+🎉 *Tipo:* {{ceremony}}
+📍 *Lugar:* {{location}}
+⏰ *Horario:* {{time}}
+📦 *Paquete:* {{package}}
+
+📝 *Notas:* {{notes}}
+
+🔗 *Confirma tu asistencia aquí:*
+{{confirmLink}}
+
+— Administración Vendetta`} 
+                        className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-border/40 flex justify-end">
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 font-black h-12 px-10 rounded-xl shadow-lg shadow-blue-600/20 text-white">
+                      Actualizar Todas las Plantillas
+                    </Button>
+                  </div>
+                </ConfigFormWrapper>
+
+                <div className="mt-10 p-6 bg-muted/30 rounded-2xl border border-border/20">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-foreground mb-4 flex items-center gap-2">
+                    <Info className="w-4 h-4" /> Guía de Variables Dinámicas
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                      { v: "{{clientName}}", d: "Nombre corto" },
+                      { v: "{{fullName}}", d: "Nombre completo" },
+                      { v: "{{date}}", d: "Fecha evento" },
+                      { v: "{{total}}", d: "Monto total" },
+                      { v: "{{folio}}", d: "ID Reserva" },
+                      { v: "{{package}}", d: "Nombre paquete" },
+                      { v: "{{bookingLink}}", d: "Link contrato" },
+                      { v: "{{location}}", d: "Lugar (Staff)" }
+                    ].map(item => (
+                      <div key={item.v} className="flex flex-col gap-1">
+                        <code className="text-[11px] font-bold text-blue-600">{item.v}</code>
+                        <span className="text-[10px] text-muted-foreground">{item.d}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ================= PESTAÑA: HISTORIAL ================= */}
+          <TabsContent value="historial" className="outline-none">
+            <Card className="bg-card/50 border-border/40 backdrop-blur-sm overflow-hidden rounded-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-border/40 bg-blue-600/10">
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-600">Fecha y Hora</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-600">Tipo</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-600">Destinatario</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-600 text-center">Estado</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-600">Mensaje</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {notifications.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground italic">
+                          No hay registros de notificaciones aún.
+                        </td>
+                      </tr>
+                    ) : (
+                      notifications.map((notif) => (
+                        <tr key={notif.id} className="hover:bg-blue-600/5 transition-colors group">
+                          <td className="px-6 py-4 text-sm font-medium text-foreground whitespace-nowrap">
+                            {format(notif.createdAt, "d 'de' MMM, HH:mm", { locale: es })}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-xs font-bold text-foreground truncate">{getTypeLabel(notif.type)}</span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap font-mono">
+                            {notif.recipient || "—"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {getStatusBadge(notif.status)}
+                          </td>
+                          <td className="px-6 py-4 max-w-md">
+                            <p className="text-xs text-muted-foreground truncate group-hover:text-foreground transition-colors">
+                              {notif.message}
+                            </p>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   )
+}
+
+function getTypeLabel(type: string) {
+  const map: Record<string, string> = {
+    'ADMIN_NEW_BOOKING': '🔔 Nuevo Pedido',
+    'CLIENT_QUOTE': '📄 Cotización',
+    'CLIENT_FOLLOWUP': '🔄 Seguimiento',
+    'CLIENT_CONFIRMED': '✅ Confirmación',
+    'MUSICIAN_GIG': '🎸 Convocatoria',
+  }
+  return map[type] || type
 }

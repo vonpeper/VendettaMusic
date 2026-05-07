@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { notifyMusicians } from "@/lib/notifications"
+import { notifyMusicians, dispatchNotification } from "@/lib/notifications"
 import { formatDateMX } from "@/lib/utils"
 
 export async function markBookingAsCompleted(bookingId: string) {
@@ -67,20 +67,12 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
       })
 
       if (newStatus === "agendado" && !br.event.notificationSent) {
-        const gigDetails = {
-          clientName: br.clientName,
-          date: br.event.date,
-          ceremonyType: br.event.ceremonyType,
-          guestCount: br.event.guestCount || 0,
-          locationName: br.event.location?.name || br.address || "Por confirmar",
-          locationAddress: br.event.location?.address || "",
-          performanceStart: br.event.performanceStart,
-          performanceEnd: br.event.performanceEnd,
-          musicianNotes: br.event.musicianNotes,
-          isPublic: br.event.isPublic,
-          packageName: br.event.package?.name || br.packageName
-        }
-        await notifyMusicians(br.eventId, gigDetails, db)
+        await dispatchNotification({
+          type: "CLIENT_CONFIRMED",
+          bookingId: br.id
+        })
+        
+        await notifyMusicians(br.eventId, br.event, db)
       }
     }
 
@@ -152,21 +144,11 @@ export async function markContractAsSignedAction(bookingId: string) {
 
     // Notificar a músicos automáticamente al firmar contrato
     if (booking.event && booking.event.status === "agendado") {
-      const gigDetails = {
-        clientName: booking.clientName,
-        date: booking.event.date,
-        ceremonyType: booking.event.ceremonyType,
-        guestCount: booking.event.guestCount || 0,
-        locationName: booking.event.location?.name || booking.address || "Por confirmar",
-        locationAddress: booking.event.location?.address || "",
-        performanceStart: booking.event.performanceStart,
-        performanceEnd: booking.event.performanceEnd,
-        musicianNotes: booking.event.musicianNotes,
-        isPublic: booking.event.isPublic,
-        packageName: booking.event.package?.name || booking.packageName
-      }
-      
-      await notifyMusicians(booking.eventId, gigDetails, db)
+      await dispatchNotification({
+        type: "CLIENT_CONFIRMED",
+        bookingId: booking.id
+      })
+      await notifyMusicians(booking.eventId, booking.event, db)
     }
 
     revalidatePath("/admin/ventas")
@@ -183,12 +165,10 @@ export async function sendAutoFollowUpAction(id: string, type: "booking" | "quot
   try {
     const { notifyWhatsApp } = await import("@/lib/notifications")
     
-    // 1. Send WhatsApp
-    const firstName = clientName.split(" ")[0]
-    await notifyWhatsApp({
-      to: phone,
-      type: "client_followup",
-      data: { clientName: firstName }
+    // 1. Send WhatsApp Push
+    await dispatchNotification({
+      type: "CLIENT_FOLLOWUP",
+      bookingId: id
     })
 
     // 2. Increment counter

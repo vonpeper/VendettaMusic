@@ -4,13 +4,14 @@ import { useState } from "react"
 import { EventForm } from "@/components/admin/EventForm"
 import { notifyEventAction, deleteEventAction } from "@/actions/events"
 import { Button } from "@/components/ui/button"
-import { Bell, BellOff, Edit2, Trash2, AlertCircle } from "lucide-react"
+import { Bell, BellOff, Edit2, Trash2, AlertCircle, Plus } from "lucide-react"
 
-export function NuevoEventoButton({ clients, locations, packages, staff }: {
+export function NuevoEventoButton({ clients, locations, packages, staff, variant = "big" }: {
   clients: { id: string; name: string }[]
   locations: { id: string; name: string }[]
   packages: { id: string; name: string; baseCostPerHour: number; minDuration: number }[]
   staff: { id: string; name: string }[]
+  variant?: "big" | "compact"
 }) {
   const [showForm, setShowForm] = useState(false)
 
@@ -25,9 +26,26 @@ export function NuevoEventoButton({ clients, locations, packages, staff }: {
           staff={staff}
         />
       )}
-      <Button onClick={() => setShowForm(true)} className="font-bold text-white">
-        + Nuevo Evento
-      </Button>
+      {variant === "big" ? (
+        <Button 
+          onClick={() => setShowForm(true)} 
+          className="w-full h-14 justify-center gap-4 bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white font-black rounded-xl shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 transition-all active:scale-[0.98]"
+        >
+          <Plus className="w-5 h-5" />
+          <div className="text-left">
+            <div className="text-sm font-bold">Nuevo Evento</div>
+            <div className="text-[10px] text-white/70 uppercase tracking-tight">Manual / Admin</div>
+          </div>
+        </Button>
+      ) : (
+        <Button 
+          onClick={() => setShowForm(true)} 
+          className="bg-primary hover:bg-primary-focus text-white font-bold gap-2 px-6 rounded-full shadow-md shadow-pink-500/20 hover:shadow-lg hover:shadow-pink-500/30 transition-all active:scale-[0.98]"
+        >
+          <Plus className="w-4 h-4" />
+          Nuevo Evento
+        </Button>
+      )}
     </>
   )
 }
@@ -58,7 +76,7 @@ export function EditEventoButton({ event, clients, locations, packages, staff, s
         variant="ghost" 
         size={showText ? "sm" : "icon"} 
         onClick={() => setShowForm(true)}
-        className={`${showText ? "px-3 gap-2" : "h-8 w-8"} text-muted-foreground hover:text-foreground hover:bg-primary/10`}
+        className={`${showText ? "px-3 gap-2" : "h-8 w-8"} text-muted-foreground hover:text-primary hover:bg-primary/10`}
         title="Editar evento"
       >
         <Edit2 className="w-3.5 h-3.5" />

@@ -48,7 +48,7 @@ export function CoverageMatrix({ musicians, onViewDetails }: { musicians: any[],
               const badgeColor = availabilityColors[musician.availability] || "bg-gray-500/20 text-muted-foreground border-gray-500/30"
 
               return (
-                <TableRow key={musician.id} className="border-border/40 hover:bg-primary/10 cursor-pointer" onClick={() => onViewDetails(musician)}>
+                <TableRow key={musician.id} className="border-border/40 hover:bg-blue-600/5 cursor-pointer" onClick={() => onViewDetails(musician)}>
                   {/* Instrument is only shown on the first row of the group, or we just show it every time for simplicity */}
                   <TableCell className="font-medium text-primary">
                     {idx === 0 ? instrument.toUpperCase() : ""}

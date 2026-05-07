@@ -29,6 +29,7 @@ export async function saveBankConfigAction(arg1: any, arg2?: any) {
       create: { id: "vendetta_config", bankName, bankAccount, bankClabe, bankBeneficiary },
     })
     revalidatePath("/admin/configuracion")
+    revalidatePath("/admin/notificaciones")
     return { success: true, message: "Datos bancarios guardados" }
   } catch (error: any) {
     console.error("Error saving bank config:", error)
@@ -105,6 +106,7 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
     const apiKey = formData.get("apiKey") as string
     const instance = formData.get("instance") as string
     const adminWhatsapp = (formData.get("adminWhatsapp") as string || "").replace(/\D/g, "") || null
+    const isSandbox = formData.get("isSandbox") === "on"
 
     const existing = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
@@ -122,6 +124,7 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
         evolutionApiKey: finalApiKey,
         evolutionInstance: instance,
         adminWhatsapp,
+        isSandbox,
       },
       create: {
         id: "vendetta_config",
@@ -129,6 +132,7 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
         evolutionApiKey: finalApiKey,
         evolutionInstance: instance,
         adminWhatsapp,
+        isSandbox,
       }
     })
 
@@ -217,14 +221,33 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
     const msgTemplateQuote = formData.get("msgTemplateQuote") as string
     const msgTemplateEventClose = formData.get("msgTemplateEventClose") as string
     const msgTemplateFollowUp = formData.get("msgTemplateFollowUp") as string
+    const msgTemplateExpiring = formData.get("msgTemplateExpiring") as string
+    const msgTemplateReminder = formData.get("msgTemplateReminder") as string
+    const msgTemplateThanks = formData.get("msgTemplateThanks") as string
 
-    await db.globalConfig.upsert({
+    const msgExpiringActive = formData.get("msgExpiringActive") === "on"
+    const msgReminderActive = formData.get("msgReminderActive") === "on"
+    const msgThanksActive = formData.get("msgThanksActive") === "on"
+
+    console.log("💾 Guardando plantillas...", {
+      msgExpiringActive,
+      msgReminderActive,
+      msgThanksActive
+    })
+
+    const result = await db.globalConfig.upsert({
       where: { id: "vendetta_config" },
       update: {
         msgTemplateGig,
         msgTemplateQuote,
         msgTemplateEventClose,
         msgTemplateFollowUp,
+        msgTemplateExpiring,
+        msgExpiringActive,
+        msgTemplateReminder,
+        msgReminderActive,
+        msgTemplateThanks,
+        msgThanksActive,
       },
       create: {
         id: "vendetta_config",
@@ -232,13 +255,46 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
         msgTemplateQuote,
         msgTemplateEventClose,
         msgTemplateFollowUp,
+        msgTemplateExpiring,
+        msgExpiringActive,
+        msgTemplateReminder,
+        msgReminderActive,
+        msgTemplateThanks,
+        msgThanksActive,
       }
     })
 
+    console.log("✅ Plantillas guardadas con éxito:", result.id)
+    revalidatePath("/admin/notificaciones")
     revalidatePath("/admin/configuracion")
-    return { success: true, message: "Plantillas de mensajes guardadas exitosamente" }
-  } catch (error) {
-    console.error("Error saving message templates:", error)
-    return { success: false, message: "Error al guardar las plantillas" }
+    return { success: true, message: "Plantillas actualizadas correctamente" }
+  } catch (error: any) {
+    console.error("❌ Error en saveMessageTemplatesAction:", error)
+    return { success: false, message: `Error al guardar: ${error.message || "Error desconocido"}` }
+  }
+}
+
+export async function updateSandboxModeAction(isActive: boolean) {
+  const u = await requireAdmin(); 
+  if (u) {
+    console.warn("⚠️ Intento no autorizado de cambiar modo Sandbox")
+    return u
+  }
+
+  try {
+    console.log(`🧪 [CONFIG] Cambiando modo Sandbox a: ${isActive}`)
+    
+    // Bypass total: SQL directo para evitar validación de Prisma Client stale
+    const val = isActive ? 1 : 0
+    await db.$executeRaw`UPDATE GlobalConfig SET isSandbox = ${val} WHERE id = 'vendetta_config'`;
+
+    revalidatePath("/admin/configuracion")
+    return { 
+      success: true, 
+      message: isActive ? "Modo Sandbox Activado 🧪" : "Modo Sandbox Desactivado 🚀" 
+    }
+  } catch (error: any) {
+    console.error("❌ ERROR actualizando modo Sandbox:", error)
+    return { success: false, message: `Error de base de datos: ${error.message || 'Desconocido'}` }
   }
 }

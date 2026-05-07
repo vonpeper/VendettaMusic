@@ -355,18 +355,19 @@ model Contract {
 }
 
 model Notification {
-  id        String   @id @default(uuid())
-  eventId   String?
-  type      String
-  channel   String
-  recipient String?
-  message   String
-  status    String   @default("pending")
-  messageId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  category  String?
-  template  String?
+  id               String   @id @default(uuid())
+  eventId          String?
+  type             String
+  channel          String
+  recipient        String?
+  message          String
+  status           String   @default("pending")
+  messageId        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
+  category         String?
+  template         String?
+  bookingRequestId String?
 }
 
 model BookingRequest {
@@ -419,6 +420,10 @@ model BookingRequest {
   hasRobot              Boolean?       @default(false)
   stripePaymentIntentId String?
   stripeSessionId       String?        @unique
+  clientSignature       String?
+  adminSignature        String?
+  signedAt              DateTime?
+  signedIp              String?
   client                ClientProfile? @relation(fields: [clientId], references: [id])
   event                 Event?         @relation(fields: [eventId], references: [id])
   inboxItems            InboxItem[]
@@ -484,9 +489,6 @@ model GlobalConfig {
   instagramUrl           String?
   tiktokUrl              String?
   whatsappUrl            String?
-  msgTemplateGig         String?
-  msgTemplateQuote       String?
-  msgTemplateEventClose  String?
   zona2Rate              Float?    @default(1500.0)
   zona3Rate              Float?    @default(3000.0)
   bankName               String?
@@ -494,9 +496,20 @@ model GlobalConfig {
   bankClabe              String?
   bankBeneficiary        String?
   evolutionWebhookSecret String?
+  msgTemplateGig         String?
+  msgTemplateQuote       String?
+  msgTemplateEventClose  String?
+  msgTemplateFollowUp    String?
+  msgTemplateExpiring    String?
+  msgExpiringActive      Boolean   @default(true)
+  msgTemplateReminder    String?
+  msgReminderActive      Boolean   @default(true)
+  msgTemplateThanks      String?
+  msgThanksActive        Boolean   @default(true)
+  adminSignature         String?
+  isSandbox              Boolean   @default(false)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
-  msgTemplateFollowUp    String?
 }
 
 model InboxItem {

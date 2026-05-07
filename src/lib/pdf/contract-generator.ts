@@ -46,7 +46,16 @@ const PACKAGE_INCLUSIONS: Record<string, string[]> = {
   ]
 }
 
-export async function generateContractPdf(data: FunnelData, shortId: string, options: { includeLegal?: boolean } = { includeLegal: true }) {
+export async function generateContractPdf(
+  data: FunnelData, 
+  shortId: string, 
+  options: { 
+    includeLegal?: boolean, 
+    clientSignature?: string, 
+    adminSignature?: string,
+    signedAt?: string
+  } = { includeLegal: true }
+) {
   const doc = await PDFDocument.create()
   doc.registerFontkit(fontkit)
 
@@ -286,14 +295,47 @@ export async function generateContractPdf(data: FunnelData, shortId: string, opt
 
     // --- FIRMAS ---
     ctx.y -= 40
-    if (ctx.y < 120) { ctx.page = doc.addPage([pageWidth, pageHeight]); ctx.y = pageHeight - margin }
+    if (ctx.y < 160) { ctx.page = doc.addPage([pageWidth, pageHeight]); ctx.y = pageHeight - margin }
 
     const sw = 160
     const sy = ctx.y - 60
+    
+    // Firma Vendetta (Izquierda)
+    if (options.adminSignature) {
+      try {
+        const adminSigImg = await doc.embedPng(options.adminSignature)
+        const sigDims = adminSigImg.scale(0.35)
+        ctx.page.drawImage(adminSigImg, { 
+          x: margin + (sw - sigDims.width) / 2, 
+          y: sy + 5, 
+          width: sigDims.width, 
+          height: sigDims.height 
+        })
+      } catch (e) { console.error("Error embedding admin signature:", e) }
+    }
     ctx.page.drawLine({ start: { x: margin, y: sy }, end: { x: margin + sw, y: sy }, thickness: 1 })
-    ctx.page.drawText("VENDETTA", { x: margin + 45, y: sy - 15, size: 8, font: montserratBold })
+    ctx.page.drawText("VENDETTA LIVE MUSIC", { x: margin + 35, y: sy - 15, size: 8, font: montserratBold })
+    ctx.page.drawText("REPRESENTANTE LEGAL", { x: margin + 35, y: sy - 25, size: 6, font: montserrat })
+
+    // Firma Cliente (Derecha)
+    if (options.clientSignature) {
+      try {
+        const clientSigImg = await doc.embedPng(options.clientSignature)
+        const sigDims = clientSigImg.scale(0.35)
+        ctx.page.drawImage(clientSigImg, { 
+          x: pageWidth - margin - sw + (sw - sigDims.width) / 2, 
+          y: sy + 5, 
+          width: sigDims.width, 
+          height: sigDims.height 
+        })
+      } catch (e) { console.error("Error embedding client signature:", e) }
+    }
     ctx.page.drawLine({ start: { x: pageWidth - margin - sw, y: sy }, end: { x: pageWidth - margin, y: sy }, thickness: 1 })
-    ctx.page.drawText("EL CLIENTE", { x: pageWidth - margin - sw + 40, y: sy - 15, size: 8, font: montserratBold })
+    ctx.page.drawText(safeValue(data.clientName, "EL CLIENTE").toUpperCase(), { x: pageWidth - margin - sw + 20, y: sy - 15, size: 8, font: montserratBold })
+    if (options.signedAt) {
+      const stamp = `FIRMADO DIGITALMENTE: ${options.signedAt}`
+      ctx.page.drawText(stamp, { x: pageWidth - margin - sw, y: sy - 25, size: 5, font: montserrat, color: rgb(0.5, 0.5, 0.5) })
+    }
   }
 
   doc.getPages().forEach((p, i) => {

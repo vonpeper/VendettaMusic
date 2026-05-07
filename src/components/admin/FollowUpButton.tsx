@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { sendAutoFollowUpAction } from "@/actions/ventas"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 
 interface FollowUpButtonProps {
   id: string
@@ -14,9 +15,10 @@ interface FollowUpButtonProps {
   clientName: string
   currentCount: number
   template?: string
+  variant?: "default" | "dropdown"
 }
 
-export function FollowUpButton({ id, type, phone, clientName, currentCount, template }: FollowUpButtonProps) {
+export function FollowUpButton({ id, type, phone, clientName, currentCount, template, variant = "default" }: FollowUpButtonProps) {
   const [loadingAuto, setLoadingAuto] = useState(false)
   const [loadingManual, setLoadingManual] = useState(false)
   const router = useRouter()
@@ -24,6 +26,13 @@ export function FollowUpButton({ id, type, phone, clientName, currentCount, temp
   const handleAutoFollowUp = async (e: React.MouseEvent) => {
     e.stopPropagation()
     e.preventDefault()
+
+    const cleanPhone = (phone || "").replace(/\D/g, "")
+    if (!cleanPhone || cleanPhone.length < 10 || cleanPhone === "5500000000") {
+      toast.error("Este cliente tiene un número no válido o de prueba (5500000000).")
+      return
+    }
+
     setLoadingAuto(true)
     try {
       const res = await sendAutoFollowUpAction(id, type, phone, clientName)
@@ -43,6 +52,13 @@ export function FollowUpButton({ id, type, phone, clientName, currentCount, temp
   const handleManualFollowUp = async (e: React.MouseEvent) => {
     e.stopPropagation()
     e.preventDefault()
+
+    const cleanPhone = (phone || "").replace(/\D/g, "")
+    if (!cleanPhone || cleanPhone.length < 10 || cleanPhone === "5500000000") {
+      toast.error("Este cliente tiene un número no válido o de prueba (5500000000).")
+      return
+    }
+
     setLoadingManual(true)
     try {
       const res = await fetch("/api/admin/follow-up", {
@@ -75,6 +91,43 @@ export function FollowUpButton({ id, type, phone, clientName, currentCount, temp
     }
   }
 
+  if (variant === "dropdown") {
+    const cleanPhone = (phone || "").replace(/\D/g, "")
+    const hasPhone = cleanPhone && cleanPhone.length >= 10 && cleanPhone !== "5500000000"
+    
+    return (
+      <>
+        <DropdownMenuItem 
+          className={`gap-3 cursor-pointer rounded-lg focus:bg-primary/10 py-2.5 ${!hasPhone ? 'opacity-50 grayscale' : ''}`}
+          onClick={handleAutoFollowUp}
+          disabled={loadingAuto || loadingManual}
+        >
+          {loadingAuto ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <Zap className="w-4 h-4 text-primary" />}
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold">Seguimiento Automático (Zap)</span>
+            <span className="text-[9px] text-muted-foreground">
+              {hasPhone ? "Envía recordatorio rápido via API" : "⚠️ Sin número de contacto registrado"}
+            </span>
+          </div>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem 
+          className={`gap-3 cursor-pointer rounded-lg focus:bg-green-500/10 py-2.5 ${!hasPhone ? 'opacity-50 grayscale' : ''}`}
+          onClick={handleManualFollowUp}
+          disabled={loadingManual || loadingAuto}
+        >
+          {loadingManual ? <Loader2 className="w-4 h-4 animate-spin text-green-600" /> : <MessageCircle className="w-4 h-4 text-green-600" />}
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold">Chat Directo (WhatsApp)</span>
+            <span className="text-[9px] text-muted-foreground">
+              {hasPhone ? `Abrir WhatsApp con mensaje pre-llenado (#${currentCount + 1})` : "⚠️ No se puede abrir el chat"}
+            </span>
+          </div>
+        </DropdownMenuItem>
+      </>
+    )
+  }
+
   return (
     <div className="flex items-center gap-1">
       <Button
@@ -82,13 +135,13 @@ export function FollowUpButton({ id, type, phone, clientName, currentCount, temp
         size="icon"
         onClick={handleAutoFollowUp}
         disabled={loadingAuto || loadingManual}
-        className="h-8 w-8 rounded-full border-blue-500/20 hover:bg-blue-500/10 text-blue-600 relative group shrink-0"
+        className="h-8 w-8 rounded-full border-primary/20 hover:bg-primary/10 text-primary relative group shrink-0"
         title="Enviar seguimiento automático (API)"
       >
         {loadingAuto ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
         ) : (
-          <Zap className="w-3.5 h-3.5 fill-blue-600/10" />
+          <Zap className="w-3.5 h-3.5 fill-primary/10" />
         )}
       </Button>
 

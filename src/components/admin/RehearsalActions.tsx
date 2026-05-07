@@ -137,7 +137,7 @@ function RehearsalForm({ onClose, locations, musicians, songs, initialData }: an
             <legend className="text-[10px] font-bold uppercase tracking-widest text-primary px-2">Repertorio a Ensayar</legend>
             <div className="max-h-40 overflow-y-auto space-y-2 pr-2 mb-4">
               {songs.map((song: any) => (
-                <label key={song.id} className="flex items-center gap-3 p-2 hover:bg-primary/10 rounded-lg cursor-pointer border border-transparent hover:border-border/40">
+                <label key={song.id} className="flex items-center gap-3 p-2 hover:bg-blue-600/5 rounded-lg cursor-pointer border border-transparent hover:border-border/40">
                   <input type="checkbox" name="songIds" value={song.id} defaultChecked={selectedSongIds.includes(song.id)} className="rounded border-border/40 bg-background text-primary focus:ring-primary h-4 w-4" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{song.title}</p>

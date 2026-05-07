@@ -68,7 +68,10 @@ export async function GET(
 
     const isQuote = booking.status === "pendiente"
     const pdfBytes = await generateContractPdf(funnelData, booking.shortId || booking.id, {
-      includeLegal: !isQuote
+      includeLegal: !isQuote,
+      clientSignature: booking.clientSignature || undefined,
+      adminSignature: booking.adminSignature || undefined,
+      signedAt: booking.signedAt ? booking.signedAt.toISOString() : undefined
     })
 
     // Crear la respuesta con el PDF

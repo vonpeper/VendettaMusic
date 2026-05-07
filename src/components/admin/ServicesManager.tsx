@@ -137,7 +137,7 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceI
                        key={opt.name}
                        type="button"
                        onClick={() => setFormData({...formData, icon: opt.name})}
-                       className={`p-2 rounded-md flex items-center justify-center hover:bg-primary/10 transition-colors ${formData.icon === opt.name ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
+                       className={`p-2 rounded-md flex items-center justify-center hover:bg-blue-600/10 transition-colors ${formData.icon === opt.name ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
                      >
                        <opt.icon className="w-4 h-4 text-foreground" />
                      </button>
@@ -208,7 +208,7 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceI
                           key={opt.name}
                           type="button"
                           onClick={() => setServices(prev => prev.map(s => s.id === service.id ? {...s, icon: opt.name} : s))}
-                          className={`p-1.5 rounded flex items-center justify-center hover:bg-primary/10 ${service.icon === opt.name ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
+                          className={`p-1.5 rounded flex items-center justify-center hover:bg-blue-600/10 ${service.icon === opt.name ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
                         >
                           <opt.icon className="w-3 h-3 text-foreground" />
                         </button>
