@@ -33,6 +33,7 @@ services:
     volumes:
       - ./prisma:/app/prisma
       - ./public/assets:/app/public/assets
+      - ./public/images/uploads:/app/public/images/uploads
 
 networks:
   dokploy-network:
