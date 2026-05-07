@@ -15,7 +15,8 @@ import {
   ChevronRight,
   HelpCircle,
   Smartphone,
-  ExternalLink
+  ExternalLink,
+  Truck
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
