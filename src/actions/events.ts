@@ -137,9 +137,9 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
 
     // Notificación automática
     let gigMessage = ""
-    const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true") || (updatedEvent.status === "agendado" && !updatedEvent.notificationSent)
+    const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true") || (updatedEvent?.status === "agendado" && !updatedEvent?.notificationSent)
 
-    if (shouldNotify) {
+    if (shouldNotify && updatedEvent) {
       const gigDetails = {
         clientName: data.customName as string || updatedEvent.client?.user?.name || "Sin Nombre",
         date: dateValue || updatedEvent.date,
