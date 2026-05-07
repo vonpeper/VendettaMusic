@@ -216,7 +216,7 @@ async function confirmBookingFromPayment(bookingId: string) {
     type: "CLIENT_CONFIRMED", 
     bookingId: booking.id 
   }).catch(e =>
-    console.error("notifyClientBookingClosed:", e)
+    console.error("Error sending confirmation notification:", e)
   )
 
   await notifyMusicians(
