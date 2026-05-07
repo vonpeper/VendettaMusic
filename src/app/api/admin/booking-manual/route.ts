@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 import { findOrCreateClient } from "@/lib/clients"
 import { findOrCreateLocation } from "@/lib/locations"
+import { assignDefaultMusicians } from "@/lib/musicians"
 import crypto from "crypto"
 import { auth } from "@/lib/auth"
 
@@ -175,6 +176,9 @@ export async function POST(req: NextRequest) {
         where: { id: bookingId },
         data: { eventId: eventId }
       })
+
+      // Asignar automáticamente los músicos titulares
+      await assignDefaultMusicians(eventId, db)
     }
 
     return NextResponse.json({ success: true, id: bookingId, shortId, status: computedStatus })
