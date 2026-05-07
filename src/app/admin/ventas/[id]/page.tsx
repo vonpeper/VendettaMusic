@@ -20,10 +20,12 @@ import {
   Download,
   Disc,
   Music2,
-  Sparkles
+  Sparkles,
+  Users
 } from "lucide-react"
 import Link from "next/link"
 import { formatDateMX } from "@/lib/utils"
+import { MusicianStatusList } from "@/components/admin/MusicianStatusList"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 
@@ -41,7 +43,13 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
       event: { 
         include: { 
           contracts: true,
-          musicians: true
+          musicians: { 
+            include: { 
+              musician: { 
+                include: { user: true } 
+              } 
+            } 
+          }
         } 
       } 
     }
@@ -372,6 +380,20 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 </div>
                 <p className="text-sm text-foreground/80 italic font-medium leading-relaxed">"{booking.adminNote}"</p>
               </div>
+            )}
+
+            {/* Confirmaciones de Staff */}
+            {booking.event && booking.event.musicians && booking.event.musicians.length > 0 && (
+              <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
+                <CardHeader className="bg-muted/30 border-b border-border/40">
+                  <CardTitle className="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                    <Users className="w-4 h-4 text-primary" /> Estatus del Staff
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <MusicianStatusList musicians={booking.event.musicians} />
+                </CardContent>
+              </Card>
             )}
 
             {/* Gestión del Registro (Editar/Eliminar) */}

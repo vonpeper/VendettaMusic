@@ -161,6 +161,9 @@ export async function notifyWhatsApp({
     case "gig_created":
       template = config?.msgTemplateGig || `🎸 *NUEVO GIG — VENDETTA* 🎸\n\n📅 *Fecha:* {{date}}\n👤 *Cliente:* {{clientName}}\n🎉 *Tipo de evento:* {{ceremony}}\n📍 *Ubicación:* {{location}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n📝 *Notas:* {{notes}}\n\n{{confirmLink}}\n— Administración Vendetta`
       break
+    case "client_followup":
+      template = config?.msgTemplateFollowUp || `Hola {{clientName}}, te escribo de *Vendetta Music* 🎸 para dar seguimiento a tu cotización. ¿Pudiste revisarla? Seguimos a tus órdenes para apartar la fecha.`
+      break
     case "rehearsal_created":
       template = `🥁 *NUEVO ENSAYO — VENDETTA* 🥁\n\n📅 *Fecha y Hora:* {{date}}\n📍 *Lugar:* {{location}}\n\n📝 *Tarea / Notas:* \n{{notes}}\n\n🎶 *Repertorio a ensayar:*\n{{songsList}}\n\n⚠️ Confirma de recibido respondiendo este mensaje.\n— Administración Vendetta`
       break
