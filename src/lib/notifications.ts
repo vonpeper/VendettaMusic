@@ -480,6 +480,7 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
 📅 *Fecha:* {{date}}
 🎉 *Tipo:* {{ceremony}}
 📍 *Lugar:* {{location}}
+🗺️ *Maps:* {{mapsLink}}
 ⏱️ *Montaje:* {{setupTime}}
 🚗 *Llegada músicos:* {{arrivalTime}}
 👔 *Vestimenta:* {{dressCode}}
@@ -495,6 +496,7 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
       .replace(/{{date}}/g, eventDate)
       .replace(/{{ceremony}}/g, ceremonyLabel[gigDetails.ceremonyType || gigDetails.venueType || ""] || gigDetails.ceremonyType || "Show")
       .replace(/{{location}}/g, gigDetails.locationName || gigDetails.address || "Por confirmar")
+      .replace(/{{mapsLink}}/g, gigDetails.mapsLink ? gigDetails.mapsLink : "(no registrado)")
       .replace(/{{setupTime}}/g, gigDetails.setupTime || gigDetails.performanceStart || "Por definir")
       .replace(/{{arrivalTime}}/g, gigDetails.arrivalTime || gigDetails.performanceStart || "Por definir")
       .replace(/{{dressCode}}/g, finalDressCode)
