@@ -33,6 +33,9 @@
   "exclude": [
     "node_modules",
     "prisma/seed.ts",
-    "scripts/**"
+    "scripts/**",
+    "scratch/**",
+    "data/**",
+    "*.exp"
   ]
 }
