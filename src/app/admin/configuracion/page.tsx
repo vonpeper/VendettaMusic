@@ -103,13 +103,13 @@ export default async function AdminConfiguracionPage() {
                 </ConfigFormWrapper>
                 
                 <div className="mt-6 pt-6 border-t border-border/40 space-y-3">
-                  <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
+                  <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl shadow-sm">
                     <div className="space-y-2">
-                      <p className="text-[10px] text-amber-200/70 leading-relaxed italic">
-                        <span className="font-bold text-amber-400">⚠️ NOTA IMPORTANTE:</span> Si el Manager te pide <strong>identificarte</strong> nada más abrirlo, usa las credenciales definidas en tu servidor (por defecto <code className="bg-card px-1 rounded">admin / admin</code>).
+                      <p className="text-[10px] text-amber-100 leading-relaxed italic">
+                        <span className="font-bold text-amber-500 underline decoration-amber-500/30">⚠️ NOTA IMPORTANTE:</span> Si el Manager te pide <strong>identificarte</strong> nada más abrirlo, usa las credenciales definidas en tu servidor (por defecto <code className="bg-zinc-800 text-amber-200 px-1.5 py-0.5 rounded border border-amber-500/20">admin / admin</code>).
                       </p>
-                      <p className="text-[10px] text-amber-200/70 leading-relaxed">
-                        <span className="font-bold text-amber-400">💡 Instrucción de Conexión:</span> En el campo <span className="italic font-bold">Server URL</span> usa la misma URL de arriba y el API Key correspondiente.
+                      <p className="text-[10px] text-amber-100/90 leading-relaxed">
+                        <span className="font-bold text-amber-500">💡 Instrucción de Conexión:</span> En el campo <span className="italic font-bold text-amber-200">Server URL</span> usa la misma URL de arriba y el API Key correspondiente.
                       </p>
                     </div>
                   </div>
