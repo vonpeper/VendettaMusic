@@ -40,11 +40,16 @@ export async function sendTestNotificationAction(target: "admin" | "musician" | 
       message = "🤖 *PRUEBA AUTOMÁTICA — ADMINISTRADOR*\n\nHola, esta es una prueba de conexión con Evolution API desde el panel de Vendetta.\n\n— Sistema de Notificaciones"
     } else if (target === "musician") {
       const musician = await db.musicianProfile.findFirst({
-        where: { OR: [{ whatsapp: { not: null } }, { phone: { not: null } }] },
         include: { user: true }
       })
-      if (!musician) return { success: false, error: "No hay músicos con teléfono registrado" }
-      phone = musician.whatsapp || musician.phone || ""
+      
+      const phoneToUse = musician?.whatsapp || musician?.phone || musician?.user?.phone
+      
+      if (!musician || !phoneToUse) {
+        return { success: false, error: "No hay músicos con teléfono registrado" }
+      }
+      
+      phone = phoneToUse.replace(/\D/g, "")
       recipientName = musician.user.name || "Músico"
       message = `🤖 *PRUEBA AUTOMÁTICA — MÚSICO*\n\nHola ${recipientName}, esta es una prueba técnica de convocatoria.\nNo es necesario responder.\n\n— Administración Vendetta`
     } else if (target === "client") {
