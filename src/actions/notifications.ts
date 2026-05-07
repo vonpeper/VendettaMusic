@@ -149,6 +149,7 @@ export async function resendNotificationAction(bookingId: string, type: "admin" 
         date: booking.event.date,
         ceremonyType: booking.event.ceremonyType || booking.venueType,
         locationName: booking.event.location?.name || booking.address,
+        mapsLink: booking.event.location?.mapsLink || "",
         address: booking.address,
         performanceStart: booking.event.performanceStart,
         performanceEnd: booking.event.performanceEnd,
