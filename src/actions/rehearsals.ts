@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { notifyWhatsApp } from "@/lib/notifications"
+import { dispatchNotification } from "@/lib/notifications"
 import { formatDateMX } from "@/lib/utils"
 
 export async function createRehearsalAction(formData: FormData) {
@@ -126,10 +126,10 @@ ${songsList || "No se especificaron canciones."}
       // Send to all selected phones
       for (const phone of notifyPhones) {
         if (phone) {
-          await notifyWhatsApp({
+          await dispatchNotification({
             to: phone,
-            type: "rehearsal_created",
-            data: {
+            type: "MUSICIAN_REHEARSAL",
+            customData: {
               date:      displayDate,
               location:  locationName,
               notes:     notes || "Sin notas adicionales.",
