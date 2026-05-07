@@ -91,7 +91,7 @@ async function handleImageUpload(file: File): Promise<string | null> {
     
     await writeFile(filepath, buffer)
     // Ensure the file is publicly readable
-    await chmod(filepath, 0o644)
+    await chmod(filepath, 0o777)
     
     return relativePath
   } catch (error) {
