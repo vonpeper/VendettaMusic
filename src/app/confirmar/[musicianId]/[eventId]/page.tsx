@@ -12,8 +12,9 @@ export default async function ConfirmationPage({
   searchParams: Promise<{ success?: string }>;
 }) {
   const { musicianId, eventId } = await params
-  const { success: successParam } = await searchParams
+  const { success: successParam, rejected: rejectedParam } = await searchParams
   const success = successParam === "true"
+  const rejected = rejectedParam === "true"
 
   const [musician, event] = await Promise.all([
     db.musicianProfile.findUnique({
@@ -38,6 +39,7 @@ export default async function ConfirmationPage({
   }
 
   if (success) {
+    // ... (existing success view)
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-card border border-green-500/30 rounded-3xl p-8 text-center shadow-2xl">
@@ -46,7 +48,7 @@ export default async function ConfirmationPage({
           </div>
           <h1 className="text-3xl font-heading font-black text-white mb-2">¡Asistencia Confirmada!</h1>
           <p className="text-gray-400 mb-8">
-            Gracias {musician.user.name}, tu asistencia para el evento con **{event.customName || "Vendetta"}** ha sido registrada correctamente.
+            Gracias {musician.user?.name || "Músico"}, tu asistencia para el evento con **{event.customName || "Vendetta"}** ha sido registrada correctamente.
           </p>
           <div className="space-y-4">
              <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-left">
@@ -66,6 +68,28 @@ export default async function ConfirmationPage({
                     {event.location.name}
                   </div>
                 )}
+             </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (rejected) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-card border border-red-500/30 rounded-3xl p-8 text-center shadow-2xl">
+          <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+             <span className="text-4xl">❌</span>
+          </div>
+          <h1 className="text-3xl font-heading font-black text-white mb-2">Fecha Rechazada</h1>
+          <p className="text-gray-400 mb-8">
+            Entendido, {musician.user?.name || "Músico"}. Hemos notificado al administrador que no estás disponible para esta fecha.
+          </p>
+          <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-left">
+             <div className="text-white font-bold text-sm mb-1">{event.customName || "Evento Vendetta"}</div>
+             <div className="text-gray-400 text-xs">
+                {event.date.toLocaleDateString("es-MX", { day: 'numeric', month: 'long' })}
              </div>
           </div>
         </div>
@@ -106,13 +130,19 @@ export default async function ConfirmationPage({
           )}
         </div>
 
-        <form action={async () => {
-          "use server"
-          await confirmAttendanceAction(musicianId, eventId)
-        }}>
-          {/* We use a client component for the button to show loading state if needed, but for simplicity let's use a server action link or a simple button */}
-          <ConfirmButton musicianId={musicianId} eventId={eventId} />
-        </form>
+        <div className="grid grid-cols-1 gap-4">
+          <Link href={`/confirmar/${musicianId}/${eventId}/go`} className="block">
+             <Button className="w-full h-14 text-lg font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
+                ✅ SÍ, CONFIRMO
+             </Button>
+          </Link>
+          
+          <Link href={`/confirmar/${musicianId}/${eventId}/reject`} className="block">
+             <Button variant="outline" className="w-full h-12 text-sm font-bold rounded-xl border-red-500/30 text-red-400 hover:bg-red-500/10">
+                ❌ NO PUEDO IR
+             </Button>
+          </Link>
+        </div>
         
         <p className="text-[10px] text-muted-foreground text-center mt-6 uppercase tracking-widest">
           Vendetta Operational Dashboard
@@ -122,14 +152,4 @@ export default async function ConfirmationPage({
   )
 }
 
-function ConfirmButton({ musicianId, eventId }: { musicianId: string, eventId: string }) {
-  // To keep it simple in a server component file, I'll create a small client component or just use a standard button
-  // Actually, I should use a client component for the button to handle the redirect after confirmation.
-  return (
-    <Link href={`/confirmar/${musicianId}/${eventId}/go`} className="block">
-       <Button className="w-full h-14 text-lg font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
-          SÍ, CONFIRMO ASISTENCIA
-       </Button>
-    </Link>
-  )
-}
+

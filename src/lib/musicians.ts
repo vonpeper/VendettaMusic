@@ -2,11 +2,12 @@
  * Utilidades de gestión de músicos para eventos.
  */
 
-const STAFF_INSTRUMENTS = ["Ingeniero de Audio", "Técnico", "Staff", "Proveedor"]
+const STAFF_INSTRUMENTS = ["Proveedor"]
 
 /**
  * Asigna automáticamente todos los músicos titulares activos al evento indicado.
- * Se considera "titular" cualquier músico activo que NO sea Ingeniero, Técnico, Staff o Proveedor.
+ * Se considera "titular" cualquier músico activo que NO sea un Proveedor externo.
+ * (Staff e Ingenieros ahora se incluyen por default a petición del usuario).
  * Usa upsert para ser idempotente (seguro llamar múltiples veces).
  */
 export async function assignDefaultMusicians(eventId: string, db: any): Promise<void> {
