@@ -71,7 +71,7 @@ export async function deleteSubstituteAction(id: string) {
   }
 }
 
-import { writeFile } from "fs/promises"
+import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 import { randomUUID } from "crypto"
 
@@ -80,9 +80,14 @@ async function handleImageUpload(file: File): Promise<string | null> {
   try {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
+    
+    // Ensure the upload directory exists
+    const uploadDir = path.join(process.cwd(), "public", "images", "uploads")
+    await mkdir(uploadDir, { recursive: true })
+    
     const uniqueSuffix = randomUUID() + path.extname(file.name)
     const relativePath = `/images/uploads/${uniqueSuffix}`
-    const filepath = path.join(process.cwd(), "public", "images", "uploads", uniqueSuffix)
+    const filepath = path.join(uploadDir, uniqueSuffix)
     
     await writeFile(filepath, buffer)
     return relativePath
