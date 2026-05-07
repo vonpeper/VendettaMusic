@@ -409,7 +409,7 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     phone: [p.whatsapp, p.phone].find((num: any) => num && num.trim() !== ""),
     instrument: p.instrument || "",
     currentStatus: p.eventMusicians[0]?.status || "pending"
-  }).filter((r: any) => r.currentStatus === "pending")
+  })).filter((r: any) => r.currentStatus === "pending")
 
   console.log(`📣 notifyMusicians: Iniciando convocatoria para Evento ${eventId}. Titulares a notificar: ${allRecipients.length}`)
 
