@@ -9,7 +9,7 @@ export default async function ConfirmationPage({
   searchParams,
 }: {
   params: Promise<{ musicianId: string; eventId: string }>;
-  searchParams: Promise<{ success?: string }>;
+  searchParams: Promise<{ success?: string; rejected?: string }>;
 }) {
   const { musicianId, eventId } = await params
   const { success: successParam, rejected: rejectedParam } = await searchParams
