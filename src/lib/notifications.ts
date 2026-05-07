@@ -371,29 +371,44 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     include: { bookingRequest: true }
   })
   
-  // 1. Obtener perfiles de los músicos solicitados
+  // 1. Resolver qué músicos notificar:
+  //    - Si se pasan IDs específicos, usarlos.
+  //    - Si no, tomar todos los asignados al evento en EventMusician.
+  let resolvedIds: string[] = targetMusicianIds || []
+  if (resolvedIds.length === 0) {
+    const assigned = await db.eventMusician.findMany({
+      where: { eventId },
+      select: { musicianId: true }
+    })
+    resolvedIds = assigned.map((em: any) => em.musicianId)
+  }
+
+  if (resolvedIds.length === 0) {
+    console.warn(`⚠️ notifyMusicians: Evento ${eventId} no tiene músicos asignados ni IDs específicos. Abortando.`)
+    return
+  }
+
   const profiles = await db.musicianProfile.findMany({
     where: {
-      id: { in: targetMusicianIds },
+      id: { in: resolvedIds },
       OR: [{ phone: { not: null } }, { whatsapp: { not: null } }],
       status: "active"
     },
     include: { 
       user: true,
-      events: {
+      eventMusicians: {
         where: { eventId: eventId }
       }
     }
   })
 
   // 2. Filtrar: Solo enviar a los que están "pending" (no han respondido o son nuevos)
-  //    Si el admin los seleccionó en el UI, queremos convocarlos.
   const allRecipients = profiles.map((p: any) => ({ 
     id: p.id, 
     name: p.user?.name || "Músico", 
     phone: [p.whatsapp, p.phone].find((num: any) => num && num.trim() !== ""),
     instrument: p.instrument || "",
-    currentStatus: p.events[0]?.status || "pending"
+    currentStatus: p.eventMusicians[0]?.status || "pending"
   })).filter((r: any) => r.currentStatus === "pending")
 
   console.log(`📣 notifyMusicians: Iniciando convocatoria para Evento ${eventId}. Titulares a notificar: ${allRecipients.length}`)
