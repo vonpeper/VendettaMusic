@@ -139,7 +139,8 @@ export async function createMusicianProfileAction(formData: FormData) {
         phone: phone || null,
         whatsapp: whatsapp || null,
         notes: notes || null,
-        rating
+        rating,
+        isTitular: formData.get("isTitular") === "true"
       }
     })
 
@@ -180,6 +181,7 @@ export async function updateMusicianProfileAction(id: string, formData: FormData
         status: data.status as string || "active",
         availability: data.availability as string || "Disponible",
         rating: data.rating ? parseInt(data.rating as string, 10) : 3,
+        isTitular: data.isTitular === "true",
         user: {
           update: {
             name: name || profile.user.name,

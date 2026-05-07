@@ -50,6 +50,7 @@ model MusicianProfile {
   role               String?
   whatsapp           String?
   status             String              @default("active")
+  isTitular          Boolean             @default(false)
   availability       String              @default("Disponible")
   rating             Int                 @default(3)
   createdAt          DateTime            @default(now())

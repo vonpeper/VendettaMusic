@@ -141,6 +141,23 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
       }
     }
 
+    // 3. Gestionar Músicos (Si se proporcionan IDs)
+    const musicianIds = formData.getAll("musicianIds") as string[]
+    if (musicianIds.length > 0) {
+      // Borrar anteriores para reemplazarlos
+      await db.eventMusician.deleteMany({ where: { eventId: id } })
+      for (const mId of musicianIds) {
+        await db.eventMusician.create({
+          data: {
+            id: `${id}-${mId}`,
+            eventId: id,
+            musicianId: mId,
+            status: "pending"
+          }
+        })
+      }
+    }
+
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/eventualidades")
     revalidatePath("/")
@@ -349,8 +366,23 @@ export async function createEventAction(_prev: any, formData: FormData) {
       }
     })
 
-    // Asignar automáticamente los músicos titulares al evento
-    await assignDefaultMusicians(event.id, db)
+    // Gestionar Músicos (Si se proporcionan IDs)
+    const musicianIds = formData.getAll("musicianIds") as string[]
+    if (musicianIds.length > 0) {
+      for (const mId of musicianIds) {
+        await db.eventMusician.create({
+          data: {
+            id: `${event.id}-${mId}`,
+            eventId: event.id,
+            musicianId: mId,
+            status: "pending"
+          }
+        })
+      }
+    } else {
+      // Asignar automáticamente los músicos titulares al evento si no se pasaron IDs
+      await assignDefaultMusicians(event.id, db)
+    }
 
     // Sincronizar con Quote (Legacy) si existe
     if (event.quoteId) {
@@ -563,5 +595,40 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
   } catch (error) {
     console.error("Error updating event status:", error)
     return { success: false, error: "No se pudo actualizar el estatus" }
+  }
+}
+export async function notifySingleMusicianAction(eventId: string, musicianId: string) {
+  try {
+    const event = await db.event.findUnique({
+      where: { id: eventId },
+      include: { location: true, package: true, client: { include: { user: true } } }
+    })
+
+    if (!event) return { success: false, error: "Evento no encontrado" }
+
+    const gigDetails = {
+      clientName: event.customName || event.client?.user?.name || "Sin Nombre",
+      date: event.date,
+      ceremonyType: event.ceremonyType,
+      guestCount: event.guestCount || 0,
+      locationName: event.location?.name || "Por definir",
+      mapsLink: event.location?.mapsLink || event.mapsLink || "",
+      locationAddress: event.location?.address || "",
+      performanceStart: event.performanceStart,
+      performanceEnd: event.performanceEnd,
+      arrivalTime: event.arrivalTime,
+      setupTime: event.setupTime,
+      dressCode: event.dressCode,
+      musicianNotes: event.musicianNotes,
+      isPublic: event.isPublic,
+      packageName: event.package?.name || "Paquete Personalizado"
+    }
+
+    await notifyMusicians(eventId, gigDetails, db, [musicianId])
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error notifying musician:", error)
+    return { success: false, error: "Error al enviar notificación" }
   }
 }

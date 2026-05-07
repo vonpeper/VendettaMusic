@@ -6,11 +6,12 @@ import { notifyEventAction, deleteEventAction } from "@/actions/events"
 import { Button } from "@/components/ui/button"
 import { Bell, BellOff, Edit2, Trash2, AlertCircle, Plus } from "lucide-react"
 
-export function NuevoEventoButton({ clients, locations, packages, staff, variant = "big" }: {
+export function NuevoEventoButton({ clients, locations, packages, staff, allMusicians = [], variant = "big" }: {
   clients: { id: string; name: string }[]
   locations: { id: string; name: string }[]
   packages: { id: string; name: string; baseCostPerHour: number; minDuration: number }[]
   staff: { id: string; name: string }[]
+  allMusicians?: any[]
   variant?: "big" | "compact"
 }) {
   const [showForm, setShowForm] = useState(false)
@@ -24,6 +25,7 @@ export function NuevoEventoButton({ clients, locations, packages, staff, variant
           locations={locations}
           packages={packages}
           staff={staff}
+          allMusicians={allMusicians}
         />
       )}
       {variant === "big" ? (
@@ -50,12 +52,14 @@ export function NuevoEventoButton({ clients, locations, packages, staff, variant
   )
 }
 
-export function EditEventoButton({ event, clients, locations, packages, staff, showText }: {
-  event: any
+export function EditEventoButton({ eventId, initialData, clients, locations, packages, staff, allMusicians = [], showText }: {
+  eventId: string
+  initialData: any
   clients: { id: string; name: string }[]
   locations: { id: string; name: string }[]
   packages: { id: string; name: string; baseCostPerHour: number; minDuration: number }[]
   staff: { id: string; name: string }[]
+  allMusicians?: any[]
   showText?: boolean
 }) {
   const [showForm, setShowForm] = useState(false)
@@ -69,7 +73,8 @@ export function EditEventoButton({ event, clients, locations, packages, staff, s
           locations={locations}
           packages={packages}
           staff={staff}
-          initialData={event}
+          allMusicians={allMusicians}
+          initialData={initialData}
         />
       )}
       <Button 
