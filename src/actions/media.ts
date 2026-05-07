@@ -94,3 +94,23 @@ export async function saveVideoLink(section: string, url: string) {
     return { success: false, error: error.message }
   }
 }
+
+export async function uploadMusicianPhoto(formData: FormData) {
+  try {
+    const file = formData.get("file") as File
+    if (!file) return { success: false, error: "Archivo no encontrado" }
+
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+    const uniqueSuffix = `musician-${randomUUID()}${path.extname(file.name)}`
+    const filepath = path.join(process.cwd(), "public", "images", "musicians", uniqueSuffix)
+
+    await writeFile(filepath, buffer)
+    const url = `/images/musicians/${uniqueSuffix}`
+
+    return { success: true, url }
+  } catch (error: any) {
+    console.error("Musician upload error:", error)
+    return { success: false, error: error.message }
+  }
+}

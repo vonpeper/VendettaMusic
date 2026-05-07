@@ -30,7 +30,7 @@ export function MusiciansSection({ musicians }: { musicians: Musician[] }) {
             </button>
             <div className="flex flex-col md:flex-row">
               <div className="md:w-1/2 h-64 md:h-auto">
-                <img src={activeMuso.img} alt={activeMuso.name} className="w-full h-full object-cover" />
+                <img src={activeMuso.img} alt={activeMuso.name} className="w-full h-full object-cover object-top" />
               </div>
               <div className="p-8 md:w-1/2">
                 <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-4">
