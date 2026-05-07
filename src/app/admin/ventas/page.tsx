@@ -173,10 +173,10 @@ export default async function AdminVentasPage() {
       <Tabs defaultValue="bookings" className="space-y-6">
         <TabsList className="bg-card border border-border/40 p-1 h-12 rounded-xl">
           <TabsTrigger value="bookings" className="gap-2 px-6 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-800 data-[state=active]:text-white data-[state=active]:shadow-lg">
-            <ShoppingBag className="w-4 h-4" /> Bookings (Web)
+            <ShoppingBag className="w-4 h-4" /> Pedidos Web
           </TabsTrigger>
           <TabsTrigger value="cotizaciones" className="gap-2 px-6 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-800 data-[state=active]:text-white data-[state=active]:shadow-lg">
-            <FileText className="w-4 h-4" /> Cotizaciones (Manual)
+            <FileText className="w-4 h-4" /> Ventas Manuales
           </TabsTrigger>
           <TabsTrigger value="contratos" className="gap-2 px-6 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
             <CheckCircle2 className="w-4 h-4" /> Contratos
@@ -194,7 +194,7 @@ export default async function AdminVentasPage() {
           <div className="space-y-6">
             <div className="bg-blue-600/10 border border-blue-600/20 p-4 rounded-xl flex items-center gap-4">
               <AlertCircle className="text-blue-600 w-5 h-5" />
-              <p className="text-sm text-muted-foreground">Aquí se listan las cotizaciones creadas manualmente por el equipo de Vendetta y registros legacy (Quotes).</p>
+              <p className="text-sm text-muted-foreground">Aquí se listan las ventas creadas manualmente (como Alquimia 73) y registros antiguos. Usa los filtros de columna para buscar rápido.</p>
             </div>
             <VentasTableClient items={manualQuotes} followUpTemplate={config?.msgTemplateFollowUp} />
             {quotes.length > 0 && (

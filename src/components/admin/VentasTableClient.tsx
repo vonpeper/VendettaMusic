@@ -81,9 +81,13 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
   const [loading, setLoading] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [search, setSearch] = useState("")
+  const [columnFilters, setColumnFilters] = useState({
+    cliente: "",
+    id: ""
+  })
   const [statusFilter, setStatusFilter] = useState("all")
   const [sortKey, setSortKey] = useState<SortKey>("fecha")
-  const [sortDir, setSortDir] = useState<SortDir>("asc")
+  const [sortDir, setSortDir] = useState<SortDir>("desc")
   const router = useRouter()
 
   const handleSort = (key: SortKey) => {
@@ -99,11 +103,19 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
   const filtered = items
     .filter(b => {
       const name = (b.event?.customName || b.clientName).toLowerCase()
-      const id = (b.shortId || "").toLowerCase()
+      const sid = (b.shortId || "").toLowerCase()
       const q = search.toLowerCase()
-      const matchSearch = !q || name.includes(q) || id.includes(q)
+      
+      // Global search
+      const matchGlobal = !q || name.includes(q) || sid.includes(q)
+      
+      // Column filters
+      const matchCliente = !columnFilters.cliente || name.includes(columnFilters.cliente.toLowerCase())
+      const matchId = !columnFilters.id || sid.includes(columnFilters.id.toLowerCase())
+      
       const matchStatus = statusFilter === "all" || b.status === statusFilter
-      return matchSearch && matchStatus
+      
+      return matchGlobal && matchCliente && matchId && matchStatus
     })
     .sort((a, b) => {
       let cmp = 0
@@ -243,9 +255,27 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                 </button>
               </th>
               <th className="px-6 py-4">
-                <button onClick={() => handleSort("cliente")} className="flex items-center text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-400 transition-colors">
-                  Cliente / ID <SortIcon col="cliente" />
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button onClick={() => handleSort("cliente")} className="flex items-center text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-400 transition-colors">
+                    Cliente / ID <SortIcon col="cliente" />
+                  </button>
+                  <div className="flex gap-1">
+                    <input 
+                      type="text" 
+                      placeholder="Filtro cliente..."
+                      value={columnFilters.cliente}
+                      onChange={e => setColumnFilters(prev => ({ ...prev, cliente: e.target.value }))}
+                      className="w-full bg-black/20 border border-white/5 rounded px-2 py-1 text-[10px] text-foreground focus:outline-none focus:border-blue-500/30"
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="ID..."
+                      value={columnFilters.id}
+                      onChange={e => setColumnFilters(prev => ({ ...prev, id: e.target.value }))}
+                      className="w-16 bg-black/20 border border-white/5 rounded px-2 py-1 text-[10px] text-foreground focus:outline-none focus:border-blue-500/30"
+                    />
+                  </div>
+                </div>
               </th>
               <th className="px-6 py-4">
                 <button onClick={() => handleSort("fecha")} className="flex items-center text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-400 transition-colors">
