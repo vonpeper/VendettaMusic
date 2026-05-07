@@ -238,7 +238,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                   disabled={section.placeholder}
                 >
                   <div className="flex items-center gap-2">
-                    <SectionIcon className={cn("w-3.5 h-3.5", isExpanded ? "text-primary" : "text-primary/60 group-hover:text-primary")} />
+                    <SectionIcon className={cn("w-3.5 h-3.5", isExpanded ? "text-[#E91E63]" : "text-[#E91E63]/70 group-hover:text-[#E91E63]")} />
                     {section.title}
                   </div>
                   {!section.placeholder && (
@@ -272,10 +272,10 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                                   : "text-white/70 hover:text-white hover:bg-white/5"
                               )}
                             >
-                              <Icon className={cn(
-                                "w-5 h-5 shrink-0 transition-transform",
-                                isActive ? "text-white" : "text-white/50 group-hover:text-white/90"
-                              )} />
+                                <Icon className={cn(
+                                  "w-5 h-5 shrink-0 transition-transform",
+                                  isActive ? "text-white" : "text-[#E91E63] group-hover:text-[#E91E63]/90"
+                                )} />
                               <span className="flex-1 truncate">{item.name}</span>
                               {item.badgeCount ? (
                                 <span className="px-1.5 py-0.5 rounded-full bg-white text-[10px] font-bold text-primary">
