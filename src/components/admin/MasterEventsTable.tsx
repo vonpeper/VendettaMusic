@@ -308,7 +308,8 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                           alreadySent={evt.notificationSent}
                         />
                         <EditEventoButton
-                          event={evt}
+                          eventId={evt.id}
+                          initialData={evt}
                           clients={clients}
                           locations={locations}
                           packages={packages}
