@@ -86,7 +86,7 @@ async function handleImageUpload(file: File): Promise<string | null> {
     await mkdir(uploadDir, { recursive: true })
     
     const uniqueSuffix = randomUUID() + path.extname(file.name)
-    const relativePath = `/images/uploads/${uniqueSuffix}`
+    const relativePath = `/api/uploads/${uniqueSuffix}`
     const filepath = path.join(uploadDir, uniqueSuffix)
     
     console.log(`[UPLOAD] Saving image to: ${filepath}`)
