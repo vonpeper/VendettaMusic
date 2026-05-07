@@ -163,8 +163,6 @@ export async function markContractAsSignedAction(bookingId: string) {
 
 export async function sendAutoFollowUpAction(id: string, type: "booking" | "quote", phone: string, clientName: string) {
   try {
-    const { notifyWhatsApp } = await import("@/lib/notifications")
-    
     // 1. Send WhatsApp Push
     await dispatchNotification({
       type: "CLIENT_FOLLOWUP",
