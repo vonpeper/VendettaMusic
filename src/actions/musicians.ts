@@ -89,6 +89,9 @@ async function handleImageUpload(file: File): Promise<string | null> {
     const relativePath = `/images/uploads/${uniqueSuffix}`
     const filepath = path.join(uploadDir, uniqueSuffix)
     
+    console.log(`[UPLOAD] Saving image to: ${filepath}`)
+    console.log(`[UPLOAD] Relative path for DB: ${relativePath}`)
+    
     await writeFile(filepath, buffer)
     // Ensure the file is publicly readable
     await chmod(filepath, 0o777)
