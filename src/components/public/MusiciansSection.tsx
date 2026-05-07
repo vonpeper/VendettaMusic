@@ -20,8 +20,14 @@ export function MusiciansSection({ musicians }: { musicians: Musician[] }) {
   return (
     <>
       {activeMuso && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-          <div className="relative w-full max-w-2xl bg-card rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md cursor-pointer"
+          onClick={() => setActiveMuso(null)}
+        >
+          <div 
+            className="relative w-full max-w-2xl bg-card rounded-[2rem] overflow-hidden shadow-2xl border border-white/10 cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button 
               onClick={() => setActiveMuso(null)}
               className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-primary transition-colors"
