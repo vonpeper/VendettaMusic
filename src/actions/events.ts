@@ -160,7 +160,8 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
 
     return { 
       success: true, 
-      message: "Evento actualizado correctamente"
+      message: "Evento actualizado correctamente",
+      gigMessage: shouldNotify ? "Mensaje de convocatoria enviado por WhatsApp." : undefined
     }
   } catch (error: any) {
     console.error("Error updating event:", error)
@@ -369,7 +370,8 @@ export async function createEventAction(_prev: any, formData: FormData) {
     return { 
       success: true, 
       message: "Evento creado exitosamente", 
-      eventId: event.id
+      eventId: event.id,
+      gigMessage: shouldNotify ? "Mensaje de convocatoria enviado por WhatsApp." : undefined
     }
   } catch (error: any) {
     console.error("Error creating event:", error)

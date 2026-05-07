@@ -60,7 +60,7 @@ function SelectField({ id, name, label, options, defaultValue, required }: {
 
 export function EventForm({ onClose, clients, locations, packages, staff = [], initialData }: EventFormProps) {
   const action = initialData ? updateEventAction.bind(null, initialData.id) : createEventAction
-  const [state, formAction, isPending] = useActionState(action, null)
+  const [state, formAction, isPending] = useActionState(action, null) as [any, any, boolean]
   const [sendNotif, setSendNotif] = useState(false)
   const [copied, setCopied] = useState(false)
 
