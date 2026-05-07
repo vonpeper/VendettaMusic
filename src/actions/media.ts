@@ -103,10 +103,10 @@ export async function uploadMusicianPhoto(formData: FormData) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
     const uniqueSuffix = `musician-${randomUUID()}${path.extname(file.name)}`
-    const filepath = path.join(process.cwd(), "public", "images", "musicians", uniqueSuffix)
+    const filepath = path.join(process.cwd(), "public", "images", "uploads", uniqueSuffix)
 
     await writeFile(filepath, buffer)
-    const url = `/images/musicians/${uniqueSuffix}`
+    const url = `/images/uploads/${uniqueSuffix}`
 
     return { success: true, url }
   } catch (error: any) {
