@@ -10,7 +10,9 @@ import { Search, Mic, Headphones, Settings } from "lucide-react"
 
 export function BandaClientView({ initialMusicians }: { initialMusicians: any[] }) {
   const [search, setSearch] = useState("")
-  const [selectedMusician, setSelectedMusician] = useState<any | null>(null)
+  const [selectedMusicianId, setSelectedMusicianId] = useState<string | null>(null)
+  
+  const selectedMusician = initialMusicians.find(m => m.id === selectedMusicianId)
   
   const filteredMusicians = initialMusicians.filter(m => 
     m.user.name.toLowerCase().includes(search.toLowerCase()) || 
