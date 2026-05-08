@@ -6,9 +6,13 @@ export default function ClienteLayout({ children }: { children: React.ReactNode 
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
       <aside className="w-64 border-r border-border/40 bg-card hidden md:flex flex-col">
-        <div className="p-6 border-b border-border/40 flex flex-col justify-center gap-1">
-          <span className="font-heading font-black text-xl tracking-wider uppercase text-white">Vendetta <span className="text-primary italic">Portal</span></span>
-          <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Panel de Cliente</span>
+        <div className="p-6 border-b border-border/40 flex flex-col justify-center items-center gap-4">
+          <img 
+            src="/images/logo-vendetta-horizontal.png" 
+            alt="Vendetta Music" 
+            className="h-10 w-auto object-contain"
+          />
+          <span className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black text-center">Panel de Cliente</span>
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <Link href="/cliente" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-primary/10 hover:text-primary transition-colors">
@@ -36,8 +40,12 @@ export default function ClienteLayout({ children }: { children: React.ReactNode 
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        <div className="h-16 border-b border-border/40 flex items-center px-6 bg-card/50 md:hidden">
-            <span className="font-heading font-bold text-primary">PORTAL CLIENTE</span>
+        <div className="h-16 border-b border-border/40 flex items-center justify-center px-6 bg-card/50 md:hidden">
+          <img 
+            src="/images/logo-vendetta-horizontal.png" 
+            alt="Vendetta Music" 
+            className="h-6 w-auto object-contain opacity-80"
+          />
         </div>
         {children}
       </main>
