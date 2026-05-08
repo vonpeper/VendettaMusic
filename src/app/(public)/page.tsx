@@ -101,7 +101,7 @@ export default async function HomePage() {
           <div className="inline-block relative mb-4 z-30 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-black text-[10px] uppercase tracking-[0.3em] backdrop-blur-md -translate-y-2">
             ✦ Agendando fechas 2026
           </div>
-          <h1 className="animated-title font-heading font-black text-4xl sm:text-5xl md:text-8xl lg:text-9xl tracking-tighter mb-6 uppercase drop-shadow-2xl leading-[0.85] relative">
+          <h1 className="animated-title font-heading font-black text-4xl sm:text-5xl md:text-8xl lg:text-9xl tracking-tighter mb-6 uppercase drop-shadow-2xl leading-none relative py-2">
             MÚSICA en Vivo<br />Inolvidable
           </h1>
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
