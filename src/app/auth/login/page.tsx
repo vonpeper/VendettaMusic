@@ -12,13 +12,6 @@ export default function LoginPage() {
 
   return (
     <div className="bg-card/80 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl">
-      <div className="flex justify-center mb-8">
-        <img 
-          src="/images/logo-vendetta-horizontal.png" 
-          alt="Vendetta Music" 
-          className="h-12 w-auto object-contain"
-        />
-      </div>
       <h2 className="text-2xl font-bold font-heading text-white mb-2 text-center">Bienvenido de vuelta</h2>
       <p className="text-muted-foreground text-center mb-8 text-sm">Ingresa tus credenciales para acceder a tu panel.</p>
       
