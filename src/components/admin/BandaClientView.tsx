@@ -68,7 +68,7 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
                 <MusicianCard 
                   key={musician.id} 
                   musician={musician} 
-                  onViewDetails={() => setSelectedMusician(musician)} 
+                  onViewDetails={() => setSelectedMusicianId(musician.id)} 
                 />
               ))}
             </div>
@@ -89,7 +89,7 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
                   <MusicianCard 
                     key={musician.id} 
                     musician={musician} 
-                    onViewDetails={() => setSelectedMusician(musician)} 
+                    onViewDetails={() => setSelectedMusicianId(musician.id)} 
                   />
                 ))}
               </div>
@@ -111,7 +111,7 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
                   <MusicianCard 
                     key={musician.id} 
                     musician={musician} 
-                    onViewDetails={() => setSelectedMusician(musician)} 
+                    onViewDetails={() => setSelectedMusicianId(musician.id)} 
                   />
                 ))}
               </div>
@@ -127,17 +127,20 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
 
         <TabsContent value="matriz" className="mt-0">
           <div className="bg-card border border-border/40 rounded-xl overflow-hidden">
-            <CoverageMatrix musicians={filteredMusicians} onViewDetails={setSelectedMusician} />
+            <CoverageMatrix musicians={filteredMusicians} onViewDetails={(m: any) => setSelectedMusicianId(m.id)} />
           </div>
         </TabsContent>
       </Tabs>
 
       {/* Sheet for details */}
-      <MusicianDetailsSheet 
-        musician={selectedMusician} 
-        open={!!selectedMusician} 
-        onOpenChange={(isOpen) => !isOpen && setSelectedMusician(null)} 
-      />
+      {selectedMusician && (
+        <MusicianDetailsSheet 
+          key={selectedMusician.id}
+          musician={selectedMusician} 
+          open={!!selectedMusicianId} 
+          onOpenChange={(isOpen) => !isOpen && setSelectedMusicianId(null)} 
+        />
+      )}
     </div>
   )
 }
