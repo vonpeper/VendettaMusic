@@ -7,10 +7,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
       
       <div className="container relative z-10 mx-auto px-4 py-8 flex flex-col items-center">
-        <div className="mb-8 p-4 bg-primary/20 backdrop-blur-md rounded-full border border-primary/30">
-          <Music className="w-8 h-8 text-primary" />
+        <div className="mb-12">
+          <img 
+            src="/images/logo-vendetta-horizontal.png" 
+            alt="Vendetta Music" 
+            className="h-16 w-auto object-contain"
+          />
         </div>
-        <h1 className="font-heading font-black text-3xl uppercase tracking-widest text-white mb-8">Vendetta <span className="text-primary italic">Portal</span></h1>
         
         <div className="w-full max-w-md">
           {children}
