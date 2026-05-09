@@ -50,6 +50,7 @@ export interface FunnelData {
   clientName:  string
   clientPhone: string
   clientEmail: string
+  originalPrice?: number
   // Promo
   promoCode?: string
   discountAmount?: number
