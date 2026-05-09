@@ -190,8 +190,19 @@ export async function generateContractPdf(
 
   const finalDesc = `Show Vendetta Rock — ${data.packageName}\n${showDetails.join("\n")}\n${inclusions.map(i => "• " + i).join("\n")}`
   
-  const tableRows = [{ no: "1", desc: finalDesc, pu: MXN(data.packagePrice) }]
-  if (data.viaticosAmount > 0) tableRows.push({ no: String(tableRows.length + 1), desc: "Viáticos y gastos logísticos", pu: MXN(data.viaticosAmount) })
+  const hasDiscount = data.discountAmount && data.discountAmount > 0 && data.originalPrice && data.originalPrice > data.packagePrice
+  const displayPrice = hasDiscount ? data.originalPrice : data.packagePrice
+  const tableRows = [{ no: "1", desc: finalDesc, pu: MXN(displayPrice as number) }]
+  
+  if (hasDiscount) {
+    tableRows.push({ 
+      no: String(tableRows.length + 1), 
+      desc: "Descuento especial aplicado", 
+      pu: `-${MXN(data.discountAmount as number)}` 
+    })
+  }
+
+  if (data.viaticosAmount > 0) tableRows.push({ no: String(tableRows.length + 1), desc: data.viaticosLabel || "Viáticos y gastos logísticos", pu: MXN(data.viaticosAmount) })
   if (extraSoundcheck > 0) tableRows.push({ no: String(tableRows.length + 1), desc: "Disponibilidad Extendida (Soundcheck)", pu: MXN(extraSoundcheck) })
 
   drawDetailedTable(ctx, tableRows)

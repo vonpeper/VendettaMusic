@@ -5,8 +5,8 @@ export function SchemaMarkup() {
     "@context": "https://schema.org",
     "@type": "MusicGroup",
     "name": "Vendetta Live Music",
-    "url": "https://vendettalive.com",
-    "logo": "https://vendettalive.com/logo.png",
+    "url": "https://vendetta.mx",
+    "logo": "https://vendetta.mx/logo.png",
     "sameAs": [
       "https://www.facebook.com/vendettamx",
       "https://www.instagram.com/vendettamx_",
@@ -20,9 +20,9 @@ export function SchemaMarkup() {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": "Vendetta Live Music",
-    "image": "https://vendettalive.com/images/hero.jpg",
-    "@id": "https://vendettalive.com",
-    "url": "https://vendettalive.com",
+    "image": "https://vendetta.mx/images/hero.jpg",
+    "@id": "https://vendetta.mx",
+    "url": "https://vendetta.mx",
     "telephone": "+527222417045",
     "priceRange": "$$$",
     "address": {

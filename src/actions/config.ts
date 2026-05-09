@@ -107,6 +107,7 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
     const instance = formData.get("instance") as string
     const adminWhatsapp = (formData.get("adminWhatsapp") as string || "").replace(/\D/g, "") || null
     const isSandbox = formData.get("isSandbox") === "on"
+    const logInboundActive = formData.get("logInboundActive") === "on"
 
     const existing = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
@@ -125,6 +126,7 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
         evolutionInstance: instance,
         adminWhatsapp,
         isSandbox,
+        logInboundActive,
       },
       create: {
         id: "vendetta_config",
@@ -133,6 +135,7 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
         evolutionInstance: instance,
         adminWhatsapp,
         isSandbox,
+        logInboundActive,
       }
     })
 
@@ -295,6 +298,25 @@ export async function updateSandboxModeAction(isActive: boolean) {
     }
   } catch (error: any) {
     console.error("❌ ERROR actualizando modo Sandbox:", error)
+    return { success: false, message: `Error de base de datos: ${error.message || 'Desconocido'}` }
+  }
+}
+
+export async function updateLogInboundActiveAction(isActive: boolean) {
+  const u = await requireAdmin(); 
+  if (u) return u
+
+  try {
+    const val = isActive ? 1 : 0
+    await db.$executeRaw`UPDATE GlobalConfig SET logInboundActive = ${val} WHERE id = 'vendetta_config'`;
+
+    revalidatePath("/admin/configuracion")
+    return { 
+      success: true, 
+      message: isActive ? "Registro de mensajes activado ✅" : "Registro de mensajes desactivado 🛑" 
+    }
+  } catch (error: any) {
+    console.error("❌ ERROR actualizando logInboundActive:", error)
     return { success: false, message: `Error de base de datos: ${error.message || 'Desconocido'}` }
   }
 }

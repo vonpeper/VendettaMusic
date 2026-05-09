@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useTransition } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { 
@@ -12,10 +14,12 @@ import { Camera, Star, Phone, MessageCircle, Trash2, Save, Plus, Trash } from "l
 export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musician: any, open: boolean, onOpenChange: (o: boolean) => void }) {
   const [isPending, startTransition] = useTransition()
   const [preview, setPreview] = useState<string | null>(null)
+  const [isTitular, setIsTitular] = useState(musician.isTitular)
   
   if (!musician) return null
 
   const handleMusicianUpdate = async (formData: FormData) => {
+    formData.set("isTitular", isTitular ? "true" : "false")
     startTransition(async () => {
       const res = await updateMusicianProfileAction(musician.id, formData)
       if (res.success) {
@@ -159,16 +163,19 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
                 <textarea name="notes" defaultValue={musician.notes} rows={3} className="w-full bg-card border border-border/40 rounded-md p-2 text-sm text-foreground" />
               </div>
 
-              <label className="flex items-center gap-3 cursor-pointer p-3 bg-primary/5 rounded-xl border border-primary/10">
-                <input type="checkbox" name="isTitular" value="true" className="sr-only peer" defaultChecked={musician.isTitular} />
-                <div className="relative w-10 h-5 bg-primary/10 rounded-full peer-checked:bg-primary transition-colors">
-                  <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+              <div 
+                className="flex items-center gap-4 p-4 bg-primary/5 rounded-xl border border-primary/10 cursor-pointer transition-all hover:bg-primary/10"
+                onClick={() => setIsTitular(!isTitular)}
+              >
+                <div className={`relative w-12 h-6 rounded-full transition-colors flex items-center px-1 ${isTitular ? 'bg-primary' : 'bg-muted-foreground/30'}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${isTitular ? 'translate-x-6' : 'translate-x-0'}`}></div>
                 </div>
-                <div>
+                <div className="flex-1">
                   <span className="text-sm font-bold text-foreground text-primary">Músico Titular / Staff Prioritario</span>
                   <p className="text-[10px] text-muted-foreground">Si está marcado, recibirá notificaciones automáticas de convocatoria para cada show.</p>
                 </div>
-              </label>
+                <input type="hidden" name="isTitular" value={isTitular ? "true" : "false"} />
+              </div>
 
               <div className="flex justify-between items-center pt-4 border-t border-border/40">
                 <button 

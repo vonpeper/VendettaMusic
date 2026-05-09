@@ -8,7 +8,7 @@ import {
   Users, Calendar, Settings, LogOut, FileText, Music, 
   LayoutDashboard, TrendingUp, ShoppingBag, Image as LucideImage, 
   Truck, Mic, Shield, Bell, Inbox, ChevronDown, ChevronRight,
-  BarChart3, Wallet, XCircle, BookOpen
+  BarChart3, Wallet, XCircle, BookOpen, History
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
@@ -42,7 +42,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
   const isAdmin = user.role === "ADMIN"
 
   const [mounted, setMounted] = useState(false)
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ operacion: true })
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ operacion: true, comms: true })
 
   useEffect(() => {
     setMounted(true)
@@ -79,6 +79,15 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
       ]
     },
     {
+      title: "MENSAJERÍA",
+      id: "comms",
+      icon: Bell,
+      items: [
+        { name: "Bandeja de Entrada", href: "/admin/inbox", icon: Inbox },
+        { name: "Log de mensajes", href: "/admin/inbox?tab=log", icon: History },
+      ]
+    },
+    {
       title: "CLIENTES",
       id: "crm",
       icon: Users,
@@ -86,14 +95,6 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
         { name: "Clientes", href: "/admin/clientes", icon: Users },
         { name: "Centro de Ventas", href: "/admin/ventas", icon: ShoppingBag },
         { name: "Testimoniales", href: "/admin/testimoniales", icon: FileText, adminOnly: true },
-      ]
-    },
-    {
-      title: "COMUNICACIÓN",
-      id: "comms",
-      icon: Bell,
-      items: [
-        { name: "Mensajería", href: "/admin/notificaciones", icon: Bell },
       ]
     },
     {

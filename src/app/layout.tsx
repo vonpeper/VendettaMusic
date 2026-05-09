@@ -22,8 +22,33 @@ const advent = Advent_Pro({
 
 export const metadata: Metadata = {
   title: "Vendetta | Música en Vivo para Eventos",
-  description: "Grupo musical en vivo para eventos privados, corporativos y bodas. Experiencia premium y energía inigualable.",
-  metadataBase: new URL('https://vendettalive.com'),
+  description: "Grupo musical versátil de alto nivel para bodas, eventos corporativos y festivales en México. Experiencia premium y energía inigualable.",
+  metadataBase: new URL('https://vendetta.mx'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: "Vendetta | Música en Vivo para Eventos",
+    description: "La mejor música en vivo para tu boda o evento corporativo en México. ¡Arma tu show ahora!",
+    url: 'https://vendetta.mx',
+    siteName: 'Vendetta Live Music',
+    images: [
+      {
+        url: '/images/shows/arma-tu-show.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Vendetta Live Music Show',
+      },
+    ],
+    locale: 'es_MX',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Vendetta | Música en Vivo para Eventos",
+    description: "Música en vivo premium para eventos inolvidables.",
+    images: ['/images/shows/arma-tu-show.jpg'],
+  },
 };
 
 export default function RootLayout({

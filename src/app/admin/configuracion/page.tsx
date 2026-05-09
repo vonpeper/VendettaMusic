@@ -13,6 +13,7 @@ import { ConfigFormWrapper } from "@/components/admin/ConfigFormWrapper"
 import { SandboxToggle } from "@/components/admin/SandboxToggle"
 import { AdminSignatureManager } from "@/components/admin/AdminSignatureManager"
 import { EvolutionTestButton } from "@/components/admin/EvolutionTestButton"
+import { LogInboundToggle } from "@/components/admin/LogInboundToggle"
 
 export default async function AdminConfiguracionPage() {
   const session = await auth()
@@ -113,6 +114,7 @@ export default async function AdminConfiguracionPage() {
                 
                 <div className="mt-6 pt-6 border-t border-border/40 space-y-3">
                   <EvolutionTestButton />
+                  <LogInboundToggle initialValue={config?.logInboundActive ?? true} />
                   <div className="bg-[#FFEB3B] border-2 border-amber-600 p-4 rounded-xl shadow-lg">
                     <div className="space-y-3">
                       <p className="text-xs text-amber-950 leading-relaxed font-medium">

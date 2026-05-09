@@ -86,7 +86,7 @@ export default function ContactoPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-white text-lg">Correo Electrónico</h3>
-                    <p className="text-muted-foreground mt-1">contacto@vendettalive.com</p>
+                    <p className="text-muted-foreground mt-1">contacto@vendetta.mx</p>
                   </div>
                 </div>
 

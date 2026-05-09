@@ -75,7 +75,15 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
     clientProvidesAudio: false,
     locationId: "",
     venueName: "",
-    venuePhone: ""
+    venuePhone: "",
+    bandHours: 2,
+    djHours: 0,
+    isDjWithTvs: false,
+    hasTemplete: false,
+    hasPista: false,
+    hasRobot: false,
+    originalPrice: 0,
+    discountAmount: 0
   })
 
   const handlePackageChange = (id: string | null) => {
@@ -86,7 +94,10 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
       setFormData(prev => ({
         ...prev,
         packageId: id,
+        originalPrice: price,
         baseAmount: price,
+        discountAmount: 0,
+        bandHours: pkg.minDuration,
         // Sugerimos 40% por defecto, el usuario puede bajar hasta 30%
         depositAmount: Math.round(price * 0.4)
       }))
@@ -340,6 +351,98 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
           </CardContent>
         </Card>
 
+        {/* Configuración de Show y Descuentos */}
+        <Card className="bg-card border-border/40 md:col-span-2">
+          <CardContent className="pt-6 space-y-6">
+            <h3 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2 mb-4">
+              <Clock className="w-4 h-4" /> Configuración de Show y Descuentos
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="space-y-2">
+                <Label>Horas Banda</Label>
+                <Input 
+                  type="number"
+                  value={formData.bandHours} 
+                  onChange={e => setFormData({...formData, bandHours: parseInt(e.target.value) || 0})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Horas DJ</Label>
+                <Input 
+                  type="number"
+                  value={formData.djHours} 
+                  onChange={e => setFormData({...formData, djHours: parseInt(e.target.value) || 0})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Precio de Lista ($)</Label>
+                <Input 
+                  type="number"
+                  value={formData.originalPrice} 
+                  onChange={e => {
+                    const original = parseFloat(e.target.value) || 0
+                    setFormData({
+                      ...formData, 
+                      originalPrice: original,
+                      discountAmount: original - formData.baseAmount
+                    })
+                  }}
+                  className="border-blue-500/30"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Descuento ($)</Label>
+                <Input 
+                  type="number"
+                  readOnly
+                  value={formData.discountAmount} 
+                  className="bg-muted text-primary font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={formData.isDjWithTvs} 
+                  onChange={e => setFormData({...formData, isDjWithTvs: e.target.checked})}
+                  className="w-4 h-4 accent-primary rounded"
+                />
+                <span className="text-xs font-bold group-hover:text-primary transition-colors">DJ con Pantallas</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={formData.hasTemplete} 
+                  onChange={e => setFormData({...formData, hasTemplete: e.target.checked})}
+                  className="w-4 h-4 accent-primary rounded"
+                />
+                <span className="text-xs font-bold group-hover:text-primary transition-colors">Templete</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={formData.hasPista} 
+                  onChange={e => setFormData({...formData, hasPista: e.target.checked})}
+                  className="w-4 h-4 accent-primary rounded"
+                />
+                <span className="text-xs font-bold group-hover:text-primary transition-colors">Pista LED</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={formData.hasRobot} 
+                  onChange={e => setFormData({...formData, hasRobot: e.target.checked})}
+                  className="w-4 h-4 accent-primary rounded"
+                />
+                <span className="text-xs font-bold group-hover:text-primary transition-colors">Robot LED</span>
+              </label>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Paquete y Costos */}
         <Card className="bg-card border-border/40 md:col-span-2">
           <CardContent className="pt-6 space-y-4">
@@ -414,12 +517,20 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
                 </label>
               </div>
               <div className="space-y-2">
-                <Label>Monto Total ($)</Label>
+                <Label className="text-primary font-black">Monto FINAL PACTADO ($)</Label>
                 <Input 
                   type="number"
                   value={formData.baseAmount} 
                   onFocus={(e) => e.target.select()}
-                  onChange={e => setFormData({...formData, baseAmount: parseFloat(e.target.value) || 0})}
+                  onChange={e => {
+                    const val = parseFloat(e.target.value) || 0
+                    setFormData({
+                      ...formData, 
+                      baseAmount: val,
+                      discountAmount: formData.originalPrice - val
+                    })
+                  }}
+                  className="bg-primary/5 border-primary shadow-inner"
                 />
               </div>
               <div className="space-y-2">

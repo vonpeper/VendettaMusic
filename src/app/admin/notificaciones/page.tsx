@@ -31,15 +31,23 @@ export default async function NotificacionesPage() {
 
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   const notifications = await db.notification.findMany({
+    where: { type: { not: 'inbound' } },
+    orderBy: { createdAt: 'desc' },
+    take: 50
+  })
+
+  const incomingMessages = await db.notification.findMany({
+    where: { type: 'inbound' },
     orderBy: { createdAt: 'desc' },
     take: 50
   })
 
   // Estadísticas simples
   const stats = {
-    total: await db.notification.count(),
-    success: await db.notification.count({ where: { status: { in: ['sent', 'delivered', 'success'] } } }),
-    error: await db.notification.count({ where: { status: 'error' } })
+    total: await db.notification.count({ where: { type: { not: 'inbound' } } }),
+    success: await db.notification.count({ where: { status: { in: ['sent', 'delivered', 'success'] }, type: { not: 'inbound' } } }),
+    error: await db.notification.count({ where: { status: 'error', type: { not: 'inbound' } } }),
+    inbound: await db.notification.count({ where: { type: 'inbound' } })
   }
 
   const getStatusBadge = (status: string) => {
@@ -47,7 +55,8 @@ export default async function NotificacionesPage() {
       case 'sent':
       case 'delivered':
       case 'success':
-        return <span className="flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20"><CheckCircle2 className="w-3 h-3" /> Enviado</span>
+      case 'received':
+        return <span className="flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20"><CheckCircle2 className="w-3 h-3" /> {status === 'received' ? 'Recibido' : 'Enviado'}</span>
       case 'pending':
         return <span className="flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20"><Clock className="w-3 h-3" /> Pendiente</span>
       default:
@@ -88,14 +97,17 @@ export default async function NotificacionesPage() {
             <TabsTrigger value="plantillas" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <FileText className="w-4 h-4" /> Plantillas VIP
             </TabsTrigger>
+            <TabsTrigger value="entrantes" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <MessageSquare className="w-4 h-4" /> Mensajes Entrantes
+            </TabsTrigger>
             <TabsTrigger value="historial" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <History className="w-4 h-4" /> Historial
+              <History className="w-4 h-4" /> Historial de Salida
             </TabsTrigger>
           </TabsList>
 
           {/* ================= PESTAÑA: CONTROL ================= */}
           <TabsContent value="control" className="space-y-6 outline-none">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                <Card className="bg-card border-border/20">
                   <CardHeader className="pb-2">
                   <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Mensajes Enviados</CardDescription>
@@ -112,6 +124,15 @@ export default async function NotificacionesPage() {
                   <CardContent>
                     <div className="text-3xl font-black text-foreground">{Math.round((stats.success / (stats.total || 1)) * 100)}%</div>
                     <p className="text-xs text-muted-foreground mt-1">Eficiencia de envío</p>
+                  </CardContent>
+               </Card>
+               <Card className="bg-card border-border/20">
+                  <CardHeader className="pb-2">
+                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-amber-400">Recibidos</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-black text-foreground">{stats.inbound}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Mensajes entrantes</p>
                   </CardContent>
                </Card>
                <Card className="bg-card border-border/20">
@@ -367,6 +388,54 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
             </Card>
           </TabsContent>
 
+          {/* ================= PESTAÑA: ENTRANTES ================= */}
+          <TabsContent value="entrantes" className="outline-none">
+            <Card className="bg-card/50 border-border/40 backdrop-blur-sm overflow-hidden rounded-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-border/40 bg-amber-600/10">
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-amber-600">Fecha y Hora</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-amber-600">Remitente</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-amber-600">Categoría</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-amber-600">Mensaje</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {incomingMessages.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground italic">
+                          No hay mensajes entrantes registrados aún.
+                        </td>
+                      </tr>
+                    ) : (
+                      incomingMessages.map((notif) => (
+                        <tr key={notif.id} className="hover:bg-amber-600/5 transition-colors group">
+                          <td className="px-6 py-4 text-sm font-medium text-foreground whitespace-nowrap">
+                            <span className="capitalize">{formatDateTimeMX(notif.createdAt)}</span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap font-mono">
+                            {notif.recipient || "—"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                              {notif.category || "General"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 max-w-md">
+                            <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors break-words">
+                              {notif.message}
+                            </p>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </TabsContent>
+
           {/* ================= PESTAÑA: HISTORIAL ================= */}
           <TabsContent value="historial" className="outline-none">
             <Card className="bg-card/50 border-border/40 backdrop-blur-sm overflow-hidden rounded-2xl">
@@ -429,6 +498,7 @@ function getTypeLabel(type: string) {
     'CLIENT_FOLLOWUP': '🔄 Seguimiento',
     'CLIENT_CONFIRMED': '✅ Confirmación',
     'MUSICIAN_GIG': '🎸 Convocatoria',
+    'inbound': '📩 Entrante',
   }
   return map[type] || type
 }

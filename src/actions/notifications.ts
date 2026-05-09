@@ -163,6 +163,7 @@ export async function resendNotificationAction(bookingId: string, type: "admin" 
       await notifyMusicians(booking.eventId, gigDetails, db)
     }
 
+
     revalidatePath("/admin/ventas")
     
     if (type === "musician") {
@@ -172,6 +173,89 @@ export async function resendNotificationAction(bookingId: string, type: "admin" 
     return { success: true }
   } catch (error: any) {
     console.error("Error resending notification:", error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function resendIndividualMusicianNotificationAction(musicianId: string, eventId: string, bookingId: string) {
+  const session = await auth()
+  if (!session?.user || !["ADMIN"].includes(session.user.role as string)) {
+    return { success: false, error: "No autorizado" }
+  }
+
+  try {
+    const booking = await db.bookingRequest.findUnique({
+      where: { id: bookingId },
+      include: { 
+        event: { 
+          include: { 
+            location: true,
+            package: true
+          } 
+        } 
+      }
+    })
+
+    if (!booking || !booking.event) return { success: false, error: "Reserva o evento no encontrado" }
+
+    const { notifyMusicians } = await import("@/lib/notifications")
+    
+    const gigDetails = {
+      clientName: booking.clientName,
+      date: booking.event.date,
+      ceremonyType: booking.event.ceremonyType || booking.venueType,
+      locationName: booking.event.location?.name || booking.address,
+      mapsLink: booking.event.location?.mapsLink || "",
+      address: booking.address,
+      performanceStart: booking.event.performanceStart,
+      performanceEnd: booking.event.performanceEnd,
+      packageName: booking.event.package?.name || booking.packageName,
+      dressCode: (booking.event as any).dressCode || "",
+      arrivalTime: (booking.event as any).arrivalTime || "",
+      setupTime: (booking.event as any).setupTime || "",
+      musicianNotes: (booking.event as any).musicianNotes || (booking as any).adminNote || "",
+      bookingRequestId: bookingId
+    }
+
+    await notifyMusicians(eventId, gigDetails, db, [musicianId])
+
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    return { success: true, message: "Notificación individual enviada con éxito." }
+  } catch (error: any) {
+    console.error("Error resending individual notification:", error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function sendAutomatedClientWhatsAppAction(bookingId: string) {
+  const session = await auth()
+  if (!session?.user || !["ADMIN"].includes(session.user.role as string)) {
+    return { success: false, error: "No autorizado" }
+  }
+
+  try {
+    const { dispatchNotification } = await import("@/lib/notifications")
+    const booking = await db.bookingRequest.findUnique({ where: { id: bookingId } })
+    
+    if (!booking) return { success: false, error: "Reserva no encontrada" }
+
+    const notificationType = (booking.status === "agendado" || booking.status === "completado") 
+      ? "CLIENT_CONFIRMED" 
+      : "CLIENT_QUOTE"
+
+    const messageId = await dispatchNotification({
+      type: notificationType,
+      bookingId: bookingId
+    })
+
+    if (!messageId) {
+      return { success: false, error: "No se pudo enviar el mensaje. Verifica la configuración de Evolution API." }
+    }
+
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    return { success: true, message: "Mensaje automático enviado con éxito." }
+  } catch (error: any) {
+    console.error("Error sending automated client WhatsApp:", error)
     return { success: false, error: error.message }
   }
 }

@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { sendAutomatedClientWhatsAppAction } from "@/actions/notifications"
+import { MessageSquare, Zap } from "lucide-react"
 
 export function BookingActions({ 
   bookingId, 
@@ -24,7 +26,7 @@ export function BookingActions({
   currentMusicianIds?: string[];
 }) {
   const [note,    setNote]    = useState("")
-  const [loading, setLoading] = useState<"confirm" | "reject" | "sync" | null>(null)
+  const [loading, setLoading] = useState<"confirm" | "reject" | "sync" | "whatsapp" | null>(null)
   const [done,    setDone]    = useState(false)
   const [selectedMusicians, setSelectedMusicians] = useState<string[]>(
     currentMusicianIds.length > 0 
@@ -34,6 +36,19 @@ export function BookingActions({
           .map(m => m.id)
   )
   const router = useRouter()
+
+  const handleAutomatedWhatsApp = async () => {
+    setLoading("whatsapp")
+    try {
+      const res = await sendAutomatedClientWhatsAppAction(bookingId)
+      if (res.success) toast.success(res.message)
+      else toast.error(res.error)
+    } catch (err) {
+      toast.error("Error de conexión")
+    } finally {
+      setLoading(null)
+    }
+  }
 
   const toggleMusician = (id: string) => {
     setSelectedMusicians(prev => 
@@ -95,6 +110,35 @@ export function BookingActions({
 
   return (
     <div className="space-y-4">
+      {/* Sección de Comunicación Directa */}
+      <div className="space-y-2 pb-2 border-b border-border/40">
+        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1 flex items-center gap-2">
+          <MessageSquare className="w-3 h-3" /> Comunicación con Cliente
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1.5 text-[10px] font-bold rounded-lg border-blue-600/30 text-blue-600 hover:bg-blue-600/10"
+            onClick={handleAutomatedWhatsApp}
+            disabled={loading !== null}
+          >
+            {loading === "whatsapp" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+            WhatsApp Auto
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1.5 text-[10px] font-bold rounded-lg border-green-600/30 text-green-600 hover:bg-green-600/10"
+            asChild
+          >
+            <a href={`https://wa.me/52${musicians[0]?.event?.bookingRequest?.clientPhone || ""}`} target="_blank" rel="noopener noreferrer">
+              <MessageSquare className="w-3 h-3" /> Chatear (Manual)
+            </a>
+          </Button>
+        </div>
+      </div>
+
       <div className="space-y-3 pb-2">
         <div className="flex items-center justify-between px-1">
           <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">

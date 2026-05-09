@@ -34,8 +34,8 @@ export async function GET(
       guestCount: booking.guestCount || 0,
       venueType: booking.venueType || "salon",
       // Valores desde BookingRequest
-      bandHours: booking.bandHours || 2,
-      djHours:   booking.djHours || 0,
+      bandHours: booking.bandHours ?? 0,
+      djHours:   booking.djHours ?? 0,
       isDjWithTvs: booking.isDjWithTvs || false,
       hasTemplete: booking.hasTemplete || false,
       hasPista:    booking.hasPista || false,
@@ -64,6 +64,8 @@ export async function GET(
       clientName: booking.clientName || "Cliente Genérico",
       clientPhone: booking.clientPhone || "",
       clientEmail: booking.clientEmail || "",
+      originalPrice: booking.originalPrice || 0,
+      discountAmount: booking.discountAmount || 0,
     }
 
     const isQuote = booking.status === "pendiente"
