@@ -1,20 +1,15 @@
 "use client"
 
-import { CheckCircle2, Clock, XCircle, User, Music } from "lucide-react"
+import { useState } from "react"
+import { CheckCircle2, Clock, XCircle, User, Music, Send, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-
-interface MusicianStatus {
-  id: string
-  status: string
-  musician: {
-    instrument: string | null
-    user: {
-      name: string | null
-    }
-  }
-}
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { resendIndividualMusicianNotificationAction } from "@/actions/notifications"
 
 export function MusicianStatusList({ musicians }: { musicians: any[] }) {
+  const [loading, setLoading] = useState<string | null>(null)
+
   if (!musicians || musicians.length === 0) {
     return (
       <div className="text-center py-6 text-muted-foreground italic text-sm">
@@ -56,6 +51,28 @@ export function MusicianStatusList({ musicians }: { musicians: any[] }) {
     }
   }
 
+  const handleResend = async (musicianId: string) => {
+    // Intentamos encontrar el eventId y bookingId en la data
+    const eventId = musicians.find(m => m.eventId)?.eventId || musicians[0]?.eventId
+    const bookingId = musicians.find(m => m.event?.bookingRequest?.id)?.event?.bookingRequest?.id || musicians[0]?.bookingId
+
+    if (!eventId || !bookingId) {
+      toast.error("No se pudo encontrar la información del evento o reserva")
+      return
+    }
+
+    setLoading(musicianId)
+    try {
+      const res = await resendIndividualMusicianNotificationAction(musicianId, eventId, bookingId)
+      if (res.success) toast.success(res.message)
+      else toast.error(res.error)
+    } catch (err) {
+      toast.error("Error de conexión")
+    } finally {
+      setLoading(null)
+    }
+  }
+
   return (
     <div className="space-y-3">
       {musicians.map((m: any) => (
@@ -81,6 +98,21 @@ export function MusicianStatusList({ musicians }: { musicians: any[] }) {
               {getStatusIcon(m.status)}
               <span className="ml-1.5">{getStatusLabel(m.status)}</span>
             </Badge>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors"
+              disabled={loading === m.musicianId}
+              onClick={() => handleResend(m.musicianId)}
+              title="Re-notificar convocatoria por WhatsApp"
+            >
+              {loading === m.musicianId ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Send className="w-3 h-3" />
+              )}
+            </Button>
           </div>
         </div>
       ))}

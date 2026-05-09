@@ -11,7 +11,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <img 
             src="/images/logo-vendetta-horizontal.png" 
             alt="Vendetta Music" 
-            className="h-24 w-auto object-contain"
+            className="h-32 w-auto object-contain"
           />
         </div>
         

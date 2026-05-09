@@ -47,7 +47,7 @@ export default async function ConfirmationPage({
             <img 
               src="/images/logo-vendetta-horizontal.png" 
               alt="Vendetta Music" 
-              className="h-10 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
           </div>
           <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -90,7 +90,7 @@ export default async function ConfirmationPage({
             <img 
               src="/images/logo-vendetta-horizontal.png" 
               alt="Vendetta Music" 
-              className="h-10 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
           </div>
           <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -118,7 +118,7 @@ export default async function ConfirmationPage({
           <img 
             src="/images/logo-vendetta-horizontal.png" 
             alt="Vendetta Music" 
-            className="h-20 w-auto object-contain"
+            className="h-28 w-auto object-contain"
           />
         </div>
         <div className="text-center mb-8">

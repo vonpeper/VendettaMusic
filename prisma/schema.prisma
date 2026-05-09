@@ -422,10 +422,12 @@ model BookingRequest {
   hasRobot              Boolean?       @default(false)
   stripePaymentIntentId String?
   stripeSessionId       String?        @unique
-  clientSignature       String?
   adminSignature        String?
+  clientSignature       String?
   signedAt              DateTime?
   signedIp              String?
+  discountAmount        Float?         @default(0)
+  originalPrice         Float?         @default(0)
   client                ClientProfile? @relation(fields: [clientId], references: [id])
   event                 Event?         @relation(fields: [eventId], references: [id])
   inboxItems            InboxItem[]
@@ -491,6 +493,9 @@ model GlobalConfig {
   instagramUrl           String?
   tiktokUrl              String?
   whatsappUrl            String?
+  msgTemplateGig         String?
+  msgTemplateQuote       String?
+  msgTemplateEventClose  String?
   zona2Rate              Float?    @default(1500.0)
   zona3Rate              Float?    @default(3000.0)
   bankName               String?
@@ -498,9 +503,8 @@ model GlobalConfig {
   bankClabe              String?
   bankBeneficiary        String?
   evolutionWebhookSecret String?
-  msgTemplateGig         String?
-  msgTemplateQuote       String?
-  msgTemplateEventClose  String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
   msgTemplateFollowUp    String?
   msgTemplateExpiring    String?
   msgExpiringActive      Boolean   @default(true)
@@ -510,8 +514,7 @@ model GlobalConfig {
   msgThanksActive        Boolean   @default(true)
   adminSignature         String?
   isSandbox              Boolean   @default(false)
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  logInboundActive       Boolean   @default(true)
 }
 
 model InboxItem {

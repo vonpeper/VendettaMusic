@@ -22,7 +22,7 @@ services:
       - ADMIN_WHATSAPP_NUMBER=${ADMIN_WHATSAPP_NUMBER}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.vendetta.rule=Host(`vendetta.prosuite.pro`) || Host(`vendetta.mx`) || Host(`www.vendetta.mx`)"
+      - "traefik.http.routers.vendetta.rule=Host(`vendetta.mx`) || Host(`www.vendetta.mx`)"
       - "traefik.http.routers.vendetta.entrypoints=websecure"
       - "traefik.http.routers.vendetta.tls.certresolver=letsencrypt"
       - "traefik.http.services.vendetta.loadbalancer.server.port=3000"

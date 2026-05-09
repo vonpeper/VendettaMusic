@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
   try {
     if (event === "send.message" || event === "messages.update" || event === "messages.upsert") {
-      await handleMessageEvent(event, payload)
+      await handleMessageEvent(event, payload, config)
     } else if (event === "connection.update") {
       // Estado de conexión: lo logueamos para visibilidad operativa.
       console.log(`📡 Evolution connection.update: ${JSON.stringify(payload?.data?.state || payload?.state)}`)
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function handleMessageEvent(event: string, payload: any) {
+async function handleMessageEvent(event: string, payload: any, config: any) {
   const data = payload?.data || payload
   const key = data?.key || {}
   const messageId: string | undefined = key?.id || data?.id || data?.messageId
@@ -67,6 +67,9 @@ async function handleMessageEvent(event: string, payload: any) {
     data?.message?.extendedTextMessage?.text ||
     data?.text ||
     null
+
+  // Skip if inbound logging is disabled
+  const logInboundActive = config?.logInboundActive ?? true
 
   // Update outbound delivery/read status when Evolution reports it.
   if ((event === "messages.update" || event === "send.message") && messageId) {
@@ -112,24 +115,18 @@ async function handleMessageEvent(event: string, payload: any) {
     ])
 
     const isKnown = !!(client || musician || booking)
-    if (!isKnown) {
-      console.log(`🔇 Ignoring message from unknown number: ${phone}`)
-      return
-    }
-
+    
     // 2. LÓGICA DE CLASIFICACIÓN Y ESCALACIÓN
     let shouldEscalate = false
-    let itemType = "customer_action_required"
+    let itemType = isKnown ? "customer_action_required" : "new_lead"
     let category = classification.category
 
     if (!isKnown) {
       // A) Si el número NO existe: Crear nuevo lead
       shouldEscalate = true
-      itemType = "new_lead"
     } else if (classification.intent === "actionable" || classification.intent === "unknown") {
-      // B) Si el número existe y tiene intención relevante (o es texto libre no detectado como simple)
+      // B) Si el número existe y tiene intención relevante
       shouldEscalate = true
-      itemType = "customer_action_required"
     }
 
     // Si es una respuesta simple ("ok", "gracias"), NO escalamos a la bandeja de atención
@@ -137,18 +134,20 @@ async function handleMessageEvent(event: string, payload: any) {
       shouldEscalate = false
     }
 
-    // 3. Crear Notificación (Log de WhatsApp)
-    await db.notification.create({
-      data: {
-        type: "inbound",
-        channel: "whatsapp",
-        recipient: phone,
-        message: text || "(media o vacío)",
-        status: "received",
-        messageId: messageId || null,
-        category: shouldEscalate ? "actionable" : "customer_reply",
-      }
-    }).catch(() => null)
+    // 3. Crear Notificación (Log de WhatsApp) - Check flag
+    if (logInboundActive) {
+      await db.notification.create({
+        data: {
+          type: "inbound",
+          channel: "whatsapp",
+          recipient: phone,
+          message: text || "(media o vacío)",
+          status: "received",
+          messageId: messageId || null,
+          category: shouldEscalate ? "actionable" : "customer_reply",
+        }
+      }).catch(() => null)
+    }
 
     if (shouldEscalate) {
       const senderName = (client as any)?.user?.name || booking?.clientName || (musician as any)?.user?.name || "Nuevo Lead"

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { BookingActions } from "@/components/admin/BookingActions"
+import { ClientWhatsappActions } from "@/components/admin/ClientWhatsappActions"
 import { AdminManagementTools } from "@/components/admin/AdminManagementTools"
 import { LiquidarButton } from "@/components/admin/LiquidarButton"
 import { ContractSignedButton } from "@/components/admin/ContractSignedButton"
@@ -304,15 +305,10 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   </div>
                 </div>
                 <div className="pt-2">
-                  <Button 
-                    variant="outline" 
-                    asChild
-                    className="w-full border-blue-600/40 text-blue-600 hover:bg-blue-600 hover:text-white transition-all rounded-xl h-12 gap-2 font-black uppercase tracking-widest group shadow-md" 
-                  >
-                    <a href={`https://wa.me/${booking.clientPhone.replace(/\D/g,'')}`} target="_blank">
-                      Contactar WhatsApp <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100" />
-                    </a>
-                  </Button>
+                  <ClientWhatsappActions 
+                    bookingId={booking.id} 
+                    clientPhone={booking.clientPhone} 
+                  />
                 </div>
               </CardContent>
             </Card>

@@ -342,6 +342,8 @@ export async function PUT(req: NextRequest) {
     if (updates.hasTemplete !== undefined) dataToUpdate.hasTemplete = Boolean(updates.hasTemplete)
     if (updates.hasPista !== undefined)    dataToUpdate.hasPista    = Boolean(updates.hasPista)
     if (updates.hasRobot !== undefined)    dataToUpdate.hasRobot    = Boolean(updates.hasRobot)
+    if (updates.originalPrice !== undefined) dataToUpdate.originalPrice = parseFloat(updates.originalPrice)
+    if (updates.discountAmount !== undefined) dataToUpdate.discountAmount = parseFloat(updates.discountAmount)
 
     const booking = await db.bookingRequest.update({
       where: { id: bookingId },

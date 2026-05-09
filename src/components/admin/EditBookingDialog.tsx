@@ -38,14 +38,16 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
     clientProvidesAudio: booking.clientProvidesAudio || false,
     isPublic:      booking.isPublic      || false,
     mapsLink:      booking.mapsLink      || "",
-    bandHours:     booking.bandHours     || 2,
-    djHours:       booking.djHours       || 0,
-    isDjWithTvs:   booking.isDjWithTvs   || false,
-    hasTemplete:   booking.hasTemplete   || false,
-    hasPista:      booking.hasPista      || false,
-    hasRobot:      booking.hasRobot      || false,
-    viaticosAmount: booking.viaticosAmount || 0,
+    bandHours:     booking.bandHours     ?? 0,
+    djHours:       booking.djHours       ?? 0,
+    isDjWithTvs:   booking.isDjWithTvs   ?? false,
+    hasTemplete:   booking.hasTemplete   ?? false,
+    hasPista:      booking.hasPista      ?? false,
+    hasRobot:      booking.hasRobot      ?? false,
+    viaticosAmount: booking.viaticosAmount ?? 0,
     adminNote:      booking.adminNote || "",
+    originalPrice:  booking.originalPrice ?? 0,
+    discountAmount: booking.discountAmount ?? 0,
   })
 
   async function handleUpdate(e: React.FormEvent) {
@@ -268,25 +270,50 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="baseAmount">Total del Servicio (Sin viáticos) ($)</Label>
+              <Label htmlFor="originalPrice">Precio de Lista (Original) ($)</Label>
+              <Input 
+                id="originalPrice" 
+                type="number"
+                value={formData.originalPrice} 
+                onChange={e => {
+                  const original = parseFloat(e.target.value) || 0
+                  setFormData({
+                    ...formData, 
+                    originalPrice: original,
+                    discountAmount: original - formData.baseAmount
+                  })
+                }}
+                className="bg-background border-blue-500/30"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="baseAmount">Monto FINAL Pactado ($)</Label>
               <Input 
                 id="baseAmount" 
                 type="number"
                 value={formData.baseAmount} 
-                onChange={e => setFormData({...formData, baseAmount: parseFloat(e.target.value)})}
-                className="bg-background"
+                onChange={e => {
+                  const val = parseFloat(e.target.value) || 0
+                  setFormData({
+                    ...formData, 
+                    baseAmount: val,
+                    discountAmount: formData.originalPrice - val
+                  })
+                }}
+                className="bg-background border-primary"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="depositAmount">Anticipo Pactado ($)</Label>
-              <Input 
-                id="depositAmount" 
-                type="number"
-                value={formData.depositAmount} 
-                onChange={e => setFormData({...formData, depositAmount: parseFloat(e.target.value)})}
-                className="bg-background"
-              />
-            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="depositAmount">Anticipo Pactado ($)</Label>
+            <Input 
+              id="depositAmount" 
+              type="number"
+              value={formData.depositAmount} 
+              onChange={e => setFormData({...formData, depositAmount: parseFloat(e.target.value)})}
+              className="bg-background"
+            />
           </div>
 
           <div className="space-y-4 bg-primary/10 p-4 rounded-xl border border-primary/20">

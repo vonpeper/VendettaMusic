@@ -23,7 +23,9 @@ export async function POST(req: NextRequest) {
       calle, numero, colonia, municipio, state,
       venueType, mapsLink, isPublic,
       depositConfirmed, clientProvidesAudio,
-      locationId, venueName, venuePhone
+      locationId, venueName, venuePhone,
+      bandHours, djHours, isDjWithTvs, hasTemplete, hasPista, hasRobot,
+      originalPrice, discountAmount
     } = data
     
     // Safeguards for numeric fields
@@ -141,7 +143,15 @@ export async function POST(req: NextRequest) {
         clientProvidesAudio: Boolean(clientProvidesAudio),
         mapsLink: mapsLink || null,
         status: computedStatus || "pending",
-        source: "manual"
+        source: "manual",
+        bandHours: parseInt(bandHours) || 2,
+        djHours: parseInt(djHours) || 0,
+        isDjWithTvs: Boolean(isDjWithTvs),
+        hasTemplete: Boolean(hasTemplete),
+        hasPista: Boolean(hasPista),
+        hasRobot: Boolean(hasRobot),
+        originalPrice: parseFloat(originalPrice) || 0,
+        discountAmount: parseFloat(discountAmount) || 0,
       }
     })
 
