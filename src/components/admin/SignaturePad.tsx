@@ -37,8 +37,8 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
-    ctx.strokeStyle = "#000000"
-    ctx.lineWidth = 3
+    ctx.strokeStyle = "#ffffff"
+    ctx.lineWidth = 4
     
     ctxRef.current = ctx
   }, [])
@@ -171,7 +171,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
         }`}
         style={{ touchAction: "none", backgroundColor: 'transparent' }}
       >
-        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v4.7</div>
+        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v5.0</div>
         <button
           type="button"
           onClick={() => setIsFullScreen(!isFullScreen)}
@@ -181,11 +181,11 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
         </button>
 
         {!hasSignature && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-black/5 gap-6 select-none">
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-white/5 gap-6 select-none">
             <MousePointer2 className="w-16 h-16 opacity-10 animate-pulse" />
             <div className="text-center">
-              <span className="font-black uppercase tracking-[0.6em] text-[10px] block mb-2 text-black/30">{placeholder}</span>
-              <span className="text-[9px] font-medium opacity-30 italic text-black/40">Trazo directo 1:1 activo</span>
+              <span className="font-black uppercase tracking-[0.6em] text-[10px] block mb-2 text-white/40">{placeholder}</span>
+              <span className="text-[9px] font-medium opacity-30 italic text-white/30">Trazo blanco 1:1 activo</span>
             </div>
           </div>
         )}

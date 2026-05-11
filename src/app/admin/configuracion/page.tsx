@@ -34,7 +34,7 @@ export default async function AdminConfiguracionPage() {
           <span className="text-sm font-bold uppercase tracking-widest">Ajustes del Sistema</span>
         </div>
         <h1 className="text-4xl font-heading font-bold text-foreground tracking-tight">
-          Configuración Maestro v4.7
+          Configuración Maestro v5.0
         </h1>
         <p className="text-muted-foreground mt-2 max-w-2xl">
           Administra las conexiones con servicios externos. Estos ajustes afectan las notificaciones automáticas y la sincronización de agenda.
@@ -322,8 +322,8 @@ export default async function AdminConfiguracionPage() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-heading font-bold text-foreground underline decoration-[#E91E63]">CONTROL DE FIRMA v4.7</h2>
-                  <p className="text-sm text-muted-foreground font-black text-[#E91E63]">ACTUALIZACIÓN FORZADA v4.7 - DOCKER REBUILD</p>
+                  <h2 className="text-2xl font-heading font-bold text-foreground underline decoration-[#E91E63]">CONTROL DE FIRMA v5.0</h2>
+                  <p className="text-sm text-muted-foreground font-black text-[#E91E63]">ACTUALIZACIÓN FORZADA v5.0 - DOCKER REBUILD</p>
                 </div>
               </div>
               
