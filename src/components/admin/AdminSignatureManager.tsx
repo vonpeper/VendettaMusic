@@ -45,7 +45,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
           >
              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E91E63] to-transparent opacity-20" />
              {signature ? (
-               <img src={signature} alt="Firma Administrador" className="max-h-40 opacity-90 drop-shadow-sm invert brightness-200" />
+               <img src={signature} alt="Firma Administrador" className="max-h-40 opacity-90 drop-shadow-sm" />
              ) : (
                <div className="text-muted-foreground text-sm">Sin firma registrada</div>
              )}
