@@ -39,8 +39,12 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
     <div className="space-y-6">
       {signature ? (
         <div className="space-y-6">
-          <div className="bg-[#f4f4f5] border border-border/60 shadow-inner rounded-3xl p-8 flex flex-col items-center justify-center min-h-[200px] relative group overflow-hidden">
+          <div 
+            className="border border-border/60 shadow-inner rounded-3xl p-8 flex flex-col items-center justify-center min-h-[200px] relative group overflow-hidden"
+            style={{ backgroundColor: '#f4f4f5' }}
+          >
              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E91E63] to-transparent opacity-20" />
+             <div className="absolute bottom-2 right-4 text-[8px] opacity-20 text-foreground">v2.2</div>
              {signature ? (
                <img src={signature} alt="Firma Administrador" className="max-h-40 opacity-90 drop-shadow-sm" />
              ) : (
