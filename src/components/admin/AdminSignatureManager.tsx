@@ -39,12 +39,11 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
     <div className="space-y-6">
       {signature ? (
         <div className="space-y-6">
-          <div 
-            className="border border-border/60 shadow-inner rounded-3xl p-8 flex flex-col items-center justify-center min-h-[200px] relative group overflow-hidden"
-            style={{ backgroundColor: '#eeeeef' }}
+            className="border border-border/60 shadow-2xl rounded-3xl p-8 flex flex-col items-center justify-center min-h-[200px] relative group overflow-hidden"
+            style={{ backgroundColor: '#0f172a' }}
           >
              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E91E63] to-transparent opacity-20" />
-             <div className="absolute bottom-2 right-4 text-[8px] opacity-40 text-foreground font-black">v6.0</div>
+             <div className="absolute bottom-2 right-4 text-[8px] opacity-40 text-foreground font-black">v7.0</div>
              {signature ? (
                <img src={signature} alt="Firma Administrador" className="max-h-40 opacity-90 drop-shadow-sm" />
              ) : (
@@ -97,7 +96,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
             <DialogHeader>
               <DialogTitle className="text-2xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
                 <PenTool className="w-6 h-6 text-[#E91E63]" />
-                Registro de Firma <span className="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full">v6.0</span>
+                Registro de Firma <span className="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full">v7.0</span>
               </DialogTitle>
               <DialogDescription className="text-muted-foreground font-medium">
                 Dibuja tu firma oficial de Vendetta en el recuadro inferior. 

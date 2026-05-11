@@ -135,16 +135,58 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
       e.preventDefault()
     }
 
+    const onTouchStart = (e: TouchEvent) => {
+      e.preventDefault()
+      const touch = e.touches[0]
+      const pos = getPos(touch as any)
+      isDrawing.current = true
+      lastPoint.current = pos
+      const ctx = ctxRef.current
+      if (ctx) {
+        ctx.beginPath()
+        ctx.moveTo(pos.x, pos.y)
+      }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      if (!isDrawing.current || !lastPoint.current) return
+      const touch = e.touches[0]
+      const pos = getPos(touch as any)
+      const ctx = ctxRef.current
+      if (ctx) {
+        ctx.beginPath()
+        ctx.moveTo(lastPoint.current.x, lastPoint.current.y)
+        ctx.lineTo(pos.x, pos.y)
+        ctx.stroke()
+        lastPoint.current = pos
+        setHasSignature(true)
+      }
+    }
+
+    const onTouchEnd = (e: TouchEvent) => {
+      e.preventDefault()
+      isDrawing.current = false
+      lastPoint.current = null
+    }
+
     canvas.addEventListener("pointerdown", onStart, { passive: false })
     canvas.addEventListener("pointermove", onMove, { passive: false })
     canvas.addEventListener("pointerup", onEnd, { passive: false })
     canvas.addEventListener("pointercancel", onEnd, { passive: false })
+    
+    canvas.addEventListener("touchstart", onTouchStart, { passive: false })
+    canvas.addEventListener("touchmove", onTouchMove, { passive: false })
+    canvas.addEventListener("touchend", onTouchEnd, { passive: false })
 
     return () => {
       canvas.removeEventListener("pointerdown", onStart)
       canvas.removeEventListener("pointermove", onMove)
       canvas.removeEventListener("pointerup", onEnd)
       canvas.removeEventListener("pointercancel", onEnd)
+      canvas.removeEventListener("touchstart", onTouchStart)
+      canvas.removeEventListener("touchmove", onTouchMove)
+      canvas.removeEventListener("touchend", onTouchEnd)
     }
   }, [])
 
@@ -171,7 +213,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
         }`}
         style={{ touchAction: "none", backgroundColor: '#0f172a' }}
       >
-        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v6.0</div>
+        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v7.0</div>
         <button
           type="button"
           onClick={() => setIsFullScreen(!isFullScreen)}
@@ -211,13 +253,13 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
           size="lg" 
           type="button"
           onClick={() => {
-            console.log("SAVE CLICKED v6.0");
+            console.log("SAVE CLICKED v7.0");
             save();
           }}
           disabled={!hasSignature}
           className="bg-[#E91E63] hover:bg-[#D81B60] text-white font-black uppercase tracking-[0.25em] rounded-[1.25rem] px-8 h-14 shadow-2xl shadow-pink-500/20 active:scale-95 transition-all disabled:opacity-20"
         >
-          Guardar v6.0
+          Guardar v7.0
         </Button>
       </div>
     </div>
