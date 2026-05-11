@@ -166,12 +166,12 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
   return (
     <div className={`space-y-4 ${isFullScreen ? "fixed inset-0 z-[9999] bg-white p-4 flex flex-col" : "relative"}`}>
       <div 
-        className={`relative border-2 border-border/40 rounded-[2rem] overflow-hidden shadow-inner transition-all ${
-          isFullScreen ? "flex-1" : "w-full h-48 sm:h-[350px]"
+        className={`relative border-4 border-[#E91E63] rounded-[2rem] overflow-hidden shadow-2xl transition-all ${
+          isFullScreen ? "flex-1" : "w-full h-40 sm:h-[300px]"
         }`}
-        style={{ touchAction: "none", backgroundColor: 'transparent' }}
+        style={{ touchAction: "none", backgroundColor: '#0f172a' }}
       >
-        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v5.0</div>
+        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v6.0</div>
         <button
           type="button"
           onClick={() => setIsFullScreen(!isFullScreen)}
@@ -210,11 +210,14 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
         <Button 
           size="lg" 
           type="button"
-          onClick={save}
+          onClick={() => {
+            console.log("SAVE CLICKED v6.0");
+            save();
+          }}
           disabled={!hasSignature}
-          className="bg-[#E91E63] hover:bg-[#D81B60] text-white font-black uppercase tracking-[0.25em] rounded-[1.25rem] px-12 h-16 shadow-2xl shadow-pink-500/20 active:scale-95 transition-all disabled:opacity-20"
+          className="bg-[#E91E63] hover:bg-[#D81B60] text-white font-black uppercase tracking-[0.25em] rounded-[1.25rem] px-8 h-14 shadow-2xl shadow-pink-500/20 active:scale-95 transition-all disabled:opacity-20"
         >
-          Guardar Firma
+          Guardar v6.0
         </Button>
       </div>
     </div>
