@@ -45,17 +45,17 @@ export default async function AdminConfiguracionPage() {
             <Plug className="w-4 h-4" />
             Integraciones
           </TabsTrigger>
-          <TabsTrigger value="viaticos" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold">
-            <Map className="w-4 h-4" />
-            Viáticos
+          <TabsTrigger value="seo" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-pink-500/20 data-[state=active]:text-pink-400 font-bold">
+            <Search className="w-4 h-4" />
+            Marketing / SEO
           </TabsTrigger>
           <TabsTrigger value="redes" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 font-bold">
             <Share2 className="w-4 h-4" />
             Redes Sociales
           </TabsTrigger>
-          <TabsTrigger value="seo" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-pink-500/20 data-[state=active]:text-pink-400 font-bold">
-            <Search className="w-4 h-4" />
-            Marketing / SEO
+          <TabsTrigger value="viaticos" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold">
+            <Map className="w-4 h-4" />
+            Viáticos
           </TabsTrigger>
         </TabsList>
 
@@ -329,54 +329,104 @@ export default async function AdminConfiguracionPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="viaticos" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
+        <TabsContent value="seo" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
           <section>
             <div className="bg-card border border-border/40 rounded-2xl p-8 backdrop-blur-sm">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center">
-                  <Map className="w-6 h-6 text-amber-400" />
+                <div className="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center">
+                  <Search className="w-6 h-6 text-pink-400" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-heading font-bold text-foreground">Tabulador de Viáticos Fijos</h2>
-                  <p className="text-sm text-muted-foreground">Define las tarifas planas para eventos foráneos según la zona de impacto.</p>
+                  <h2 className="text-2xl font-heading font-bold text-foreground">OpenGraph y SEO</h2>
+                  <p className="text-sm text-muted-foreground">Personaliza cómo se ve tu sitio cuando compartes el enlace en Facebook, WhatsApp o Instagram.</p>
                 </div>
               </div>
 
-              <ConfigFormWrapper action={saveViaticosConfigAction} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ConfigFormWrapper action={saveOGConfigAction} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="zona2Rate" className="text-foreground">Zona 2 (CDMX, Valle de Bravo, Ixtapan, Tenancingo)</Label>
-                  <Input id="zona2Rate" name="zona2Rate" type="number" step="100" 
-                    defaultValue={(config as any)?.zona2Rate || 1500} 
-                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zona3Rate" className="text-foreground">Zona 3 (Querétaro, Cuernavaca, Puebla, Pachuca)</Label>
-                  <Input id="zona3Rate" name="zona3Rate" type="number" step="100" 
-                    defaultValue={(config as any)?.zona3Rate || 3000} 
-                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
+                  <Label htmlFor="ogTitle">Título OpenGraph (og:title)</Label>
+                  <Input id="ogTitle" name="ogTitle" 
+                    defaultValue={config?.ogTitle || "Vendetta | Música en Vivo para Eventos"} 
+                    placeholder="Ej: Vendetta | El mejor show para tu boda"
+                    className="bg-card border-border/40 text-foreground" />
+                  <p className="text-[10px] text-muted-foreground">Recomendado: Menos de 60 caracteres.</p>
                 </div>
 
-                <div className="md:col-span-2">
-                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold h-12 text-lg text-white">
-                    Actualizar Tarifas
+                <div className="space-y-2">
+                  <Label htmlFor="ogDescription">Descripción OpenGraph (og:description)</Label>
+                  <Textarea id="ogDescription" name="ogDescription" 
+                    defaultValue={config?.ogDescription || "La mejor música en vivo para tu boda o evento corporativo en México. ¡Arma tu show ahora!"} 
+                    placeholder="Describe brevemente el servicio..."
+                    className="bg-card border-border/40 text-foreground min-h-[100px]" />
+                  <p className="text-[10px] text-muted-foreground">Recomendado: Entre 50 y 160 caracteres.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ogImage">URL de Imagen OpenGraph (og:image)</Label>
+                  <Input id="ogImage" name="ogImage" 
+                    defaultValue={config?.ogImage || "/images/shows/arma-tu-show.jpg"} 
+                    placeholder="https://tu-sitio.com/imagen.jpg o ruta interna /images/..."
+                    className="bg-card border-border/40 text-foreground font-mono" />
+                  <p className="text-[10px] text-muted-foreground italic">
+                    * Proporción recomendada 1200x630px. Puedes subir una imagen a la carpeta public y poner aquí la ruta.
+                  </p>
+                </div>
+
+                <div className="pt-4">
+                  <Button type="submit" className="w-full bg-pink-600 hover:bg-pink-500 font-bold h-12 text-white">
+                    Guardar Configuración SEO
                   </Button>
                 </div>
               </ConfigFormWrapper>
-              
-              <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-xl flex gap-3">
-                 <Settings className="w-5 h-5 text-primary shrink-0" />
-                 <div className="text-xs text-muted-foreground leading-relaxed space-y-2">
-                   <p>
-                     <strong>¿Cómo funciona?</strong> El cotizador asignará automáticamente:
-                   </p>
-                   <ul className="list-disc pl-4 space-y-1">
-                     <li><strong>Zona 1 (Toluca / Metepec / Alrededores):</strong> $0 MXN.</li>
-                     <li><strong>Zona 2 (Media Distancia):</strong> El costo establecido arriba.</li>
-                     <li><strong>Zona 3 (Larga Distancia):</strong> El costo establecido arriba.</li>
-                     <li><strong>Zona 4 (Resto de México):</strong> No dará costo automático. Dirá que se cotizará por separado.</li>
-                   </ul>
-                 </div>
+
+              <div className="mt-8 p-6 bg-pink-500/5 border border-pink-500/10 rounded-2xl space-y-6">
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-pink-400 mb-3">Vista Previa (Aproximada)</h4>
+                  <div className="bg-white rounded-lg overflow-hidden border border-slate-200 max-w-sm mx-auto shadow-xl">
+                    <div className="aspect-[1.91/1] bg-slate-100 flex items-center justify-center relative overflow-hidden">
+                      <img 
+                        src={config?.ogImage || "/images/shows/arma-tu-show.jpg"} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as any).src = "https://placehold.co/1200x630?text=Error+Cargando+Imagen";
+                        }}
+                      />
+                    </div>
+                    <div className="p-4 bg-slate-50 border-t border-slate-200">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight mb-1">VENDETTA.MX</p>
+                      <h5 className="text-slate-900 font-bold text-sm line-clamp-1">{config?.ogTitle || "Vendetta | Música en Vivo"}</h5>
+                      <p className="text-slate-500 text-xs line-clamp-2 mt-1 leading-tight">
+                        {config?.ogDescription || "La mejor música en vivo para tu boda..."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-pink-500/10 space-y-4">
+                  <div className="flex items-start gap-3 bg-pink-500/10 p-4 rounded-xl border border-pink-500/20">
+                    <ShieldCheck className="w-5 h-5 text-pink-400 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-pink-100 uppercase tracking-wide">¿Facebook muestra Error 403?</p>
+                      <p className="text-[11px] text-pink-200/70 leading-relaxed">
+                        Si el depurador de Facebook devuelve un código <strong>403</strong>, significa que tu servidor o WAF está bloqueando al bot de Facebook. 
+                        Debes permitir el User-Agent <code className="bg-pink-900/40 px-1 rounded text-pink-300">facebookexternalhit</code> en tu configuración de Cloudflare o Firewall.
+                      </p>
+                    </div>
+                  </div>
+
+                  <a 
+                    href="https://developers.facebook.com/tools/debug/?q=https%3A%2F%2Fvendetta.mx%2F" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-white transition-all group"
+                  >
+                    <ExternalLink className="w-4 h-4 text-pink-400" />
+                    Abrir Depurador de Compartición de Facebook
+                  </a>
+                </div>
               </div>
+
             </div>
           </section>
         </TabsContent>
@@ -429,77 +479,53 @@ export default async function AdminConfiguracionPage() {
           </section>
         </TabsContent>
 
-        <TabsContent value="seo" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
+        <TabsContent value="viaticos" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
           <section>
             <div className="bg-card border border-border/40 rounded-2xl p-8 backdrop-blur-sm">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center">
-                  <Search className="w-6 h-6 text-pink-400" />
+                <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center">
+                  <Map className="w-6 h-6 text-amber-400" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-heading font-bold text-foreground">OpenGraph y SEO</h2>
-                  <p className="text-sm text-muted-foreground">Personaliza cómo se ve tu sitio cuando compartes el enlace en Facebook, WhatsApp o Instagram.</p>
+                  <h2 className="text-2xl font-heading font-bold text-foreground">Tabulador de Viáticos Fijos</h2>
+                  <p className="text-sm text-muted-foreground">Define las tarifas planas para eventos foráneos según la zona de impacto.</p>
                 </div>
               </div>
 
-              <ConfigFormWrapper action={saveOGConfigAction} className="space-y-6">
+              <ConfigFormWrapper action={saveViaticosConfigAction} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="ogTitle">Título OpenGraph (og:title)</Label>
-                  <Input id="ogTitle" name="ogTitle" 
-                    defaultValue={config?.ogTitle || "Vendetta | Música en Vivo para Eventos"} 
-                    placeholder="Ej: Vendetta | El mejor show para tu boda"
-                    className="bg-card border-border/40 text-foreground" />
-                  <p className="text-[10px] text-muted-foreground">Recomendado: Menos de 60 caracteres.</p>
+                  <Label htmlFor="zona2Rate" className="text-foreground">Zona 2 (CDMX, Valle de Bravo, Ixtapan, Tenancingo)</Label>
+                  <Input id="zona2Rate" name="zona2Rate" type="number" step="100" 
+                    defaultValue={(config as any)?.zona2Rate || 1500} 
+                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="zona3Rate" className="text-foreground">Zona 3 (Querétaro, Cuernavaca, Puebla, Pachuca)</Label>
+                  <Input id="zona3Rate" name="zona3Rate" type="number" step="100" 
+                    defaultValue={(config as any)?.zona3Rate || 3000} 
+                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="ogDescription">Descripción OpenGraph (og:description)</Label>
-                  <Textarea id="ogDescription" name="ogDescription" 
-                    defaultValue={config?.ogDescription || "La mejor música en vivo para tu boda o evento corporativo en México. ¡Arma tu show ahora!"} 
-                    placeholder="Describe brevemente el servicio..."
-                    className="bg-card border-border/40 text-foreground min-h-[100px]" />
-                  <p className="text-[10px] text-muted-foreground">Recomendado: Entre 50 y 160 caracteres.</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="ogImage">URL de Imagen OpenGraph (og:image)</Label>
-                  <Input id="ogImage" name="ogImage" 
-                    defaultValue={config?.ogImage || "/images/shows/arma-tu-show.jpg"} 
-                    placeholder="https://tu-sitio.com/imagen.jpg o ruta interna /images/..."
-                    className="bg-card border-border/40 text-foreground font-mono" />
-                  <p className="text-[10px] text-muted-foreground italic">
-                    * Proporción recomendada 1200x630px. Puedes subir una imagen a la carpeta public y poner aquí la ruta.
-                  </p>
-                </div>
-
-                <div className="pt-4">
-                  <Button type="submit" className="w-full bg-pink-600 hover:bg-pink-500 font-bold h-12 text-white">
-                    Guardar Configuración SEO
+                <div className="md:col-span-2">
+                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold h-12 text-lg text-white">
+                    Actualizar Tarifas
                   </Button>
                 </div>
               </ConfigFormWrapper>
-
-              <div className="mt-8 p-6 bg-pink-500/5 border border-pink-500/10 rounded-2xl">
-                <h4 className="text-xs font-black uppercase tracking-widest text-pink-400 mb-3">Vista Previa (Aproximada)</h4>
-                <div className="bg-white rounded-lg overflow-hidden border border-slate-200 max-w-sm mx-auto shadow-xl">
-                  <div className="aspect-[1.91/1] bg-slate-100 flex items-center justify-center relative overflow-hidden">
-                    <img 
-                      src={config?.ogImage || "/images/shows/arma-tu-show.jpg"} 
-                      alt="Preview" 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as any).src = "https://placehold.co/1200x630?text=Error+Cargando+Imagen";
-                      }}
-                    />
-                  </div>
-                  <div className="p-4 bg-slate-50 border-t border-slate-200">
-                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight mb-1">VENDETTA.MX</p>
-                    <h5 className="text-slate-900 font-bold text-sm line-clamp-1">{config?.ogTitle || "Vendetta | Música en Vivo"}</h5>
-                    <p className="text-slate-500 text-xs line-clamp-2 mt-1 leading-tight">
-                      {config?.ogDescription || "La mejor música en vivo para tu boda..."}
-                    </p>
-                  </div>
-                </div>
+              
+              <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-xl flex gap-3">
+                 <Settings className="w-5 h-5 text-primary shrink-0" />
+                 <div className="text-xs text-muted-foreground leading-relaxed space-y-2">
+                   <p>
+                     <strong>¿Cómo funciona?</strong> El cotizador asignará automáticamente:
+                   </p>
+                   <ul className="list-disc pl-4 space-y-1">
+                     <li><strong>Zona 1 (Toluca / Metepec / Alrededores):</strong> $0 MXN.</li>
+                     <li><strong>Zona 2 (Media Distancia):</strong> El costo establecido arriba.</li>
+                     <li><strong>Zona 3 (Larga Distancia):</strong> El costo establecido arriba.</li>
+                     <li><strong>Zona 4 (Resto de México):</strong> No dará costo automático. Dirá que se cotizará por separado.</li>
+                   </ul>
+                 </div>
               </div>
             </div>
           </section>

@@ -233,9 +233,9 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                 <button
                   onClick={() => toggleSection(section.id)}
                   className={cn(
-                    "w-full flex items-center justify-between px-3 py-2.5 text-[10px] font-black tracking-widest uppercase transition-all rounded-xl group mb-1",
+                    "w-full flex items-center justify-between px-3 py-3 text-[10px] font-black tracking-widest uppercase transition-all rounded-xl group mb-1",
                     isAnyChildActive 
-                      ? "bg-[#E91E63] text-white shadow-lg shadow-pink-500/20" 
+                      ? "bg-[#E91E63] text-white shadow-lg shadow-pink-500/30" 
                       : section.placeholder 
                         ? "text-white/20 cursor-not-allowed" 
                         : "text-white/60 hover:text-white hover:bg-white/5"
@@ -265,7 +265,10 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                       transition={{ duration: 0.2, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
-                      <div className="space-y-1.5 mt-1 ml-1 border-l border-white/10 pl-3">
+                      <div className={cn(
+                        "space-y-1 mt-1 ml-1 pl-3 mb-2",
+                        isAnyChildActive ? "border-l-2 border-[#E91E63]/30" : "border-l border-white/10"
+                      )}>
                         {visibleItems.map((item) => {
                           const Icon = item.icon
                           const isActive = pathname === item.href
@@ -278,17 +281,24 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                               className={cn(
                                 "flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all group relative",
                                 isActive 
-                                  ? "bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white shadow-lg shadow-pink-500/30" 
-                                  : "text-white/70 hover:text-white hover:bg-white/5"
+                                  ? "bg-white/10 text-white" 
+                                  : "text-white/50 hover:text-white hover:bg-white/5"
                               )}
                             >
                                 <Icon className={cn(
                                   "w-4 h-4 shrink-0 transition-transform",
-                                  isActive ? "text-white" : "text-white group-hover:scale-110"
+                                  "text-white", // Always white as requested
+                                  isActive ? "opacity-100 scale-110" : "opacity-40 group-hover:opacity-100 group-hover:scale-110"
                                 )} />
                               <span className="flex-1 truncate uppercase tracking-tight">{item.name}</span>
+                              {isActive && (
+                                <motion.div 
+                                  layoutId="activeSub"
+                                  className="absolute left-0 w-1 h-4 bg-[#E91E63] rounded-full"
+                                />
+                              )}
                               {item.badgeCount ? (
-                                <span className="px-1.5 py-0.5 rounded-full bg-white text-[10px] font-bold text-[#E91E63]">
+                                <span className="px-1.5 py-0.5 rounded-full bg-[#E91E63] text-[10px] font-bold text-white">
                                   {item.badgeCount}
                                 </span>
                               ) : null}
