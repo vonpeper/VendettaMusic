@@ -39,6 +39,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
     <div className="space-y-6">
       {signature ? (
         <div className="space-y-6">
+          <div 
             className="border border-border/60 shadow-2xl rounded-3xl p-8 flex flex-col items-center justify-center min-h-[200px] relative group overflow-hidden"
             style={{ backgroundColor: '#0f172a' }}
           >
