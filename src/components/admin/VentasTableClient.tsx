@@ -22,7 +22,8 @@ import {
   MessageSquare,
   Eye,
   Search,
-  X
+  X,
+  RefreshCw
 } from "lucide-react"
 import { resendNotificationAction } from "@/actions/notifications"
 import { Button } from "@/components/ui/button"
@@ -46,7 +47,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { formatDateMX, formatCurrency } from "@/lib/utils"
-import { updateBookingStatusAction } from "@/actions/ventas"
+import { updateBookingStatusAction, reactivateBookingAction } from "@/actions/ventas"
 import { FollowUpButton } from "./FollowUpButton"
 
 interface Booking {
@@ -80,6 +81,8 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [reactivatingBooking, setReactivatingBooking] = useState<any | null>(null)
+  const [isReactivating, setIsReactivating] = useState(false)
   const [search, setSearch] = useState("")
   const [columnFilters, setColumnFilters] = useState({
     cliente: "",
@@ -375,18 +378,31 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                           </DropdownMenuItem>
                         </Link>
 
-                        {(reserva.status === "pendiente" || reserva.status === "pending") && (
-                          <DropdownMenuItem 
-                            className="gap-3 cursor-pointer rounded-lg focus:bg-green-500/10 py-2.5"
-                            onClick={() => handleStatusChange(reserva.id, 'agendado')}
-                          >
-                            <UserCheck className="w-4 h-4 text-green-600" />
-                            <div className="flex flex-col">
-                              <span className="text-xs font-semibold text-green-600">Confirmar y Agendar</span>
-                              <span className="text-[9px] text-muted-foreground">Mover a eventos confirmados</span>
-                            </div>
-                          </DropdownMenuItem>
-                        )}
+                          {(reserva.status === "pendiente" || reserva.status === "pending") && (
+                            <DropdownMenuItem 
+                              className="gap-3 cursor-pointer rounded-lg focus:bg-green-500/10 py-2.5"
+                              onClick={() => handleStatusChange(reserva.id, 'agendado')}
+                            >
+                              <UserCheck className="w-4 h-4 text-green-600" />
+                              <div className="flex flex-col">
+                                <span className="text-xs font-semibold text-green-600">Confirmar y Agendar</span>
+                                <span className="text-[9px] text-muted-foreground">Mover a eventos confirmados</span>
+                              </div>
+                            </DropdownMenuItem>
+                          )}
+
+                          {reserva.status === "EXPIRED" && (
+                            <DropdownMenuItem 
+                              className="gap-3 cursor-pointer rounded-lg focus:bg-orange-500/10 py-2.5"
+                              onClick={() => setReactivatingBooking(reserva)}
+                            >
+                              <RefreshCw className="w-4 h-4 text-orange-600" />
+                              <div className="flex flex-col">
+                                <span className="text-xs font-semibold text-orange-600">Reactivar Contrato</span>
+                                <span className="text-[9px] text-muted-foreground">Recuperar venta expirada</span>
+                              </div>
+                            </DropdownMenuItem>
+                          )}
                       </DropdownMenuGroup>
 
                       <DropdownMenuSeparator className="bg-border/40 my-1" />
@@ -419,6 +435,66 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
           </tbody>
         </table>
       </div>
+
+      {/* Dialogo de Reactivación */}
+      <Dialog open={!!reactivatingBooking} onOpenChange={(open) => !open && setReactivatingBooking(null)}>
+        <DialogContent className="max-w-md bg-background border-border shadow-2xl rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black flex items-center gap-2">
+              <RefreshCw className="w-6 h-6 text-primary animate-spin-slow" />
+              Reactivar Cotización
+            </DialogTitle>
+            <DialogDescription>
+              La reserva de <strong>{reactivatingBooking?.clientName}</strong> ha expirado.
+              ¿Cómo deseas proceder con la reactivación?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <Button 
+              className="h-auto flex flex-col items-start gap-1 p-4 text-left justify-start bg-primary/5 hover:bg-primary/10 border-primary/20 border text-foreground"
+              disabled={isReactivating}
+              onClick={async () => {
+                setIsReactivating(true)
+                try {
+                  const res = await reactivateBookingAction(reactivatingBooking.id)
+                  if (res.success) {
+                    toast.success("Reserva reactivada con éxito")
+                    setReactivatingBooking(null)
+                    router.refresh()
+                  } else {
+                    toast.error(res.error || "Error al reactivar")
+                  }
+                } catch {
+                  toast.error("Error de conexión")
+                } finally {
+                  setIsReactivating(false)
+                }
+              }}
+            >
+              <span className="font-bold text-sm">Mismo Presupuesto</span>
+              <span className="text-[10px] text-muted-foreground">Mantiene los precios actuales y vuelve a estado pendiente por 15 días más.</span>
+              {isReactivating && <Loader2 className="w-4 h-4 animate-spin absolute right-4 top-1/2 -translate-y-1/2" />}
+            </Button>
+
+            <Button 
+              variant="outline"
+              className="h-auto flex flex-col items-start gap-1 p-4 text-left justify-start hover:bg-blue-600/5 border-blue-600/20"
+              onClick={() => {
+                router.push(`/admin/ventas/manual?reactivateId=${reactivatingBooking.id}`)
+                setReactivatingBooking(null)
+              }}
+            >
+              <span className="font-bold text-sm text-blue-600">Cambiar Datos / Presupuesto</span>
+              <span className="text-[10px] text-muted-foreground">Redirige al formulario manual pre-llenado para ajustar precios, fechas o servicios.</span>
+            </Button>
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setReactivatingBooking(null)}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

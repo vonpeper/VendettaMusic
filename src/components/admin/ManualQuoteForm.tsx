@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -48,6 +48,58 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
         setLocations([])
       })
   }, [])
+  
+  const searchParams = useSearchParams()
+  const reactivateId = searchParams.get("reactivateId")
+
+  useEffect(() => {
+    if (reactivateId) {
+      setLoading(true)
+      fetch(`/api/admin/booking-manual/${reactivateId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && !data.error) {
+            // Pre-llenar el formulario con los datos de la reserva expirada
+            setFormData({
+              clientName: data.clientName || "",
+              clientPhone: data.clientPhone || "",
+              clientEmail: data.clientEmail || "",
+              requestedDate: data.requestedDate ? data.requestedDate.split("T")[0] : "",
+              startTime: data.startTime || "21:00",
+              endTime: data.endTime || "23:00",
+              packageId: data.packageId || "manual-arma",
+              calle: data.calle || "",
+              numero: data.numero || "",
+              colonia: data.colonia || "",
+              municipio: data.municipio || "",
+              state: data.state || "Estado de México",
+              baseAmount: data.baseAmount || 0,
+              depositAmount: data.depositAmount || 0,
+              paymentMethod: data.paymentMethod || "transfer",
+              venueType: data.venueType || "salon",
+              guestCount: data.guestCount || 0,
+              isPublic: data.isPublic || false,
+              mapsLink: data.mapsLink || "",
+              adminNote: `Reactivación de reserva ${data.shortId}. ${data.adminNote || ""}`,
+              depositConfirmed: false, // Siempre empezamos sin confirmar depósito en nuevos datos
+              clientProvidesAudio: data.clientProvidesAudio || false,
+              locationId: "", // Podríamos intentar matchear pero mejor que lo elijan o se quede como manual
+              venueName: data.venueName || "",
+              venuePhone: data.venuePhone || "",
+              bandHours: data.bandHours || 2,
+              djHours: data.djHours || 0,
+              isDjWithTvs: data.isDjWithTvs || false,
+              hasTemplete: data.hasTemplete || false,
+              hasPista: data.hasPista || false,
+              hasRobot: data.hasRobot || false,
+              originalPrice: data.originalPrice || 0,
+              discountAmount: data.discountAmount || 0
+            })
+          }
+        })
+        .finally(() => setLoading(false))
+    }
+  }, [reactivateId])
 
 
   const [formData, setFormData] = useState({

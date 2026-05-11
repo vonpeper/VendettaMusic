@@ -189,3 +189,70 @@ export async function sendAutoFollowUpAction(id: string, type: "booking" | "quot
     return { success: false, error: "Error al enviar el seguimiento automático" }
   }
 }
+
+export async function reactivateBookingAction(bookingId: string) {
+  try {
+    const booking = await db.bookingRequest.findUnique({ 
+      where: { id: bookingId } 
+    })
+    if (!booking) return { success: false, error: "No se encontró la reserva." }
+
+    await db.bookingRequest.update({
+      where: { id: bookingId },
+      data: { 
+        status: "pendiente",
+        createdAt: new Date(), // Reiniciar el contador de 15 días
+        followUpCount: 0      // Reiniciar seguimiento
+      }
+    })
+
+    // SI TIENE EVENTO, TAMBIÉN RE-ACTIVARLO
+    if (booking.eventId) {
+      await db.event.update({
+        where: { id: booking.eventId },
+        data: { status: "scheduled" } // o "pendiente" si prefieres
+      })
+    }
+
+    revalidatePath("/admin/ventas")
+    revalidatePath("/admin/eventos")
+    return { success: true }
+  } catch (error) {
+    console.error("Error reactivating booking:", error)
+    return { success: false, error: "Error al reactivar el contrato." }
+  }
+}
+
+export async function confirmDepositPaidAction(bookingId: string) {
+  try {
+    const booking = await db.bookingRequest.findUnique({
+      where: { id: bookingId }
+    })
+    
+    if (!booking) return { success: false, error: "Reserva no encontrada" }
+
+    await db.bookingRequest.update({
+      where: { id: bookingId },
+      data: { paymentStatus: "paid" } // Lo marcamos como pagado (el anticipo)
+    })
+
+    if (booking.eventId) {
+      // Al confirmar anticipo, actualizamos el balance del evento
+      await db.event.update({
+        where: { id: booking.eventId },
+        data: { 
+          deposit: booking.depositAmount,
+          balance: booking.baseAmount - booking.depositAmount
+        }
+      })
+    }
+
+    revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    revalidatePath("/admin/eventos")
+    return { success: true }
+  } catch (error) {
+    console.error("Error confirming deposit:", error)
+    return { success: false, error: "Error al confirmar el anticipo." }
+  }
+}

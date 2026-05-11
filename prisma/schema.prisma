@@ -515,6 +515,9 @@ model GlobalConfig {
   adminSignature         String?
   isSandbox              Boolean   @default(false)
   logInboundActive       Boolean   @default(true)
+  ogTitle                String?
+  ogDescription          String?
+  ogImage                String?
 }
 
 model InboxItem {

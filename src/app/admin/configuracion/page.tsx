@@ -2,13 +2,13 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { db } from "@/lib/db"
-import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction, saveBankConfigAction, saveEvolutionWebhookSecretAction } from "@/actions/config"
+import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction, saveBankConfigAction, saveEvolutionWebhookSecretAction, saveOGConfigAction } from "@/actions/config"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MessageCircle, Calendar, Settings, ShieldCheck, Mail, ArrowRight, ExternalLink, Share2, FileText, Plug, Map, Loader2, MessageSquare } from "lucide-react"
+import { MessageCircle, Calendar, Settings, ShieldCheck, Mail, ArrowRight, ExternalLink, Share2, FileText, Plug, Map, Loader2, MessageSquare, Search } from "lucide-react"
 import { ConfigFormWrapper } from "@/components/admin/ConfigFormWrapper"
 import { SandboxToggle } from "@/components/admin/SandboxToggle"
 import { AdminSignatureManager } from "@/components/admin/AdminSignatureManager"
@@ -52,6 +52,10 @@ export default async function AdminConfiguracionPage() {
           <TabsTrigger value="redes" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 font-bold">
             <Share2 className="w-4 h-4" />
             Redes Sociales
+          </TabsTrigger>
+          <TabsTrigger value="seo" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-pink-500/20 data-[state=active]:text-pink-400 font-bold">
+            <Search className="w-4 h-4" />
+            Marketing / SEO
           </TabsTrigger>
         </TabsList>
 
@@ -421,6 +425,82 @@ export default async function AdminConfiguracionPage() {
                   </Button>
                 </div>
               </ConfigFormWrapper>
+            </div>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="seo" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
+          <section>
+            <div className="bg-card border border-border/40 rounded-2xl p-8 backdrop-blur-sm">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center">
+                  <Search className="w-6 h-6 text-pink-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-heading font-bold text-foreground">OpenGraph y SEO</h2>
+                  <p className="text-sm text-muted-foreground">Personaliza cómo se ve tu sitio cuando compartes el enlace en Facebook, WhatsApp o Instagram.</p>
+                </div>
+              </div>
+
+              <ConfigFormWrapper action={saveOGConfigAction} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="ogTitle">Título OpenGraph (og:title)</Label>
+                  <Input id="ogTitle" name="ogTitle" 
+                    defaultValue={config?.ogTitle || "Vendetta | Música en Vivo para Eventos"} 
+                    placeholder="Ej: Vendetta | El mejor show para tu boda"
+                    className="bg-card border-border/40 text-foreground" />
+                  <p className="text-[10px] text-muted-foreground">Recomendado: Menos de 60 caracteres.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ogDescription">Descripción OpenGraph (og:description)</Label>
+                  <Textarea id="ogDescription" name="ogDescription" 
+                    defaultValue={config?.ogDescription || "La mejor música en vivo para tu boda o evento corporativo en México. ¡Arma tu show ahora!"} 
+                    placeholder="Describe brevemente el servicio..."
+                    className="bg-card border-border/40 text-foreground min-h-[100px]" />
+                  <p className="text-[10px] text-muted-foreground">Recomendado: Entre 50 y 160 caracteres.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ogImage">URL de Imagen OpenGraph (og:image)</Label>
+                  <Input id="ogImage" name="ogImage" 
+                    defaultValue={config?.ogImage || "/images/shows/arma-tu-show.jpg"} 
+                    placeholder="https://tu-sitio.com/imagen.jpg o ruta interna /images/..."
+                    className="bg-card border-border/40 text-foreground font-mono" />
+                  <p className="text-[10px] text-muted-foreground italic">
+                    * Proporción recomendada 1200x630px. Puedes subir una imagen a la carpeta public y poner aquí la ruta.
+                  </p>
+                </div>
+
+                <div className="pt-4">
+                  <Button type="submit" className="w-full bg-pink-600 hover:bg-pink-500 font-bold h-12 text-white">
+                    Guardar Configuración SEO
+                  </Button>
+                </div>
+              </ConfigFormWrapper>
+
+              <div className="mt-8 p-6 bg-pink-500/5 border border-pink-500/10 rounded-2xl">
+                <h4 className="text-xs font-black uppercase tracking-widest text-pink-400 mb-3">Vista Previa (Aproximada)</h4>
+                <div className="bg-white rounded-lg overflow-hidden border border-slate-200 max-w-sm mx-auto shadow-xl">
+                  <div className="aspect-[1.91/1] bg-slate-100 flex items-center justify-center relative overflow-hidden">
+                    <img 
+                      src={config?.ogImage || "/images/shows/arma-tu-show.jpg"} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as any).src = "https://placehold.co/1200x630?text=Error+Cargando+Imagen";
+                      }}
+                    />
+                  </div>
+                  <div className="p-4 bg-slate-50 border-t border-slate-200">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight mb-1">VENDETTA.MX</p>
+                    <h5 className="text-slate-900 font-bold text-sm line-clamp-1">{config?.ogTitle || "Vendetta | Música en Vivo"}</h5>
+                    <p className="text-slate-500 text-xs line-clamp-2 mt-1 leading-tight">
+                      {config?.ogDescription || "La mejor música en vivo para tu boda..."}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         </TabsContent>

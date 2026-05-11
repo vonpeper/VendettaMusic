@@ -362,3 +362,28 @@ export async function testEvolutionConnectionAction() {
     return { success: false, message: `Error de red/servidor: ${error.message}` }
   }
 }
+
+export async function saveOGConfigAction(arg1: any, arg2?: any) {
+  const u = await requireAdmin(); if (u) return u
+  try {
+    const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null)
+    if (!formData) return { success: false, message: "Error: No se recibieron datos" }
+
+    const ogTitle = formData.get("ogTitle") as string
+    const ogDescription = formData.get("ogDescription") as string
+    const ogImage = formData.get("ogImage") as string
+
+    await db.globalConfig.upsert({
+      where: { id: "vendetta_config" },
+      update: { ogTitle, ogDescription, ogImage },
+      create: { id: "vendetta_config", ogTitle, ogDescription, ogImage },
+    })
+
+    revalidatePath("/admin/configuracion")
+    revalidatePath("/")
+    return { success: true, message: "Configuración OpenGraph guardada" }
+  } catch (error: any) {
+    console.error("Error saving OG config:", error)
+    return { success: false, message: `Error: ${error.message}` }
+  }
+}
