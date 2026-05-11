@@ -92,22 +92,21 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
             {signature ? "Actualizar Firma Digital" : "Registrar Nueva Firma"}
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[600px] bg-background border-border rounded-3xl p-0 overflow-hidden">
-          <div className="p-6 pb-0">
+        <DialogContent className="w-[95vw] sm:max-w-[600px] bg-background border-border rounded-3xl p-0 overflow-hidden" onPointerDownCapture={(e) => e.stopPropagation()}>
+          <div className="p-6 pb-0" style={{ touchAction: "none" }}>
             <DialogHeader>
               <DialogTitle className="text-2xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
                 <PenTool className="w-6 h-6 text-[#E91E63]" />
-                Registro de Firma
+                Registro de Firma <span className="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full">v3.0</span>
               </DialogTitle>
               <DialogDescription className="text-muted-foreground font-medium">
                 Dibuja tu firma oficial de Vendetta en el recuadro inferior. 
-                Se recomienda usar un dispositivo táctil para mayor precisión.
               </DialogDescription>
             </DialogHeader>
           </div>
           
           <div className="p-6">
-            <div className="bg-white border border-border/40 rounded-2xl p-2">
+            <div className="bg-white border border-border/40 rounded-2xl p-2" style={{ touchAction: "none" }}>
               <SignaturePad onSave={handleSave} placeholder="Traza tu firma aquí" />
             </div>
           </div>
