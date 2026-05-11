@@ -316,11 +316,12 @@ export default async function AdminConfiguracionPage() {
             {/* Firma Digital Corporativa - Full Width */}
             <section className="space-y-6 pt-12 mt-12 border-t border-border/60">
               <div className="flex items-center gap-4 mb-2">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center relative">
                   <ShieldCheck className="w-6 h-6 text-primary" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-heading font-bold text-foreground">Firma Digital Corporativa</h2>
+                  <h2 className="text-2xl font-heading font-bold text-foreground">Firma Digital Corporativa <span className="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full ml-2">v3.0</span></h2>
                   <p className="text-sm text-muted-foreground">Esta firma aparecerá automáticamente en todos los contratos que tus clientes firmen.</p>
                 </div>
               </div>
