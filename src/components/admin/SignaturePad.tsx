@@ -206,21 +206,12 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
   }
 
   return (
-    <div className={`space-y-4 ${isFullScreen ? "fixed inset-0 z-[9999] bg-white p-4 flex flex-col" : "relative"}`}>
+    <div className="space-y-4 relative">
       <div 
-        className={`relative border-4 border-[#E91E63] rounded-[2rem] overflow-hidden shadow-2xl transition-all ${
-          isFullScreen ? "flex-1" : "w-full h-40 sm:h-[300px]"
-        }`}
+        className="relative border-4 border-[#E91E63] rounded-[2rem] overflow-hidden shadow-2xl transition-all w-full h-44 sm:h-[300px]"
         style={{ touchAction: "none", backgroundColor: '#0f172a' }}
       >
-        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v7.0</div>
-        <button
-          type="button"
-          onClick={() => setIsFullScreen(!isFullScreen)}
-          className="absolute top-6 right-6 z-10 w-14 h-14 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center text-black/20 hover:text-black hover:bg-black/10 active:scale-95 transition-all shadow-sm backdrop-blur-md"
-        >
-          {isFullScreen ? <Minimize2 className="w-6 h-6" /> : <Maximize2 className="w-6 h-6" />}
-        </button>
+        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v8.0</div>
 
         {!hasSignature && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-white/5 gap-6 select-none">
@@ -239,13 +230,13 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
         />
       </div>
       
-      <div className={`flex gap-4 justify-end ${isFullScreen ? "pb-4" : ""}`}>
+      <div className="flex gap-3 justify-end">
         <Button 
           variant="outline" 
           size="lg" 
           type="button"
           onClick={clear}
-          className="border-border bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted rounded-[1.25rem] px-10 h-16 text-xs font-black uppercase tracking-widest transition-all"
+          className="border-border bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted rounded-[1.25rem] px-6 h-14 text-xs font-black uppercase tracking-widest transition-all"
         >
           Limpiar
         </Button>
@@ -253,13 +244,13 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
           size="lg" 
           type="button"
           onClick={() => {
-            console.log("SAVE CLICKED v7.0");
+            console.log("SAVE CLICKED v8.0");
             save();
           }}
           disabled={!hasSignature}
-          className="bg-[#E91E63] hover:bg-[#D81B60] text-white font-black uppercase tracking-[0.25em] rounded-[1.25rem] px-8 h-14 shadow-2xl shadow-pink-500/20 active:scale-95 transition-all disabled:opacity-20"
+          className="bg-[#E91E63] hover:bg-[#D81B60] text-white font-black uppercase tracking-[0.25em] rounded-[1.25rem] px-6 h-14 shadow-2xl shadow-pink-500/20 active:scale-95 transition-all disabled:opacity-20"
         >
-          Guardar v7.0
+          Guardar v8.0
         </Button>
       </div>
     </div>
