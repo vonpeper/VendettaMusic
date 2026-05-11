@@ -7,6 +7,7 @@ import { BookingActions } from "@/components/admin/BookingActions"
 import { ClientWhatsappActions } from "@/components/admin/ClientWhatsappActions"
 import { AdminManagementTools } from "@/components/admin/AdminManagementTools"
 import { LiquidarButton } from "@/components/admin/LiquidarButton"
+import { ConfirmarAnticipoButton } from "@/components/admin/ConfirmarAnticipoButton"
 import { ContractSignedButton } from "@/components/admin/ContractSignedButton"
 import { 
   ArrowLeft, 
@@ -271,7 +272,10 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   </div>
                 )}
                 {booking.paymentStatus === "pendiente" && (
-                  <LiquidarButton bookingId={booking.id} />
+                  <div className="flex flex-col gap-2">
+                    <ConfirmarAnticipoButton bookingId={booking.id} />
+                    <LiquidarButton bookingId={booking.id} />
+                  </div>
                 )}
               </CardContent>
             </Card>

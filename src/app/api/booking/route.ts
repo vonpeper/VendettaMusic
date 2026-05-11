@@ -245,17 +245,21 @@ export async function PATCH(req: NextRequest) {
           data:  { eventId: eventId }
         })
       } else {
-        // Si ya existe, solo actualizamos notas si hay nuevas
-        if (adminNote) {
-          await db.bookingRequest.update({
-            where: { id: bookingId },
-            data: { adminNote }
-          })
-          await db.event.update({
-            where: { id: eventId },
-            data: { musicianNotes: adminNote }
-          })
-        }
+        // Si ya existe, actualizamos status y notas
+        await db.bookingRequest.update({
+          where: { id: bookingId },
+          data: { 
+            status: "agendado",
+            adminNote: adminNote || undefined 
+          }
+        })
+        await db.event.update({
+          where: { id: eventId },
+          data: { 
+            status: "agendado",
+            musicianNotes: adminNote || undefined 
+          }
+        })
       }
 
       // 5. Asignar automáticamente los músicos titulares al evento
