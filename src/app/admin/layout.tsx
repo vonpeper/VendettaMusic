@@ -22,6 +22,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="admin-theme flex min-h-screen bg-background text-foreground p-4 gap-4">
+      <div className="fixed top-0 left-0 right-0 h-1 bg-red-600 z-[99999] pointer-events-none" />
       {/* Sidebar - Floating style */}
       <AdminSidebar 
         user={{ name: session.user?.name, role: session.user?.role }} 
