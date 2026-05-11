@@ -44,11 +44,24 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
   }, [])
 
   useEffect(() => {
-    const timer = setTimeout(setupCanvas, 1000)
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const observer = new ResizeObserver(() => {
+      // Small delay to ensure browser has finished layout
+      requestAnimationFrame(setupCanvas)
+    })
+
+    observer.observe(canvas.parentElement || canvas)
+    
+    // Fallback for initial load
+    const timer = setTimeout(setupCanvas, 100)
+    
     window.addEventListener("resize", setupCanvas)
     window.addEventListener("orientationchange", setupCanvas)
     
     return () => {
+      observer.disconnect()
       clearTimeout(timer)
       window.removeEventListener("resize", setupCanvas)
       window.removeEventListener("orientationchange", setupCanvas)
@@ -151,10 +164,10 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
   }
 
   return (
-    <div className={`space-y-4 ${isFullScreen ? "fixed inset-0 z-[9999] bg-black p-4 flex flex-col" : ""}`}>
+    <div className={`space-y-4 ${isFullScreen ? "fixed inset-0 z-[9999] bg-white p-4 flex flex-col" : ""}`}>
       <div 
-        className={`relative bg-white border-2 border-border/40 rounded-[2rem] overflow-hidden shadow-sm transition-all ${
-          isFullScreen ? "flex-1" : "aspect-[2/1] sm:aspect-[3/1] min-h-[350px]"
+        className={`relative bg-zinc-50 border-2 border-border/40 rounded-[2rem] overflow-hidden shadow-inner transition-all ${
+          isFullScreen ? "flex-1" : "aspect-[3/2] sm:aspect-[3/1] min-h-[200px] sm:min-h-[350px]"
         }`}
         style={{ touchAction: "none" }}
       >
