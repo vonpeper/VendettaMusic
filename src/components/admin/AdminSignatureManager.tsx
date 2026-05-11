@@ -44,7 +44,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
             style={{ backgroundColor: '#eeeeef' }}
           >
              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E91E63] to-transparent opacity-20" />
-             <div className="absolute bottom-2 right-4 text-[8px] opacity-40 text-foreground font-black">v4.5</div>
+             <div className="absolute bottom-2 right-4 text-[8px] opacity-40 text-foreground font-black">v4.7</div>
              {signature ? (
                <img src={signature} alt="Firma Administrador" className="max-h-40 opacity-90 drop-shadow-sm" />
              ) : (
@@ -92,12 +92,12 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
             {signature ? "Actualizar Firma Digital" : "Registrar Nueva Firma"}
           </Button>
         </DialogTrigger>
-        <DialogContent className="w-[92vw] max-w-[600px] bg-background border-border rounded-3xl p-0 overflow-hidden" onPointerDownCapture={(e) => e.stopPropagation()}>
+        <DialogContent className="w-[95vw] sm:max-w-[600px] bg-background border-border rounded-3xl p-0 overflow-hidden" onPointerDownCapture={(e) => e.stopPropagation()}>
           <div className="p-6 pb-0" style={{ touchAction: "none" }}>
             <DialogHeader>
               <DialogTitle className="text-2xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
                 <PenTool className="w-6 h-6 text-[#E91E63]" />
-                Registro de Firma <span className="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full">v4.5</span>
+                Registro de Firma <span className="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full">v4.7</span>
               </DialogTitle>
               <DialogDescription className="text-muted-foreground font-medium">
                 Dibuja tu firma oficial de Vendetta en el recuadro inferior. 
@@ -106,7 +106,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
           </div>
           
           <div className="p-4 sm:p-6">
-            <div className="bg-white border border-border/40 rounded-2xl p-1 sm:p-2" style={{ touchAction: "none" }}>
+            <div className="bg-[#e5e7eb] border-2 border-dashed border-black/10 rounded-3xl p-1" style={{ touchAction: "none" }}>
               <SignaturePad onSave={handleSave} placeholder="Traza tu firma aquí" />
             </div>
           </div>
