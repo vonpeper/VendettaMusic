@@ -311,8 +311,10 @@ export default async function AdminConfiguracionPage() {
                 </ConfigFormWrapper>
               </div>
             </section>
-            {/* Firma Digital Corporativa */}
-            <section className="space-y-6 pt-10 border-t border-border/40">
+            </div>
+
+            {/* Firma Digital Corporativa - Full Width */}
+            <section className="space-y-6 pt-12 mt-12 border-t border-border/60">
               <div className="flex items-center gap-4 mb-2">
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                   <ShieldCheck className="w-6 h-6 text-primary" />
@@ -323,11 +325,10 @@ export default async function AdminConfiguracionPage() {
                 </div>
               </div>
               
-              <div className="bg-card border border-border/40 rounded-2xl p-8 max-w-2xl">
+              <div className="bg-card border border-border/40 rounded-3xl p-8 shadow-sm">
                  <AdminSignatureManager initialSignature={config?.adminSignature || null} />
               </div>
             </section>
-          </div>
         </TabsContent>
 
         <TabsContent value="seo" className="focus-visible:outline-none focus-visible:ring-0 mt-0">

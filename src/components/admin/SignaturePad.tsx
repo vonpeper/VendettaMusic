@@ -153,7 +153,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
   return (
     <div className={`space-y-4 ${isFullScreen ? "fixed inset-0 z-[9999] bg-black p-4 flex flex-col" : ""}`}>
       <div 
-        className={`relative bg-[#050505] border-2 border-white/5 rounded-[2rem] overflow-hidden shadow-2xl transition-all ${
+        className={`relative bg-white border-2 border-border/40 rounded-[2rem] overflow-hidden shadow-sm transition-all ${
           isFullScreen ? "flex-1" : "aspect-[2/1] sm:aspect-[3/1] min-h-[350px]"
         }`}
         style={{ touchAction: "none" }}
@@ -161,17 +161,17 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
         <button
           type="button"
           onClick={() => setIsFullScreen(!isFullScreen)}
-          className="absolute top-6 right-6 z-10 w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 active:scale-95 transition-all shadow-xl backdrop-blur-md"
+          className="absolute top-6 right-6 z-10 w-14 h-14 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center text-black/20 hover:text-black hover:bg-black/10 active:scale-95 transition-all shadow-sm backdrop-blur-md"
         >
           {isFullScreen ? <Minimize2 className="w-6 h-6" /> : <Maximize2 className="w-6 h-6" />}
         </button>
 
         {!hasSignature && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-white/5 gap-6 select-none">
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-black/5 gap-6 select-none">
             <MousePointer2 className="w-16 h-16 opacity-10 animate-pulse" />
             <div className="text-center">
-              <span className="font-black uppercase tracking-[0.6em] text-[10px] block mb-2">{placeholder}</span>
-              <span className="text-[9px] font-medium opacity-30 italic">Trazo directo 1:1 activo</span>
+              <span className="font-black uppercase tracking-[0.6em] text-[10px] block mb-2 text-black/30">{placeholder}</span>
+              <span className="text-[9px] font-medium opacity-30 italic text-black/40">Trazo directo 1:1 activo</span>
             </div>
           </div>
         )}
@@ -189,7 +189,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
           size="lg" 
           type="button"
           onClick={clear}
-          className="border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 rounded-[1.25rem] px-10 h-16 text-xs font-black uppercase tracking-widest transition-all"
+          className="border-border bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted rounded-[1.25rem] px-10 h-16 text-xs font-black uppercase tracking-widest transition-all"
         >
           Limpiar
         </Button>
