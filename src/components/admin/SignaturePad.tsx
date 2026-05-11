@@ -208,10 +208,10 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
   return (
     <div className="space-y-4 relative">
       <div 
-        className="relative border-4 border-[#E91E63] rounded-[2rem] overflow-hidden shadow-2xl transition-all w-full h-44 sm:h-[300px]"
+        className="relative border-4 border-[#E91E63] rounded-[2rem] overflow-hidden shadow-2xl transition-all w-full h-40 sm:h-[300px] landscape:h-[140px]"
         style={{ touchAction: "none", backgroundColor: '#0f172a' }}
       >
-        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v8.0</div>
+        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v9.0</div>
 
         {!hasSignature && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-white/5 gap-6 select-none">
@@ -244,13 +244,13 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
           size="lg" 
           type="button"
           onClick={() => {
-            console.log("SAVE CLICKED v8.0");
+            console.log("SAVE CLICKED v9.0");
             save();
           }}
           disabled={!hasSignature}
           className="bg-[#E91E63] hover:bg-[#D81B60] text-white font-black uppercase tracking-[0.25em] rounded-[1.25rem] px-6 h-14 shadow-2xl shadow-pink-500/20 active:scale-95 transition-all disabled:opacity-20"
         >
-          Guardar v8.0
+          Guardar v9.0
         </Button>
       </div>
     </div>
