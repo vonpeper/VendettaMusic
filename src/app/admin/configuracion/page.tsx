@@ -40,21 +40,21 @@ export default async function AdminConfiguracionPage() {
       </div>
 
       <Tabs defaultValue="integraciones" className="w-full">
-        <TabsList className="flex flex-col md:flex-row w-full bg-card border border-border/40 h-auto p-1.5 mb-8 rounded-2xl gap-2">
-          <TabsTrigger value="integraciones" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold">
-            <Plug className="w-4 h-4" />
+        <TabsList className="grid grid-cols-2 md:flex md:flex-row w-full bg-card/50 border border-border/40 h-auto p-1.5 mb-8 rounded-2xl gap-2">
+          <TabsTrigger value="integraciones" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold bg-transparent">
+            <Plug className="w-4 h-4 mr-2" />
             Integraciones
           </TabsTrigger>
-          <TabsTrigger value="seo" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-pink-500/20 data-[state=active]:text-pink-400 font-bold">
-            <Search className="w-4 h-4" />
-            Marketing / SEO
+          <TabsTrigger value="seo" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-pink-500/20 data-[state=active]:text-pink-400 font-bold bg-transparent">
+            <Search className="w-4 h-4 mr-2" />
+            Marketing
           </TabsTrigger>
-          <TabsTrigger value="redes" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 font-bold">
-            <Share2 className="w-4 h-4" />
-            Redes Sociales
+          <TabsTrigger value="redes" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 font-bold bg-transparent">
+            <Share2 className="w-4 h-4 mr-2" />
+            Redes
           </TabsTrigger>
-          <TabsTrigger value="viaticos" className="w-full rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold">
-            <Map className="w-4 h-4" />
+          <TabsTrigger value="viaticos" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold bg-transparent">
+            <Map className="w-4 h-4 mr-2" />
             Viáticos
           </TabsTrigger>
         </TabsList>
