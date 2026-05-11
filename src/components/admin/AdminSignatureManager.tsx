@@ -39,9 +39,9 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
     <div className="space-y-6">
       {signature ? (
         <div className="space-y-6">
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[200px] relative group overflow-hidden">
-             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E91E63] to-transparent opacity-50" />
-             <img src={signature} alt="Firma Administrador" className="max-h-40 invert opacity-90 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+          <div className="bg-white border border-border/60 shadow-inner rounded-3xl p-8 flex flex-col items-center justify-center min-h-[200px] relative group overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E91E63] to-transparent opacity-20" />
+             <img src={signature} alt="Firma Administrador" className="max-h-40 opacity-90 grayscale hover:grayscale-0 transition-all duration-500" />
              
              <div className="mt-4 flex items-center gap-2 text-[10px] font-black text-green-500 uppercase tracking-widest bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
                <CheckCircle2 className="w-3 h-3" /> Firma Registrada
@@ -65,12 +65,12 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
           </p>
         </div>
       ) : (
-        <div className="p-12 border-2 border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20 flex flex-col items-center justify-center text-center gap-4">
+        <div className="p-12 border-2 border-dashed border-border/60 rounded-3xl bg-muted/30 flex flex-col items-center justify-center text-center gap-4">
            <div className="w-16 h-16 rounded-2xl bg-[#E91E63]/10 flex items-center justify-center text-[#E91E63] mb-2">
              <PenTool className="w-8 h-8" />
            </div>
            <div>
-             <h3 className="text-white font-black uppercase tracking-tight">Sin Firma Digital</h3>
+             <h3 className="text-foreground font-black uppercase tracking-tight">Sin Firma Digital</h3>
              <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">Necesitas registrar tu firma para poder emitir contratos legales.</p>
            </div>
         </div>
@@ -84,14 +84,14 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
             {signature ? "Actualizar Firma Digital" : "Registrar Nueva Firma"}
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[600px] bg-[#1a1a1a] border-white/10 rounded-3xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[600px] bg-background border-border rounded-3xl p-0 overflow-hidden">
           <div className="p-6 pb-0">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3">
+              <DialogTitle className="text-2xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
                 <PenTool className="w-6 h-6 text-[#E91E63]" />
                 Registro de Firma
               </DialogTitle>
-              <DialogDescription className="text-zinc-400 font-medium">
+              <DialogDescription className="text-muted-foreground font-medium">
                 Dibuja tu firma oficial de Vendetta en el recuadro inferior. 
                 Se recomienda usar un dispositivo táctil para mayor precisión.
               </DialogDescription>
@@ -99,7 +99,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
           </div>
           
           <div className="p-6">
-            <div className="bg-zinc-900 border border-white/5 rounded-2xl p-2">
+            <div className="bg-white border border-border/40 rounded-2xl p-2">
               <SignaturePad onSave={handleSave} placeholder="Traza tu firma aquí" />
             </div>
           </div>
