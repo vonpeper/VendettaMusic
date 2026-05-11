@@ -225,25 +225,34 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
 
             const isExpanded = expandedSections[section.id]
             const SectionIcon = section.icon
+            const isAnyChildActive = visibleItems.some(item => pathname === item.href)
 
             return (
               <div key={section.id} className="space-y-1">
+                {/* Section Header */}
                 <button
                   onClick={() => toggleSection(section.id)}
                   className={cn(
-                    "w-full flex items-center justify-between px-3 py-2 text-[10px] font-black tracking-widest uppercase transition-all rounded-lg group",
-                    section.placeholder 
-                      ? "text-white/20 cursor-not-allowed" 
-                      : "text-white/60 hover:text-white hover:bg-white/5"
+                    "w-full flex items-center justify-between px-3 py-2.5 text-[10px] font-black tracking-widest uppercase transition-all rounded-xl group mb-1",
+                    isAnyChildActive 
+                      ? "bg-[#E91E63] text-white shadow-lg shadow-pink-500/20" 
+                      : section.placeholder 
+                        ? "text-white/20 cursor-not-allowed" 
+                        : "text-white/60 hover:text-white hover:bg-white/5"
                   )}
                   disabled={section.placeholder}
                 >
                   <div className="flex items-center gap-2">
-                    <SectionIcon className={cn("w-3.5 h-3.5", isExpanded ? "text-[#E91E63]" : "text-[#E91E63]/70 group-hover:text-[#E91E63]")} />
+                    <SectionIcon className={cn(
+                      "w-4 h-4", 
+                      isAnyChildActive ? "text-white" : (isExpanded ? "text-[#E91E63]" : "text-[#E91E63]/70 group-hover:text-[#E91E63]")
+                    )} />
                     {section.title}
                   </div>
                   {!section.placeholder && (
-                    isExpanded ? <ChevronDown className="w-3 h-3 text-white/40" /> : <ChevronRight className="w-3 h-3 text-white/40" />
+                    isExpanded 
+                      ? <ChevronDown className={cn("w-3.5 h-3.5", isAnyChildActive ? "text-white/70" : "text-white/40")} /> 
+                      : <ChevronRight className={cn("w-3.5 h-3.5", isAnyChildActive ? "text-white/70" : "text-white/40")} />
                   )}
                 </button>
 
@@ -256,7 +265,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                       transition={{ duration: 0.2, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
-                      <div className="space-y-1.5 mt-1">
+                      <div className="space-y-1.5 mt-1 ml-1 border-l border-white/10 pl-3">
                         {visibleItems.map((item) => {
                           const Icon = item.icon
                           const isActive = pathname === item.href
@@ -267,19 +276,19 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                               href={item.href}
                               onClick={() => setExpandedSections(prev => ({ ...prev, mobile: false }))}
                               className={cn(
-                                "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all group relative",
+                                "flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all group relative",
                                 isActive 
                                   ? "bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white shadow-lg shadow-pink-500/30" 
                                   : "text-white/70 hover:text-white hover:bg-white/5"
                               )}
                             >
                                 <Icon className={cn(
-                                  "w-5 h-5 shrink-0 transition-transform",
-                                  isActive ? "text-white" : "text-[#E91E63] group-hover:text-[#E91E63]/90"
+                                  "w-4 h-4 shrink-0 transition-transform",
+                                  isActive ? "text-white" : "text-white group-hover:scale-110"
                                 )} />
-                              <span className="flex-1 truncate">{item.name}</span>
+                              <span className="flex-1 truncate uppercase tracking-tight">{item.name}</span>
                               {item.badgeCount ? (
-                                <span className="px-1.5 py-0.5 rounded-full bg-white text-[10px] font-bold text-primary">
+                                <span className="px-1.5 py-0.5 rounded-full bg-white text-[10px] font-bold text-[#E91E63]">
                                   {item.badgeCount}
                                 </span>
                               ) : null}
