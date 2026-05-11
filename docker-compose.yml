@@ -1,7 +1,7 @@
 services:
-  vendetta:
+  vendetta-v4:
     build: .
-    container_name: vendetta-app
+    container_name: vendetta-app-v4
     restart: always
     ports:
       - "3005:3000"

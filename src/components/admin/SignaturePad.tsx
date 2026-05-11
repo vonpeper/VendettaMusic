@@ -171,7 +171,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
         }`}
         style={{ touchAction: "none", backgroundColor: '#e5e7eb' }}
       >
-        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v3.0</div>
+        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v4.5</div>
         <button
           type="button"
           onClick={() => setIsFullScreen(!isFullScreen)}
