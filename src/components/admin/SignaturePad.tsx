@@ -37,7 +37,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
-    ctx.strokeStyle = "#ffffff"
+    ctx.strokeStyle = "#000000"
     ctx.lineWidth = 4
     
     ctxRef.current = ctx
@@ -223,7 +223,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
 
         <canvas
           ref={canvasRef}
-          className="w-full h-full block cursor-crosshair"
+          className="w-full h-full block cursor-crosshair invert brightness-200"
           style={{ touchAction: "none" }}
         />
       </div>
