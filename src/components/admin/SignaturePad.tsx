@@ -38,7 +38,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
     ctx.strokeStyle = "#000000"
-    ctx.lineWidth = 4
+    ctx.lineWidth = 3
     
     ctxRef.current = ctx
   }, [])
@@ -209,21 +209,21 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
     <div className="space-y-4 relative">
       <div 
         className="relative border-4 border-[#E91E63] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-2xl transition-all w-full h-64 sm:h-[350px] landscape:h-[160px]"
-        style={{ touchAction: "none", backgroundColor: '#0f172a' }}
+        style={{ touchAction: "none", backgroundColor: '#f8fafc' }}
       >
         {!hasSignature && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-white/5 gap-6 select-none">
-            <MousePointer2 className="w-16 h-16 opacity-10 animate-pulse" />
+            <MousePointer2 className="w-16 h-16 opacity-5 animate-pulse text-slate-900" />
             <div className="text-center">
-              <span className="font-black uppercase tracking-[0.6em] text-[10px] block mb-2 text-white/40">{placeholder}</span>
-              <span className="text-[9px] font-medium opacity-30 italic text-white/30">Trazo blanco 1:1 activo</span>
+              <span className="font-black uppercase tracking-[0.6em] text-[10px] block mb-2 text-slate-400">{placeholder}</span>
+              <span className="text-[9px] font-medium opacity-30 italic text-slate-500">Trazo negro sólido</span>
             </div>
           </div>
         )}
 
         <canvas
           ref={canvasRef}
-          className="w-full h-full block cursor-crosshair invert brightness-200"
+          className="w-full h-full block cursor-crosshair"
           style={{ touchAction: "none" }}
         />
       </div>
