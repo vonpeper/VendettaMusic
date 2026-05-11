@@ -211,8 +211,6 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
         className="relative border-4 border-[#E91E63] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-2xl transition-all w-full h-64 sm:h-[350px] landscape:h-[160px]"
         style={{ touchAction: "none", backgroundColor: '#0f172a' }}
       >
-        <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v10.0</div>
-
         {!hasSignature && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-white/5 gap-6 select-none">
             <MousePointer2 className="w-16 h-16 opacity-10 animate-pulse" />
@@ -244,13 +242,12 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
           size="lg" 
           type="button"
           onClick={() => {
-            console.log("SAVE CLICKED v10.0");
             save();
           }}
           disabled={!hasSignature}
           className="bg-[#E91E63] hover:bg-[#D81B60] text-white font-black uppercase tracking-[0.25em] rounded-[1.25rem] px-6 h-14 shadow-2xl shadow-pink-500/20 active:scale-95 transition-all disabled:opacity-20"
         >
-          Guardar v10.0
+          Guardar Firma
         </Button>
       </div>
     </div>
