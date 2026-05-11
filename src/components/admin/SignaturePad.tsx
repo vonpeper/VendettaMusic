@@ -37,7 +37,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
-    ctx.strokeStyle = "#E91E63"
+    ctx.strokeStyle = "#000000"
     ctx.lineWidth = 3
     
     ctxRef.current = ctx
@@ -167,9 +167,9 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
     <div className={`space-y-4 ${isFullScreen ? "fixed inset-0 z-[9999] bg-white p-4 flex flex-col" : "relative"}`}>
       <div 
         className={`relative border-2 border-border/40 rounded-[2rem] overflow-hidden shadow-inner transition-all ${
-          isFullScreen ? "flex-1" : "w-full aspect-[3/2] sm:aspect-[3/1] min-h-[160px] sm:min-h-[350px]"
+          isFullScreen ? "flex-1" : "w-full h-48 sm:h-[350px]"
         }`}
-        style={{ touchAction: "none", backgroundColor: '#f4f4f5' }}
+        style={{ touchAction: "none", backgroundColor: '#e5e7eb' }}
       >
         <div className="absolute top-2 right-4 text-[8px] opacity-40 text-foreground z-10 font-black tracking-tighter">v3.0</div>
         <button

@@ -327,7 +327,7 @@ export default async function AdminConfiguracionPage() {
                 </div>
               </div>
               
-              <div className="bg-card border border-border/40 rounded-3xl p-8 shadow-sm">
+              <div className="bg-card border border-border/40 rounded-3xl p-4 sm:p-8 shadow-sm">
                  <AdminSignatureManager initialSignature={config?.adminSignature || null} />
               </div>
             </section>

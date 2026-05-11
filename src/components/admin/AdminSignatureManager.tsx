@@ -41,10 +41,10 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
         <div className="space-y-6">
           <div 
             className="border border-border/60 shadow-inner rounded-3xl p-8 flex flex-col items-center justify-center min-h-[200px] relative group overflow-hidden"
-            style={{ backgroundColor: '#f4f4f5' }}
+            style={{ backgroundColor: '#eeeeef' }}
           >
              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E91E63] to-transparent opacity-20" />
-             <div className="absolute bottom-2 right-4 text-[8px] opacity-20 text-foreground">v2.2</div>
+             <div className="absolute bottom-2 right-4 text-[8px] opacity-40 text-foreground font-black">v3.0</div>
              {signature ? (
                <img src={signature} alt="Firma Administrador" className="max-h-40 opacity-90 drop-shadow-sm" />
              ) : (
@@ -92,7 +92,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
             {signature ? "Actualizar Firma Digital" : "Registrar Nueva Firma"}
           </Button>
         </DialogTrigger>
-        <DialogContent className="w-[95vw] sm:max-w-[600px] bg-background border-border rounded-3xl p-0 overflow-hidden" onPointerDownCapture={(e) => e.stopPropagation()}>
+        <DialogContent className="w-[92vw] max-w-[600px] bg-background border-border rounded-3xl p-0 overflow-hidden" onPointerDownCapture={(e) => e.stopPropagation()}>
           <div className="p-6 pb-0" style={{ touchAction: "none" }}>
             <DialogHeader>
               <DialogTitle className="text-2xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
@@ -105,8 +105,8 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
             </DialogHeader>
           </div>
           
-          <div className="p-6">
-            <div className="bg-white border border-border/40 rounded-2xl p-2" style={{ touchAction: "none" }}>
+          <div className="p-4 sm:p-6">
+            <div className="bg-white border border-border/40 rounded-2xl p-1 sm:p-2" style={{ touchAction: "none" }}>
               <SignaturePad onSave={handleSave} placeholder="Traza tu firma aquí" />
             </div>
           </div>
