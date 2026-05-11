@@ -6,8 +6,9 @@ const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const session = await auth()
   if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -15,7 +16,7 @@ export async function GET(
 
   try {
     const booking = await db.bookingRequest.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     if (!booking) {
