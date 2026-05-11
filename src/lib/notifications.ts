@@ -247,7 +247,10 @@ Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/pri
 
         const isConfirmed = type === "CLIENT_CONFIRMED"
         const pdfBytes = await generateContractPdf(funnelData, booking.shortId || booking.id, {
-          includeLegal: isConfirmed // Si está confirmado, incluye contrato legal
+          includeLegal: isConfirmed, // Si está confirmado, incluye contrato legal
+          clientSignature: booking.clientSignature || undefined,
+          adminSignature: booking.adminSignature || config?.adminSignature || undefined,
+          signedAt: booking.signedAt ? booking.signedAt.toISOString() : undefined
         })
         
         media = Buffer.from(pdfBytes).toString("base64")

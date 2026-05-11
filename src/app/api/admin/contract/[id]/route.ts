@@ -16,13 +16,47 @@ export async function GET(
   }
   try {
     const { id } = await params
-    const booking = await db.bookingRequest.findUnique({
+    let booking = await db.bookingRequest.findUnique({
       where: { id: id }
-    })
+    }) as any
+
+    // Fallback para quotes legacy
+    if (!booking) {
+      const legacyQuote = await db.quote.findUnique({
+        where: { id: id },
+        include: { client: { include: { user: true } } }
+      })
+      if (legacyQuote) {
+        booking = {
+          id: legacyQuote.id,
+          shortId: (legacyQuote as any).shortId || legacyQuote.id.slice(0, 8).toUpperCase(),
+          clientName: legacyQuote.client?.user?.name || "Cliente Legacy",
+          clientEmail: legacyQuote.client?.user?.email || "",
+          clientPhone: "",
+          status: legacyQuote.status,
+          packageName: "Paquete Personalizado",
+          requestedDate: legacyQuote.eventDate,
+          baseAmount: legacyQuote.totalEstimated,
+          depositAmount: 0,
+          createdAt: legacyQuote.createdAt,
+          source: "legacy",
+        }
+      }
+    }
 
     if (!booking) {
+      console.error(`[Contract API] Booking/Quote not found: ${id}`)
       return NextResponse.json({ error: "Reserva no encontrada" }, { status: 404 })
     }
+
+    console.log(`[Contract API] Processing booking ${booking.shortId} (Status: ${booking.status})`)
+    console.log(`[Contract API] Signatures: Client=${!!booking.clientSignature}, Admin=${!!booking.adminSignature}`)
+
+    // Obtener la firma administrativa actual como fallback
+    const globalConfig = await db.globalConfig.findUnique({
+      where: { id: "vendetta_config" }
+    })
+    console.log(`[Contract API] GlobalConfig fallback signature found: ${!!globalConfig?.adminSignature}`)
 
     // Mapear BookingRequest a FunnelData para el generador
     const funnelData: FunnelData = {
@@ -72,7 +106,9 @@ export async function GET(
     const pdfBytes = await generateContractPdf(funnelData, booking.shortId || booking.id, {
       includeLegal: !isQuote,
       clientSignature: booking.clientSignature || undefined,
-      adminSignature: booking.adminSignature || undefined,
+      adminSignature: (booking.adminSignature && booking.adminSignature.length > 10) 
+        ? booking.adminSignature 
+        : (globalConfig?.adminSignature || undefined),
       signedAt: booking.signedAt ? booking.signedAt.toISOString() : undefined
     })
 

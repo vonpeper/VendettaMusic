@@ -24,6 +24,14 @@ interface DrawContext {
   doc: PDFDocument
 }
 
+function stripBase64Prefix(base64: string) {
+  if (base64.startsWith("data:")) {
+    const parts = base64.split(",");
+    if (parts.length > 1) return parts[1];
+  }
+  return base64;
+}
+
 const PACKAGE_INCLUSIONS: Record<string, string[]> = {
   "61a5477c-de10-4788-a8bd-1dfa8b57d256": [
     "Audio Electro-Voice (2 tops + 1 sub + consola digital)",
@@ -56,6 +64,7 @@ export async function generateContractPdf(
     signedAt?: string
   } = { includeLegal: true }
 ) {
+  console.log(`[PDF Generator] Finalizing document. includeLegal=${!!options.includeLegal}`)
   const doc = await PDFDocument.create()
   doc.registerFontkit(fontkit)
 
@@ -314,7 +323,13 @@ export async function generateContractPdf(
     // Firma Vendetta (Izquierda)
     if (options.adminSignature) {
       try {
-        const adminSigImg = await doc.embedPng(options.adminSignature)
+        const cleanAdminSig = stripBase64Prefix(options.adminSignature)
+        console.log(`[PDF Generator] Embedding admin signature. Length: ${options.adminSignature.length}, Cleaned: ${cleanAdminSig.length}`)
+        
+        // Convertir base64 a Uint8Array para asegurar compatibilidad con pdf-lib
+        const adminSigBytes = Buffer.from(cleanAdminSig, 'base64')
+        const adminSigImg = await doc.embedPng(adminSigBytes)
+        
         const sigDims = adminSigImg.scale(0.35)
         ctx.page.drawImage(adminSigImg, { 
           x: margin + (sw - sigDims.width) / 2, 
@@ -322,7 +337,11 @@ export async function generateContractPdf(
           width: sigDims.width, 
           height: sigDims.height 
         })
-      } catch (e) { console.error("Error embedding admin signature:", e) }
+      } catch (e) { 
+        console.error("❌ [PDF Generator] Error embedding admin signature:", e) 
+      }
+    } else {
+      console.warn("[PDF Generator] No admin signature provided in options")
     }
     ctx.page.drawLine({ start: { x: margin, y: sy }, end: { x: margin + sw, y: sy }, thickness: 1 })
     ctx.page.drawText("VENDETTA LIVE MUSIC", { x: margin + 35, y: sy - 15, size: 8, font: montserratBold })
@@ -331,7 +350,12 @@ export async function generateContractPdf(
     // Firma Cliente (Derecha)
     if (options.clientSignature) {
       try {
-        const clientSigImg = await doc.embedPng(options.clientSignature)
+        const cleanClientSig = stripBase64Prefix(options.clientSignature)
+        console.log(`[PDF Generator] Embedding client signature. Length: ${options.clientSignature.length}, Cleaned: ${cleanClientSig.length}`)
+        
+        const clientSigBytes = Buffer.from(cleanClientSig, 'base64')
+        const clientSigImg = await doc.embedPng(clientSigBytes)
+        
         const sigDims = clientSigImg.scale(0.35)
         ctx.page.drawImage(clientSigImg, { 
           x: pageWidth - margin - sw + (sw - sigDims.width) / 2, 
@@ -339,7 +363,11 @@ export async function generateContractPdf(
           width: sigDims.width, 
           height: sigDims.height 
         })
-      } catch (e) { console.error("Error embedding client signature:", e) }
+      } catch (e) { 
+        console.error("❌ [PDF Generator] Error embedding client signature:", e) 
+      }
+    } else {
+      console.warn("[PDF Generator] No client signature provided in options")
     }
     ctx.page.drawLine({ start: { x: pageWidth - margin - sw, y: sy }, end: { x: pageWidth - margin, y: sy }, thickness: 1 })
     ctx.page.drawText(safeValue(data.clientName, "EL CLIENTE").toUpperCase(), { x: pageWidth - margin - sw + 20, y: sy - 15, size: 8, font: montserratBold })

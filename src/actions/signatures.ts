@@ -64,6 +64,11 @@ export async function signContractAction(bookingId: string, signatureBase64: str
 
 export async function saveAdminSignatureAction(signatureBase64: string) {
   try {
+    console.log(`[Signature Action] Saving admin signature. Length: ${signatureBase64.length}`)
+    if (signatureBase64.length < 100) {
+      console.warn("[Signature Action] Signature data seems too short or empty")
+    }
+
     await db.globalConfig.upsert({
       where: { id: "vendetta_config" },
       update: { adminSignature: signatureBase64 },
