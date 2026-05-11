@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
@@ -25,7 +26,7 @@ export default async function AdminConfiguracionPage() {
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
   return (
-    <div className="p-8 max-w-5xl mx-auto pb-24">
+    <div className="p-8 max-w-5xl mx-auto pb-24 admin-deploy-v3">
       {/* Header */}
       <div className="mb-10">
         <div className="flex items-center gap-3 text-primary mb-2">
@@ -33,7 +34,7 @@ export default async function AdminConfiguracionPage() {
           <span className="text-sm font-bold uppercase tracking-widest">Ajustes del Sistema</span>
         </div>
         <h1 className="text-4xl font-heading font-bold text-foreground tracking-tight">
-          Integraciones y Configuración
+          Configuración Maestro v3.0
         </h1>
         <p className="text-muted-foreground mt-2 max-w-2xl">
           Administra las conexiones con servicios externos. Estos ajustes afectan las notificaciones automáticas y la sincronización de agenda.
@@ -321,8 +322,8 @@ export default async function AdminConfiguracionPage() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-heading font-bold text-foreground">Firma Digital Corporativa <span className="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full ml-2">v3.0</span></h2>
-                  <p className="text-sm text-muted-foreground">Esta firma aparecerá automáticamente en todos los contratos que tus clientes firmen.</p>
+                  <h2 className="text-2xl font-heading font-bold text-foreground">SISTEMA DE FIRMA v3.0</h2>
+                  <p className="text-sm text-muted-foreground font-black text-[#E91E63]">ESTA ES LA VERSIÓN 3.0 - SI NO VES ESTO, LIMPIA CACHÉ</p>
                 </div>
               </div>
               
