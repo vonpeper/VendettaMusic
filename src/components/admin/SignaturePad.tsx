@@ -166,7 +166,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
   return (
     <div className={`space-y-4 ${isFullScreen ? "fixed inset-0 z-[9999] bg-white p-4 flex flex-col" : ""}`}>
       <div 
-        className={`relative bg-zinc-50 border-2 border-border/40 rounded-[2rem] overflow-hidden shadow-inner transition-all ${
+        className={`relative bg-zinc-100 border-2 border-border/40 rounded-[2rem] overflow-hidden shadow-inner transition-all ${
           isFullScreen ? "flex-1" : "aspect-[3/2] sm:aspect-[3/1] min-h-[200px] sm:min-h-[350px]"
         }`}
         style={{ touchAction: "none" }}
