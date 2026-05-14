@@ -30,6 +30,12 @@ export default async function CotizarPage({ searchParams }: Props) {
         zona2Rate: config?.zona2Rate || undefined,
         zona3Rate: config?.zona3Rate || undefined,
       }}
+      paymentConfig={{
+        payMercadoPagoActive: config?.payMercadoPagoActive ?? true,
+        payTransferenciaActive: config?.payTransferenciaActive ?? true,
+        payPersonalActive: config?.payPersonalActive ?? true,
+        payStripeActive: config?.payStripeActive ?? false,
+      }}
     />
   )
 }
