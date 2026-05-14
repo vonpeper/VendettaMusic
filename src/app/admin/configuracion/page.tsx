@@ -3,13 +3,13 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { db } from "@/lib/db"
-import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction, saveBankConfigAction, saveEvolutionWebhookSecretAction, saveOGConfigAction, saveContractConfigAction } from "@/actions/config"
+import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction, saveBankConfigAction, saveEvolutionWebhookSecretAction, saveOGConfigAction, saveContractConfigAction, savePaymentConfigAction } from "@/actions/config"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MessageCircle, Calendar, Settings, ShieldCheck, Mail, ArrowRight, ExternalLink, Share2, FileText, Plug, Map, Loader2, MessageSquare, Search } from "lucide-react"
+import { MessageCircle, Calendar, Settings, ShieldCheck, Mail, ArrowRight, ExternalLink, Share2, FileText, Plug, Map, Loader2, MessageSquare, Search, CreditCard, Lock } from "lucide-react"
 import { ConfigFormWrapper } from "@/components/admin/ConfigFormWrapper"
 import { SandboxToggle } from "@/components/admin/SandboxToggle"
 import { AdminSignatureManager } from "@/components/admin/AdminSignatureManager"
@@ -62,6 +62,10 @@ export default async function AdminConfiguracionPage() {
           <TabsTrigger value="contrato" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 font-bold bg-transparent">
             <FileText className="w-4 h-4 mr-2" />
             Contrato
+          </TabsTrigger>
+          <TabsTrigger value="pagos" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 font-bold bg-transparent">
+            <CreditCard className="w-4 h-4 mr-2" />
+            Pagos
           </TabsTrigger>
         </TabsList>
 
@@ -561,6 +565,155 @@ export default async function AdminConfiguracionPage() {
               </ConfigFormWrapper>
             </div>
           </section>
+        </TabsContent>
+
+        <TabsContent value="pagos" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <section className="space-y-6">
+              <div className="bg-card border border-border/40 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                    <CreditCard className="w-6 h-6 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-heading font-bold text-foreground">Pasarelas de Pago</h2>
+                    <p className="text-sm text-muted-foreground">Activa o desactiva los métodos de pago disponibles en el funnel.</p>
+                  </div>
+                </div>
+
+                <ConfigFormWrapper action={savePaymentConfigAction} className="space-y-8">
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-black text-blue-400 uppercase tracking-widest mb-4">Métodos Activos</h3>
+                    
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-900/40 border border-border/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                          <CreditCard className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">Mercado Pago</p>
+                          <p className="text-[10px] text-muted-foreground">Tarjetas y efectivo (México)</p>
+                        </div>
+                      </div>
+                      <input type="checkbox" name="payMercadoPagoActive" defaultChecked={config?.payMercadoPagoActive ?? true} className="w-5 h-5 accent-blue-500" />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-900/40 border border-border/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                          <Mail className="w-4 h-4 text-emerald-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">Depósito / Transferencia</p>
+                          <p className="text-[10px] text-muted-foreground">Pago manual vía CLABE</p>
+                        </div>
+                      </div>
+                      <input type="checkbox" name="payTransferenciaActive" defaultChecked={config?.payTransferenciaActive ?? true} className="w-5 h-5 accent-emerald-500" />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-900/40 border border-border/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-amber-500/10 rounded-lg flex items-center justify-center">
+                          <Settings className="w-4 h-4 text-amber-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">Personal / Efectivo</p>
+                          <p className="text-[10px] text-muted-foreground">Acuerdo directo con agente</p>
+                        </div>
+                      </div>
+                      <input type="checkbox" name="payPersonalActive" defaultChecked={config?.payPersonalActive ?? true} className="w-5 h-5 accent-amber-500" />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-900/40 border border-border/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-indigo-500/10 rounded-lg flex items-center justify-center">
+                          <Lock className="w-4 h-4 text-indigo-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">Stripe</p>
+                          <p className="text-[10px] text-muted-foreground">Pago global con tarjeta</p>
+                        </div>
+                      </div>
+                      <input type="checkbox" name="payStripeActive" defaultChecked={config?.payStripeActive ?? false} className="w-5 h-5 accent-indigo-500" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-6 pt-6 border-t border-border/40">
+                    <h3 className="text-xs font-black text-blue-400 uppercase tracking-widest">Configuración Stripe</h3>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Clave Pública (Publishable Key)</Label>
+                        <Input name="stripePublicKey" defaultValue={config?.stripePublicKey || ""} placeholder="pk_live_..." className="bg-card border-border/40 font-mono text-xs" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Clave Secreta (Secret Key)</Label>
+                        <Input name="stripeSecretKey" type="password" defaultValue={config?.stripeSecretKey ? "********" : ""} placeholder="sk_live_..." className="bg-card border-border/40 font-mono text-xs" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Webhook Secret</Label>
+                        <Input name="stripeWebhookSecret" type="password" defaultValue={config?.stripeWebhookSecret ? "********" : ""} placeholder="whsec_..." className="bg-card border-border/40 font-mono text-xs" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6 pt-6 border-t border-border/40">
+                    <h3 className="text-xs font-black text-blue-400 uppercase tracking-widest">Configuración Mercado Pago</h3>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Access Token</Label>
+                        <Input name="mercadoPagoAccessToken" type="password" defaultValue={config?.mercadoPagoAccessToken ? "********" : ""} placeholder="APP_USR-..." className="bg-card border-border/40 font-mono text-xs" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Public Key</Label>
+                        <Input name="mercadoPagoPublicKey" defaultValue={config?.mercadoPagoPublicKey || ""} placeholder="APP_USR-..." className="bg-card border-border/40 font-mono text-xs" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 font-bold h-12 text-white">
+                    Guardar Configuración de Pagos
+                  </Button>
+                </ConfigFormWrapper>
+              </div>
+            </section>
+
+            <section className="space-y-6">
+              <div className="bg-slate-900/80 border border-blue-500/30 rounded-2xl p-6 backdrop-blur-md shadow-xl">
+                 <div className="flex items-center gap-3 text-blue-400 mb-4">
+                   <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <ShieldCheck className="w-4 h-4" />
+                   </div>
+                   <h3 className="font-black text-white text-sm uppercase tracking-widest">Seguridad en Pagos</h3>
+                 </div>
+                 <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                   Las claves de API se encriptan antes de guardarse en la base de datos. Asegúrate de usar claves <strong className="text-white">Live</strong> para producción y claves <strong className="text-white">Test</strong> solo si el modo Sandbox está activo.
+                 </p>
+                 <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl">
+                    <p className="text-[10px] text-blue-200 font-bold uppercase tracking-widest mb-2">Webhooks requeridos:</p>
+                    <ul className="space-y-2">
+                      <li className="text-[10px] text-slate-400 font-mono break-all">
+                        Stripe: <span className="text-white">/api/webhooks/stripe</span>
+                      </li>
+                      <li className="text-[10px] text-slate-400 font-mono break-all">
+                        MP: <span className="text-white">/api/webhooks/mercadopago</span>
+                      </li>
+                    </ul>
+                 </div>
+              </div>
+
+              <div className="bg-card border border-border/40 rounded-2xl p-6">
+                <h3 className="text-sm font-bold text-foreground mb-4">Instrucciones de Depósito</h3>
+                <p className="text-xs text-muted-foreground mb-6">
+                  Cuando un cliente selecciona transferencia, se le mostrarán automáticamente los datos bancarios configurados en la pestaña <span className="text-primary font-bold">Integraciones</span>.
+                </p>
+                <Link href="/admin/configuracion?tab=integraciones">
+                  <Button variant="outline" className="w-full text-xs font-bold border-border/40 h-10">
+                    Ir a Configuración Bancaria
+                  </Button>
+                </Link>
+              </div>
+            </section>
+          </div>
         </TabsContent>
       </Tabs>
 

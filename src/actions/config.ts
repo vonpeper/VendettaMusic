@@ -409,3 +409,55 @@ export async function saveContractConfigAction(arg1: any, arg2?: any) {
     return { success: false, message: `Error: ${error.message}` }
   }
 }
+
+export async function savePaymentConfigAction(arg1: any, arg2?: any) {
+  const u = await requireAdmin(); if (u) return u
+  try {
+    const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null)
+    if (!formData) return { success: false, message: "Error: No se recibieron datos" }
+
+    const payMercadoPagoActive = formData.get("payMercadoPagoActive") === "on"
+    const payTransferenciaActive = formData.get("payTransferenciaActive") === "on"
+    const payPersonalActive = formData.get("payPersonalActive") === "on"
+    const payStripeActive = formData.get("payStripeActive") === "on"
+
+    const stripePublicKey = (formData.get("stripePublicKey") as string) || null
+    const stripeSecretKey = (formData.get("stripeSecretKey") as string) || null
+    const stripeWebhookSecret = (formData.get("stripeWebhookSecret") as string) || null
+    const mercadoPagoAccessToken = (formData.get("mercadoPagoAccessToken") as string) || null
+    const mercadoPagoPublicKey = (formData.get("mercadoPagoPublicKey") as string) || null
+
+    await db.globalConfig.upsert({
+      where: { id: "vendetta_config" },
+      update: {
+        payMercadoPagoActive,
+        payTransferenciaActive,
+        payPersonalActive,
+        payStripeActive,
+        stripePublicKey,
+        stripeSecretKey,
+        stripeWebhookSecret,
+        mercadoPagoAccessToken,
+        mercadoPagoPublicKey,
+      },
+      create: {
+        id: "vendetta_config",
+        payMercadoPagoActive,
+        payTransferenciaActive,
+        payPersonalActive,
+        payStripeActive,
+        stripePublicKey,
+        stripeSecretKey,
+        stripeWebhookSecret,
+        mercadoPagoAccessToken,
+        mercadoPagoPublicKey,
+      },
+    })
+
+    revalidatePath("/admin/configuracion")
+    return { success: true, message: "Configuración de pagos guardada" }
+  } catch (error: any) {
+    console.error("Error saving payment config:", error)
+    return { success: false, message: `Error: ${error.message}` }
+  }
+}

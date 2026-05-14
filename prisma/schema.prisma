@@ -519,6 +519,15 @@ model GlobalConfig {
   ogDescription          String?
   ogImage                String?
   contractLegalText      String?
+  payMercadoPagoActive   Boolean   @default(true)
+  payTransferenciaActive Boolean   @default(true)
+  payPersonalActive      Boolean   @default(true)
+  payStripeActive        Boolean   @default(false)
+  stripePublicKey        String?
+  stripeSecretKey        String?
+  stripeWebhookSecret    String?
+  mercadoPagoAccessToken String?
+  mercadoPagoPublicKey   String?
 }
 
 model InboxItem {

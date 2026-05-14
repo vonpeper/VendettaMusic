@@ -17,41 +17,67 @@ interface Props {
   data: Partial<FunnelData>
   onNext: (d: Partial<FunnelData>) => void
   onBack: () => void
+  paymentConfig?: {
+    payMercadoPagoActive: boolean
+    payTransferenciaActive: boolean
+    payPersonalActive: boolean
+    payStripeActive: boolean
+  }
 }
 
 const MXN = (v: number) =>
   new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(v)
 
-const PAYMENT_METHODS = [
+const ALL_PAYMENT_METHODS = [
   {
+    id: "stripe",
     value: "stripe",
     label: "Tarjeta / OXXO (Stripe)",
     icon:  "💳",
     desc:  "Pago seguro con tarjeta de crédito, débito o ficha OXXO. La reserva se confirma al instante.",
     badge: "En línea",
     badgeColor: "text-blue-400 bg-blue-900/40 border-blue-700/50",
+    configKey: "payStripeActive"
   },
   {
+    id: "mercado-pago",
+    value: "mercado-pago",
+    label: "Mercado Pago",
+    icon:  "🔵",
+    desc:  "Paga con tu saldo de Mercado Pago, tarjetas o efectivo en puntos de venta.",
+    badge: "En línea",
+    badgeColor: "text-blue-400 bg-blue-900/40 border-blue-700/50",
+    configKey: "payMercadoPagoActive"
+  },
+  {
+    id: "transfer",
     value: "transfer",
     label: "Transferencia Bancaria",
     icon:  "🏦",
     desc:  "SPEI a nuestra cuenta. Adjunta tu comprobante. El booking queda pendiente hasta verificación.",
     badge: "Manual",
     badgeColor: "text-yellow-400 bg-yellow-900/40 border-yellow-700/50",
+    configKey: "payTransferenciaActive"
   },
   {
+    id: "cash",
     value: "cash",
     label: "Efectivo en persona",
     icon:  "💵",
     desc:  "Coordinamos punto de entrega. El booking se confirma al recibir el anticipo.",
     badge: "En persona",
     badgeColor: "text-green-400 bg-green-900/40 border-green-700/50",
+    configKey: "payPersonalActive"
   },
 ]
 
 const DEPOSIT_PCT = 0.30  // 30% de anticipo mínimo
 
-export default function Step4_Pago({ data, onNext, onBack }: Props) {
+export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Props) {
+  const activeMethods = ALL_PAYMENT_METHODS.filter(pm => {
+    if (!paymentConfig) return pm.id !== "mercado-pago" && pm.id !== "stripe" // Default behavior if no config
+    return (paymentConfig as any)[pm.configKey]
+  })
   const base          = (data.packagePrice ?? 0) + (data.viaticosAmount ?? 0)
   const minDeposit    = Math.ceil(base * DEPOSIT_PCT / 100) * 100  // redondear a centenas
   const [method,  setMethod]  = useState<string>(data.paymentMethod ?? "")
@@ -159,7 +185,7 @@ export default function Step4_Pago({ data, onNext, onBack }: Props) {
       {/* Método de pago */}
       <div className="space-y-3 mb-6">
         <label className="text-sm font-bold text-white">Método de pago del anticipo</label>
-        {PAYMENT_METHODS.map(pm => (
+        {activeMethods.map(pm => (
           <button
             key={pm.value}
             onClick={() => { setMethod(pm.value); setError("") }}
