@@ -1,8 +1,8 @@
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apt-get update && apt-get install -y openssl libssl-dev && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -14,9 +14,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client and initialize dummy DB for build
+# Generate Prisma client
 RUN npx prisma generate
-RUN npx prisma db push --accept-data-loss --url file:./dev.db
 
 # Disable telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
@@ -27,6 +26,8 @@ RUN DATABASE_URL=file:./dev.db NEXT_PRIVATE_SKIP_TYPESCRIPT_CHECK=1 NEXT_PRIVATE
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y openssl libssl-dev && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
@@ -41,6 +42,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy standalone build and prisma schema
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+
+# Ensure Prisma client is available and has all necessary files
+# Copying from builder's node_modules to ensure WASM files are there if standalone pruned them
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 
 USER nextjs
 
