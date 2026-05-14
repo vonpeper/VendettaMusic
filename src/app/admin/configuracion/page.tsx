@@ -262,41 +262,8 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
               </div>
             </section>
 
-            {/* ================ Datos Bancarios (transferencias) ================ */}
-            <section className="space-y-6 mt-8">
-              <div className="bg-card border border-border/40 rounded-2xl p-6 backdrop-blur-sm">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                    <Mail className="w-6 h-6 text-emerald-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground">Cuenta para transferencia</h2>
-                    <p className="text-[11px] text-muted-foreground">Mostrada al cliente cuando elige "Transferencia" en el funnel.</p>
-                  </div>
-                </div>
-                <ConfigFormWrapper action={saveBankConfigAction} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bankName">Banco</Label>
-                    <Input id="bankName" name="bankName" defaultValue={config?.bankName || ""} className="bg-card border-border/40" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bankAccount">Cuenta</Label>
-                    <Input id="bankAccount" name="bankAccount" defaultValue={config?.bankAccount || ""} className="bg-card border-border/40" />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="bankClabe">CLABE</Label>
-                    <Input id="bankClabe" name="bankClabe" defaultValue={config?.bankClabe || ""} className="bg-card border-border/40 font-mono" />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="bankBeneficiary">Beneficiario</Label>
-                    <Input id="bankBeneficiary" name="bankBeneficiary" defaultValue={config?.bankBeneficiary || ""} className="bg-card border-border/40" />
-                  </div>
-                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold mt-2 text-white md:col-span-2">
-                    Guardar Datos Bancarios
-                  </Button>
-                </ConfigFormWrapper>
-              </div>
 
+            <section className="space-y-6 mt-8">
               {/* Evolution Webhook Secret */}
               <div className="bg-card border border-border/40 rounded-2xl p-6 backdrop-blur-sm">
                 <div className="flex items-center gap-4 mb-6">
@@ -708,16 +675,37 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                  </div>
               </div>
 
-              <div className="bg-card border border-border/40 rounded-2xl p-6">
-                <h3 className="text-sm font-bold text-foreground mb-4">Instrucciones de Depósito</h3>
-                <p className="text-xs text-muted-foreground mb-6">
-                  Cuando un cliente selecciona transferencia, se le mostrarán automáticamente los datos bancarios configurados en la pestaña <span className="text-primary font-bold">Integraciones</span>.
-                </p>
-                <Link href="/admin/configuracion?tab=integraciones">
-                  <Button variant="outline" className="w-full text-xs font-bold border-border/40 h-10">
-                    Ir a Configuración Bancaria
+              <div className="bg-card border border-border/40 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                    <Mail className="w-6 h-6 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">Cuenta para transferencia</h2>
+                    <p className="text-[11px] text-muted-foreground">Mostrada al cliente cuando elige "Transferencia" en el funnel.</p>
+                  </div>
+                </div>
+                <ConfigFormWrapper action={saveBankConfigAction} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bankName">Banco</Label>
+                    <Input id="bankName" name="bankName" defaultValue={config?.bankName || ""} className="bg-card border-border/40" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bankAccount">Cuenta</Label>
+                    <Input id="bankAccount" name="bankAccount" defaultValue={config?.bankAccount || ""} className="bg-card border-border/40" />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="bankClabe">CLABE</Label>
+                    <Input id="bankClabe" name="bankClabe" defaultValue={config?.bankClabe || ""} className="bg-card border-border/40 font-mono" />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="bankBeneficiary">Beneficiario</Label>
+                    <Input id="bankBeneficiary" name="bankBeneficiary" defaultValue={config?.bankBeneficiary || ""} className="bg-card border-border/40" />
+                  </div>
+                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold mt-2 text-white md:col-span-2">
+                    Guardar Datos Bancarios
                   </Button>
-                </Link>
+                </ConfigFormWrapper>
               </div>
             </section>
           </div>
