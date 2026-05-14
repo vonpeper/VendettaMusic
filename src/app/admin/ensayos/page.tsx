@@ -121,7 +121,38 @@ export default async function AdminEnsayosPage() {
             )}
           </section>
 
-          {/* Past rehearsals can go here optionally */}
+          {pastRehearsals.length > 0 && (
+            <section className="pt-8 border-t border-border/40">
+              <h2 className="text-xl font-bold text-muted-foreground mb-4 flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5" /> Ensayos Pasados
+              </h2>
+              <div className="space-y-4 opacity-70 grayscale-[0.5]">
+                {pastRehearsals.map(rehearsal => (
+                  <div key={rehearsal.id} className="bg-card/50 border border-border/40 rounded-xl p-6 shadow-sm">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <p className="text-lg font-bold text-muted-foreground line-through decoration-primary/30">{formatDateMX(rehearsal.datetime, "EEEE, d 'de' MMMM, yyyy - HH:mm 'hrs'")}</p>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                          <MapPin className="w-4 h-4" /> {rehearsal.location?.name || "Sin ubicación"}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <EditRehearsalButton rehearsal={rehearsal} locations={locations} musicians={musicians} songs={songs} />
+                        <DeleteRehearsalButton rehearsalId={rehearsal.id} />
+                      </div>
+                    </div>
+
+                    {rehearsal.notes && (
+                      <div className="mb-4 p-3 bg-card rounded-lg text-sm text-muted-foreground border border-border/40">
+                        <span className="font-bold text-foreground block mb-1">Notas / Tarea:</span>
+                        {rehearsal.notes}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </div>
     </div>
