@@ -125,15 +125,15 @@ export default async function AdminConfiguracionPage() {
                 <div className="mt-6 pt-6 border-t border-border/40 space-y-3">
                   <EvolutionTestButton />
                   <LogInboundToggle initialValue={config?.logInboundActive ?? true} />
-                  <div className="bg-slate-900/60 border border-amber-500/30 p-4 rounded-xl shadow-sm backdrop-blur-md">
-                    <div className="space-y-3">
+                  <div className="bg-slate-900/80 border border-blue-500/30 p-5 rounded-2xl shadow-xl backdrop-blur-md">
+                    <div className="space-y-4">
                       <p className="text-xs text-slate-200 leading-relaxed">
-                        <span className="font-bold text-amber-400 text-sm block mb-1">⚠️ NOTA DE ACCESO:</span>
-                        Si el Manager te pide <strong className="text-white">identificarte</strong> usa: <code className="bg-white/10 px-2 py-0.5 rounded border border-white/10 font-bold text-amber-200">admin / admin</code>
+                        <span className="font-black text-blue-400 text-[10px] uppercase tracking-widest block mb-1.5">Acceso al Manager</span>
+                        Si el sistema solicita <strong className="text-white underline decoration-blue-500/50">credenciales</strong>, utiliza los valores por defecto: <code className="bg-blue-500/20 px-2 py-0.5 rounded border border-blue-500/20 font-black text-blue-200 ml-1">admin / admin</code>
                       </p>
                       <p className="text-xs text-slate-200 leading-relaxed">
-                        <span className="font-bold text-amber-400 text-sm block mb-1">💡 CONEXIÓN:</span>
-                        En <span className="font-bold text-white">Server URL</span> usa la dirección de arriba y la Global API Key.
+                        <span className="font-black text-blue-400 text-[10px] uppercase tracking-widest block mb-1.5">Configuración de Conexión</span>
+                        En el campo <span className="font-bold text-white">Server URL</span> debes ingresar la URL de la API configurada arriba junto con la <span className="text-blue-300 italic">Global API Key</span>.
                       </p>
                     </div>
                   </div>
@@ -235,16 +235,18 @@ export default async function AdminConfiguracionPage() {
                 </div>
               </div>
               
-              <div className="bg-slate-900/60 border border-primary/30 rounded-2xl p-6 backdrop-blur-md">
-                 <div className="flex items-center gap-3 text-primary mb-3">
-                   <Mail className="w-5 h-5" />
-                   <h3 className="font-bold text-white font-heading">¿Necesitas ayuda con Google?</h3>
+              <div className="bg-slate-900/80 border border-blue-500/30 rounded-2xl p-6 backdrop-blur-md shadow-xl">
+                 <div className="flex items-center gap-3 text-blue-400 mb-4">
+                   <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Search className="w-4 h-4" />
+                   </div>
+                   <h3 className="font-black text-white text-sm uppercase tracking-widest">Guía de Configuración Google</h3>
                  </div>
-                 <p className="text-sm text-slate-300 mb-4 leading-relaxed">
-                   He preparado una guía paso a paso para ayudarte a configurar tu consola de Google Cloud y obtener las llaves necesarias para la sincronización.
+                 <p className="text-xs text-slate-300 mb-5 leading-relaxed">
+                   Para habilitar la sincronización con tu calendario, es necesario configurar un proyecto en la consola de Google Cloud. He preparado una documentación detallada para guiarte en este proceso.
                  </p>
-                 <Button variant="link" className="p-0 h-auto text-primary font-bold hover:no-underline underline-offset-4 decoration-2">
-                   Ver guía de configuración pública →
+                 <Button variant="link" className="p-0 h-auto text-blue-400 font-black text-[10px] uppercase tracking-widest hover:text-blue-300 hover:no-underline underline-offset-4 decoration-2 decoration-blue-500/30">
+                   CONSULTAR GUÍA DE INTEGRACIÓN →
                  </Button>
               </div>
             </section>
@@ -478,26 +480,24 @@ export default async function AdminConfiguracionPage() {
                 </div>
               </ConfigFormWrapper>
               
-              <div className="mt-6 p-4 bg-slate-900/60 border border-primary/30 rounded-xl flex gap-4 backdrop-blur-md">
-                 <Settings className="w-5 h-5 text-primary shrink-0 mt-1" />
-                 <div className="text-xs text-slate-300 leading-relaxed space-y-2">
-                   <p className="text-white font-bold mb-2">¿Cómo funciona el cálculo automático?</p>
-                   <ul className="space-y-1.5">
-                     <li className="flex items-start gap-2">
-                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                       <span><strong className="text-slate-100">Zona 1 (Toluca / Metepec):</strong> Sin costo extra ($0 MXN).</span>
+              <div className="mt-8 p-6 bg-slate-900/80 border border-blue-500/30 rounded-2xl flex gap-5 backdrop-blur-md shadow-xl">
+                 <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center shrink-0">
+                  <Settings className="w-5 h-5 text-blue-400" />
+                 </div>
+                 <div className="text-xs text-slate-300 leading-relaxed space-y-4">
+                   <p className="text-white font-black text-[10px] uppercase tracking-widest">Lógica de Cálculo de Viáticos</p>
+                   <ul className="space-y-2.5">
+                     <li className="flex items-start gap-3">
+                       <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                       <span className="text-[11px]"><strong className="text-white font-bold">Zona 1 (Toluca / Metepec):</strong> Tarifa base sin cargos adicionales ($0 MXN).</span>
                      </li>
-                     <li className="flex items-start gap-2">
-                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                       <span><strong className="text-slate-100">Zona 2 (Media Distancia):</strong> Aplica la tarifa establecida arriba.</span>
+                     <li className="flex items-start gap-3">
+                       <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                       <span className="text-[11px]"><strong className="text-white font-bold">Zonas de Media y Larga Distancia:</strong> Se aplicará el monto configurado arriba multiplicado por la logística del evento.</span>
                      </li>
-                     <li className="flex items-start gap-2">
-                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                       <span><strong className="text-slate-100">Zona 3 (Larga Distancia):</strong> Aplica la tarifa establecida arriba.</span>
-                     </li>
-                     <li className="flex items-start gap-2">
-                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                       <span><strong className="text-slate-100">Zona 4 (Resto de México):</strong> Requiere cotización manual personalizada.</span>
+                     <li className="flex items-start gap-3">
+                       <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                       <span className="text-[11px]"><strong className="text-white font-bold">Resto de México:</strong> El sistema indicará que la cotización debe ser validada por un agente.</span>
                      </li>
                    </ul>
                  </div>
@@ -533,20 +533,20 @@ export default async function AdminConfiguracionPage() {
                     Sugerencia: Divide por cláusulas (PRIMERA, SEGUNDA, etc.) para mayor claridad.
                   </p>
                   
-                  <div className="mt-4 p-5 rounded-2xl bg-slate-900/60 border border-cyan-500/20 backdrop-blur-md">
-                    <h4 className="text-[11px] font-black text-cyan-400 uppercase tracking-widest mb-4">Variables Disponibles para el Llenado</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div className="mt-6 p-6 rounded-2xl bg-slate-900/80 border border-blue-500/30 backdrop-blur-md shadow-xl">
+                    <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-5 text-center">Variables del Sistema para el Contrato</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       {[
-                        { tag: "{{cliente}}", label: "Nombre del cliente" },
-                        { tag: "{{fecha}}", label: "Fecha del evento" },
-                        { tag: "{{horario}}", label: "Hora de inicio" },
-                        { tag: "{{monto}}", label: "Monto total" },
-                        { tag: "{{paquete}}", label: "Nombre del paquete" },
-                        { tag: "{{ubicación}}", label: "Dirección/Lugar" },
+                        { tag: "{{cliente}}", label: "Nombre completo del cliente" },
+                        { tag: "{{fecha}}", label: "Fecha programada del evento" },
+                        { tag: "{{horario}}", label: "Hora exacta de inicio del show" },
+                        { tag: "{{monto}}", label: "Monto total del servicio (MXN)" },
+                        { tag: "{{paquete}}", label: "Nombre del paquete seleccionado" },
+                        { tag: "{{ubicación}}", label: "Dirección física del evento" },
                       ].map((v) => (
-                        <div key={v.tag} className="space-y-1.5 bg-white/5 p-2 rounded-lg border border-white/5">
-                          <code className="text-[10px] font-black text-cyan-200 bg-cyan-500/20 px-2 py-0.5 rounded block w-fit">{v.tag}</code>
-                          <p className="text-[10px] text-slate-400 font-medium px-0.5">{v.label}</p>
+                        <div key={v.tag} className="flex flex-col gap-2 bg-blue-500/5 p-3 rounded-xl border border-blue-500/10 hover:bg-blue-500/10 transition-colors">
+                          <code className="text-[11px] font-black text-white bg-blue-600 px-2.5 py-1 rounded shadow-sm w-fit mx-auto">{v.tag}</code>
+                          <p className="text-[10px] text-slate-300 font-bold text-center uppercase tracking-tighter opacity-80">{v.label}</p>
                         </div>
                       ))}
                     </div>
