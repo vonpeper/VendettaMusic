@@ -67,7 +67,14 @@ export function ContractSigner({
               <div className="space-y-4">
                  <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2">Firma del Cliente: {clientName}</div>
                  <div className="bg-white/5 rounded-2xl p-4 flex items-center justify-center min-h-[120px]">
-                    <img src={clientSignature!} alt="Firma Cliente" className="max-h-24 invert opacity-80" />
+                    {clientSignature ? (
+                      <img src={clientSignature} alt="Firma Cliente" className="max-h-24 invert opacity-80" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-gray-500">
+                        <CheckCircle2 className="w-8 h-8 opacity-20" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">Verificado Administrativamente</span>
+                      </div>
+                    )}
                  </div>
                  <div className="flex items-center gap-2 text-[9px] text-gray-500 font-bold uppercase italic">
                     <Clock className="w-3 h-3" /> Firmado el {signedAt ? new Date(signedAt).toLocaleString() : "N/A"}

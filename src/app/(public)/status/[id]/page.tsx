@@ -15,7 +15,14 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
   const { id } = await params
   const mainBooking = await db.bookingRequest.findUnique({
     where: { shortId: id.toUpperCase() },
-    include: { client: true }
+    include: { 
+      client: true,
+      event: {
+        include: {
+          contracts: true
+        }
+      }
+    }
   })
 
   if (!mainBooking) {
@@ -129,8 +136,8 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                 bookingId={mainBooking.id}
                 clientName={mainBooking.clientName}
                 shortId={mainBooking.shortId || ""}
-                isSigned={!!mainBooking.clientSignature}
-                signedAt={mainBooking.signedAt}
+                isSigned={!!mainBooking.clientSignature || mainBooking.event?.contracts?.some((c: any) => c.status === "signed")}
+                signedAt={mainBooking.signedAt || mainBooking.event?.contracts?.find((c: any) => c.status === "signed")?.signedAt}
                 clientSignature={mainBooking.clientSignature}
                 adminSignature={mainBooking.adminSignature}
                 contractLegalText={globalConfig?.contractLegalText || undefined}
