@@ -8,7 +8,7 @@ import { ClientWhatsappActions } from "@/components/admin/ClientWhatsappActions"
 import { AdminManagementTools } from "@/components/admin/AdminManagementTools"
 import { LiquidarButton } from "@/components/admin/LiquidarButton"
 import { ConfirmarAnticipoButton } from "@/components/admin/ConfirmarAnticipoButton"
-import { ContractSignedButton } from "@/components/admin/ContractSignedButton"
+import { ContractStatusSwitcher } from "@/components/admin/ContractStatusSwitcher"
 import { 
   ArrowLeft, 
   Calendar, 
@@ -125,9 +125,9 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           
           {(booking.status === "agendado" || booking.status === "confirmed" || booking.status === "pendiente") && (
             <div className="flex flex-wrap gap-3">
-              <ContractSignedButton 
+              <ContractStatusSwitcher 
                 bookingId={booking.id} 
-                isSigned={!!booking.event?.contracts?.some((c: any) => c.status === "signed")} 
+                status={booking.event?.contracts?.[0]?.status || "pending"} 
               />
               <Button 
                 variant="outline"

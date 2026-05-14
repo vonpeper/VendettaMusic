@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { VentasTableClient } from "@/components/admin/VentasTableClient"
 import { MarkCompletedButton } from "@/components/admin/MarkCompletedButton"
+import { ContractStatusSwitcher } from "@/components/admin/ContractStatusSwitcher"
 import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
 
@@ -70,7 +71,8 @@ export default async function AdminVentasPage() {
       include: {
         event: {
           include: {
-            musicians: true
+            musicians: true,
+            contracts: true
           }
         }
       }
@@ -100,7 +102,8 @@ export default async function AdminVentasPage() {
         admin: bNotifs.find(n => n.type === 'ADMIN_NEW_BOOKING')?.status || 'none',
         client: bNotifs.find(n => n.type === 'CLIENT_FOLLOWUP' || n.type === 'CLIENT_CONFIRMED')?.status || 'none',
         musicians: bNotifs.find(n => n.type === 'MUSICIAN_GIG_ANNOUNCE')?.status || 'none'
-      }
+      },
+      contractStatus: b.event?.contracts?.[0]?.status || 'pending'
     }
   })
 
@@ -298,8 +301,11 @@ function ContratosGrid({ items, isCompleted }: { items: any[], isCompleted: bool
                 )}
               </div>
             </div>
-            <div className="pt-2 border-t border-border/40 flex items-center justify-between">
-              <div className="text-sm font-black text-foreground">{MXN(c.baseAmount + (c.viaticosAmount || 0))}</div>
+            <div className="pt-2 border-t border-border/40 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-black text-foreground">{MXN(c.baseAmount + (c.viaticosAmount || 0))}</div>
+                <ContractStatusSwitcher bookingId={c.id} status={c.contractStatus || "pending"} />
+              </div>
               <div className="flex gap-2">
                 {!isCompleted && (
                   <MarkCompletedButton bookingId={c.id} />
