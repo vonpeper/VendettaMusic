@@ -494,6 +494,8 @@ export default async function AdminConfiguracionPage() {
               </div>
             </div>
           </section>
+        </TabsContent>
+
         <TabsContent value="contrato" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
           <section>
             <div className="bg-card border border-border/40 rounded-2xl p-8 backdrop-blur-sm">
