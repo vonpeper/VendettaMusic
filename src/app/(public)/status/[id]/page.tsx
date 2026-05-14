@@ -141,6 +141,11 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                 clientSignature={mainBooking.clientSignature}
                 adminSignature={mainBooking.adminSignature}
                 contractLegalText={globalConfig?.contractLegalText || undefined}
+                eventDate={mainBooking.requestedDate}
+                eventTime={mainBooking.startTime}
+                eventAmount={mainBooking.baseAmount}
+                packageName={mainBooking.packageName}
+                eventAddress={mainBooking.address}
               />
             )}
           </div>

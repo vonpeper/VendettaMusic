@@ -47,7 +47,7 @@ export default async function AdminConfiguracionPage() {
             <Plug className="w-4 h-4 mr-2" />
             Integraciones
           </TabsTrigger>
-          <TabsTrigger value="seo" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-pink-500/20 data-[state=active]:text-pink-400 font-bold bg-transparent">
+          <TabsTrigger value="seo" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 font-bold bg-transparent">
             <Search className="w-4 h-4 mr-2" />
             Marketing
           </TabsTrigger>
@@ -341,8 +341,8 @@ export default async function AdminConfiguracionPage() {
           <section>
             <div className="bg-card border border-border/40 rounded-2xl p-8 backdrop-blur-sm">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center">
-                  <Search className="w-6 h-6 text-pink-400" />
+                <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                  <Search className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-heading font-bold text-foreground">OpenGraph y SEO</h2>
@@ -381,7 +381,7 @@ export default async function AdminConfiguracionPage() {
                 </div>
 
                 <div className="pt-4">
-                  <Button type="submit" className="w-full bg-pink-600 hover:bg-pink-500 font-bold h-12 text-white">
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 font-bold h-12 text-white">
                     Guardar Configuración SEO
                   </Button>
                 </div>
@@ -519,9 +519,28 @@ export default async function AdminConfiguracionPage() {
                     placeholder="Escribe aquí las cláusulas y términos legales del contrato..."
                     className="bg-card border-border/40 text-foreground min-h-[400px] font-serif text-base leading-relaxed" 
                   />
-                  <p className="text-[10px] text-muted-foreground">
+                   <p className="text-[10px] text-muted-foreground">
                     Sugerencia: Divide por cláusulas (PRIMERA, SEGUNDA, etc.) para mayor claridad.
                   </p>
+                  
+                  <div className="mt-4 p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
+                    <h4 className="text-[11px] font-black text-cyan-400 uppercase tracking-widest mb-3">Variables Disponibles</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {[
+                        { tag: "{{cliente}}", label: "Nombre del cliente" },
+                        { tag: "{{fecha}}", label: "Fecha del evento" },
+                        { tag: "{{horario}}", label: "Hora de inicio" },
+                        { tag: "{{monto}}", label: "Monto total" },
+                        { tag: "{{paquete}}", label: "Nombre del paquete" },
+                        { tag: "{{ubicación}}", label: "Dirección/Lugar" },
+                      ].map((v) => (
+                        <div key={v.tag} className="space-y-1">
+                          <code className="text-[10px] font-bold text-white bg-white/10 px-1.5 py-0.5 rounded">{v.tag}</code>
+                          <p className="text-[9px] text-muted-foreground">{v.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="pt-4">
