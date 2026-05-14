@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { db } from "@/lib/db"
-import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction, saveBankConfigAction, saveEvolutionWebhookSecretAction, saveOGConfigAction } from "@/actions/config"
+import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction, saveBankConfigAction, saveEvolutionWebhookSecretAction, saveOGConfigAction, saveContractConfigAction } from "@/actions/config"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -58,6 +58,10 @@ export default async function AdminConfiguracionPage() {
           <TabsTrigger value="viaticos" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold bg-transparent">
             <Map className="w-4 h-4 mr-2" />
             Viáticos
+          </TabsTrigger>
+          <TabsTrigger value="contrato" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 font-bold bg-transparent">
+            <FileText className="w-4 h-4 mr-2" />
+            Contrato
           </TabsTrigger>
         </TabsList>
 
@@ -488,6 +492,42 @@ export default async function AdminConfiguracionPage() {
                    </ul>
                  </div>
               </div>
+            </div>
+          </section>
+        <TabsContent value="contrato" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
+          <section>
+            <div className="bg-card border border-border/40 rounded-2xl p-8 backdrop-blur-sm">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-cyan-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-heading font-bold text-foreground">Texto Legal del Contrato</h2>
+                  <p className="text-sm text-muted-foreground">Este texto aparecerá en el contrato PDF que firman los clientes. Puedes usar variables (próximamente) o texto plano.</p>
+                </div>
+              </div>
+
+              <ConfigFormWrapper action={saveContractConfigAction} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="contractLegalText">Contenido del Contrato</Label>
+                  <Textarea 
+                    id="contractLegalText" 
+                    name="contractLegalText" 
+                    defaultValue={config?.contractLegalText || ""} 
+                    placeholder="Escribe aquí las cláusulas y términos legales del contrato..."
+                    className="bg-card border-border/40 text-foreground min-h-[400px] font-serif text-base leading-relaxed" 
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Sugerencia: Divide por cláusulas (PRIMERA, SEGUNDA, etc.) para mayor claridad.
+                  </p>
+                </div>
+
+                <div className="pt-4">
+                  <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500 font-bold h-12 text-white text-lg">
+                    Guardar Texto Legal
+                  </Button>
+                </div>
+              </ConfigFormWrapper>
             </div>
           </section>
         </TabsContent>

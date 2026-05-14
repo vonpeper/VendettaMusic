@@ -12,6 +12,7 @@ export type NotificationType =
   | "CLIENT_CONFIRMED"   // Aviso de fecha bloqueada (agendado)
   | "MUSICIAN_GIG"       // Convocatoria a músicos
   | "MUSICIAN_REHEARSAL" // Aviso de ensayo
+  | "EVENT_CANCELLED"    // Aviso de cancelación de evento
 
 const CEREMONY_LABELS: Record<string, string> = {
   boda: "💒 Boda", xv_anos: "👸 XV Años", cumpleanos: "🎂 Cumpleaños",
@@ -95,7 +96,7 @@ export async function dispatchNotification({
       recipient = config?.adminWhatsapp || recipient
       template = `🎸 *NUEVO PEDIDO — VENDETTA* 🎸\nID: {{folio}}\n\n👤 *Cliente:* {{fullName}}\n📅 *Fecha:* {{date}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n✅ Verifica en: {{adminLink}}`
       break
-
+    case "CLIENT_QUOTE":
       template = config?.msgTemplateQuote || `Hola {{clientName}}, somos *Vendetta Live Music* 🎸.
 
 Es un gusto saludarte. Te compartimos adjunta la propuesta exclusiva para tu evento el próximo *{{date}}*.
@@ -119,7 +120,7 @@ Hemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente
 
 *Folio:* {{shortId}}
 
-Puedes consultar el estatus de tu evento y descargar tu contrato firmado aquí:
+Puedes consultar el detalle de tu evento, *firmar tu contrato digital* y descargarlo aquí:
 {{bookingLink}}
 
 ¡Gracias por confiar en *Vendetta* para este día tan especial! 🎸
@@ -162,6 +163,19 @@ Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/pri
 ⚠️ Confirma de recibido respondiendo este mensaje.
 — Administración Vendetta`
       break
+
+    case "EVENT_CANCELLED":
+      template = `⚠️ *AVISO: EVENTO CANCELADO* ⚠️
+
+Lamentamos informarte que el evento del próximo *{{date}}* ha sido cancelado por el cliente o administración.
+
+👤 *Evento:* {{eventName}}
+📅 *Fecha:* {{date}}
+
+Por favor, toma tus precauciones y libera la fecha en tu agenda. 
+
+— Administración Vendetta`
+      break
   }
 
   // --- MODO SANDBOX GLOBAL: DESVÍO DE TODOS LOS MENSAJES ---
@@ -179,21 +193,15 @@ Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/pri
   }
 
   // 3. Renderizar Mensaje
-  let finalMessage = template
-    .replace(/{{clientName}}/g, payload.clientName || "")
-    .replace(/{{fullName}}/g, payload.fullName || "")
-    .replace(/{{date}}/g, payload.date || "")
-    .replace(/{{time}}/g, payload.time || "")
-    .replace(/{{package}}/g, payload.package || "")
-    .replace(/{{total}}/g, payload.total || "")
-    .replace(/{{shortId}}/g, payload.shortId || payload.folio || "")
-    .replace(/{{folio}}/g, payload.folio || payload.shortId || "")
-    .replace(/{{bookingLink}}/g, payload.bookingLink || "")
-    .replace(/{{statusLink}}/g, payload.statusLink || payload.bookingLink || "")
-    .replace(/{{adminLink}}/g, payload.adminLink || "")
-    .replace(/{{notes}}/g, payload.notes || "Ninguna")
-    .replace(/{{songsList}}/g, payload.songsList || "No se especificaron canciones.")
-    .replace(/\\n/g, "\n") // Convertir \n literales en saltos de línea reales
+  // Aseguramos que los campos básicos estén en el payload si no vienen de customData
+  const finalPayload = {
+    notes: "Ninguna",
+    songsList: "No se especificaron canciones.",
+    location: "Por confirmar",
+    ...payload,
+  }
+
+  const finalMessage = parseTemplate(template, finalPayload)
 
   // Añadir prefijo de sandbox si aplica
   if (isSandbox && type !== "ADMIN_NEW_BOOKING") {
@@ -249,8 +257,11 @@ Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/pri
         const pdfBytes = await generateContractPdf(funnelData, booking.shortId || booking.id, {
           includeLegal: isConfirmed, // Si está confirmado, incluye contrato legal
           clientSignature: booking.clientSignature || undefined,
-          adminSignature: booking.adminSignature || config?.adminSignature || undefined,
-          signedAt: booking.signedAt ? booking.signedAt.toISOString() : undefined
+          adminSignature: (booking.adminSignature && booking.adminSignature.length > 10) 
+            ? booking.adminSignature 
+            : (config?.adminSignature || undefined),
+          signedAt: booking.signedAt ? booking.signedAt.toISOString() : undefined,
+          contractLegalText: config?.contractLegalText || undefined
         })
         
         media = Buffer.from(pdfBytes).toString("base64")
@@ -285,12 +296,33 @@ Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/pri
 /**
  * Función auxiliar para reemplazar {{variables}}
  */
-function parseTemplate(template: string, data: Record<string, string>): string {
+function parseTemplate(template: string, data: Record<string, any>): string {
   let result = template
-  for (const [key, value] of Object.entries(data)) {
-    result = result.replace(new RegExp(`{{${key}}}`, 'g'), value || "")
+  
+  // Aliases y fallbacks comunes para compatibilidad entre diferentes disparadores
+  const extendedData = {
+    fullName:    data.fullName || data.clientName || data.eventName || "",
+    clientName:  data.clientName || (data.fullName ? data.fullName.split(" ")[0] : "") || data.eventName || "",
+    eventName:   data.eventName || data.fullName || data.clientName || "Evento Vendetta",
+    shortId:     data.shortId || data.folio || "",
+    folio:       data.folio || data.shortId || "",
+    time:        data.time || data.startTime || data.setupTime || data.performanceStart || "Por confirmar",
+    location:    data.location || data.locationName || "Por confirmar",
+    statusLink:  data.statusLink || data.bookingLink || "",
+    bookingLink: data.bookingLink || data.statusLink || "",
+    notes:       data.notes || data.musicianNotes || "Ninguna",
+    ...data
   }
-  return result
+
+  // Reemplazar cada {{key}} por su valor, soportando espacios opcionales {{ key }}
+  for (const [key, value] of Object.entries(extendedData)) {
+    const val = value === null || value === undefined ? "" : String(value)
+    const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
+    result = result.replace(regex, val)
+  }
+
+  // Convertir \n literales en saltos de línea reales
+  return result.replace(/\\n/g, "\n")
 }
 
 /**
@@ -505,18 +537,24 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
 {{confirmLink}}`
       : dbTemplate
 
-    // Sustituir variables directamente sin pasar bookingId (evita sobreescritura)
-    const message = template
-      .replace(/{{eventName}}/g, eventName)
-      .replace(/{{date}}/g, eventDate)
-      .replace(/{{ceremony}}/g, ceremonyLabel[gigDetails.ceremonyType || gigDetails.venueType || ""] || gigDetails.ceremonyType || "Show")
-      .replace(/{{location}}/g, gigDetails.locationName || gigDetails.address || "Por confirmar")
-      .replace(/{{mapsLink}}/g, gigDetails.mapsLink ? gigDetails.mapsLink : "(no registrado)")
-      .replace(/{{setupTime}}/g, gigDetails.setupTime || gigDetails.performanceStart || "Por definir")
-      .replace(/{{arrivalTime}}/g, gigDetails.arrivalTime || gigDetails.performanceStart || "Por definir")
-      .replace(/{{dressCode}}/g, finalDressCode)
-      .replace(/{{notes}}/g, gigDetails.musicianNotes || "Ninguna")
-      .replace(/{{confirmLink}}/g, confirmLink)
+    // Sustituir variables usando el parser centralizado
+    const templateData = {
+      eventName,
+      date: eventDate,
+      ceremony: ceremonyLabel[gigDetails.ceremonyType || gigDetails.venueType || ""] || gigDetails.ceremonyType || "Show",
+      location: gigDetails.locationName || gigDetails.address || "Por confirmar",
+      mapsLink: gigDetails.mapsLink ? gigDetails.mapsLink : "(no registrado)",
+      setupTime: gigDetails.setupTime || gigDetails.performanceStart || "Por definir",
+      arrivalTime: gigDetails.arrivalTime || gigDetails.performanceStart || "Por definir",
+      dressCode: finalDressCode,
+      notes: gigDetails.musicianNotes || "Ninguna",
+      confirmLink,
+      // Añadimos variables adicionales solicitadas por el usuario en plantillas personalizadas
+      fullName: eventName,
+      time: gigDetails.performanceStart || gigDetails.setupTime || "Por definir"
+    }
+    
+    const message = parseTemplate(template, templateData)
 
     // Enviar directamente via Evolution sin pasar por dispatchNotification
     // (para evitar que el bookingId sobreescriba los datos ya resueltos)
@@ -575,6 +613,58 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
   }
 
   await db.event.update({ where: { id: eventId }, data: { notificationSent: true } })
+}
+
+/**
+ * Notifica a los músicos asignados que un evento ha sido cancelado
+ */
+export async function notifyEventCancellation(eventId: string, prisma?: any) {
+  const { db } = await import("./db")
+  const client = prisma || db
+
+  const event = await client.event.findUnique({
+    where: { id: eventId },
+    include: {
+      musicians: {
+        include: { musician: { include: { user: true } } }
+      }
+    }
+  })
+
+  if (!event) return
+
+  const dateStr = formatDateMX(event.date, "d 'de' MMMM")
+  const eventName = event.customName || "Evento Vendetta"
+
+  for (const em of event.musicians) {
+    // Notificar solo a los que están confirmados o pendientes (que están esperando el show)
+    if (em.status !== "confirmed" && em.status !== "pending") continue
+
+    const musician = em.musician
+    const phone = musician.whatsapp || musician.phone
+    
+    if (phone) {
+      await dispatchNotification({
+        type: "EVENT_CANCELLED",
+        to: phone,
+        customData: {
+          date: dateStr,
+          eventName: eventName
+        }
+      }).catch(e => console.error(`Error enviando cancelación a ${musician.user?.name}:`, e))
+    }
+  }
+
+  // Registrar en notificaciones el aviso de cancelación global
+  await client.notification.create({
+    data: {
+      type: "EVENT_CANCELLED",
+      channel: "whatsapp",
+      message: `Aviso de cancelación enviado para el evento ${eventId}`,
+      status: "sent",
+      eventId: eventId
+    }
+  }).catch(() => {})
 }
 
 /**

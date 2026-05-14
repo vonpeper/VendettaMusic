@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { notifyMusicians } from "@/lib/notifications"
+import { notifyMusicians, notifyEventCancellation } from "@/lib/notifications"
 import { assignDefaultMusicians } from "@/lib/musicians"
 import crypto from "crypto"
 
@@ -201,6 +201,11 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
       }).catch(() => {})
 
       await notifyMusicians(id, gigDetails, db)
+    }
+
+    if ((data.status as string) === "cancelado") {
+      console.log(`⚠️ updateEventAction: Detectada cancelación para evento ${id}. Notificando...`)
+      await notifyEventCancellation(id, db).catch(e => console.error("Error sending cancellation notifications:", e))
     }
 
     return { 
@@ -585,6 +590,11 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
         }
         await notifyMusicians(id, gigDetails, db)
       }
+    }
+
+    if (newStatus === "cancelado") {
+      console.log(`⚠️ updateEventStatusAction: Detectada cancelación para evento ${id}. Notificando...`)
+      await notifyEventCancellation(id, db).catch(e => console.error("Error sending cancellation notifications:", e))
     }
 
     revalidatePath("/admin/eventualidades")

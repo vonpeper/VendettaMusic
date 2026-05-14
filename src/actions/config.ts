@@ -387,3 +387,25 @@ export async function saveOGConfigAction(arg1: any, arg2?: any) {
     return { success: false, message: `Error: ${error.message}` }
   }
 }
+
+export async function saveContractConfigAction(arg1: any, arg2?: any) {
+  const u = await requireAdmin(); if (u) return u
+  try {
+    const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null)
+    if (!formData) return { success: false, message: "Error: No se recibieron datos" }
+
+    const contractLegalText = formData.get("contractLegalText") as string
+
+    await db.globalConfig.upsert({
+      where: { id: "vendetta_config" },
+      update: { contractLegalText },
+      create: { id: "vendetta_config", contractLegalText },
+    })
+
+    revalidatePath("/admin/configuracion")
+    return { success: true, message: "Texto legal del contrato guardado" }
+  } catch (error: any) {
+    console.error("Error saving contract config:", error)
+    return { success: false, message: `Error: ${error.message}` }
+  }
+}

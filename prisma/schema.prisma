@@ -518,6 +518,7 @@ model GlobalConfig {
   ogTitle                String?
   ogDescription          String?
   ogImage                String?
+  contractLegalText      String?
 }
 
 model InboxItem {
