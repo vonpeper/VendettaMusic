@@ -18,6 +18,12 @@ interface ContractSignerProps {
   clientSignature?: string | null
   adminSignature?: string | null
   contractLegalText?: string
+  // New props for variables
+  eventDate?: Date | string
+  eventTime?: string
+  eventAmount?: number
+  packageName?: string
+  eventAddress?: string
 }
 
 export function ContractSigner({ 
@@ -28,10 +34,44 @@ export function ContractSigner({
   signedAt,
   clientSignature,
   adminSignature,
-  contractLegalText
+  contractLegalText,
+  eventDate,
+  eventTime,
+  eventAmount,
+  packageName,
+  eventAddress
 }: ContractSignerProps) {
   const [loading, setLoading] = useState(false)
   const [showPad, setShowPad] = useState(false)
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("es-MX", {
+      style: "currency",
+      currency: "MXN",
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
+
+  const processedLegalText = React.useMemo(() => {
+    if (!contractLegalText) return ""
+    
+    let text = contractLegalText
+    const replacements: Record<string, string> = {
+      "{{cliente}}": clientName,
+      "{{horario}}": eventTime || "Por confirmar",
+      "{{monto}}": eventAmount ? formatCurrency(eventAmount) : "Por confirmar",
+      "{{paquete}}": packageName || "Por confirmar",
+      "{{dirección}}": eventAddress || "Por confirmar",
+      "{{ubicación}}": eventAddress || "Por confirmar",
+      "{{fecha}}": eventDate ? new Date(eventDate).toLocaleDateString("es-MX", { day: 'numeric', month: 'long', year: 'numeric' }) : "Por confirmar"
+    }
+
+    Object.entries(replacements).forEach(([key, value]) => {
+      text = text.split(key).join(value)
+    })
+
+    return text
+  }, [contractLegalText, clientName, eventTime, eventAmount, packageName, eventAddress, eventDate])
 
   const handleSign = async (base64: string) => {
     setLoading(true)
@@ -134,8 +174,8 @@ export function ContractSigner({
           ) : (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                <div className="p-4 rounded-xl bg-white/5 border border-white/10 max-h-40 overflow-y-auto text-[11px] text-gray-400 space-y-3 leading-relaxed">
-                  {contractLegalText ? (
-                    contractLegalText.split("\n").filter(p => p.trim()).map((para, idx) => (
+                  {processedLegalText ? (
+                    processedLegalText.split("\n").filter(p => p.trim()).map((para, idx) => (
                       <p key={idx}>{para}</p>
                     ))
                   ) : (
