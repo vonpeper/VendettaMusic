@@ -109,7 +109,8 @@ export async function GET(
       adminSignature: (booking.adminSignature && booking.adminSignature.length > 10) 
         ? booking.adminSignature 
         : (globalConfig?.adminSignature || undefined),
-      signedAt: booking.signedAt ? booking.signedAt.toISOString() : undefined
+      signedAt: booking.signedAt ? booking.signedAt.toISOString() : undefined,
+      contractLegalText: globalConfig?.contractLegalText || undefined
     })
 
     // Crear la respuesta con el PDF

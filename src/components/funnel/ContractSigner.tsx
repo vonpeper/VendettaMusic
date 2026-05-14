@@ -17,6 +17,7 @@ interface ContractSignerProps {
   signedAt?: Date | null
   clientSignature?: string | null
   adminSignature?: string | null
+  contractLegalText?: string
 }
 
 export function ContractSigner({ 
@@ -26,7 +27,8 @@ export function ContractSigner({
   isSigned, 
   signedAt,
   clientSignature,
-  adminSignature
+  adminSignature,
+  contractLegalText
 }: ContractSignerProps) {
   const [loading, setLoading] = useState(false)
   const [showPad, setShowPad] = useState(false)
@@ -125,9 +127,17 @@ export function ContractSigner({
           ) : (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                <div className="p-4 rounded-xl bg-white/5 border border-white/10 max-h-40 overflow-y-auto text-[11px] text-gray-400 space-y-3 leading-relaxed">
-                  <p><strong>CLAÚSULA DE SERVICIO:</strong> VENDETTA se compromete a presentarse en la fecha y hora estipuladas con el paquete seleccionado.</p>
-                  <p><strong>CANCELACIONES:</strong> El anticipo no es reembolsable en caso de cancelación por parte del cliente.</p>
-                  <p><strong>LOGÍSTICA:</strong> El cliente proporcionará el espacio físico y alimentación básica para el staff.</p>
+                  {contractLegalText ? (
+                    contractLegalText.split("\n").filter(p => p.trim()).map((para, idx) => (
+                      <p key={idx}>{para}</p>
+                    ))
+                  ) : (
+                    <>
+                      <p><strong>CLAÚSULA DE SERVICIO:</strong> VENDETTA se compromete a presentarse en la fecha y hora estipuladas con el paquete seleccionado.</p>
+                      <p><strong>CANCELACIONES:</strong> El anticipo no es reembolsable en caso de cancelación por parte del cliente.</p>
+                      <p><strong>LOGÍSTICA:</strong> El cliente proporcionará el espacio físico y alimentación básica para el staff.</p>
+                    </>
+                  )}
                </div>
                
                <div className="space-y-2">

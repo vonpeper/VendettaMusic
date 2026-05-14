@@ -41,6 +41,10 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
     })
   }
 
+  const globalConfig = await db.globalConfig.findUnique({
+    where: { id: "vendetta_config" }
+  })
+
   const statusMap: Record<string, { label: string, color: string, icon: any }> = {
     pendiente: { label: "Pendiente de Revisión", color: "text-yellow-500", icon: Clock },
     agendado:  { label: "Evento Confirmado",    color: "text-green-500",  icon: CheckCircle2 },
@@ -129,6 +133,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                 signedAt={mainBooking.signedAt}
                 clientSignature={mainBooking.clientSignature}
                 adminSignature={mainBooking.adminSignature}
+                contractLegalText={globalConfig?.contractLegalText || undefined}
               />
             )}
           </div>

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { notifyMusicians, dispatchNotification } from "@/lib/notifications"
+import { notifyMusicians, dispatchNotification, notifyEventCancellation } from "@/lib/notifications"
 import { formatDateMX } from "@/lib/utils"
 
 export async function markBookingAsCompleted(bookingId: string) {
@@ -73,6 +73,11 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
         })
         
         await notifyMusicians(br.eventId, br.event, db)
+      }
+
+      if (newStatus === "cancelado") {
+        console.log(`⚠️ updateBookingStatusAction: Detectada cancelación para contrato ${bookingId}. Notificando...`)
+        await notifyEventCancellation(br.eventId, db).catch(e => console.error("Error sending cancellation notifications:", e))
       }
     }
 
