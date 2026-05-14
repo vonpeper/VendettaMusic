@@ -166,6 +166,58 @@ export async function markContractAsSignedAction(bookingId: string) {
   }
 }
 
+export async function updateContractStatusAction(bookingId: string, newStatus: string) {
+  try {
+    const booking = await db.bookingRequest.findUnique({
+      where: { id: bookingId },
+      include: { 
+        event: { 
+          include: { 
+            contracts: true,
+            location: true,
+            package: true
+          } 
+        } 
+      }
+    })
+
+    if (!booking || !booking.eventId) {
+      return { success: false, error: "No se encontró un evento vinculado." }
+    }
+
+    if (booking.event?.contracts && booking.event.contracts.length > 0) {
+      await db.contract.update({
+        where: { id: booking.event.contracts[0].id },
+        data: { 
+          status: newStatus,
+          signedAt: newStatus === "signed" ? new Date() : null
+        }
+      })
+    } else {
+      await db.contract.create({
+        data: {
+          eventId: booking.eventId,
+          status: newStatus,
+          signedAt: newStatus === "signed" ? new Date() : null
+        }
+      })
+    }
+
+    // Si se firma y el evento está agendado, podemos disparar notificaciones si no se habían enviado
+    if (newStatus === "signed" && booking.event && booking.event.status === "agendado") {
+      // Opcional: solo si queremos re-enviar o asegurar envío
+      // await dispatchNotification(...)
+    }
+
+    revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating contract status:", error)
+    return { success: false, error: "Error al actualizar contrato." }
+  }
+}
+
 export async function sendAutoFollowUpAction(id: string, type: "booking" | "quote", phone: string, clientName: string) {
   try {
     // 1. Send WhatsApp Push

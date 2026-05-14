@@ -49,6 +49,7 @@ import {
 import { formatDateMX, formatCurrency } from "@/lib/utils"
 import { updateBookingStatusAction, reactivateBookingAction } from "@/actions/ventas"
 import { FollowUpButton } from "./FollowUpButton"
+import { ContractStatusSwitcher } from "./ContractStatusSwitcher"
 
 interface Booking {
   id: string
@@ -72,6 +73,7 @@ interface Booking {
     client: string
     musicians: string
   }
+  contractStatus?: string
 }
 
 type SortKey = "fecha" | "cliente" | "monto" | "estado"
@@ -295,6 +297,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                   Estado <SortIcon col="estado" />
                 </button>
               </th>
+              <th className="px-6 py-4 text-[10px] font-bold text-blue-600 uppercase tracking-widest text-center">Contrato</th>
               <th className="px-6 py-4 text-[10px] font-bold text-blue-600 uppercase tracking-widest text-right">Opciones</th>
             </tr>
           </thead>
@@ -355,6 +358,12 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                     id={reserva.id} 
                     onStatusChange={handleStatusChange}
                     isUpdating={updatingId === reserva.id}
+                  />
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <ContractStatusSwitcher 
+                    bookingId={reserva.id} 
+                    status={reserva.contractStatus || "pending"} 
                   />
                 </td>
                 <td className="px-6 py-4 text-right">
