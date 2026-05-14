@@ -201,7 +201,7 @@ Por favor, toma tus precauciones y libera la fecha en tu agenda.
     ...payload,
   }
 
-  const finalMessage = parseTemplate(template, finalPayload)
+  let finalMessage = parseTemplate(template, finalPayload)
 
   // Añadir prefijo de sandbox si aplica
   if (isSandbox && type !== "ADMIN_NEW_BOOKING") {
