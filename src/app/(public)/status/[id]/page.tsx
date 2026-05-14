@@ -136,8 +136,8 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                 bookingId={mainBooking.id}
                 clientName={mainBooking.clientName}
                 shortId={mainBooking.shortId || ""}
-                isSigned={!!mainBooking.clientSignature || mainBooking.event?.contracts?.some((c: any) => c.status === "signed")}
-                signedAt={mainBooking.signedAt || mainBooking.event?.contracts?.find((c: any) => c.status === "signed")?.signedAt}
+                isSigned={!!mainBooking.clientSignature || (mainBooking as any).event?.contracts?.some((c: any) => c.status === "signed")}
+                signedAt={mainBooking.signedAt || (mainBooking as any).event?.contracts?.find((c: any) => c.status === "signed")?.signedAt}
                 clientSignature={mainBooking.clientSignature}
                 adminSignature={mainBooking.adminSignature}
                 contractLegalText={globalConfig?.contractLegalText || undefined}
