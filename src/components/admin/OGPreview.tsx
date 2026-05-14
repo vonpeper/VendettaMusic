@@ -40,13 +40,13 @@ export function OGPreview({ ogImage, ogTitle, ogDescription }: OGPreviewProps) {
       </div>
 
       <div className="pt-6 border-t border-blue-500/10 space-y-4">
-        <div className="flex items-start gap-3 bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
+        <div className="flex items-start gap-4 bg-slate-900/60 p-5 rounded-2xl border border-blue-500/30 backdrop-blur-md">
           <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="text-xs font-bold text-white uppercase tracking-wide">¿Facebook muestra Error 403?</p>
-            <p className="text-[11px] text-slate-300 leading-relaxed">
-              Si el depurador de Facebook devuelve un código <strong>403</strong>, significa que tu servidor o WAF está bloqueando al bot de Facebook. 
-              Debes permitir el User-Agent <code className="bg-blue-900/40 px-1 rounded text-blue-300">facebookexternalhit</code> en tu configuración de Cloudflare o Firewall.
+            <p className="text-xs font-black text-white uppercase tracking-widest">¿Facebook muestra Error 403?</p>
+            <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
+              Si el depurador de Facebook devuelve un código <strong className="text-white">403</strong>, significa que tu servidor o WAF está bloqueando al bot de Facebook. 
+              Debes permitir el User-Agent <code className="bg-blue-500/20 px-1.5 py-0.5 rounded text-blue-300 border border-blue-500/10 font-bold">facebookexternalhit</code> en tu configuración de Cloudflare o Firewall.
             </p>
           </div>
         </div>
@@ -55,10 +55,10 @@ export function OGPreview({ ogImage, ogTitle, ogDescription }: OGPreviewProps) {
           href="https://developers.facebook.com/tools/debug/?q=https%3A%2F%2Fvendetta.mx%2F" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-white transition-all group"
+          className="flex items-center justify-center gap-2 w-full py-3.5 bg-blue-600 hover:bg-blue-500 border border-blue-400/20 rounded-xl text-xs font-black text-white transition-all shadow-lg shadow-blue-900/20 group"
         >
-          <ExternalLink className="w-4 h-4 text-blue-400" />
-          Abrir Depurador de Compartición de Facebook
+          <ExternalLink className="w-4 h-4 text-white" />
+          ABRIR DEPURADOR DE COMPARTICIÓN
         </a>
       </div>
     </div>

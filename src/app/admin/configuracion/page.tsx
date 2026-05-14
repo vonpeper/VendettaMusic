@@ -125,15 +125,15 @@ export default async function AdminConfiguracionPage() {
                 <div className="mt-6 pt-6 border-t border-border/40 space-y-3">
                   <EvolutionTestButton />
                   <LogInboundToggle initialValue={config?.logInboundActive ?? true} />
-                  <div className="bg-[#FFEB3B] border-2 border-amber-600 p-4 rounded-xl shadow-lg">
+                  <div className="bg-slate-900/60 border border-amber-500/30 p-4 rounded-xl shadow-sm backdrop-blur-md">
                     <div className="space-y-3">
-                      <p className="text-xs text-amber-950 leading-relaxed font-medium">
-                        <span className="font-black text-amber-900 text-sm">⚠️ NOTA IMPORTANTE:</span><br/>
-                        Si el Manager te pide <strong>identificarte</strong> usa: <code className="bg-white/50 px-2 py-0.5 rounded border border-amber-600/30 font-bold">admin / admin</code>
+                      <p className="text-xs text-slate-200 leading-relaxed">
+                        <span className="font-bold text-amber-400 text-sm block mb-1">⚠️ NOTA DE ACCESO:</span>
+                        Si el Manager te pide <strong className="text-white">identificarte</strong> usa: <code className="bg-white/10 px-2 py-0.5 rounded border border-white/10 font-bold text-amber-200">admin / admin</code>
                       </p>
-                      <p className="text-xs text-amber-950 leading-relaxed font-medium">
-                        <span className="font-black text-amber-900 text-sm">💡 CONEXIÓN:</span><br/>
-                        En <span className="font-bold">Server URL</span> usa la dirección de arriba y la Global API Key.
+                      <p className="text-xs text-slate-200 leading-relaxed">
+                        <span className="font-bold text-amber-400 text-sm block mb-1">💡 CONEXIÓN:</span>
+                        En <span className="font-bold text-white">Server URL</span> usa la dirección de arriba y la Global API Key.
                       </p>
                     </div>
                   </div>
@@ -161,13 +161,13 @@ export default async function AdminConfiguracionPage() {
               </div>
             </div>
               
-              <div className="bg-blue-600/5 border border-blue-500/20 rounded-2xl p-6">
+              <div className="bg-slate-900/60 border border-blue-500/30 rounded-2xl p-6 backdrop-blur-md">
                  <div className="flex items-center gap-3 text-blue-400 mb-3">
                    <ShieldCheck className="w-5 h-5" />
-                   <h3 className="font-bold">Seguridad de Datos</h3>
+                   <h3 className="font-bold text-white">Seguridad de Datos</h3>
                  </div>
-                 <p className="text-sm text-muted-foreground">
-                   Tus credenciales de Evolution API se almacenan de forma local. Nunca expongas tu puerto 8080 a internet sin un proxy inverso y autenticación.
+                 <p className="text-sm text-slate-300 leading-relaxed">
+                   Tus credenciales de Evolution API se almacenan de forma local y segura. Nunca expongas tu puerto 8080 a internet sin un proxy inverso y autenticación debidamente configurada.
                  </p>
               </div>
             </section>
@@ -235,13 +235,13 @@ export default async function AdminConfiguracionPage() {
                 </div>
               </div>
               
-              <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6">
+              <div className="bg-slate-900/60 border border-primary/30 rounded-2xl p-6 backdrop-blur-md">
                  <div className="flex items-center gap-3 text-primary mb-3">
                    <Mail className="w-5 h-5" />
-                   <h3 className="font-bold font-heading">¿Necesitas ayuda?</h3>
+                   <h3 className="font-bold text-white font-heading">¿Necesitas ayuda con Google?</h3>
                  </div>
-                 <p className="text-sm text-muted-foreground mb-4">
-                   He preparado una guía paso a paso para ayudarte a configurar tu consola de Google Cloud y obtener las llaves.
+                 <p className="text-sm text-slate-300 mb-4 leading-relaxed">
+                   He preparado una guía paso a paso para ayudarte a configurar tu consola de Google Cloud y obtener las llaves necesarias para la sincronización.
                  </p>
                  <Button variant="link" className="p-0 h-auto text-primary font-bold hover:no-underline underline-offset-4 decoration-2">
                    Ver guía de configuración pública →
@@ -478,17 +478,27 @@ export default async function AdminConfiguracionPage() {
                 </div>
               </ConfigFormWrapper>
               
-              <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-xl flex gap-3">
-                 <Settings className="w-5 h-5 text-primary shrink-0" />
-                 <div className="text-xs text-muted-foreground leading-relaxed space-y-2">
-                   <p>
-                     <strong>¿Cómo funciona?</strong> El cotizador asignará automáticamente:
-                   </p>
-                   <ul className="list-disc pl-4 space-y-1">
-                     <li><strong>Zona 1 (Toluca / Metepec / Alrededores):</strong> $0 MXN.</li>
-                     <li><strong>Zona 2 (Media Distancia):</strong> El costo establecido arriba.</li>
-                     <li><strong>Zona 3 (Larga Distancia):</strong> El costo establecido arriba.</li>
-                     <li><strong>Zona 4 (Resto de México):</strong> No dará costo automático. Dirá que se cotizará por separado.</li>
+              <div className="mt-6 p-4 bg-slate-900/60 border border-primary/30 rounded-xl flex gap-4 backdrop-blur-md">
+                 <Settings className="w-5 h-5 text-primary shrink-0 mt-1" />
+                 <div className="text-xs text-slate-300 leading-relaxed space-y-2">
+                   <p className="text-white font-bold mb-2">¿Cómo funciona el cálculo automático?</p>
+                   <ul className="space-y-1.5">
+                     <li className="flex items-start gap-2">
+                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                       <span><strong className="text-slate-100">Zona 1 (Toluca / Metepec):</strong> Sin costo extra ($0 MXN).</span>
+                     </li>
+                     <li className="flex items-start gap-2">
+                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                       <span><strong className="text-slate-100">Zona 2 (Media Distancia):</strong> Aplica la tarifa establecida arriba.</span>
+                     </li>
+                     <li className="flex items-start gap-2">
+                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                       <span><strong className="text-slate-100">Zona 3 (Larga Distancia):</strong> Aplica la tarifa establecida arriba.</span>
+                     </li>
+                     <li className="flex items-start gap-2">
+                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                       <span><strong className="text-slate-100">Zona 4 (Resto de México):</strong> Requiere cotización manual personalizada.</span>
+                     </li>
                    </ul>
                  </div>
               </div>
@@ -523,9 +533,9 @@ export default async function AdminConfiguracionPage() {
                     Sugerencia: Divide por cláusulas (PRIMERA, SEGUNDA, etc.) para mayor claridad.
                   </p>
                   
-                  <div className="mt-4 p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
-                    <h4 className="text-[11px] font-black text-cyan-400 uppercase tracking-widest mb-3">Variables Disponibles</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="mt-4 p-5 rounded-2xl bg-slate-900/60 border border-cyan-500/20 backdrop-blur-md">
+                    <h4 className="text-[11px] font-black text-cyan-400 uppercase tracking-widest mb-4">Variables Disponibles para el Llenado</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {[
                         { tag: "{{cliente}}", label: "Nombre del cliente" },
                         { tag: "{{fecha}}", label: "Fecha del evento" },
@@ -534,9 +544,9 @@ export default async function AdminConfiguracionPage() {
                         { tag: "{{paquete}}", label: "Nombre del paquete" },
                         { tag: "{{ubicación}}", label: "Dirección/Lugar" },
                       ].map((v) => (
-                        <div key={v.tag} className="space-y-1">
-                          <code className="text-[10px] font-bold text-white bg-white/10 px-1.5 py-0.5 rounded">{v.tag}</code>
-                          <p className="text-[9px] text-muted-foreground">{v.label}</p>
+                        <div key={v.tag} className="space-y-1.5 bg-white/5 p-2 rounded-lg border border-white/5">
+                          <code className="text-[10px] font-black text-cyan-200 bg-cyan-500/20 px-2 py-0.5 rounded block w-fit">{v.tag}</code>
+                          <p className="text-[10px] text-slate-400 font-medium px-0.5">{v.label}</p>
                         </div>
                       ))}
                     </div>
