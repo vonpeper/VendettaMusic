@@ -17,7 +17,14 @@ import { OGPreview } from "@/components/admin/OGPreview"
 import { EvolutionTestButton } from "@/components/admin/EvolutionTestButton"
 import { LogInboundToggle } from "@/components/admin/LogInboundToggle"
 
-export default async function AdminConfiguracionPage() {
+interface Props {
+  searchParams: Promise<{ tab?: string }>
+}
+
+export default async function AdminConfiguracionPage({ searchParams }: Props) {
+  const params = await searchParams
+  const defaultTab = params.tab || "integraciones"
+
   const session = await auth()
   if (!session || session.user?.role !== "ADMIN") {
     redirect("/admin")
@@ -41,7 +48,7 @@ export default async function AdminConfiguracionPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="integraciones" className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="grid grid-cols-2 md:flex md:flex-row w-full bg-card/50 border border-border/40 h-auto p-1.5 mb-8 rounded-2xl gap-2">
           <TabsTrigger value="integraciones" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold bg-transparent">
             <Plug className="w-4 h-4 mr-2" />
@@ -332,8 +339,8 @@ export default async function AdminConfiguracionPage() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-heading font-bold text-foreground underline decoration-[#E91E63]">CONTROL DE FIRMA</h2>
-                  <p className="text-sm text-muted-foreground font-black text-[#E91E63]">GESTIÓN DE FIRMA ADMINISTRATIVA</p>
+                  <h2 className="text-2xl font-heading font-bold text-foreground underline decoration-primary">CONTROL DE FIRMA</h2>
+                  <p className="text-sm text-muted-foreground font-black text-primary">GESTIÓN DE FIRMA ADMINISTRATIVA</p>
                 </div>
               </div>
               
