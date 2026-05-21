@@ -388,7 +388,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <MusicianStatusList musicians={booking.event.musicians} />
+                  <MusicianStatusList musicians={booking.event.musicians} eventId={booking.event?.id} bookingId={booking.id} />
                 </CardContent>
               </Card>
             )}

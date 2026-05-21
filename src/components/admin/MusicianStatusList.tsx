@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { resendIndividualMusicianNotificationAction } from "@/actions/notifications"
 
-export function MusicianStatusList({ musicians }: { musicians: any[] }) {
+export function MusicianStatusList({ musicians, eventId, bookingId }: { musicians: any[]; eventId: string; bookingId: string }) {
   const [loading, setLoading] = useState<string | null>(null)
 
   if (!musicians || musicians.length === 0) {
@@ -52,12 +52,8 @@ export function MusicianStatusList({ musicians }: { musicians: any[] }) {
   }
 
   const handleResend = async (musicianId: string) => {
-    // Intentamos encontrar el eventId y bookingId en la data
-    const eventId = musicians.find(m => m.eventId)?.eventId || musicians[0]?.eventId
-    const bookingId = musicians.find(m => m.event?.bookingRequest?.id)?.event?.bookingRequest?.id || musicians[0]?.bookingId
-
     if (!eventId || !bookingId) {
-      toast.error("No se pudo encontrar la información del evento o reserva")
+      toast.error("Información de evento o reserva faltante")
       return
     }
 
