@@ -200,7 +200,8 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
         }
       }).catch(() => {})
 
-      await notifyMusicians(id, gigDetails, db)
+      const notifyMusicianIds = formData.getAll("notifyMusicianIds") as string[]
+      await notifyMusicians(id, gigDetails, db, notifyMusicianIds.length > 0 ? notifyMusicianIds : undefined)
     }
 
     if ((data.status as string) === "cancelado") {

@@ -137,10 +137,22 @@ export function ContractSigner({
               </div>
            </div>
 
-           <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+           <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-4">
               <p className="text-[10px] text-gray-500 leading-relaxed text-center italic">
                 Este documento constituye un acuerdo legal entre las partes. La firma digital ha sido verificada mediante IP y sello de tiempo.
               </p>
+              
+              <div className="flex justify-center pt-2">
+                <Button 
+                  asChild
+                  className="bg-primary/20 text-primary hover:bg-primary/30 border border-primary/50 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl transition-all gap-2"
+                >
+                  <a href={`/api/admin/contract/${bookingId}`} target="_blank" rel="noreferrer">
+                    <FileText className="w-4 h-4" />
+                    Descargar Contrato PDF
+                  </a>
+                </Button>
+              </div>
            </div>
         </div>
       </div>

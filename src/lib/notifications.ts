@@ -351,7 +351,8 @@ export async function sendWhatsApp(
   // Normalización Inteligente
   let cleanNumber = to.replace(/\D/g, "")
   if (cleanNumber.length === 10) cleanNumber = `52${cleanNumber}`
-  else if (cleanNumber.length === 11 && cleanNumber.startsWith("1")) cleanNumber = `52${cleanNumber}`
+  else if (cleanNumber.length === 12 && cleanNumber.startsWith("521")) cleanNumber = `52${cleanNumber.substring(3)}`
+  else if (cleanNumber.length === 11 && cleanNumber.startsWith("1")) cleanNumber = `52${cleanNumber.substring(1)}`
   
   const isMedia = !!media
   const endpoint = isMedia ? "sendMedia" : "sendText"
@@ -362,7 +363,7 @@ export async function sendWhatsApp(
 
   try {
     const body: any = {
-      number: cleanNumber,
+      number: `${cleanNumber}@s.whatsapp.net`,
       delay: 1200
     }
 
@@ -448,14 +449,19 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
   })
 
   // 2. Filtrar: Solo enviar a los que están "pending" (no han respondido o son nuevos)
+  // O a los que explícitamente se pasaron por targetMusicianIds
   const allRecipients = profiles.map((p: any) => ({ 
     id: p.id, 
     name: p.user?.name || "Músico", 
     phone: [p.whatsapp, p.phone].find((num: any) => num && num.trim() !== ""),
     instrument: p.instrument || "",
     currentStatus: p.eventMusicians[0]?.status || "pending"
-  })).filter((r: any) => r.currentStatus === "pending" || r.currentStatus === "confirmed" || r.currentStatus === "rejected") 
-  // Nota: Permitimos re-enviar incluso si ya respondieron si se solicita explícitamente
+  })).filter((r: any) => 
+    r.currentStatus === "pending" || 
+    r.currentStatus === "confirmed" || 
+    r.currentStatus === "rejected" || 
+    (targetMusicianIds && targetMusicianIds.includes(r.id))
+  ) 
 
   console.log(`📣 notifyMusicians: Iniciando convocatoria para Evento ${eventId}. Destinatarios filtrados: ${allRecipients.length}`)
 
@@ -557,7 +563,6 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     const message = parseTemplate(template, templateData)
 
     // Enviar directamente via Evolution sin pasar por dispatchNotification
-    // (para evitar que el bookingId sobreescriba los datos ya resueltos)
     const evolutionUrl = (config as any)?.evolutionUrl || process.env.EVOLUTION_API_URL
     const evolutionKey = (config as any)?.evolutionApiKey || process.env.EVOLUTION_API_KEY
     const evolutionInstance = (config as any)?.evolutionInstance || process.env.EVOLUTION_INSTANCE_NAME
@@ -568,7 +573,19 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     }
 
     const cleanPhone = realRecipient.replace(/\D/g, "")
-    const jid = cleanPhone.length === 10 ? `52${cleanPhone}@s.whatsapp.net` : `${cleanPhone}@s.whatsapp.net`
+    // Ensure we handle local and international correctly
+    let jid = ""
+    if (cleanPhone.length === 10) {
+      jid = `52${cleanPhone}@s.whatsapp.net`
+    } else if (cleanPhone.length === 12 && cleanPhone.startsWith("521")) {
+      // Sometimes Mexico adds a 1
+      jid = `52${cleanPhone.substring(3)}@s.whatsapp.net`
+    } else if (cleanPhone.length >= 11) {
+      jid = `${cleanPhone}@s.whatsapp.net`
+    } else {
+      console.warn(`Número inválido para ${r.name}: ${cleanPhone}`)
+      continue
+    }
 
     try {
       const resp = await fetch(`${evolutionUrl}/message/sendText/${evolutionInstance}`, {

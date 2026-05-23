@@ -5,7 +5,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   // Las rutas que llamen a `stripe` lo validan en runtime.
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "sk_unset", {
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_unset", {
   apiVersion: "2025-09-30.acacia" as any,
   typescript: true,
 })

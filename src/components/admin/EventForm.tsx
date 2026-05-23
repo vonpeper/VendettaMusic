@@ -38,7 +38,7 @@ const STATUS_OPTIONS = [
 interface EventFormProps {
   onClose: () => void
   clients: { id: string; name: string }[]
-  locations: { id: string; name: string }[]
+  locations: { id: string; name: string; mapsLink?: string | null }[]
   packages: { id: string; name: string; baseCostPerHour: number; minDuration: number }[]
   staff?: { id: string; name: string }[]
   allMusicians?: { id: string; name: string; instrument: string; isTitular: boolean }[]
@@ -223,30 +223,6 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                   className="bg-background border-border/40 text-foreground" />
               </div>
 
-              {/* Nuevos controles de visibilidad pública */}
-              <div className="col-span-1 md:col-span-2 p-4 bg-primary/10 border border-primary/20 rounded-xl space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="isPublic" className="text-sm font-bold text-primary flex items-center gap-2">
-                      ⚡ Show Público en Agenda
-                    </Label>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Si se activa, el show aparecerá en la página principal con botones de "Ubucación" y "Reservar".</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" name="isPublic" id="isPublic" defaultChecked={initialData?.isPublic} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-primary/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-border/40 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </label>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="mapsLink" className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                    Link de Google Maps
-                  </Label>
-                  <Input id="mapsLink" name="mapsLink" defaultValue={initialData?.mapsLink || ""}
-                    placeholder="https://maps.app.goo.gl/..."
-                    className="bg-background h-9 text-xs border-primary/20" />
-                </div>
-              </div>
             </div>
           </fieldset>
 
@@ -257,6 +233,13 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
               <div className="space-y-2">
                 <Label htmlFor="locationId">Ubicación (catálogo)</Label>
                 <select id="locationId" name="locationId" defaultValue={initialData?.locationId || ""}
+                  onChange={(e) => {
+                     const selectedLoc = locations.find(l => l.id === e.target.value)
+                     if (selectedLoc?.mapsLink) {
+                        const mapsInput = document.getElementById("mapsLink") as HTMLInputElement
+                        if (mapsInput && !mapsInput.value) mapsInput.value = selectedLoc.mapsLink
+                     }
+                  }}
                   className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <option value="">Sin ubicación en catálogo</option>
                   {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
@@ -338,35 +321,52 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                   const isSelected = selectedMusicians.includes(m.id)
                   const isNotifying = notifyingIds.includes(m.id)
                   return (
-                    <div key={m.id} className={`flex items-center justify-between p-2 rounded-lg border transition-all ${isSelected ? 'bg-primary/5 border-primary/30' : 'bg-card border-transparent opacity-60'}`}>
-                      <label className="flex items-center gap-3 cursor-pointer flex-1">
-                        <input 
-                          type="checkbox" 
-                          name="musicianIds" 
-                          value={m.id} 
-                          checked={isSelected}
-                          onChange={() => toggleMusician(m.id)}
-                          className="sr-only" 
-                        />
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
-                          {isSelected && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className={`text-xs font-bold ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{m.name}</span>
-                          <span className="text-[9px] text-muted-foreground uppercase">{m.instrument} {m.isTitular && "• Titular"}</span>
-                        </div>
-                      </label>
+                    <div key={m.id} className={`flex flex-col gap-1 p-2 rounded-lg border transition-all ${isSelected ? 'bg-primary/5 border-primary/30' : 'bg-card border-transparent opacity-60'}`}>
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-3 cursor-pointer flex-1">
+                          <input 
+                            type="checkbox" 
+                            name="musicianIds" 
+                            value={m.id} 
+                            checked={isSelected}
+                            onChange={() => toggleMusician(m.id)}
+                            className="sr-only" 
+                          />
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className={`text-xs font-bold ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{m.name}</span>
+                            <span className="text-[9px] text-muted-foreground uppercase">{m.instrument} {m.isTitular && "• Titular"}</span>
+                          </div>
+                        </label>
+                        
+                        {initialData && isSelected && (
+                          <button
+                            type="button"
+                            onClick={() => handleNotifySingle(m.id)}
+                            disabled={isNotifying}
+                            title="Enviar convocatoria individual por WhatsApp"
+                            className="p-1.5 rounded-md hover:bg-primary/20 text-primary transition-colors disabled:opacity-50"
+                          >
+                            {isNotifying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                          </button>
+                        )}
+                      </div>
                       
-                      {initialData && isSelected && (
-                        <button
-                          type="button"
-                          onClick={() => handleNotifySingle(m.id)}
-                          disabled={isNotifying}
-                          title="Enviar convocatoria individual por WhatsApp"
-                          className="p-1.5 rounded-md hover:bg-primary/20 text-primary transition-colors disabled:opacity-50"
-                        >
-                          {isNotifying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                        </button>
+                      {isSelected && (
+                        <div className="pl-7 mt-1">
+                          <label className="flex items-center gap-1.5 text-[10px] cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              name="notifyMusicianIds" 
+                              value={m.id} 
+                              defaultChecked={true} 
+                              className="rounded border-primary/30 text-primary h-3 w-3" 
+                            />
+                            <span className="text-muted-foreground font-medium">Incluir en notificación de grupo</span>
+                          </label>
+                        </div>
                       )}
                     </div>
                   )
@@ -446,6 +446,34 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
               </div>
               <span className="text-sm text-muted-foreground">Requiere Factura (se aplica IVA 16%)</span>
             </label>
+          </fieldset>
+
+          {/* Nuevos controles de visibilidad pública (Movido al final) */}
+          <fieldset className="border-t border-border/40 pt-4 bg-primary/5 rounded-xl p-4">
+            <legend className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Visibilidad Pública</legend>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="isPublic" className="text-sm font-bold text-primary flex items-center gap-2">
+                    ⚡ Show Público en Agenda
+                  </Label>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Si se activa, el show aparecerá en la página principal con botones de "Ubicación" y "Reservar".</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" name="isPublic" id="isPublic" defaultChecked={initialData?.isPublic} className="sr-only peer" />
+                  <div className="w-11 h-6 bg-primary/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-border/40 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="mapsLink" className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                  Link de Google Maps
+                </Label>
+                <Input id="mapsLink" name="mapsLink" defaultValue={initialData?.mapsLink || ""}
+                  placeholder="https://maps.app.goo.gl/..."
+                  className="bg-background h-9 text-xs border-primary/20" />
+              </div>
+            </div>
           </fieldset>
 
           {/* Notificación */}
