@@ -8,7 +8,7 @@ import {
   Users, Calendar, Settings, LogOut, FileText, Music, 
   LayoutDashboard, TrendingUp, ShoppingBag, Image as LucideImage, 
   Truck, Mic, Shield, Bell, Inbox, ChevronDown, ChevronRight,
-  BarChart3, Wallet, XCircle, BookOpen, History
+  BarChart3, Wallet, XCircle, BookOpen, History, MessageSquare
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
@@ -85,6 +85,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
       items: [
         { name: "Bandeja de Entrada", href: "/admin/inbox", icon: Inbox },
         { name: "Log de mensajes", href: "/admin/inbox?tab=log", icon: History },
+        { name: "Centro de Mensajería", href: "/admin/notificaciones", icon: MessageSquare, adminOnly: true },
       ]
     },
     {
