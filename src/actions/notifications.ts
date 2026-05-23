@@ -184,7 +184,7 @@ export async function resendIndividualMusicianNotificationAction(musicianId: str
   }
 
   try {
-    const booking = await db.bookingRequest.findUnique({
+    let booking = await db.bookingRequest.findUnique({
       where: { id: bookingId },
       include: { 
         event: { 
@@ -196,7 +196,38 @@ export async function resendIndividualMusicianNotificationAction(musicianId: str
       }
     })
 
-    if (!booking || !booking.event) return { success: false, error: "Reserva o evento no encontrado" }
+    if (!booking) {
+      // Fallback para Legacy Quotes
+      const quote = await db.quote.findUnique({
+        where: { id: bookingId },
+        include: { 
+          client: {
+            include: { user: true }
+          },
+          event: { 
+            include: { 
+              location: true,
+              package: true
+            } 
+          } 
+        }
+      })
+      
+      if (quote) {
+        booking = {
+          clientName: quote.client?.user?.name || "Cliente",
+          venueType: quote.ceremonyType || "",
+          address: "",
+          packageName: "",
+          adminNote: quote.notes || "",
+          event: quote.event
+        } as any
+      }
+    }
+
+    if (!booking || !booking.event) {
+      return { success: false, error: "No hay evento confirmado vinculado a esta venta" }
+    }
 
     const { notifyMusicians } = await import("@/lib/notifications")
     
