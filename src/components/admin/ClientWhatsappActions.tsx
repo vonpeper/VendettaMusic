@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { MessageSquare, Zap, Loader2, ExternalLink } from "lucide-react"
+import { MessageSquare, Zap, Loader2, ExternalLink, Copy } from "lucide-react"
 import { toast } from "sonner"
 import { sendAutomatedClientWhatsAppAction } from "@/actions/notifications"
 
@@ -14,17 +14,31 @@ export function ClientWhatsappActions({
   clientPhone: string 
 }) {
   const [loading, setLoading] = useState(false)
+  const [rawMessage, setRawMessage] = useState<string | null>(null)
 
   const handleAutomated = async () => {
     setLoading(true)
+    setRawMessage(null)
     try {
       const res = await sendAutomatedClientWhatsAppAction(bookingId)
       if (res.success) toast.success(res.message)
-      else toast.error(res.error)
+      else {
+        toast.error(res.error)
+        if (res.rawMessage) {
+          setRawMessage(res.rawMessage)
+        }
+      }
     } catch (err) {
       toast.error("Error de conexión")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCopy = () => {
+    if (rawMessage) {
+      navigator.clipboard.writeText(rawMessage)
+      toast.success("Mensaje copiado al portapapeles")
     }
   }
 
@@ -47,6 +61,17 @@ export function ClientWhatsappActions({
         WhatsApp Auto
       </Button>
       
+      {rawMessage && (
+        <Button 
+          variant="outline" 
+          onClick={handleCopy}
+          className="w-full border-orange-500/40 text-orange-500 hover:bg-orange-500 hover:text-white transition-all rounded-xl h-11 gap-2 font-black uppercase tracking-widest group shadow-sm" 
+        >
+          <Copy className="w-4 h-4" />
+          Copiar Mensaje
+        </Button>
+      )}
+
       <Button 
         variant="outline" 
         asChild

@@ -66,13 +66,25 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
         data: { status: newStatus }
       })
 
-      if (newStatus === "agendado" && !br.event.notificationSent) {
-        await dispatchNotification({
-          type: "CLIENT_CONFIRMED",
-          bookingId: br.id
+      if (newStatus === "agendado") {
+        // Verificamos de forma independiente si ya se le avisó al cliente
+        const existingClientNotif = await db.notification.findFirst({
+          where: {
+            bookingRequestId: br.id,
+            type: { in: ["CLIENT_CONFIRMED", "client_confirmed"] }
+          }
         })
+
+        if (!existingClientNotif) {
+          await dispatchNotification({
+            type: "CLIENT_CONFIRMED",
+            bookingId: br.id
+          })
+        }
         
-        await notifyMusicians(br.eventId, br.event, db)
+        if (!br.event.notificationSent) {
+          await notifyMusicians(br.eventId, br.event, db)
+        }
       }
 
       if (newStatus === "cancelado") {
@@ -149,11 +161,23 @@ export async function markContractAsSignedAction(bookingId: string) {
 
     // Notificar a músicos automáticamente al firmar contrato
     if (booking.event && booking.event.status === "agendado") {
-      await dispatchNotification({
-        type: "CLIENT_CONFIRMED",
-        bookingId: booking.id
+      const existingClientNotif = await db.notification.findFirst({
+        where: {
+          bookingRequestId: booking.id,
+          type: { in: ["CLIENT_CONFIRMED", "client_confirmed"] }
+        }
       })
-      await notifyMusicians(booking.eventId, booking.event, db)
+
+      if (!existingClientNotif) {
+        await dispatchNotification({
+          type: "CLIENT_CONFIRMED",
+          bookingId: booking.id
+        })
+      }
+
+      if (!booking.event.notificationSent) {
+        await notifyMusicians(booking.eventId, booking.event, db)
+      }
     }
 
     revalidatePath("/admin/ventas")

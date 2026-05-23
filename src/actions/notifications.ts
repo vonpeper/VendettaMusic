@@ -280,7 +280,12 @@ export async function sendAutomatedClientWhatsAppAction(bookingId: string) {
     })
 
     if (!messageId) {
-      return { success: false, error: "No se pudo enviar el mensaje. Verifica la configuración de Evolution API." }
+      // Fetch the generated message from the DB to return it as a fallback
+      const lastFailed = await db.notification.findFirst({
+        where: { bookingRequestId: bookingId, type: notificationType.toLowerCase(), status: "failed" },
+        orderBy: { createdAt: "desc" }
+      })
+      return { success: false, error: "No se pudo enviar el mensaje a Evolution API.", rawMessage: lastFailed?.message || "" }
     }
 
     revalidatePath(`/admin/ventas/${bookingId}`)
