@@ -8,6 +8,7 @@ services:
     environment:
       - DATABASE_URL=file:/app/prisma/prod.db
       - AUTH_SECRET=${AUTH_SECRET}
+      - AUTH_TRUST_HOST=true
       - EVOLUTION_BASE_URL=${EVOLUTION_BASE_URL}
       - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
       - EVOLUTION_INSTANCE=${EVOLUTION_INSTANCE}
