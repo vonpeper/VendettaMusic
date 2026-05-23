@@ -59,6 +59,7 @@ export async function dispatchNotification({
       payload = {
         ...payload,
         folio: booking.shortId || "S/F",
+        shortId: booking.shortId || "S/F",
         clientName: booking.clientName.split(" ")[0],
         fullName: booking.clientName,
         eventName: booking.clientName, // Usamos el nombre del cliente como nombre de evento por ahora
@@ -114,7 +115,23 @@ Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/pri
       break
 
     case "CLIENT_CONFIRMED":
-      template = config?.msgTemplateEventClose || `¡Felicidades {{clientName}}! 🎉
+      const isBar = payload.ceremony?.toLowerCase().includes("bar") || payload.package?.toLowerCase().includes("bar");
+      if (isBar) {
+        template = `¡Hola {{clientName}}! 🎉
+
+Tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.
+
+*Folio:* {{shortId}}
+
+Puedes consultar el detalle de tu evento, *firmar tu contrato digital* y descargarlo aquí:
+{{bookingLink}}
+
+¡Gracias por confiar en *Vendetta*! 🎸
+
+—
+Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`
+      } else {
+        template = config?.msgTemplateEventClose || `¡Felicidades {{clientName}}! 🎉
 
 Hemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.
 
@@ -127,6 +144,7 @@ Puedes consultar el detalle de tu evento, *firmar tu contrato digital* y descarg
 
 —
 Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`
+      }
       break
 
     case "MUSICIAN_GIG":
