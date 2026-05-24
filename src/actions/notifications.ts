@@ -265,7 +265,7 @@ export async function resendIndividualMusicianNotificationAction(musicianId: str
   }
 }
 
-export async function sendAutomatedClientWhatsAppAction(bookingId: string) {
+export async function sendAutomatedClientWhatsAppAction(bookingId: string, forceResend: boolean = false) {
   const session = await auth()
   if (!session?.user || !["ADMIN"].includes(session.user.role as string)) {
     return { success: false, error: "No autorizado" }
@@ -283,7 +283,8 @@ export async function sendAutomatedClientWhatsAppAction(bookingId: string) {
 
     const messageId = await dispatchNotification({
       type: notificationType,
-      bookingId: bookingId
+      bookingId: bookingId,
+      forceResend
     })
 
     if (!messageId) {

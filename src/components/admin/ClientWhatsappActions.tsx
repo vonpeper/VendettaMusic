@@ -36,7 +36,7 @@ export function ClientWhatsappActions({
     setLoading(true)
     setRawMessage(null)
     try {
-      const res = await sendAutomatedClientWhatsAppAction(bookingId)
+      const res = await sendAutomatedClientWhatsAppAction(bookingId, isSent)
       if (res.success) {
         toast.success(res.message)
         // Refresh the page to get the new notification status
