@@ -24,31 +24,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Falta destinatario" }, { status: 400 })
   }
 
-  const messageId = await sendWhatsApp(existing.recipient, existing.message)
+  const { messageId, error } = await sendWhatsApp(existing.recipient, existing.message)
 
   if (!messageId) {
     await db.notification.update({
       where: { id: notificationId },
-      data:  { status: "failed" },
+      data:  { 
+        status: "failed",
+        errorDetails: error,
+        retries: existing.retries + 1,
+        lastRetryAt: new Date(),
+        actorId: session.user.id
+      },
     })
-    return NextResponse.json({ success: false, error: "Evolution API rechazó el mensaje" }, { status: 502 })
+    return NextResponse.json({ success: false, error: error || "Evolution API rechazó el mensaje" }, { status: 502 })
   }
-
-  await db.notification.create({
-    data: {
-      eventId:   existing.eventId,
-      type:      existing.type,
-      channel:   "whatsapp",
-      recipient: existing.recipient,
-      message:   existing.message,
-      status:    "sent",
-      messageId,
-    },
-  })
 
   await db.notification.update({
     where: { id: notificationId },
-    data:  { status: "sent" },
+    data:  { 
+      status: "sent",
+      errorDetails: null, // Clear error on success
+      retries: existing.retries + 1,
+      lastRetryAt: new Date(),
+      actorId: session.user.id,
+      messageId
+    },
   })
 
   return NextResponse.json({ success: true, messageId })

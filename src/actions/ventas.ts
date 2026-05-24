@@ -116,6 +116,10 @@ export async function markBookingAsPaidAction(bookingId: string) {
       })
     }
 
+    // Alerta al Admin
+    const { dispatchAdminAlert } = await import("@/lib/notifications")
+    await dispatchAdminAlert(`💰 *PAGO RECIBIDO*\nEl cliente *${booking.clientName}* ha liquidado su evento.\n\nFolio: ${booking.shortId}`)
+
     revalidatePath("/admin/ventas")
     revalidatePath(`/admin/ventas/${bookingId}`)
     return { success: true }
@@ -189,6 +193,21 @@ export async function markContractAsSignedAction(bookingId: string) {
     return { success: false, error: "Error al firmar el contrato." }
   }
 }
+
+export async function updateVenueTypeAction(bookingId: string, newType: string) {
+  try {
+    await db.bookingRequest.update({
+      where: { id: bookingId },
+      data: { venueType: newType }
+    })
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating venueType:", error)
+    return { success: false, error: "Error al actualizar tipo de evento." }
+  }
+}
+
 
 export async function updateContractStatusAction(bookingId: string, newStatus: string) {
   try {

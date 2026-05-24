@@ -16,7 +16,9 @@ export function BookingActions({
   musicians = [],
   forceSync = false,
   isAlreadyScheduled = false,
-  currentMusicianIds = []
+  currentMusicianIds = [],
+  eventMusicians = [],
+  notifications = []
 }: { 
   bookingId: string; 
   clientName: string;
@@ -24,15 +26,20 @@ export function BookingActions({
   forceSync?: boolean;
   isAlreadyScheduled?: boolean;
   currentMusicianIds?: string[];
+  eventMusicians?: any[];
+  notifications?: any[];
 }) {
   const [note,    setNote]    = useState("")
   const [loading, setLoading] = useState<"confirm" | "reject" | "sync" | "whatsapp" | null>(null)
   const [done,    setDone]    = useState(false)
   const [selectedMusicians, setSelectedMusicians] = useState<string[]>(
     currentMusicianIds.length > 0 
-      ? currentMusicianIds 
+      ? currentMusicianIds.filter(id => {
+          const em = eventMusicians.find(e => e.musicianId === id);
+          return em?.status !== "REJECTED";
+        })
       : musicians
-          .filter(m => !["Ingeniero de Audio", "Técnico", "Staff", "Proveedor"].includes(m.instrument || ""))
+          .filter(m => m.isTitular && !["Proveedor"].includes(m.instrument || ""))
           .map(m => m.id)
   )
   const router = useRouter()
@@ -110,34 +117,6 @@ export function BookingActions({
 
   return (
     <div className="space-y-4">
-      {/* Sección de Comunicación Directa */}
-      <div className="space-y-2 pb-2 border-b border-border/40">
-        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1 flex items-center gap-2">
-          <MessageSquare className="w-3 h-3" /> Comunicación con Cliente
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-1.5 text-[10px] font-bold rounded-lg border-blue-600/30 text-blue-600 hover:bg-blue-600/10"
-            onClick={handleAutomatedWhatsApp}
-            disabled={loading !== null}
-          >
-            {loading === "whatsapp" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-            WhatsApp Auto
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-1.5 text-[10px] font-bold rounded-lg border-green-600/30 text-green-600 hover:bg-green-600/10"
-            asChild
-          >
-            <a href={`https://wa.me/52${musicians[0]?.event?.bookingRequest?.clientPhone || ""}`} target="_blank" rel="noopener noreferrer">
-              <MessageSquare className="w-3 h-3" /> Chatear (Manual)
-            </a>
-          </Button>
-        </div>
-      </div>
 
       <div className="space-y-3 pb-2">
         <div className="flex items-center justify-between px-1">
@@ -149,21 +128,37 @@ export function BookingActions({
         <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1 scrollbar-hide">
           {musicians.map(m => {
             const isSelected = selectedMusicians.includes(m.id)
+            const mPhone = m.whatsapp || ""
+            const nNotif = notifications?.find(n => n.type === "musician_gig" && n.recipient === mPhone)
+            const isSent = nNotif?.status === "sent" || nNotif?.status === "successful"
+            const isFailed = nNotif?.status === "failed"
+            const evMus = eventMusicians.find(em => em.musicianId === m.id)
+            const isRejected = evMus?.status === "REJECTED"
+
             return (
               <button
                 key={m.id}
                 type="button"
-                onClick={() => toggleMusician(m.id)}
+                onClick={() => {
+                  if (isRejected) return; // Prevent selection if rejected
+                  toggleMusician(m.id)
+                }}
+                disabled={isRejected}
                 className={cn(
                   "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold transition-all",
-                  isSelected 
-                    ? "bg-blue-600/20 border-blue-600 text-blue-600" 
-                    : "bg-background border-border/40 text-muted-foreground opacity-60 hover:opacity-100"
+                  isRejected 
+                    ? "bg-red-900/10 border-red-500/20 text-red-500 opacity-50 cursor-not-allowed line-through"
+                    : isSelected 
+                      ? (isSent ? "bg-green-600/20 border-green-600 text-green-700" : isFailed ? "bg-red-600/20 border-red-600 text-red-600" : "bg-blue-600/20 border-blue-600 text-blue-600")
+                      : "bg-background border-border/40 text-muted-foreground opacity-60 hover:opacity-100"
                 )}
               >
                 {m.name.split(' ')[0]} 
                 <span className="opacity-50 font-normal">({m.instrument || 'Músico'})</span>
-                {isSelected && <Check className="w-2.5 h-2.5" />}
+                {isSelected && !isSent && !isFailed && !isRejected && <Check className="w-2.5 h-2.5" />}
+                {isSent && !isRejected && <span title="Enviado"><Check className="w-2.5 h-2.5 text-green-600" /></span>}
+                {isFailed && !isRejected && <span title="Falló"><X className="w-2.5 h-2.5 text-red-600" /></span>}
+                {isRejected && <span title="Rechazado"><X className="w-2.5 h-2.5" /></span>}
               </button>
             )
           })}

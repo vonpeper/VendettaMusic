@@ -187,7 +187,7 @@ function RehearsalForm({ onClose, locations, musicians, songs, initialData }: an
                     </label>
                     
                     <label className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full border border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors">
-                      <input type="checkbox" name="notifyPhones" value={m.whatsapp || m.phone || ""} className="rounded border-primary/40 bg-background text-primary focus:ring-primary h-3 w-3" />
+                      <input type="checkbox" name="notifyPhones" value={m.whatsapp || ""} className="rounded border-primary/40 bg-background text-primary focus:ring-primary h-3 w-3" />
                       <span className="text-[9px] font-black uppercase tracking-tighter text-primary">Notificar</span>
                     </label>
                   </div>

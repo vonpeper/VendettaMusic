@@ -50,6 +50,7 @@ import { formatDateMX, formatCurrency } from "@/lib/utils"
 import { updateBookingStatusAction, reactivateBookingAction } from "@/actions/ventas"
 import { FollowUpButton } from "./FollowUpButton"
 import { ContractStatusSwitcher } from "./ContractStatusSwitcher"
+import { PreConfirmChecklist, PreConfirmData } from "./PreConfirmChecklist"
 
 interface Booking {
   id: string
@@ -65,8 +66,11 @@ interface Booking {
   clientPhone: string
   followUpCount: number
   clientEmail?: string | null
+  mapsLink?: string | null
   event?: {
     customName?: string | null
+    location?: { mapsLink?: string | null } | null
+    musicians?: any[]
   } | null
   notifications?: {
     admin: string
@@ -74,6 +78,7 @@ interface Booking {
     musicians: string
   }
   contractStatus?: string
+  client?: { whatsapp?: string | null; name?: string | null } | null
 }
 
 type SortKey = "fecha" | "cliente" | "monto" | "estado"
@@ -84,6 +89,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
   const [loading, setLoading] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [reactivatingBooking, setReactivatingBooking] = useState<any | null>(null)
+  const [preConfirmData, setPreConfirmData] = useState<PreConfirmData | null>(null)
   const [isReactivating, setIsReactivating] = useState(false)
   const [search, setSearch] = useState("")
   const [columnFilters, setColumnFilters] = useState({
@@ -168,7 +174,18 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
     }
   }
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
+  const handleStatusChange = async (id: string, newStatus: string, bookingObj?: any) => {
+    if (newStatus === "agendado" && bookingObj) {
+      setPreConfirmData({
+        bookingId: id,
+        clientName: bookingObj.clientName || bookingObj.client?.name || "Cliente",
+        clientPhone: (bookingObj.clientPhone && bookingObj.clientPhone !== "5500000000" && bookingObj.clientPhone !== "0000000000") ? bookingObj.clientPhone : (bookingObj.client?.whatsapp || ""),
+        mapsLink: bookingObj.mapsLink || bookingObj.event?.location?.mapsLink || null,
+        musiciansCount: bookingObj.event?.musicians?.length || 0,
+      })
+      return
+    }
+
     setUpdatingId(id)
     try {
       const result = await updateBookingStatusAction(id, newStatus)
@@ -332,6 +349,11 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                   {reserva.event?.customName && (
                     <div className="text-[10px] text-muted-foreground mt-0.5">{reserva.clientName}</div>
                   )}
+                  <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                    {reserva.clientPhone && reserva.clientPhone !== "5500000000" && reserva.clientPhone !== "0000000000" 
+                      ? reserva.clientPhone 
+                      : ((reserva as any).client?.whatsapp || "Sin teléfono")}
+                  </div>
                   <div className="text-[10px] text-muted-foreground font-mono mt-0.5">{reserva.shortId || "S/F"}</div>
                 </td>
                 <td className="px-6 py-4">
@@ -347,7 +369,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                     {reserva.paymentStatus === "paid" ? (
                       <span className="text-[8px] font-black bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded border border-green-500/20 uppercase tracking-tighter">PAGADO</span>
                     ) : (
-                      <span className="text-[8px] font-black bg-yellow-500/10 text-yellow-600 px-1.5 py-0.5 rounded border border-yellow-500/20 uppercase tracking-tighter">PENDIENTE</span>
+                      <span className="text-[8px] font-black bg-yellow-500/10 text-yellow-600 px-1.5 py-0.5 rounded border border-yellow-500/20 uppercase tracking-tighter">PAGO PENDIENTE</span>
                     )}
                   </div>
                   <div className="text-[9px] text-muted-foreground">Anticipo: {formatCurrency(Number(reserva.depositAmount))}</div>
@@ -356,6 +378,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                   <StatusSwitcher 
                     status={reserva.status} 
                     id={reserva.id} 
+                    reserva={reserva}
                     onStatusChange={handleStatusChange}
                     isUpdating={updatingId === reserva.id}
                   />
@@ -390,7 +413,15 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                           {(reserva.status === "pendiente" || reserva.status === "pending") && (
                             <DropdownMenuItem 
                               className="gap-3 cursor-pointer rounded-lg focus:bg-green-500/10 py-2.5"
-                              onClick={() => handleStatusChange(reserva.id, 'agendado')}
+                              onClick={() => {
+                                setPreConfirmData({
+                                  bookingId: reserva.id,
+                                  clientName: reserva.clientName || reserva.client?.name || "Cliente",
+                                  clientPhone: (reserva.clientPhone && reserva.clientPhone !== "5500000000" && reserva.clientPhone !== "0000000000") ? reserva.clientPhone : (reserva.client?.whatsapp || ""),
+                                  mapsLink: reserva.mapsLink || reserva.event?.location?.mapsLink || null,
+                                  musiciansCount: reserva.event?.musicians?.length || 0,
+                                })
+                              }}
                             >
                               <UserCheck className="w-4 h-4 text-green-600" />
                               <div className="flex flex-col">
@@ -428,10 +459,10 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                           <FollowUpButton 
                             id={reserva.id}
                             type="booking"
-                            phone={reserva.clientPhone}
-                            clientName={reserva.clientName}
+                            phone={(reserva.clientPhone && reserva.clientPhone !== "5500000000" && reserva.clientPhone !== "0000000000") ? reserva.clientPhone : (reserva.client?.whatsapp || "")}
+                            clientName={reserva.clientName || reserva.client?.name || "Cliente"}
                             currentCount={reserva.followUpCount}
-                            template={followUpTemplate ?? undefined}
+                            template={followUpTemplate || undefined}
                             variant="dropdown"
                           />
                         </div>
@@ -504,6 +535,20 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Checklist Pre-Confirmación */}
+      {preConfirmData && (
+        <PreConfirmChecklist
+          data={preConfirmData}
+          isOpen={!!preConfirmData}
+          onOpenChange={(open) => !open && setPreConfirmData(null)}
+          onConfirm={async () => {
+            if (preConfirmData?.bookingId) {
+              await handleStatusChange(preConfirmData.bookingId, 'agendado')
+            }
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -594,11 +639,12 @@ function NotificationSemaphore({ bookingId, stats, variant = "default" }: { book
   )
 }
 
-function StatusSwitcher({ status, id, onStatusChange, isUpdating }: { 
+function StatusSwitcher({ status, id, onStatusChange, isUpdating, reserva }: { 
   status: string, 
   id: string, 
-  onStatusChange: (id: string, s: string) => void,
-  isUpdating: boolean
+  onStatusChange: (id: string, s: string, booking?: any) => void,
+  isUpdating: boolean,
+  reserva?: any
 }) {
   const configs: any = {
     pendiente:  { color: "text-yellow-600 border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20", label: "Pendiente" },
@@ -625,7 +671,7 @@ function StatusSwitcher({ status, id, onStatusChange, isUpdating }: {
         {Object.entries(configs).map(([key, value]: [string, any]) => (
           <DropdownMenuItem 
             key={key}
-            onClick={() => onStatusChange(id, key)}
+            onClick={() => onStatusChange(id, key, reserva)}
             className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-blue-600/10"
           >
             <div className={`w-2 h-2 rounded-full ${value.color.split(' ')[0].replace('text-', 'bg-')}`} />

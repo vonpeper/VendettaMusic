@@ -223,6 +223,7 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
     const msgTemplateGig = formData.get("msgTemplateGig") as string
     const msgTemplateQuote = formData.get("msgTemplateQuote") as string
     const msgTemplateEventClose = formData.get("msgTemplateEventClose") as string
+    const msgTemplateBarClose = formData.get("msgTemplateBarClose") as string
     const msgTemplateFollowUp = formData.get("msgTemplateFollowUp") as string
     const msgTemplateExpiring = formData.get("msgTemplateExpiring") as string
     const msgTemplateReminder = formData.get("msgTemplateReminder") as string
@@ -244,6 +245,7 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
         msgTemplateGig,
         msgTemplateQuote,
         msgTemplateEventClose,
+        msgTemplateBarClose,
         msgTemplateFollowUp,
         msgTemplateExpiring,
         msgExpiringActive,
@@ -257,6 +259,7 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
         msgTemplateGig,
         msgTemplateQuote,
         msgTemplateEventClose,
+        msgTemplateBarClose,
         msgTemplateFollowUp,
         msgTemplateExpiring,
         msgExpiringActive,

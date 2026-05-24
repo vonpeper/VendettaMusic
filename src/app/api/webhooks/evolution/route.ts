@@ -102,11 +102,11 @@ async function handleMessageEvent(event: string, payload: any, config: any) {
     // 1. Identificar si es un contacto conocido
     const [client, musician, booking] = await Promise.all([
       db.clientProfile.findFirst({
-        where: { OR: [{ whatsapp: { contains: cleanLast10 } }, { phone: { contains: cleanLast10 } }] },
+        where: { whatsapp: { contains: cleanLast10 } },
         include: { user: true }
       }),
       db.musicianProfile.findFirst({
-        where: { OR: [{ whatsapp: { contains: cleanLast10 } }, { phone: { contains: cleanLast10 } }] },
+        where: { whatsapp: { contains: cleanLast10 } },
         include: { user: true }
       }),
       db.bookingRequest.findFirst({

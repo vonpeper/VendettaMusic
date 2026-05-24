@@ -114,6 +114,7 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
     "Essential":       ["🔊 Audio EV", "🎸 Backline", "💡 Ilum. Básica", "👥 4 Integrantes", "⏱️ 2 Horas"],
     "Experience":      ["🔊 Audio Pro", "🎤 Monitoreo Inalámbrico", "🎸 Backline Gira", "💡 Ilum. Expandida", "⏱️ 2 Horas"],
     "Festival Premium":["🖥️ Pantalla LED", "🤖 Robótica", "🏟️ Templete", "🎭 Producción", "⏱️ 2 Horas"],
+    "Bar":             ["🔊 Audio EV", "🎸 Backline completo", "👥 4 Integrantes + Staff", "⏱️ 2x 45 min"],
   }
 
   return (

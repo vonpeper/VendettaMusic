@@ -69,6 +69,7 @@ export default async function AdminVentasPage() {
     db.bookingRequest.findMany({ 
       orderBy: { createdAt: "desc" },
       include: {
+        client: true,
         event: {
           include: {
             musicians: true,

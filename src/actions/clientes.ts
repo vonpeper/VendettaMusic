@@ -8,7 +8,6 @@ export async function createClienteAction(prevState: any, formData: FormData) {
   try {
     const name = formData.get("name") as string
     const email = (formData.get("email") as string || "").trim() || null
-    const phone = (formData.get("phone") as string) || null
     const whatsapp = (formData.get("whatsapp") as string) || null
     const state = (formData.get("state") as string) || null
     const city = (formData.get("city") as string) || null
@@ -38,7 +37,6 @@ export async function createClienteAction(prevState: any, formData: FormData) {
         role: "CLIENT",
         clientProfile: {
           create: {
-            phone,
             whatsapp,
             state,
             city,
@@ -65,7 +63,6 @@ export async function updateClienteAction(prevState: any, formData: FormData) {
     const name = formData.get("name") as string
     const emailInput = (formData.get("email") as string || "").trim()
     const email = emailInput || null
-    const phone = formData.get("phone") as string
     const whatsapp = formData.get("whatsapp") as string
     const state = formData.get("state") as string
     const city = formData.get("city") as string
@@ -91,7 +88,7 @@ export async function updateClienteAction(prevState: any, formData: FormData) {
 
     await db.clientProfile.update({
       where: { id: profileId },
-      data: { phone, whatsapp, state, city, type, company, rfc, notes }
+      data: { whatsapp, state, city, type, company, rfc, notes }
     })
 
     revalidatePath("/admin/clientes")

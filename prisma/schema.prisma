@@ -24,7 +24,6 @@ model User {
 model ClientProfile {
   id         String           @id @default(uuid())
   userId     String           @unique
-  phone      String?
   type       String?
   company    String?
   rfc        String?
@@ -45,7 +44,6 @@ model MusicianProfile {
   id                 String              @id @default(uuid())
   userId             String              @unique
   instrument         String?
-  phone              String?
   notes              String?
   role               String?
   whatsapp           String?
@@ -370,6 +368,19 @@ model Notification {
   category         String?
   template         String?
   bookingRequestId String?
+  errorDetails     String?
+  retries          Int      @default(0)
+  lastRetryAt      DateTime?
+  actorId          String?
+}
+
+model SystemLog {
+  id          String   @id @default(uuid())
+  source      String
+  status      String
+  message     String
+  metadata    String?
+  createdAt   DateTime @default(now())
 }
 
 model BookingRequest {
@@ -496,6 +507,7 @@ model GlobalConfig {
   msgTemplateGig         String?
   msgTemplateQuote       String?
   msgTemplateEventClose  String?
+  msgTemplateBarClose    String?
   zona2Rate              Float?    @default(1500.0)
   zona3Rate              Float?    @default(3000.0)
   bankName               String?

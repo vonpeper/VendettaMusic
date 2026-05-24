@@ -105,6 +105,15 @@ const HARDCODED_FEATURES: Record<string, { includes: {icon: string, text: string
       { icon: "Music2",     text: "2 horas de máxima experiencia" },
     ],
     notIncludes: ["Viáticos"]
+  },
+  "Bar": {
+    includes: [
+      { icon: "Volume2",    text: "Audio EV" },
+      { icon: "Music2",     text: "Backline completo" },
+      { icon: "Users",      text: "4 integrantes + Ing. en audio + Staff" },
+      { icon: "Sparkles",   text: "2 turnos de 45 mins" },
+    ],
+    notIncludes: ["Templete", "Pantalla LED", "Iluminación robótica", "Viáticos"]
   }
 }
 

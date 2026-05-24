@@ -62,7 +62,7 @@ export async function rejectAttendanceAction(musicianId: string, eventId: string
 
     // NOTIFICAR AL ADMIN: Kevin no puede ir, búscame un reemplazo
     if (config?.adminWhatsapp) {
-      const { sendWhatsApp } = await import("@/lib/notifications")
+      const { dispatchAdminAlert } = await import("@/lib/notifications")
       const eventDateStr = event.date.toLocaleDateString("es-MX", { day: 'numeric', month: 'long' })
       const message = `⚠️ *RECHAZO DE FECHA*
 El músico *${musician.user?.name || "Desconocido"}* ha indicado que *NO ESTÁ DISPONIBLE* para el evento:
@@ -71,7 +71,7 @@ El músico *${musician.user?.name || "Desconocido"}* ha indicado que *NO ESTÁ D
 
 Favor de buscar un reemplazo.`
       
-      await sendWhatsApp(config.adminWhatsapp, message).catch(e => console.error("Error notifying admin of rejection:", e))
+      await dispatchAdminAlert(message)
     }
 
     revalidatePath("/admin/eventos")

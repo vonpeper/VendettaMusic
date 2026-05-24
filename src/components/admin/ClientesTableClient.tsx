@@ -48,7 +48,7 @@ interface ClientListItem {
   whatsapp: string | null
   city: string | null
   state: string | null
-  phone: string | null
+
   company: string | null
   rfc: string | null
   notes: string | null
@@ -286,7 +286,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                         profileId: client.id,
                         name: client.user.name || "",
                         email: client.user.email || "",
-                        phone: client.phone,
+
                         whatsapp: client.whatsapp,
                         state: client.state,
                         city: client.city,

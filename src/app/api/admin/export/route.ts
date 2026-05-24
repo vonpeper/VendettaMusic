@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
       data = clients.map(c => ({
         "Nombre": c.user?.name || "N/A",
         "Email": c.user?.email || "N/A",
-        "WhatsApp": c.whatsapp || c.phone || "N/A",
+        "WhatsApp": c.whatsapp || "N/A",
         "Ciudad": c.city || "N/A",
         "Estado": c.state || "N/A",
         "Empresa": c.company || "N/A",

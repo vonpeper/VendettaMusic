@@ -121,7 +121,7 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
             eventId: id,
             clientId: evt.clientId,
             clientName: evt.customName || evt.client?.user?.name || "Sin Nombre",
-            clientPhone: evt.client?.phone || "",
+            clientPhone: evt.client?.whatsapp || "",
             clientEmail: evt.client?.user?.email || "",
             requestedDate: evt.date,
             startTime: evt.performanceStart || "21:00",
@@ -341,7 +341,7 @@ export async function createEventAction(_prev: any, formData: FormData) {
       })
       if (fullClient) {
         clientName = fullClient.user.name || clientName
-        clientPhone = fullClient.whatsapp || fullClient.phone || ""
+        clientPhone = fullClient.whatsapp || ""
         clientEmail = fullClient.user.email || ""
       }
     }
@@ -543,7 +543,7 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
             eventId: id,
             clientId: evt.clientId,
             clientName: evt.customName || evt.client?.user?.name || "Sin Nombre",
-            clientPhone: evt.client?.phone || "",
+            clientPhone: evt.client?.whatsapp || "",
             clientEmail: evt.client?.user?.email || "",
             requestedDate: evt.date,
             startTime: evt.performanceStart || "21:00",

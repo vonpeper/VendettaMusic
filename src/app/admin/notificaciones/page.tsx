@@ -20,6 +20,9 @@ import { ConfigFormWrapper } from "@/components/admin/ConfigFormWrapper"
 import { Toggle } from "@/components/ui/Toggle"
 import { SandboxToggle } from "@/components/admin/SandboxToggle"
 import { saveMessageTemplatesAction } from "@/actions/config"
+import { EvolutionHealthCheck } from "@/components/admin/EvolutionHealthCheck"
+import { ResendNotificationButton } from "@/components/admin/ResendNotificationButton"
+import { RetryAllFailedButton } from "@/components/admin/RetryAllFailedButton"
 
 export const dynamic = 'force-dynamic'
 
@@ -38,6 +41,12 @@ export default async function NotificacionesPage() {
 
   const incomingMessages = await db.notification.findMany({
     where: { type: 'inbound' },
+    orderBy: { createdAt: 'desc' },
+    take: 50
+  })
+
+  const failedMessages = await db.notification.findMany({
+    where: { status: 'failed', type: { not: 'inbound' } },
     orderBy: { createdAt: 'desc' },
     take: 50
   })
@@ -80,11 +89,7 @@ export default async function NotificacionesPage() {
           
           <div className="flex gap-4">
              <Card className="bg-card border-border/20 px-4 py-2 flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase text-muted-foreground leading-none mb-1">Evolution API</span>
-                  <span className="text-xs font-bold text-foreground">Conectado</span>
-                </div>
+                <EvolutionHealthCheck />
              </Card>
           </div>
         </div>
@@ -99,6 +104,9 @@ export default async function NotificacionesPage() {
             </TabsTrigger>
             <TabsTrigger value="entrantes" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <MessageSquare className="w-4 h-4" /> Mensajes Entrantes
+            </TabsTrigger>
+            <TabsTrigger value="fallidos" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <AlertCircle className="w-4 h-4 text-red-500" /> Reintentos / Fallidos
             </TabsTrigger>
             <TabsTrigger value="historial" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <History className="w-4 h-4" /> Historial de Salida
@@ -258,6 +266,30 @@ Puedes consultar el estatus de tu evento y descargar tu contrato firmado aquí:
 {{bookingLink}}
 
 ¡Gracias por confiar en *Vendetta* para este día tan especial! 🎸
+
+—
+Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`} 
+                        placeholder="Usa {{clientName}}, {{shortId}}..."
+                        className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
+                    </div>
+
+                    {/* Confirmación Bares */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="msgTemplateBarClose" className="text-foreground font-black uppercase tracking-widest text-xs">🍻 Confirmación de Bares</Label>
+                        <span className="text-[10px] text-muted-foreground italic">Cliente (Bares)</span>
+                      </div>
+                      <Textarea id="msgTemplateBarClose" name="msgTemplateBarClose" rows={10}
+                        defaultValue={config?.msgTemplateBarClose || `¡Hola {{clientName}}! 🎉
+
+Tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.
+
+*Folio:* {{shortId}}
+
+Puedes consultar el detalle de tu evento, *firmar tu contrato digital* y descargarlo aquí:
+{{bookingLink}}
+
+¡Gracias por confiar en *Vendetta*! 🎸
 
 —
 Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`} 
@@ -436,6 +468,70 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
             </Card>
           </TabsContent>
 
+          {/* ================= PESTAÑA: FALLIDOS ================= */}
+          <TabsContent value="fallidos" className="outline-none">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-red-500 flex items-center gap-2">
+                  <AlertCircle className="w-6 h-6" /> Mensajes Fallidos
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">Notificaciones que no pudieron ser enviadas a través de Evolution API.</p>
+              </div>
+              <RetryAllFailedButton />
+            </div>
+
+            <Card className="bg-card/50 border-border/40 backdrop-blur-sm overflow-hidden rounded-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-border/40 bg-red-600/10">
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-red-500">Fecha y Hora</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-red-500">Tipo</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-red-500">Destinatario</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-red-500">Reintentos</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-red-500">Error</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-red-500 text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {failedMessages.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground italic">
+                          No hay mensajes fallidos para reintentar. ¡Todo está funcionando bien!
+                        </td>
+                      </tr>
+                    ) : (
+                      failedMessages.map((notif) => (
+                        <tr key={notif.id} className="hover:bg-red-600/5 transition-colors group">
+                          <td className="px-6 py-4 text-sm font-medium text-foreground whitespace-nowrap">
+                            <span className="capitalize">{formatDateTimeMX(notif.createdAt)}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-xs font-bold text-foreground truncate">{getTypeLabel(notif.type)}</span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap font-mono">
+                            {notif.recipient || "—"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <span className="text-xs text-muted-foreground font-mono">{notif.retries || 0}</span>
+                          </td>
+                          <td className="px-6 py-4 max-w-md">
+                            <p className="text-[10px] text-red-500 font-mono mt-1 break-all bg-red-500/10 p-2 rounded">
+                              {notif.errorDetails || "Error desconocido"}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <ResendNotificationButton notificationId={notif.id} />
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </TabsContent>
+
           {/* ================= PESTAÑA: HISTORIAL ================= */}
           <TabsContent value="historial" className="outline-none">
             <Card className="bg-card/50 border-border/40 backdrop-blur-sm overflow-hidden rounded-2xl">
@@ -447,13 +543,15 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-600">Tipo</th>
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-600">Destinatario</th>
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-600 text-center">Estado</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-600">Reintentos</th>
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-600">Mensaje</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-blue-600 text-center">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
                     {notifications.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground italic">
+                        <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground italic">
                           No hay registros de notificaciones aún.
                         </td>
                       </tr>
@@ -469,13 +567,26 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                           <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap font-mono">
                             {notif.recipient || "—"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
                             {getStatusBadge(notif.status)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <span className="text-xs text-muted-foreground font-mono">{notif.retries || 0}</span>
                           </td>
                           <td className="px-6 py-4 max-w-md">
                             <p className="text-xs text-muted-foreground truncate group-hover:text-foreground transition-colors">
                               {notif.message}
                             </p>
+                            {notif.errorDetails && (
+                              <p className="text-[10px] text-red-500 font-mono mt-1 break-all bg-red-500/10 p-1 rounded">
+                                {notif.errorDetails}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            {notif.status === "failed" && (
+                              <ResendNotificationButton notificationId={notif.id} />
+                            )}
                           </td>
                         </tr>
                       ))

@@ -30,7 +30,7 @@ export async function signContractAction(bookingId: string, signatureBase64: str
       }
     })
 
-    // 3. Sincronizar con el modelo de Contrato si existe
+    // Sincronizar con el modelo de Contrato si existe
     if (updatedBooking.eventId) {
        // Buscar si ya existe un contrato para este evento
        const existingContract = await db.contract.findFirst({
@@ -51,6 +51,10 @@ export async function signContractAction(bookingId: string, signatureBase64: str
          })
        }
     }
+
+    // Alerta al Admin
+    const { dispatchAdminAlert } = await import("@/lib/notifications")
+    await dispatchAdminAlert(`✅ *CONTRATO FIRMADO*\nEl cliente *${updatedBooking.clientName}* ha firmado el contrato para el evento del *${updatedBooking.requestedDate.toLocaleDateString("es-MX", { day: 'numeric', month: 'long' })}*.\n\nFolio: ${updatedBooking.shortId}`)
 
     revalidatePath(`/status/${updatedBooking.shortId}`)
     revalidatePath(`/admin/ventas/${bookingId}`)

@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const clientId = await findOrCreateClient({
       name: clientName,
       email: clientEmail || null,
-      phone: clientPhone,
+      whatsapp: clientPhone,
       city: municipio,
       state: state
     })

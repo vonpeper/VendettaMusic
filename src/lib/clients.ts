@@ -7,12 +7,11 @@ import { db } from "./db"
 export async function findOrCreateClient(data: {
   name: string
   email?: string | null
-  phone?: string | null
   whatsapp?: string | null
   city?: string | null
   state?: string | null
 }) {
-  const { name, email, phone, whatsapp, city, state } = data
+  const { name, email, whatsapp, city, state } = data
 
   let clientProfile = null
 
@@ -27,14 +26,11 @@ export async function findOrCreateClient(data: {
     }
   }
 
-  // 2. Si no se encontró por email, intentar buscar por Teléfono en ClientProfile
-  if (!clientProfile && phone && phone.trim() !== "") {
+  // 2. Si no se encontró por email, intentar buscar por WhatsApp en ClientProfile
+  if (!clientProfile && whatsapp && whatsapp.trim() !== "") {
     clientProfile = await db.clientProfile.findFirst({
       where: { 
-        OR: [
-          { phone: phone.trim() },
-          { whatsapp: phone.trim() }
-        ]
+        whatsapp: whatsapp.trim()
       }
     })
   }
@@ -54,11 +50,10 @@ export async function findOrCreateClient(data: {
     }
     
     const profileUpdates: any = {}
-    if (phone && phone !== clientProfile.phone) profileUpdates.phone = phone
     if (city && city !== clientProfile.city) profileUpdates.city = city
     if (state && state !== clientProfile.state) profileUpdates.state = state
-    if ((whatsapp || phone) && (whatsapp || phone) !== clientProfile.whatsapp) {
-      profileUpdates.whatsapp = whatsapp || phone
+    if (whatsapp && whatsapp !== clientProfile.whatsapp) {
+      profileUpdates.whatsapp = whatsapp
     }
 
     if (Object.keys(profileUpdates).length > 0) {
@@ -87,8 +82,7 @@ export async function findOrCreateClient(data: {
   const newProfile = await db.clientProfile.create({
     data: {
       userId: newUser.id,
-      phone,
-      whatsapp: whatsapp || phone,
+      whatsapp: whatsapp,
       city,
       state,
       type: "social"

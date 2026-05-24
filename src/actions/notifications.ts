@@ -42,9 +42,7 @@ export async function sendTestNotificationAction(target: "admin" | "musician" | 
       const musician = await db.musicianProfile.findFirst({
         include: { user: true }
       })
-      
-      const phoneToUse = musician?.whatsapp || musician?.phone
-      
+      const phoneToUse = musician?.whatsapp
       if (!musician || !phoneToUse) {
         return { success: false, error: "No hay músicos con teléfono registrado" }
       }
@@ -54,11 +52,11 @@ export async function sendTestNotificationAction(target: "admin" | "musician" | 
       message = `🤖 *PRUEBA AUTOMÁTICA — MÚSICO*\n\nHola ${recipientName}, esta es una prueba técnica de convocatoria.\nNo es necesario responder.\n\n— Administración Vendetta`
     } else if (target === "client") {
       const client = await db.clientProfile.findFirst({
-        where: { OR: [{ whatsapp: { not: null } }, { phone: { not: null } }] },
+        where: { whatsapp: { not: null } },
         include: { user: true }
       })
       if (!client) return { success: false, error: "No hay clientes con teléfono registrado" }
-      phone = client.whatsapp || client.phone || ""
+      phone = client.whatsapp || ""
       recipientName = client.user.name || "Cliente"
       message = `🤖 *PRUEBA AUTOMÁTICA — CLIENTE*\n\nHola ${recipientName}, esta es una prueba técnica de seguimiento.\nNo es necesario responder.\n\n— Ventas Vendetta`
     }
@@ -73,8 +71,8 @@ export async function sendTestNotificationAction(target: "admin" | "musician" | 
     }
 
     // Use sendWhatsApp (raw Evolution API call)
-    const msgId = await sendWhatsApp(phone, message)
-    const status = msgId ? "sent" : "failed"
+    const { messageId, error } = await sendWhatsApp(phone, message)
+    const status = messageId ? "sent" : "failed"
 
     // Log to Notification table so it shows in the notification center
     await db.notification.create({
@@ -85,15 +83,16 @@ export async function sendTestNotificationAction(target: "admin" | "musician" | 
         message,
         recipient: phone,
         template: `test_${target}`,
-        messageId: msgId || undefined,
+        messageId: messageId || undefined,
+        errorDetails: error,
         category: "automatic_notification"
       }
     })
 
     revalidatePath("/admin/notificaciones")
     return {
-      success: !!msgId,
-      error: msgId ? undefined : "Evolution API no configurada o no respondió. Verifica la instancia en Configuración."
+      success: !!messageId,
+      error: messageId ? undefined : (error || "Evolution API no configurada o no respondió. Verifica la instancia en Configuración.")
     }
   } catch (error: any) {
     console.error("Error sending test notification:", error)
@@ -131,7 +130,8 @@ export async function resendNotificationAction(bookingId: string, type: "admin" 
         bookingId: bookingId
       })
     } else if (type === "client") {
-      const cleanPhone = (booking.clientPhone || "").replace(/\D/g, "")
+      const fallbackPhone = (booking as any).client?.whatsapp || ""
+      const cleanPhone = (booking.clientPhone || fallbackPhone).replace(/\D/g, "")
       if (!cleanPhone || cleanPhone.length < 10 || cleanPhone === "5500000000") {
         return { success: false, error: "El cliente no tiene un número de contacto válido registrado (actualmente es un marcador de posición)." }
       }
@@ -141,7 +141,8 @@ export async function resendNotificationAction(bookingId: string, type: "admin" 
 
       await dispatchNotification({
         type: notificationType,
-        bookingId: bookingId
+        bookingId: bookingId,
+        forceResend: true
       })
     } else if (type === "musician" && booking.eventId && booking.event) {
       const gigDetails = {
@@ -160,7 +161,10 @@ export async function resendNotificationAction(bookingId: string, type: "admin" 
         musicianNotes: (booking.event as any).musicianNotes || (booking as any).adminNote || "",
         bookingRequestId: bookingId
       }
-      await notifyMusicians(booking.eventId, gigDetails, db)
+      const result = await notifyMusicians(booking.eventId, gigDetails, db, undefined, true)
+      if (result && !result.success) {
+        return { success: false, error: result.message }
+      }
     }
 
 
@@ -248,7 +252,10 @@ export async function resendIndividualMusicianNotificationAction(musicianId: str
       bookingRequestId: bookingId
     }
 
-    await notifyMusicians(eventId, gigDetails, db, [musicianId])
+    const result = await notifyMusicians(eventId, gigDetails, db, [musicianId], true)
+    if (result && !result.success) {
+      return { success: false, error: result.message }
+    }
 
     revalidatePath(`/admin/ventas/${bookingId}`)
     return { success: true, message: "Notificación individual enviada con éxito." }

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { BookingActions } from "@/components/admin/BookingActions"
 import { ClientWhatsappActions } from "@/components/admin/ClientWhatsappActions"
+import { VenueTypeSwitcher } from "@/components/admin/VenueTypeSwitcher"
 import { AdminManagementTools } from "@/components/admin/AdminManagementTools"
 import { LiquidarButton } from "@/components/admin/LiquidarButton"
 import { ConfirmarAnticipoButton } from "@/components/admin/ConfirmarAnticipoButton"
@@ -101,9 +102,18 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     id:         m.id,
     name:       m.user?.name || "Músico",
     instrument: m.instrument || null,
+    whatsapp:   m.whatsapp,
+
+    isTitular:  m.isTitular,
   }))
 
   if (!booking) notFound()
+
+  const notifications = await db.notification.findMany({
+    where: { bookingRequestId: id }
+  })
+  
+  ;(booking as any).notifications = notifications
 
   return (
     <div className="p-8 bg-background min-h-screen">
@@ -159,9 +169,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Paquete Solicitado</div>
                     <div className="flex items-center gap-2">
                       <div className="text-lg font-black text-foreground">{booking.packageName}</div>
-                      <Badge variant="outline" className="border-blue-600/40 text-blue-600 bg-blue-600/10 uppercase text-[9px] font-black tracking-tighter shadow-sm">
-                        {booking.venueType || 'Salón'}
-                      </Badge>
+                      <VenueTypeSwitcher bookingId={booking.id} currentType={booking.venueType || ''} />
                     </div>
                     <div className="text-sm text-blue-600 font-bold mt-1 tracking-tight">{booking.guestCount} invitados aproximados</div>
                   </div>
@@ -312,6 +320,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   <ClientWhatsappActions 
                     bookingId={booking.id} 
                     clientPhone={booking.clientPhone} 
+                    notifications={(booking as any).notifications || []}
+                    bookingStatus={booking.status}
                   />
                 </div>
               </CardContent>
@@ -337,8 +347,9 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                     clientName={booking.clientName} 
                     musicians={musicians}
                     isAlreadyScheduled={!!booking.eventId}
-                    // Pasamos los IDs actuales para que aparezcan seleccionados
                     currentMusicianIds={booking.event?.musicians?.map((m: any) => m.musicianId) || []}
+                    eventMusicians={booking.event?.musicians || []}
+                    notifications={(booking as any).notifications || []}
                   />
                 </CardContent>
               </Card>

@@ -14,7 +14,7 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
   const badgeColor = availabilityColors[musician.availability] || "bg-gray-500/20 text-muted-foreground border-gray-500/30"
   
   // Format phone for whatsapp link
-  const rawPhone = musician.whatsapp || musician.phone
+  const rawPhone = musician.whatsapp
   const cleanPhone = rawPhone ? String(rawPhone).replace(/\D/g, "") : ""
   
   // Basic validation for Mexico (52) if 10 digits

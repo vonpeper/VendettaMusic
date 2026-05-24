@@ -107,7 +107,6 @@ export async function createMusicianProfileAction(formData: FormData) {
   try {
     const name = formData.get("name") as string
     const instrument = formData.get("instrument") as string
-    const phone = formData.get("phone") as string
     const whatsapp = formData.get("whatsapp") as string
     const notes = formData.get("notes") as string
     const ratingStr = formData.get("rating") as string
@@ -136,7 +135,6 @@ export async function createMusicianProfileAction(formData: FormData) {
       data: {
         userId: user.id,
         instrument,
-        phone: phone || null,
         whatsapp: whatsapp || null,
         notes: notes || null,
         rating,
@@ -175,7 +173,6 @@ export async function updateMusicianProfileAction(id: string, formData: FormData
       where: { id },
       data: {
         instrument: data.instrument as string,
-        phone: (data.phone as string) || null,
         whatsapp: (data.whatsapp as string) || null,
         notes: (data.notes as string) || null,
         status: data.status as string || "active",

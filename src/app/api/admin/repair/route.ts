@@ -25,7 +25,7 @@ export async function GET() {
       clientId = await findOrCreateClient({
         name: johanna.clientName,
         email: johanna.clientEmail === "no@no.com" ? null : johanna.clientEmail,
-        phone: johanna.clientPhone,
+        whatsapp: johanna.clientPhone,
         city: johanna.municipio,
         state: johanna.state
       })

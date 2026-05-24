@@ -78,14 +78,7 @@ export async function POST(req: NextRequest) {
       throw new Error(`Fecha inválida recibida: ${requestedDate}`)
     }
 
-    // 2. Sincronizar o crear cliente
-    const clientId = await findOrCreateClient({
-      name: clientName,
-      email: clientEmail,
-      phone: clientPhone,
-      city: city,
-      state: state
-    })
+
 
     const booking = await db.bookingRequest.create({
       data: {
@@ -115,7 +108,7 @@ export async function POST(req: NextRequest) {
         clientName:    clientName || "ClienteAnónimo",
         clientPhone:   clientPhone || "",
         clientEmail:   clientEmail || null,
-        clientId,
+        clientId:      null,
         isPublic:      Boolean(isPublic),
         clientProvidesAudio: Boolean(clientProvidesAudio),
         status:        "pendiente", // Nuevo estándar: pendiente
@@ -184,15 +177,31 @@ export async function PATCH(req: NextRequest) {
           data:  { status: "agendado", adminNote: adminNote || null }
         })
 
+        let finalClientId = booking.clientId
+        if (!finalClientId) {
+          const { findOrCreateClient } = await import("@/lib/clients")
+          finalClientId = await findOrCreateClient({
+            name: booking.clientName,
+            email: booking.clientEmail,
+            whatsapp: booking.clientPhone,
+            city: booking.city,
+            state: booking.state
+          })
+          await db.bookingRequest.update({
+            where: { id: bookingId },
+            data: { clientId: finalClientId }
+          })
+        }
+
         // 3. Crear Cotización (Legacy compatibility)
         const quoteId = crypto.randomUUID()
         let quoteCreated = false
         
-        if (booking.clientId) {
+        if (finalClientId) {
           await db.quote.create({
             data: {
               id: quoteId,
-              clientId: booking.clientId,
+              clientId: finalClientId,
               status: "agendado",
               totalEstimated: booking.baseAmount,
               guestCount: booking.guestCount,
@@ -229,7 +238,7 @@ export async function PATCH(req: NextRequest) {
             venueType:        booking.venueType,
             mapsLink:         booking.mapsLink,
             ceremonyType:     booking.venueType,
-            clientId:         booking.clientId,
+            clientId:         finalClientId,
             locationId:       locationId,
             isPublic:         booking.isPublic,
             clientProvidesAudio: booking.clientProvidesAudio,
@@ -272,6 +281,21 @@ export async function PATCH(req: NextRequest) {
             where: { eventId: eventId as string },
             select: { musicianId: true }
           })).map((em: any) => em.musicianId)
+
+      // 5.5 Asegurar que todos los targetMusicianIds tengan un registro en EventMusician
+      // Especialmente útil para reemplazos que no son titulares
+      for (const mId of targetMusicianIds) {
+        await db.eventMusician.upsert({
+          where: { id: `${eventId}-${mId}` },
+          create: {
+            id: `${eventId}-${mId}`,
+            eventId: eventId as string,
+            musicianId: mId,
+            status: "pending"
+          },
+          update: {} // No sobrescribir si ya existe y tiene status confirmed/rejected
+        });
+      }
 
       // 6. Notificar a los músicos (template + confirmLink por músico) — único lugar central
       const gig = {

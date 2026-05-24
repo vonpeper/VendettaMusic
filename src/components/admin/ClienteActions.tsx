@@ -11,7 +11,7 @@ interface ClienteActionsProps {
     profileId: string
     name: string
     email: string
-    phone: string | null
+    phone?: string | null
     whatsapp: string | null
     state: string | null
     city: string | null

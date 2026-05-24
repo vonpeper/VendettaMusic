@@ -26,7 +26,7 @@ export async function repairOrphanedEvents() {
       const shortId = `VND-${randomHex}`
       
       const clientName = event.customName || event.client?.user.name || "Sin Nombre"
-      const clientPhone = event.client?.whatsapp || event.client?.phone || ""
+      const clientPhone = event.client?.whatsapp || ""
       const clientEmail = event.client?.user.email || ""
 
       await db.bookingRequest.create({

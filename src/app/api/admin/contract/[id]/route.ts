@@ -17,7 +17,17 @@ export async function GET(
   try {
     const { id } = await params
     let booking = await db.bookingRequest.findUnique({
-      where: { id: id }
+      where: { id: id },
+      include: {
+        client: {
+          include: { user: true }
+        },
+        event: {
+          include: {
+            location: true
+          }
+        }
+      }
     }) as any
 
     // Fallback para quotes legacy
@@ -76,17 +86,17 @@ export async function GET(
       hasRobot:    booking.hasRobot || false,
       hasPantalla: false, // Coming soon
       // Ubicación
-      street: booking.calle || "",
+      street: booking.event?.location?.address?.split(',')[0] || booking.calle || "",
       houseNumber: booking.numero || "",
       colonia: booking.colonia || "",
-      municipio: booking.municipio || booking.city || "",
-      address: booking.address || "",
-      city: booking.city || "",
-      state: booking.state || "México",
+      municipio: booking.event?.location?.city || booking.municipio || booking.city || "",
+      address: booking.event?.location?.address || booking.address || "",
+      city: booking.event?.location?.city || booking.city || "",
+      state: booking.event?.location?.state || booking.state || "México",
       isOutsideZone: booking.isOutsideZone || false,
       viaticosAmount: booking.viaticosAmount || 0,
       viaticosLabel: booking.isOutsideZone ? "Viáticos Foráneos" : "Zona Estándar",
-      mapsLink: booking.mapsLink || undefined,
+      mapsLink: booking.event?.location?.mapsLink || booking.mapsLink || undefined,
       // Tiempos
       requestedDate: booking.requestedDate ? booking.requestedDate.toISOString() : new Date().toISOString(),
       startTime: booking.startTime || "21:00",
@@ -95,7 +105,7 @@ export async function GET(
       paymentMethod: booking.paymentMethod || "transfer",
       depositAmount: booking.depositAmount || 0,
       // Cliente
-      clientName: booking.clientName || "Cliente Genérico",
+      clientName: booking.client?.user?.name || booking.clientName || "Cliente Genérico",
       clientPhone: booking.clientPhone || "",
       clientEmail: booking.clientEmail || "",
       originalPrice: booking.originalPrice || 0,

@@ -22,7 +22,7 @@ interface ClienteFormProps {
     profileId: string
     name: string
     email: string
-    phone: string | null
+
     whatsapp: string | null
     state: string | null
     city: string | null
@@ -89,10 +89,6 @@ export function ClienteForm({ onClose, editing }: ClienteFormProps) {
               <div className="space-y-2">
                 <Label htmlFor="email">Correo electrónico (Opcional)</Label>
                 <Input id="email" name="email" type="email" defaultValue={editing?.email} placeholder="correo@ejemplo.com" className="bg-background border-border/40" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono</Label>
-                <Input id="phone" name="phone" defaultValue={editing?.phone || ""} placeholder="Ej. 55 1234 5678" className="bg-background border-border/40" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="whatsapp">WhatsApp</Label>

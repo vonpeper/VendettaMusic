@@ -128,6 +128,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
       id: "configuracion",
       icon: Settings,
       items: [
+        { name: "Diagnóstico", href: "/admin/diagnostico", icon: Settings, adminOnly: true },
         { name: "Administradores", href: "/admin/usuarios", icon: Shield, adminOnly: true },
         { name: "Configuración", href: "/admin/configuracion", icon: Settings, adminOnly: true },
       ]

@@ -437,7 +437,7 @@ export default async function AdminDashboardPage() {
                         <FollowUpButton 
                           id={q.id}
                           type={isWebFunnel ? "booking" : "quote"}
-                          phone={isWebFunnel ? (q as any).clientPhone : (q as any).client?.clientProfile?.whatsapp || (q as any).client?.clientProfile?.phone || ""}
+                          phone={isWebFunnel ? (q as any).clientPhone : (q as any).client?.clientProfile?.whatsapp || ""}
                           clientName={clientName}
                           currentCount={(q as any).followUpCount || 0}
                         />
