@@ -39,8 +39,6 @@ export function ClientWhatsappActions({
       const res = await sendAutomatedClientWhatsAppAction(bookingId, isSent)
       if (res.success) {
         toast.success(res.message)
-        // Refresh the page to get the new notification status
-        window.location.reload()
       } else {
         toast.error(res.error)
         if (res.rawMessage) {
