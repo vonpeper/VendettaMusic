@@ -105,6 +105,13 @@ Puedes consultar el detalle de tu evento, *firmar tu contrato digital* y descarg
 Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`
       }
 
+    case "CLIENT_THANKS":
+      return config?.msgTemplateThanks || `¡Hola {{clientName}}! 🎉 Todavía seguimos emocionados por lo de ayer.
+      
+Queríamos agradecerte por confiar en *Vendetta* para tu evento. ¡Esperamos que la hayas pasado increíble!
+
+¡Gracias totales! 🤘🎸`
+
     case "MUSICIAN_GIG":
       // Forzamos la nueva plantilla si la de la DB es la antigua
       const dbTemplate = config?.msgTemplateGig

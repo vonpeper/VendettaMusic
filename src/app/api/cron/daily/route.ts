@@ -24,6 +24,7 @@ export async function GET(request: Request) {
       followups5Days: 0,
       followups10Days: 0,
       vipReminders: 0,
+      postEventThanks: 0,
       errors: [] as string[]
     }
 
@@ -117,6 +118,45 @@ export async function GET(request: Request) {
       }
     }
 
+    // 3.5. Post-Event Thanks (El día después del evento)
+    const yesterday = startOfDay(subDays(now, 1))
+    const yesterdayEnd = endOfDay(subDays(now, 1))
+    
+    // Check if the thank you message feature is active
+    const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+    const msgThanksActive = config?.msgThanksActive ?? false
+
+    if (msgThanksActive) {
+      const pastEvents = await db.bookingRequest.findMany({
+        where: {
+          status: { in: ["agendado", "completado"] },
+          requestedDate: {
+            gte: yesterday,
+            lte: yesterdayEnd
+          }
+        }
+      })
+
+      for (const booking of pastEvents) {
+        try {
+          const existingThanks = await db.notification.findFirst({
+            where: {
+              bookingRequestId: booking.id,
+              type: "client_thanks",
+              status: { in: ["sent", "successful"] }
+            }
+          })
+
+          if (!existingThanks) {
+            await dispatchNotification({ type: "CLIENT_THANKS", bookingId: booking.id })
+            results.postEventThanks++
+          }
+        } catch (err: any) {
+          results.errors.push(`Error in post-event thanks for ${booking.id}: ${err.message}`)
+        }
+      }
+    }
+
     // 4. Retry Failed Notifications
     const failedNotifications = await db.notification.findMany({
       where: {
@@ -160,7 +200,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       results,
-      message: `Procesados: ${results.followups5Days} seguimientos (5d), ${results.followups10Days} seguimientos (10d), ${results.vipReminders} recordatorios VIP, ${retriesCount} reintentos exitosos.`
+      message: `Procesados: ${results.followups5Days} seguimientos (5d), ${results.followups10Days} seguimientos (10d), ${results.vipReminders} recordatorios VIP, ${results.postEventThanks} agradecimientos post-evento, ${retriesCount} reintentos exitosos.`
     })
     
   } catch (error: any) {
