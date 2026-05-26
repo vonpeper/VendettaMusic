@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClienteAction, updateClienteAction } from "@/actions/clientes"
 import { X, AlertCircle, CheckCircle2 } from "lucide-react"
+import { toast } from "sonner"
+import { useEffect } from "react"
 
 const ESTADOS_MX = [
   "Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas",
@@ -37,6 +39,12 @@ export function ClienteForm({ onClose, editing }: ClienteFormProps) {
   const isEditing = !!editing
   const action = isEditing ? updateClienteAction : createClienteAction
   const [state, formAction, isPending] = useActionState(action, null)
+
+  useEffect(() => {
+    if (state && !state.success) {
+      toast.error(state.message || "Error al procesar la solicitud")
+    }
+  }, [state])
 
   if (state?.success) {
     return (

@@ -32,7 +32,7 @@ export function ConfirmarAnticipoButton({ bookingId }: { bookingId: string }) {
       onClick={handleConfirm}
       disabled={loading}
       variant="outline"
-      className="mt-4 w-full border-blue-500/30 text-blue-400 hover:bg-blue-600 hover:text-white font-bold rounded-xl h-10 gap-2"
+      className="w-full border-blue-500/30 text-blue-400 hover:bg-blue-600 hover:text-white font-bold rounded-xl h-10 gap-2"
     >
       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
       Confirmar Anticipo Pagado

@@ -67,12 +67,18 @@ export default async function EventualidadesPage() {
   // 🛡️ SERIALIZACIÓN SEGURA: Convertir a POJOs puros para evitar errores de hidratación/Turbopack con objetos Date
   const allEvents = JSON.parse(JSON.stringify(allEventsRaw))
 
-  // Calcular anticipos bancarios reales (Solo futuros y confirmados)
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  
-  const upcomingRealEvents = newEvents.filter(e => e.date >= now && (e.status === "agendado" || e.status === "confirmed"))
+  // Calcular anticipos bancarios reales (agendados/confirmados, sin importar la fecha, hasta que pasen a completado)
+  const upcomingRealEvents = newEvents.filter(e => e.status === "agendado" || e.status === "confirmed")
   const currentAnticipos = upcomingRealEvents.reduce((acc, e) => acc + (e.deposit || 0), 0)
+
+  const anticiposList = upcomingRealEvents
+    .filter(e => (e.deposit || 0) > 0)
+    .map(e => ({
+      id: e.id,
+      clientName: e.customName || e.client?.user?.name || "Sin nombre",
+      date: e.date,
+      amount: e.deposit || 0
+    }))
 
   return (
     <div className="p-8 bg-background min-h-full">
@@ -96,7 +102,11 @@ export default async function EventualidadesPage() {
         </Button>
       </div>
 
-      <BandEventsClient events={allEvents as any} currentAnticipos={currentAnticipos} />
+      <BandEventsClient 
+        events={allEvents as any} 
+        currentAnticipos={currentAnticipos} 
+        anticiposList={anticiposList} 
+      />
     </div>
   )
 }

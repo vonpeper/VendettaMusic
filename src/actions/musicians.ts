@@ -176,9 +176,9 @@ export async function updateMusicianProfileAction(id: string, formData: FormData
         whatsapp: (data.whatsapp as string) || null,
         notes: (data.notes as string) || null,
         status: data.status as string || "active",
-        availability: data.availability as string || "Disponible",
+        availability: data.status === "inactive" ? "Ausencia" : (data.availability as string || "Disponible"),
         rating: data.rating ? parseInt(data.rating as string, 10) : 3,
-        isTitular: data.isTitular === "true",
+        isTitular: data.status === "inactive" ? false : (data.isTitular === "true"),
         user: {
           update: {
             name: name || profile.user.name,

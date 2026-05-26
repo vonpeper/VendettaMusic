@@ -181,8 +181,8 @@ model SetlistSong {
   order     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
-  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
   setlist   Setlist  @relation(fields: [setlistId], references: [id], onDelete: Cascade)
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
 }
 
 model BandEvent {
@@ -312,10 +312,10 @@ model Event {
   audioEngineer       String?
   bookingRequest      BookingRequest?
   contracts           Contract[]
-  quote               Quote?          @relation(fields: [quoteId], references: [id])
-  client              ClientProfile?  @relation(fields: [clientId], references: [id])
-  location            Location?       @relation(fields: [locationId], references: [id])
   package             Package?        @relation(fields: [packageId], references: [id])
+  location            Location?       @relation(fields: [locationId], references: [id])
+  client              ClientProfile?  @relation(fields: [clientId], references: [id])
+  quote               Quote?          @relation(fields: [quoteId], references: [id])
   musicians           EventMusician[]
   payments            Payment[]
 }
@@ -339,8 +339,8 @@ model Payment {
   rawPayload            String?
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @default(now()) @updatedAt
-  bookingRequest        BookingRequest? @relation(fields: [bookingRequestId], references: [id])
   event                 Event?          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  bookingRequest        BookingRequest? @relation(fields: [bookingRequestId], references: [id])
 }
 
 model Contract {
@@ -355,32 +355,32 @@ model Contract {
 }
 
 model Notification {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   eventId          String?
   type             String
   channel          String
   recipient        String?
   message          String
-  status           String   @default("pending")
+  status           String    @default("pending")
   messageId        String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @default(now()) @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @default(now()) @updatedAt
   category         String?
   template         String?
   bookingRequestId String?
   errorDetails     String?
-  retries          Int      @default(0)
+  retries          Int       @default(0)
   lastRetryAt      DateTime?
   actorId          String?
 }
 
 model SystemLog {
-  id          String   @id @default(uuid())
-  source      String
-  status      String
-  message     String
-  metadata    String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  source    String
+  status    String
+  message   String
+  metadata  String?
+  createdAt DateTime @default(now())
 }
 
 model BookingRequest {
@@ -439,8 +439,8 @@ model BookingRequest {
   signedIp              String?
   discountAmount        Float?         @default(0)
   originalPrice         Float?         @default(0)
-  client                ClientProfile? @relation(fields: [clientId], references: [id])
   event                 Event?         @relation(fields: [eventId], references: [id])
+  client                ClientProfile? @relation(fields: [clientId], references: [id])
   inboxItems            InboxItem[]
   payments              Payment[]
 }
@@ -463,8 +463,8 @@ model RehearsalSong {
   songId      String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
-  rehearsal   Rehearsal @relation(fields: [rehearsalId], references: [id], onDelete: Cascade)
   song        Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+  rehearsal   Rehearsal @relation(fields: [rehearsalId], references: [id], onDelete: Cascade)
 }
 
 model RehearsalMusician {
@@ -474,8 +474,8 @@ model RehearsalMusician {
   status      String          @default("pending")
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @default(now()) @updatedAt
-  rehearsal   Rehearsal       @relation(fields: [rehearsalId], references: [id], onDelete: Cascade)
   musician    MusicianProfile @relation(fields: [musicianId], references: [id], onDelete: Cascade)
+  rehearsal   Rehearsal       @relation(fields: [rehearsalId], references: [id], onDelete: Cascade)
 }
 
 model EventMusician {
@@ -485,8 +485,8 @@ model EventMusician {
   status     String          @default("pending")
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @default(now()) @updatedAt
-  event      Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
   musician   MusicianProfile @relation(fields: [musicianId], references: [id], onDelete: Cascade)
+  event      Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
 
 model GlobalConfig {
@@ -518,6 +518,8 @@ model GlobalConfig {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   msgTemplateFollowUp    String?
+  autoFollowUpEnabled    Boolean   @default(true)
+  autoThanksEnabled      Boolean   @default(true)
   msgTemplateExpiring    String?
   msgExpiringActive      Boolean   @default(true)
   msgTemplateReminder    String?
@@ -531,6 +533,7 @@ model GlobalConfig {
   ogDescription          String?
   ogImage                String?
   contractLegalText      String?
+  contractBarLegalText   String?
   payMercadoPagoActive   Boolean   @default(true)
   payTransferenciaActive Boolean   @default(true)
   payPersonalActive      Boolean   @default(true)
@@ -556,6 +559,6 @@ model InboxItem {
   assignedTo       String?
   clientId         String?
   bookingRequestId String?
-  bookingRequest   BookingRequest? @relation(fields: [bookingRequestId], references: [id])
   client           ClientProfile?  @relation(fields: [clientId], references: [id])
+  bookingRequest   BookingRequest? @relation(fields: [bookingRequestId], references: [id])
 }

@@ -498,18 +498,44 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
               </div>
 
               <ConfigFormWrapper action={saveContractConfigAction} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="contractLegalText">Contenido del Contrato</Label>
-                  <Textarea 
-                    id="contractLegalText" 
-                    name="contractLegalText" 
-                    defaultValue={config?.contractLegalText || ""} 
-                    placeholder="Escribe aquí las cláusulas y términos legales del contrato..."
-                    className="bg-card border-border/40 text-foreground min-h-[400px] font-serif text-base leading-relaxed" 
-                  />
-                   <p className="text-[10px] text-muted-foreground">
-                    Sugerencia: Divide por cláusulas (PRIMERA, SEGUNDA, etc.) para mayor claridad.
-                  </p>
+                <Tabs defaultValue="eventos" className="w-full">
+                  <TabsList className="grid grid-cols-2 mb-6">
+                    <TabsTrigger value="eventos">Eventos Privados</TabsTrigger>
+                    <TabsTrigger value="bares">Bares / Foros</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="eventos" className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="contractLegalText">Contrato de Eventos Privados</Label>
+                      <Textarea 
+                        id="contractLegalText" 
+                        name="contractLegalText" 
+                        defaultValue={config?.contractLegalText || ""} 
+                        placeholder="Escribe aquí las cláusulas y términos legales del contrato para eventos privados (bodas, xv años, corporativos)..."
+                        className="bg-card border-border/40 text-foreground min-h-[400px] font-serif text-base leading-relaxed" 
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        Sugerencia: Divide por cláusulas (PRIMERA, SEGUNDA, etc.) para mayor claridad.
+                      </p>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="bares" className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="contractBarLegalText">Contrato de Bares / Foros</Label>
+                      <Textarea 
+                        id="contractBarLegalText" 
+                        name="contractBarLegalText" 
+                        defaultValue={(config as any)?.contractBarLegalText || ""} 
+                        placeholder="Escribe aquí las cláusulas especiales para presentaciones en bares, restaurantes o foros públicos..."
+                        className="bg-card border-border/40 text-foreground min-h-[400px] font-serif text-base leading-relaxed" 
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        Este contrato se mostrará si el tipo de evento es "Bar".
+                      </p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
                   
                   <div className="mt-6 p-6 rounded-2xl bg-slate-900/80 border border-blue-500/30 backdrop-blur-md shadow-xl">
                     <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-5 text-center">Variables del Sistema para el Contrato</h4>
@@ -529,11 +555,10 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                       ))}
                     </div>
                   </div>
-                </div>
 
                 <div className="pt-4">
                   <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500 font-bold h-12 text-white text-lg">
-                    Guardar Texto Legal
+                    Guardar Textos Legales
                   </Button>
                 </div>
               </ConfigFormWrapper>

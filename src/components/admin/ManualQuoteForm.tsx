@@ -242,7 +242,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
                 placeholder="Ej. Juan Pérez"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Teléfono</Label>
                 <Input 
@@ -280,7 +280,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
                 onChange={e => setFormData({...formData, requestedDate: e.target.value})}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Inicio (HH:MM)</Label>
                 <Input 

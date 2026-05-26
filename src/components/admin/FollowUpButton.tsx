@@ -38,7 +38,6 @@ export function FollowUpButton({ id, type, phone, clientName, currentCount, temp
       const res = await sendAutoFollowUpAction(id, type, phone, clientName)
       if (res.success) {
         toast.success("Mensaje automático enviado")
-        router.refresh()
       } else {
         toast.error(res.error || "Error al enviar mensaje")
       }

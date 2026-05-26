@@ -60,13 +60,12 @@ export function VenueTypeSwitcher({
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Badge 
-          variant="outline" 
-          className="cursor-pointer hover:bg-blue-600/20 border-blue-600/40 text-blue-600 bg-blue-600/10 uppercase text-[9px] font-black tracking-tighter shadow-sm flex items-center gap-1 transition-colors"
+        <button 
+          className="inline-flex items-center rounded-full border px-2.5 py-0.5 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:bg-blue-600/20 border-blue-600/40 text-blue-600 bg-blue-600/10 uppercase text-[9px] font-black tracking-tighter shadow-sm gap-1 transition-colors"
         >
           {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : currentLabel}
           <Edit2 className="w-2.5 h-2.5 opacity-50" />
-        </Badge>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-48" align="start">
         <DropdownMenuLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">

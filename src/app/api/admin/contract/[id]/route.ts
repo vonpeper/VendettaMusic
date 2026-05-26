@@ -120,7 +120,9 @@ export async function GET(
         ? booking.adminSignature 
         : (globalConfig?.adminSignature || undefined),
       signedAt: booking.signedAt ? booking.signedAt.toISOString() : undefined,
-      contractLegalText: globalConfig?.contractLegalText || undefined
+      contractLegalText: (booking.venueType?.toLowerCase() === "bar" || booking.event?.venueType?.toLowerCase() === "bar") 
+        ? ((globalConfig as any)?.contractBarLegalText || undefined)
+        : (globalConfig?.contractLegalText || undefined)
     })
 
     // Crear la respuesta con el PDF

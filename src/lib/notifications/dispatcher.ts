@@ -190,7 +190,9 @@ export async function dispatchNotification({
             ? booking.adminSignature 
             : (config?.adminSignature || undefined),
           signedAt: booking.signedAt ? booking.signedAt.toISOString() : undefined,
-          contractLegalText: config?.contractLegalText || undefined
+          contractLegalText: (booking.venueType?.toLowerCase() === "bar" || (booking as any).event?.venueType?.toLowerCase() === "bar") 
+            ? ((config as any)?.contractBarLegalText || undefined)
+            : (config?.contractLegalText || undefined)
         })
         
         media = Buffer.from(pdfBytes).toString("base64")

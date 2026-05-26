@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useActionState, useState, useEffect } from "react"
 import { createEventAction, updateEventAction } from "@/actions/events"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -65,6 +65,13 @@ function SelectField({ id, name, label, options, defaultValue, required }: {
 export function EventForm({ onClose, clients, locations, packages, staff = [], allMusicians = [], initialData }: EventFormProps) {
   const action = initialData ? updateEventAction.bind(null, initialData.id) : createEventAction
   const [state, formAction, isPending] = useActionState(action, null) as [any, any, boolean]
+
+  useEffect(() => {
+    if (state && !state.success) {
+      toast.error(state.message || "Error al procesar la solicitud")
+    }
+  }, [state])
+
   const [sendNotif, setSendNotif] = useState(false)
   const [copied, setCopied] = useState(false)
   const [notifyingIds, setNotifyingIds] = useState<string[]>([])
@@ -153,11 +160,11 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-card backdrop-blur-sm p-4">
-      <div className="bg-card border border-border/40 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[94vh] overflow-y-auto">
+      <div className="bg-card border border-border/40 rounded-2xl shadow-2xl w-[95vw] sm:w-full max-w-3xl max-h-[85vh] overflow-y-auto">
 
         {/* Header */}
         <div className="border-b border-border/40 sticky top-0 bg-card z-10">
-          <div className="p-4 flex justify-center bg-black/20">
+          <div className="p-4 flex justify-center bg-muted/20">
              <Image 
                src="/images/logo-vendetta-horizontal.png" 
                alt="Vendetta Music" 
@@ -316,7 +323,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                 </span>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-1 border border-border/20 rounded-xl bg-black/5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-1 border border-border/20 rounded-xl bg-muted/10">
                 {allMusicians.map(m => {
                   const isSelected = selectedMusicians.includes(m.id)
                   const isNotifying = notifyingIds.includes(m.id)

@@ -48,7 +48,9 @@ type BandEvent = {
   isNewModel?: boolean
 }
 
-export function BandEventsClient({ events = [], currentAnticipos = 0 }: { events: BandEvent[], currentAnticipos?: number }) {
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+
+export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposList = [] }: { events: BandEvent[], currentAnticipos?: number, anticiposList?: {id: string, clientName: string, date: Date, amount: number}[] }) {
   // 🛡️ GUARD: Evitar crashes si events no es un array
   const safeEvents = Array.isArray(events) ? events : []
 
@@ -141,15 +143,55 @@ export function BandEventsClient({ events = [], currentAnticipos = 0 }: { events
       )}
 
       {/* Anticipos (Standalone) */}
-      <div className="mb-6 rounded-xl border border-blue-500/30 bg-blue-500/10 p-5 flex items-center justify-between">
-         <div>
-            <span className="text-xs uppercase tracking-[0.2em] text-blue-800 font-bold">Reserva en Banco (Eventos Próximos)</span>
-            <p className="text-sm text-blue-700 mt-1">Suma exclusiva de anticipos cobrados para shows que aún no suceden.</p>
-         </div>
-         <div className="text-3xl font-black text-blue-800">
-            {MXN(currentAnticipos)}
-         </div>
-      </div>
+      <Dialog>
+        <DialogTrigger asChild>
+          <button className="w-full text-left mb-6 rounded-xl border border-blue-500/30 bg-blue-500/10 p-5 flex items-center justify-between cursor-pointer hover:bg-blue-500/20 transition-all shadow-sm">
+             <div>
+                <span className="text-xs uppercase tracking-[0.2em] text-blue-800 font-bold">Reserva en Banco (Eventos Próximos)</span>
+                <p className="text-sm text-blue-700 mt-1">Suma exclusiva de anticipos cobrados para shows que aún no suceden. Click para ver detalles.</p>
+             </div>
+             <div className="text-3xl font-black text-blue-800">
+                {MXN(currentAnticipos)}
+             </div>
+          </button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black font-heading flex justify-between items-center pr-4">
+              Desglose de Anticipos en Banco
+              <span className="text-blue-600">{MXN(currentAnticipos)}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 border border-border/40 rounded-xl overflow-hidden bg-card">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 border-b border-border/40">
+                <tr>
+                  <th className="px-4 py-2 text-left font-bold text-muted-foreground text-xs uppercase">Cliente / Evento</th>
+                  <th className="px-4 py-2 text-left font-bold text-muted-foreground text-xs uppercase">Fecha</th>
+                  <th className="px-4 py-2 text-right font-bold text-muted-foreground text-xs uppercase">Monto</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/20">
+                {anticiposList && anticiposList.length > 0 ? (
+                  anticiposList.map((ant) => (
+                    <tr key={ant.id} className="hover:bg-muted/20">
+                      <td className="px-4 py-3 font-medium">{ant.clientName}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{formatDateMX(new Date(ant.date), "dd MMM yyyy")}</td>
+                      <td className="px-4 py-3 text-right font-black text-foreground">{MXN(ant.amount)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">
+                      No hay anticipos registrados en este momento.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
@@ -195,7 +237,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0 }: { events
       </div>
 
       {/* Tabla */}
-      <div className="border border-border/40 rounded-xl bg-card overflow-x-auto">
+      <div className="hidden md:block border border-border/40 rounded-xl bg-card overflow-x-auto">
         <table className="w-full text-sm min-w-[1100px]">
           <thead>
             <tr className="border-b border-border/40 text-left">
@@ -271,6 +313,81 @@ export function BandEventsClient({ events = [], currentAnticipos = 0 }: { events
             </tfoot>
           )}
         </table>
+      </div>
+
+      {/* MOBILE CARDS */}
+      <div className="md:hidden grid grid-cols-1 gap-4">
+        {filtered.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground bg-card border border-border/40 rounded-2xl">
+            <p className="text-sm font-medium">No hay eventos que coincidan.</p>
+          </div>
+        ) : (
+          filtered.map(ev => (
+            <div key={ev.id} className="bg-card border border-border/40 rounded-2xl p-4 flex flex-col gap-3 relative transition-all hover:border-border/80">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-black text-foreground text-base leading-tight uppercase">{ev.clientName}</h3>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
+                    {formatDateMX(new Date(ev.eventDate), "dd MMM yyyy")}
+                  </div>
+                </div>
+                <StatusSelector 
+                  eventId={ev.id} 
+                  currentStatus={ev.status} 
+                  isNewModel={ev.isNewModel}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Finanzas</span>
+                  <div className="text-sm font-black text-foreground">{MXN(ev.totalIncome)}</div>
+                  <div className="text-[10px] text-muted-foreground">Base: {MXN(ev.baseIncome)}</div>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Detalles</span>
+                  <div className="text-xs text-foreground capitalize">{ev.eventType}</div>
+                  <Badge variant="outline" className={`mt-1 text-[9px] ${ev.source==="excel_import" ? "border-blue-500/40 text-blue-800" : "border-border/40 text-muted-foreground"}`}>
+                    {ev.source === "excel_import" ? "Excel" : "Manual"}
+                  </Badge>
+                </div>
+              </div>
+
+              {ev.location && (
+                <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                  <span>📍</span>
+                  <span className="truncate">{ev.location}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/40 mt-1">
+                <Button variant="ghost" size="sm" className="h-8 text-xs hover:text-primary hover:bg-primary/10"
+                  onClick={() => setEditing(ev)}>
+                  <Pencil className="w-3.5 h-3.5 mr-1.5" /> Editar
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 text-xs hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => handleDelete(ev.id)} disabled={deleting === ev.id}>
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Eliminar
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
+        
+        {/* Mobile Totals */}
+        {filtered.length > 0 && (
+          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 mt-2">
+            <h4 className="text-[10px] text-primary font-bold uppercase tracking-widest mb-2">Subtotales ({filtered.length})</h4>
+            <div className="flex justify-between items-end">
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Base: {MXN(kpis.base)}</div>
+                <div className="text-xs text-muted-foreground">IVA: {MXN(kpis.iva)}</div>
+              </div>
+              <div className="text-lg font-black text-primary">{MXN(kpis.total)}</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* FAB / Botón flotante */}

@@ -208,7 +208,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
   return (
     <div className="space-y-4 relative">
       <div 
-        className="relative border-4 border-[#E91E63] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-2xl transition-all w-full h-64 sm:h-[350px] landscape:h-[160px]"
+        className="relative border-4 border-primary rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-2xl transition-all w-full h-64 sm:h-[350px] landscape:h-[160px]"
         style={{ touchAction: "none", backgroundColor: '#f8fafc' }}
       >
         {!hasSignature && (
@@ -228,27 +228,29 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
         />
       </div>
       
-      <div className="flex gap-3 justify-end">
-        <Button 
-          variant="outline" 
-          size="lg" 
-          type="button"
-          onClick={clear}
-          className="border-border bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted rounded-[1.25rem] px-6 h-14 text-xs font-black uppercase tracking-widest transition-all"
-        >
-          Limpiar
-        </Button>
-        <Button 
-          size="lg" 
-          type="button"
-          onClick={() => {
-            save();
-          }}
-          disabled={!hasSignature}
-          className="bg-[#E91E63] hover:bg-[#D81B60] text-white font-black uppercase tracking-[0.25em] rounded-[1.25rem] px-6 h-14 shadow-2xl shadow-pink-500/20 active:scale-95 transition-all disabled:opacity-20"
-        >
-          Guardar Firma
-        </Button>
+      <div className="flex justify-center w-full mt-4">
+        <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+          <Button 
+            variant="outline" 
+            size="lg" 
+            type="button"
+            onClick={clear}
+            className="w-full border-border bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted rounded-[1.25rem] px-4 h-14 text-xs font-black uppercase tracking-widest transition-all"
+          >
+            Limpiar
+          </Button>
+          <Button 
+            size="lg" 
+            type="button"
+            onClick={() => {
+              save();
+            }}
+            disabled={!hasSignature}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-[0.20em] rounded-[1.25rem] px-4 h-14 shadow-md active:scale-95 transition-all disabled:opacity-20"
+          >
+            Guardar Firma
+          </Button>
+        </div>
       </div>
     </div>
   )

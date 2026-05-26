@@ -7,6 +7,7 @@ import { BookingActions } from "@/components/admin/BookingActions"
 import { ClientWhatsappActions } from "@/components/admin/ClientWhatsappActions"
 import { VenueTypeSwitcher } from "@/components/admin/VenueTypeSwitcher"
 import { AdminManagementTools } from "@/components/admin/AdminManagementTools"
+import { BookingStatusSwitcher } from "@/components/admin/BookingStatusSwitcher"
 import { LiquidarButton } from "@/components/admin/LiquidarButton"
 import { ConfirmarAnticipoButton } from "@/components/admin/ConfirmarAnticipoButton"
 import { ContractStatusSwitcher } from "@/components/admin/ContractStatusSwitcher"
@@ -43,6 +44,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
   let booking = await db.bookingRequest.findUnique({
     where: { id: id },
     include: { 
+      payments: { orderBy: { createdAt: "desc" } },
       event: { 
         include: { 
           contracts: true,
@@ -113,7 +115,19 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     where: { bookingRequestId: id }
   })
   
-  ;(booking as any).notifications = notifications
+  const missingFields: string[] = []
+  if (!booking.address || booking.address === "Dirección no especificada" || booking.address.trim() === "") {
+    missingFields.push("Dirección del evento")
+  }
+  if (!booking.startTime || booking.startTime === "00:00") {
+    missingFields.push("Hora de inicio")
+  }
+  if (!booking.endTime || booking.endTime === "00:00") {
+    missingFields.push("Hora de fin")
+  }
+  if (!booking.clientPhone || booking.clientPhone.trim() === "") {
+    missingFields.push("Teléfono del cliente")
+  }
 
   return (
     <div className="p-8 bg-background min-h-screen">
@@ -128,7 +142,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-heading font-black text-foreground tracking-tight">Solicitud {booking.shortId}</h1>
-              <StatusBadge status={booking.status} />
+              <BookingStatusSwitcher bookingId={booking.id} currentStatus={booking.status} missingFields={missingFields} />
             </div>
             <p className="text-muted-foreground mt-1">Registrado el {formatDateMX(booking.createdAt, "PPPP")}</p>
           </div>
@@ -174,8 +188,13 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                     <div className="text-sm text-blue-600 font-bold mt-1 tracking-tight">{booking.guestCount} invitados aproximados</div>
                   </div>
                   <div className="pt-4 border-t border-border/40">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Fecha y Horario</div>
-                    <div className="text-base text-foreground flex items-center gap-2 font-black">
+                    <CardTitle className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] flex flex-wrap gap-2 items-center justify-between">
+                    <span>Fecha y Horario</span>
+                    {booking.source === 'MANUAL' && (
+                      <span className="bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded text-[9px] border border-orange-500/20">RESERVA MANUAL</span>
+                    )}
+                  </CardTitle>
+                    <div className="text-base text-foreground flex items-center gap-2 font-black mt-2">
                       <Calendar className="w-4 h-4 text-blue-600" /> {formatDateMX(booking.requestedDate, "EEEE, d 'de' MMMM")}
                     </div>
                     <div className="text-sm text-muted-foreground font-mono mt-1 font-bold">
@@ -253,40 +272,69 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             )}
 
             {/* Desglose Financiero */}
-            <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="bg-muted/30 border-b border-border/40">
-                <CardTitle className="text-lg flex items-center gap-2 font-black">
-                  <CreditCard className="w-5 h-5 text-blue-600" /> Información Financiera
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-4 rounded-2xl bg-blue-600/10 border border-blue-600/20">
-                    <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Subtotal Servicio</div>
-                    <div className="text-xl font-black text-foreground">{MXN(booking.baseAmount)}</div>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-blue-600/15 border border-blue-600/30">
-                    <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Anticipo Pactado</div>
-                    <div className="text-xl font-black text-blue-600">{MXN(booking.depositAmount)}</div>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20">
-                    <div className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Estado de Pago</div>
-                    <div className="text-xl font-black text-green-600 capitalize">{booking.paymentStatus}</div>
-                  </div>
-                </div>
-                {booking.paymentRef && (
-                  <div className="mt-4 text-[10px] font-mono text-muted-foreground flex items-center gap-2 px-2 font-bold uppercase tracking-widest">
-                    Referencia de pago: <span className="text-foreground">{booking.paymentRef}</span>
-                  </div>
-                )}
-                {booking.paymentStatus === "pendiente" && (
-                  <div className="flex flex-col gap-2">
-                    <ConfirmarAnticipoButton bookingId={booking.id} />
-                    <LiquidarButton bookingId={booking.id} />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {(() => {
+              const total = Number(booking.baseAmount) + Number(booking.viaticosAmount || 0) - Number(booking.discountAmount || 0);
+              const deposit = Number(booking.depositAmount || 0);
+              const paid = ((booking as any).payments || []).filter((p: any) => p.status === 'completed' || p.status === 'paid').reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+              const balance = total - paid;
+              
+              let badgeLabel = "PAGO PENDIENTE";
+              let badgeColor = "text-yellow-600";
+              if (paid === 0 && deposit === 0) { badgeLabel = "SIN ANTICIPO"; badgeColor = "text-gray-400"; }
+              else if (paid >= total) { badgeLabel = "LIQUIDADO"; badgeColor = "text-emerald-600"; }
+              else if (paid >= deposit) { badgeLabel = "ANTICIPO PAGADO"; badgeColor = "text-blue-600"; }
+              else if (paid > 0) { badgeLabel = "PAGO PARCIAL"; badgeColor = "text-orange-500"; }
+
+              return (
+                <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
+                  <CardHeader className="bg-muted/30 border-b border-border/40 p-4 md:p-6">
+                    <CardTitle className="text-lg flex items-center gap-2 font-black">
+                      <CreditCard className="w-5 h-5 text-blue-600" /> Información Financiera
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 md:p-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+                      <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-blue-600/10 border border-blue-600/20">
+                        <div className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 truncate">Total</div>
+                        <div className="text-base md:text-xl font-black text-foreground">{MXN(total)}</div>
+                      </div>
+                      <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-blue-600/15 border border-blue-600/30">
+                        <div className="text-[9px] md:text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 truncate">Anticipo</div>
+                        <div className="text-base md:text-xl font-black text-blue-600">{MXN(deposit)}</div>
+                      </div>
+                      <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="text-[9px] md:text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 truncate">Pagado</div>
+                        <div className="text-base md:text-xl font-black text-emerald-600">{MXN(paid)}</div>
+                      </div>
+                      <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-muted border border-border/50">
+                        <div className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 truncate">Pendiente</div>
+                        <div className="text-base md:text-xl font-black text-foreground">{MXN(balance)}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Estado Actual:</div>
+                        <div className={`text-sm font-black uppercase ${badgeColor}`}>{badgeLabel}</div>
+                      </div>
+                    </div>
+
+                    {booking.paymentRef && (
+                      <div className="mt-4 text-[10px] font-mono text-muted-foreground flex flex-wrap items-center gap-2 font-bold uppercase tracking-widest bg-muted/30 p-2 rounded">
+                        <span>Ref:</span> <span className="text-foreground break-all">{booking.paymentRef}</span>
+                      </div>
+                    )}
+                    
+                    {balance > 0 && (
+                      <div className="flex flex-col sm:flex-row gap-2 mt-6">
+                        {paid < deposit && <div className="flex-1"><ConfirmarAnticipoButton bookingId={booking.id} /></div>}
+                        <div className="flex-1"><LiquidarButton bookingId={booking.id} /></div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )
+            })()}
           </div>
 
           {/* Columna Derecha: Cliente y Acciones Administrativas */}
@@ -296,14 +344,14 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               <CardHeader>
                 <CardTitle className="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em]">Datos del Solicitante</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-600/15 border border-blue-600/30 flex items-center justify-center shadow-inner">
-                    <User className="text-blue-600 w-6 h-6" />
+              <CardContent className="space-y-4 md:space-y-5 p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-blue-600/15 border border-blue-600/30 flex items-center justify-center shadow-inner shrink-0">
+                    <User className="text-blue-600 w-5 h-5 md:w-6 md:h-6" />
                   </div>
-                  <div>
-                    <div className="text-xl font-black text-foreground tracking-tighter">{booking.clientName}</div>
-                    <div className="text-xs text-muted-foreground font-bold">Origen: <span className="text-blue-600 font-black uppercase tracking-widest">{booking.source || 'WEB'}</span></div>
+                  <div className="min-w-0">
+                    <div className="text-lg md:text-xl font-black text-foreground tracking-tighter truncate" title={booking.clientName}>{booking.clientName}</div>
+                    <div className="text-[10px] md:text-xs text-muted-foreground font-bold truncate">Origen: <span className="text-blue-600 font-black uppercase tracking-widest">{booking.source || 'WEB'}</span></div>
                   </div>
                 </div>
                 <div className="space-y-3 pt-4 border-t border-border/40">

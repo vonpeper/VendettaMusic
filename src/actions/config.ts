@@ -232,11 +232,15 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
     const msgExpiringActive = formData.get("msgExpiringActive") === "on"
     const msgReminderActive = formData.get("msgReminderActive") === "on"
     const msgThanksActive = formData.get("msgThanksActive") === "on"
+    const autoFollowUpEnabled = formData.get("autoFollowUpEnabled") === "on"
+    const autoThanksEnabled = formData.get("autoThanksEnabled") === "on"
 
     console.log("💾 Guardando plantillas...", {
       msgExpiringActive,
       msgReminderActive,
-      msgThanksActive
+      msgThanksActive,
+      autoFollowUpEnabled,
+      autoThanksEnabled
     })
 
     const result = await db.globalConfig.upsert({
@@ -253,6 +257,8 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
         msgReminderActive,
         msgTemplateThanks,
         msgThanksActive,
+        autoFollowUpEnabled,
+        autoThanksEnabled,
       },
       create: {
         id: "vendetta_config",
@@ -267,6 +273,8 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
         msgReminderActive,
         msgTemplateThanks,
         msgThanksActive,
+        autoFollowUpEnabled,
+        autoThanksEnabled,
       }
     })
 
@@ -398,11 +406,12 @@ export async function saveContractConfigAction(arg1: any, arg2?: any) {
     if (!formData) return { success: false, message: "Error: No se recibieron datos" }
 
     const contractLegalText = formData.get("contractLegalText") as string
+    const contractBarLegalText = formData.get("contractBarLegalText") as string
 
     await db.globalConfig.upsert({
       where: { id: "vendetta_config" },
-      update: { contractLegalText },
-      create: { id: "vendetta_config", contractLegalText },
+      update: { contractLegalText, contractBarLegalText },
+      create: { id: "vendetta_config", contractLegalText, contractBarLegalText },
     })
 
     revalidatePath("/admin/configuracion")

@@ -124,7 +124,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                 <Trash2 className="w-4 h-4" /> Eliminar permanentemente
               </Button>
             </DialogTrigger>
-            <DialogContent showCloseButton={false} className="bg-black border-border/20 backdrop-blur-2xl sm:max-w-[500px] text-white">
+            <DialogContent showCloseButton={false} className="bg-background border-border/20 backdrop-blur-2xl sm:max-w-[500px] text-foreground">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-red-500 text-xl font-black">
                   <AlertTriangle className="w-6 h-6" /> ¿ESTÁS SEGURO?
@@ -154,7 +154,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
         </div>
       )}
 
-      <div className="border border-border/40 rounded-2xl bg-card overflow-x-auto shadow-2xl">
+      <div className="hidden md:block border border-border/40 rounded-2xl bg-card overflow-x-auto shadow-2xl">
         <Table className="min-w-[900px]">
           <TableHeader>
             <TableRow className="border-border/40 hover:bg-transparent bg-white/[0.02]">
@@ -302,6 +302,100 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* MOBILE CARDS */}
+      <div className="md:hidden grid grid-cols-1 gap-4">
+        {items.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground bg-card border border-border/40 rounded-2xl">
+            <Users className="w-8 h-8 mx-auto mb-2 opacity-20" />
+            <p className="text-sm font-medium">No hay registros de clientes.</p>
+          </div>
+        ) : (
+          items.map((client) => (
+            <div 
+              key={client.id} 
+              className={`bg-card border rounded-2xl p-4 flex flex-col gap-3 relative transition-all ${
+                selectedIds.has(client.id) ? 'border-primary shadow-md shadow-primary/10' : 'border-border/40 hover:border-border/80'
+              }`}
+            >
+              <div className="absolute top-4 right-4">
+                <button 
+                  onClick={() => toggleSelect(client.id)}
+                  className="w-6 h-6 rounded-md border border-border/40 flex items-center justify-center bg-background"
+                >
+                  {selectedIds.has(client.id) ? (
+                    <CheckSquare className="w-4 h-4 text-primary" />
+                  ) : (
+                    <Square className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </button>
+              </div>
+              
+              <div onClick={() => toggleSelect(client.id)}>
+                <h3 className="font-black text-foreground text-lg leading-tight uppercase pr-8">{client.user.name}</h3>
+                {client.type === "corporate" ? (
+                  <Badge className="mt-1 bg-blue-900/30 text-blue-300 border-blue-200 text-[10px] tracking-widest uppercase">
+                    Corp
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="mt-1 border-primary/20 text-primary text-[10px] tracking-widest uppercase">
+                    Social
+                  </Badge>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Contacto</span>
+                  {client.whatsapp ? (
+                    <div className="flex items-center gap-1.5 text-xs text-green-500 font-bold font-mono">
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>{client.whatsapp}</span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground/50 italic">S/N</span>
+                  )}
+                  {client.user.email && (
+                    <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{client.user.email}</div>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Gigs ({client._count.events})</span>
+                  {client.events.length > 0 ? (
+                    <div className="text-xs font-medium text-foreground">
+                      Último: {formatDateMX(client.events[0].date, "dd MMM yy")}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground/50 italic">-</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mt-2 pt-3 border-t border-border/40">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>{client.city || "S/U"}</span>
+                </div>
+                <ClienteActions
+                  client={{
+                    profileId: client.id,
+                    name: client.user.name || "",
+                    email: client.user.email || "",
+                    whatsapp: client.whatsapp,
+                    state: client.state,
+                    city: client.city,
+                    type: client.type,
+                    company: client.company,
+                    rfc: client.rfc,
+                    notes: client.notes,
+                  }}
+                />
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   )

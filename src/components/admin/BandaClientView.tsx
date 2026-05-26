@@ -14,20 +14,23 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
   
   const selectedMusician = initialMusicians.find(m => m.id === selectedMusicianId)
   
-  const filteredMusicians = initialMusicians.filter(m => 
+  const searchMatched = initialMusicians.filter(m => 
     m.user.name.toLowerCase().includes(search.toLowerCase()) || 
     (m.instrument && m.instrument.toLowerCase().includes(search.toLowerCase()))
   )
 
-  const musiciansOnly = filteredMusicians.filter(m => 
+  const activeMatched = searchMatched.filter(m => m.status === 'active')
+  const inactiveMatched = searchMatched.filter(m => m.status === 'inactive')
+
+  const musiciansOnly = activeMatched.filter(m => 
     !["Ingeniero de Audio", "Técnico", "Staff", "Proveedor"].includes(m.instrument || "")
   )
   
-  const engineers = filteredMusicians.filter(m => 
+  const engineers = activeMatched.filter(m => 
     m.instrument === "Ingeniero de Audio"
   )
 
-  const staffTech = filteredMusicians.filter(m => 
+  const staffTech = activeMatched.filter(m => 
     ["Técnico", "Staff", "Proveedor"].includes(m.instrument || "")
   )
 
@@ -38,6 +41,7 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
           <TabsList className="bg-card border border-border/40">
             <TabsTrigger value="tarjetas">Vista Tarjetas</TabsTrigger>
             <TabsTrigger value="matriz">Matriz de Cobertura</TabsTrigger>
+            <TabsTrigger value="inactivos">Inactivos</TabsTrigger>
           </TabsList>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -59,9 +63,9 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
           {/* SECCIÓN MÚSICOS */}
           <div>
             <div className="flex items-center gap-4 mb-8">
-            <div className="flex items-center gap-3 px-4 py-2 bg-[#111111] border-l-4 border-[#E91E63] rounded-r-xl shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
-                <Mic className="w-4 h-4 text-[#E91E63]" />
-                <h2 className="text-[12px] font-black uppercase tracking-[0.25em] text-white">Titulares y Músicos</h2>
+            <div className="flex items-center gap-3 px-4 py-2 bg-card border-l-4 border-primary rounded-r-xl shadow-md">
+                <Mic className="w-4 h-4 text-primary" />
+                <h2 className="text-[12px] font-black uppercase tracking-[0.25em] text-foreground">Titulares y Músicos</h2>
               </div>
               <div className="h-px flex-1 bg-border/40" />
             </div>
@@ -80,9 +84,9 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
           {engineers.length > 0 && (
             <div>
               <div className="flex items-center gap-4 mb-8">
-                <div className="flex items-center gap-3 px-4 py-2 bg-[#111111] border-l-4 border-[#E91E63] rounded-r-xl shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
-                  <Headphones className="w-4 h-4 text-[#E91E63]" />
-                  <h2 className="text-[12px] font-black uppercase tracking-[0.25em] text-white">Ingeniería de Audio</h2>
+                <div className="flex items-center gap-3 px-4 py-2 bg-card border-l-4 border-primary rounded-r-xl shadow-md">
+                  <Headphones className="w-4 h-4 text-primary" />
+                  <h2 className="text-[12px] font-black uppercase tracking-[0.25em] text-foreground">Ingeniería de Audio</h2>
                 </div>
                 <div className="h-px flex-1 bg-border/40" />
               </div>
@@ -102,9 +106,9 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
           {staffTech.length > 0 && (
             <div>
               <div className="flex items-center gap-4 mb-8">
-                <div className="flex items-center gap-3 px-4 py-2 bg-[#111111] border-l-4 border-[#E91E63] rounded-r-xl shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
-                  <Settings className="w-4 h-4 text-[#E91E63]" />
-                  <h2 className="text-[12px] font-black uppercase tracking-[0.25em] text-white">Staff Técnico y Apoyo</h2>
+                <div className="flex items-center gap-3 px-4 py-2 bg-card border-l-4 border-primary rounded-r-xl shadow-md">
+                  <Settings className="w-4 h-4 text-primary" />
+                  <h2 className="text-[12px] font-black uppercase tracking-[0.25em] text-foreground">Staff Técnico y Apoyo</h2>
                 </div>
                 <div className="h-px flex-1 bg-border/40" />
               </div>
@@ -120,7 +124,7 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
             </div>
           )}
 
-          {filteredMusicians.length === 0 && (
+          {searchMatched.length === 0 && (
             <div className="col-span-full p-8 text-center border border-dashed border-border/40 rounded-xl bg-card">
               <p className="text-muted-foreground">No se encontraron resultados.</p>
             </div>
@@ -129,8 +133,25 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
 
         <TabsContent value="matriz" className="mt-0">
           <div className="bg-card border border-border/40 rounded-xl overflow-hidden">
-            <CoverageMatrix musicians={filteredMusicians} onViewDetails={(m: any) => setSelectedMusicianId(m.id)} />
+            <CoverageMatrix musicians={activeMatched} onViewDetails={(m: any) => setSelectedMusicianId(m.id)} />
           </div>
+        </TabsContent>
+
+        <TabsContent value="inactivos" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {inactiveMatched.map(musician => (
+              <MusicianCard 
+                key={musician.id} 
+                musician={musician} 
+                onViewDetails={() => setSelectedMusicianId(musician.id)} 
+              />
+            ))}
+          </div>
+          {inactiveMatched.length === 0 && (
+            <div className="p-8 text-center border border-dashed border-border/40 rounded-xl bg-card mt-6">
+              <p className="text-muted-foreground">No hay personal inactivo.</p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

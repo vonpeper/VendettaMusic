@@ -1,17 +1,20 @@
 import { Phone, Users as UsersIcon, AlertTriangle, MessageCircle, Star } from "lucide-react"
 
 export function MusicianCard({ musician, onViewDetails }: { musician: any, onViewDetails: () => void }) {
-  const isAvailable = musician.availability === "Disponible"
-  const isAtRisk = musician.status === "active" && musician.substitutes.length === 0
+  const isInactive = musician.status !== "active"
+  const actualAvailability = isInactive ? "No Aplica" : musician.availability
+  const isAvailable = actualAvailability === "Disponible"
+  const isAtRisk = !isInactive && musician.substitutes?.length === 0
 
   const availabilityColors: Record<string, string> = {
     "Disponible": "bg-green-600 text-white border-none shadow-sm",
     "Ocupado": "bg-red-600 text-white border-none shadow-sm",
     "Vacaciones": "bg-blue-600 text-white border-none shadow-sm",
     "Ausencia": "bg-orange-600 text-white border-none shadow-sm",
+    "No Aplica": "bg-gray-500/20 text-muted-foreground border-gray-500/30",
   }
 
-  const badgeColor = availabilityColors[musician.availability] || "bg-gray-500/20 text-muted-foreground border-gray-500/30"
+  const badgeColor = availabilityColors[actualAvailability] || "bg-gray-500/20 text-muted-foreground border-gray-500/30"
   
   // Format phone for whatsapp link
   const rawPhone = musician.whatsapp
@@ -31,7 +34,7 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
       )}
 
       <div className="flex items-start gap-4 mb-4">
-        <div className="w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center border border-primary/30 shrink-0 overflow-hidden shadow-inner">
+        <div className="w-12 h-12 rounded-full bg-card flex items-center justify-center border border-primary/30 shrink-0 overflow-hidden shadow-inner">
           {musician.user.image ? (
             <img src={musician.user.image} alt={musician.user.name} className="w-full h-full object-cover" />
           ) : (
@@ -43,15 +46,16 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
         
         <div className="flex-1 pr-12">
           <h3 className="font-bold text-lg text-foreground leading-tight">{musician.user.name}</h3>
-          <p className="text-sm font-black text-[#E91E63] uppercase tracking-wider mt-0.5">{musician.instrument || "Músico"}</p>
+          <p className="text-sm font-black text-primary uppercase tracking-wider mt-0.5">{musician.instrument || "Músico"}</p>
           
           <div className="flex flex-wrap gap-2 mt-2">
-            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${badgeColor}`}>
-              {musician.availability}
-            </span>
-            {musician.status !== "active" && (
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border bg-gray-500/20 text-muted-foreground border-gray-500/30">
+            {isInactive ? (
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border bg-red-500/10 text-red-500 border-red-500/20">
                 Inactivo
+              </span>
+            ) : (
+              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${badgeColor}`}>
+                {actualAvailability}
               </span>
             )}
           </div>
@@ -93,8 +97,7 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
       <div className="flex gap-2">
         <button 
           onClick={onViewDetails}
-          style={{ background: 'linear-gradient(to right, #E91E63, #D81B60)' }}
-          className="flex-1 text-white py-2.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-pink-500/20"
+          className="flex-1 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground py-2.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all hover:brightness-110 active:scale-95 shadow-md"
         >
           Ver Perfil
         </button>
@@ -112,7 +115,7 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
         ) : (
           <button 
             disabled
-            className="flex-1 bg-[#2a2a2a] border border-white/5 text-zinc-500 cursor-not-allowed py-2 rounded-lg text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+            className="flex-1 bg-muted border border-border/40 text-muted-foreground cursor-not-allowed py-2 rounded-lg text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
           >
             <MessageCircle className="w-4 h-4" /> Sin WhatsApp
           </button>

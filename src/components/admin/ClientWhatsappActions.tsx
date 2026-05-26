@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Zap, Loader2, ExternalLink, Copy, CheckCircle2, Clock, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
-import { sendAutomatedClientWhatsAppAction } from "@/actions/notifications"
+import { sendAutomatedClientWhatsAppAction, sendManualClientThanksAction } from "@/actions/notifications"
 
 export function ClientWhatsappActions({ 
   bookingId, 
@@ -18,6 +18,7 @@ export function ClientWhatsappActions({
   bookingStatus?: string
 }) {
   const [loading, setLoading] = useState(false)
+  const [loadingThanks, setLoadingThanks] = useState(false)
   const [rawMessage, setRawMessage] = useState<string | null>(null)
 
   // Find the last confirmation notification
@@ -49,6 +50,22 @@ export function ClientWhatsappActions({
       toast.error("Error de conexión")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleThanks = async () => {
+    setLoadingThanks(true)
+    try {
+      const res = await sendManualClientThanksAction(bookingId)
+      if (res.success) {
+        toast.success(res.message)
+      } else {
+        toast.error(res.error)
+      }
+    } catch (err) {
+      toast.error("Error de conexión")
+    } finally {
+      setLoadingThanks(false)
     }
   }
 
@@ -84,41 +101,65 @@ export function ClientWhatsappActions({
         )}
       </div>
 
-      <div className="space-y-2 pt-1">
-        <Button 
-          variant={isSent ? "outline" : "default"} 
-          onClick={handleAutomated}
-          disabled={loading}
-          className={`w-full transition-all rounded-xl h-11 gap-2 font-black uppercase tracking-widest shadow-sm ${
-            isSent ? "border-blue-600/40 text-blue-600 hover:bg-blue-600 hover:text-white" : "bg-blue-600 text-white hover:bg-blue-700"
-          }`} 
-          title="Envía la notificación oficial configurada en el sistema (Cotización o Confirmación)."
-        >
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Zap className="w-4 h-4" />
-          )}
-          {isSent ? "Reenviar Confirmación" : "Enviar Confirmación Oficial"}
-        </Button>
+      <div className="space-y-3 pt-2">
+        {/* Notificación Oficial Block */}
+        <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-3 flex flex-col gap-3">
+          <div className="space-y-1">
+            <div className="text-[10px] font-black uppercase tracking-widest text-blue-600">Notificación Oficial</div>
+            <div className="text-xs text-muted-foreground leading-snug">
+              Envía los detalles (cotización o confirmación) directamente al WhatsApp del cliente.
+            </div>
+          </div>
+          <Button 
+            variant={isSent ? "outline" : "default"} 
+            onClick={handleAutomated}
+            disabled={loading || loadingThanks}
+            className={`w-full transition-all rounded-lg h-10 gap-2 font-bold shadow-sm ${
+              isSent ? "border-blue-600/40 text-blue-600 hover:bg-blue-600 hover:text-white" : "bg-blue-600 text-white hover:bg-blue-700"
+            }`} 
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+            {isSent ? "Reenviar Mensaje" : "Enviar Mensaje"}
+          </Button>
+        </div>
+
+        {/* Post Event Thanks Button (Only if Completed) */}
+        {bookingStatus === "completado" && (
+          <div className="bg-purple-500/5 border border-purple-500/10 rounded-xl p-3 flex flex-col gap-3">
+            <div className="space-y-1">
+              <div className="text-[10px] font-black uppercase tracking-widest text-purple-600">Post-Evento</div>
+              <div className="text-xs text-muted-foreground leading-snug">
+                Envía mensaje de agradecimiento y petición de testimonio.
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={handleThanks}
+              disabled={loading || loadingThanks}
+              className="w-full transition-all rounded-lg h-10 gap-2 font-bold shadow-sm border-purple-600/40 text-purple-600 hover:bg-purple-600 hover:text-white" 
+            >
+              {loadingThanks ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+              Enviar Agradecimiento
+            </Button>
+          </div>
+        )}
         
         {rawMessage && (
           <Button 
             variant="outline" 
             onClick={handleCopy}
-            className="w-full border-orange-500/40 text-orange-500 hover:bg-orange-500 hover:text-white transition-all rounded-xl h-11 gap-2 font-black uppercase tracking-widest shadow-sm" 
-            title="Si el envío falló, copia el texto de la plantilla aquí para pegarlo manualmente."
+            className="w-full border-orange-500/40 text-orange-500 hover:bg-orange-500 hover:text-white transition-all rounded-lg h-10 gap-2 font-bold shadow-sm" 
+            title="Copia el texto de la plantilla para pegarlo manualmente."
           >
             <Copy className="w-4 h-4" />
-            Copiar Plantilla Manual
+            Copiar Texto Manual
           </Button>
         )}
 
         <Button 
           variant="ghost" 
           asChild
-          className="w-full text-green-600 hover:bg-green-600/10 hover:text-green-700 transition-all rounded-xl h-11 gap-2 font-bold shadow-none" 
-          title="Abre un chat vacío con el cliente en WhatsApp Web o en la App."
+          className="w-full text-green-600 hover:bg-green-600/10 hover:text-green-700 transition-all rounded-lg h-10 gap-2 font-bold shadow-none" 
         >
           <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="w-4 h-4" />

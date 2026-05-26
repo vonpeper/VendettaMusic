@@ -40,10 +40,9 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
       {signature ? (
         <div className="space-y-6">
           <div 
-            className="border border-border/60 shadow-2xl rounded-3xl p-8 flex flex-col items-center justify-center min-h-[200px] relative group overflow-hidden"
-            style={{ backgroundColor: '#0f172a' }}
+            className="border border-border/60 shadow-2xl rounded-3xl p-8 flex flex-col items-center justify-center min-h-[200px] relative group overflow-hidden bg-card"
           >
-             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E91E63] to-transparent opacity-20" />
+             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-20" />
              {signature ? (
                <img src={signature} alt="Firma Administrador" className="max-h-40 opacity-90 drop-shadow-sm" />
              ) : (
@@ -73,7 +72,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
         </div>
       ) : (
         <div className="p-12 border-2 border-dashed border-border/60 rounded-3xl bg-muted/30 flex flex-col items-center justify-center text-center gap-4">
-           <div className="w-16 h-16 rounded-2xl bg-[#E91E63]/10 flex items-center justify-center text-[#E91E63] mb-2">
+           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-2">
              <PenTool className="w-8 h-8" />
            </div>
            <div>
@@ -86,7 +85,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button 
-            className="w-full h-14 bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-pink-500/20 hover:scale-[1.02] transition-all"
+            className="w-full h-14 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-black uppercase tracking-[0.2em] rounded-2xl shadow-md hover:scale-[1.02] transition-all"
           >
             {signature ? "Actualizar Firma Digital" : "Registrar Nueva Firma"}
           </Button>
@@ -95,7 +94,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
           <div className="p-6 pb-0" style={{ touchAction: "none" }}>
             <DialogHeader>
               <DialogTitle className="text-2xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
-                <PenTool className="w-6 h-6 text-[#E91E63]" />
+                <PenTool className="w-6 h-6 text-primary" />
                 Registro de Firma
               </DialogTitle>
               <DialogDescription className="text-muted-foreground font-medium">

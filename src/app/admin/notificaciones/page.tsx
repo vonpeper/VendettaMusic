@@ -300,7 +300,10 @@ Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/pri
                     {/* Seguimiento */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="msgTemplateFollowUp" className="text-foreground font-black uppercase tracking-widest text-xs">🔄 Seguimiento Automático</Label>
+                        <div className="flex items-center gap-4">
+                          <Label htmlFor="msgTemplateFollowUp" className="text-foreground font-black uppercase tracking-widest text-xs">🔄 Seguimiento Automático</Label>
+                          <Toggle name="autoFollowUpEnabled" defaultChecked={config?.autoFollowUpEnabled} />
+                        </div>
                         <span className="text-[10px] text-muted-foreground italic">Cliente</span>
                       </div>
                       <Textarea id="msgTemplateFollowUp" name="msgTemplateFollowUp" rows={6}
@@ -367,22 +370,22 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                         <Label htmlFor="msgTemplateGig" className="text-foreground font-black uppercase tracking-widest text-xs">🎸 Convocatoria de Músicos</Label>
                         <span className="text-[10px] text-muted-foreground italic">Staff</span>
                       </div>
-                      <Textarea id="msgTemplateGig" name="msgTemplateGig" rows={6}
-                        defaultValue={config?.msgTemplateGig || `🎸 *NUEVA CONVOCATORIA — VENDETTA* 🎸
-
+                      <Textarea id="msgTemplateGig" name="msgTemplateGig" rows={12}
+                        defaultValue={config?.msgTemplateGig || `🎸 *NUEVA CONVOCATORIA: {{eventName}}*
+  
+👤 *Cliente / Evento:* {{clientName}}
 📅 *Fecha:* {{date}}
-👤 *Cliente:* {{fullName}}
-🎉 *Tipo:* {{ceremony}}
-📍 *Lugar:* {{location}}
-⏰ *Horario:* {{time}}
-📦 *Paquete:* {{package}}
-
+🎤 *Hora de Show:* {{performanceStart}}
+📍 *Ubicación:* {{location}}
+🏠 *Dirección:* {{address}}
+🗺️ *Maps:* {{mapsLink}}
+🚗 *Llegada músicos:* {{arrivalTime}}
+⚙️ *Hora de Montaje:* {{setupTime}}
+👔 *Vestimenta:* {{dressCode}}
 📝 *Notas:* {{notes}}
 
 🔗 *Confirma tu asistencia aquí:*
-{{confirmLink}}
-
-— Administración Vendetta`} 
+{{confirmLink}}`} 
                         className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
                     </div>
                   </div>

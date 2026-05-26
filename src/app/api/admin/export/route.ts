@@ -1,7 +1,6 @@
 import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import * as XLSX from "xlsx"
 
 const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
 
@@ -142,6 +141,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Crear Workbook y Worksheet
+    const XLSX = await import("xlsx")
     const worksheet = XLSX.utils.json_to_sheet(data)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, "Datos")

@@ -152,12 +152,14 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     const template = isOldTemplate
       ? `🎸 *NUEVA CONVOCATORIA: {{eventName}}*
   
+👤 *Cliente / Evento:* {{clientName}}
 📅 *Fecha:* {{date}}
-🎉 *Tipo:* {{ceremony}}
-📍 *Lugar:* {{location}}
+🎤 *Hora de Show:* {{performanceStart}}
+📍 *Ubicación:* {{location}}
+🏠 *Dirección:* {{address}}
 🗺️ *Maps:* {{mapsLink}}
-⏱️ *Montaje:* {{setupTime}}
 🚗 *Llegada músicos:* {{arrivalTime}}
+⚙️ *Hora de Montaje:* {{setupTime}}
 👔 *Vestimenta:* {{dressCode}}
 📝 *Notas:* {{notes}}
 
@@ -171,11 +173,14 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
       date: eventDate,
       ceremony: ceremonyLabel[gigDetails.ceremonyType || gigDetails.venueType || ""] || gigDetails.ceremonyType || "Show",
       location: gigDetails.locationName || gigDetails.address || "Por confirmar",
+      address: gigDetails.address || "No especificada",
       mapsLink: gigDetails.mapsLink ? gigDetails.mapsLink : "(no registrado)",
-      setupTime: gigDetails.setupTime || gigDetails.performanceStart || "Por definir",
-      arrivalTime: gigDetails.arrivalTime || gigDetails.performanceStart || "Por definir",
+      setupTime: gigDetails.setupTime || "Por definir",
+      arrivalTime: gigDetails.arrivalTime || "Por definir",
+      performanceStart: gigDetails.performanceStart || "Por definir",
       dressCode: finalDressCode,
       notes: gigDetails.musicianNotes || "Ninguna",
+      clientName: gigDetails.clientName || "Vendetta",
       confirmLink,
       // Añadimos variables adicionales solicitadas por el usuario en plantillas personalizadas
       fullName: eventName,

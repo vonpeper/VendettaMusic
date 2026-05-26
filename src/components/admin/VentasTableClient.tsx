@@ -79,6 +79,20 @@ interface Booking {
   }
   contractStatus?: string
   client?: { whatsapp?: string | null; name?: string | null } | null
+  payments?: any[]
+}
+
+const getDynamicPaymentStatus = (r: Booking) => {
+  const total = Number(r.baseAmount) + Number(r.viaticosAmount || 0);
+  const deposit = Number(r.depositAmount || 0);
+  const paid = (r.payments || []).filter((p: any) => p.status === 'completed' || p.status === 'paid').reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+  const balance = total - paid;
+  
+  if (paid === 0 && deposit === 0) return { label: "SIN ANTICIPO", color: "bg-gray-500/10 text-gray-400 border-gray-500/20" };
+  if (paid === 0) return { label: "PAGO PENDIENTE", color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" };
+  if (balance <= 0) return { label: "LIQUIDADO", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" };
+  if (paid >= deposit) return { label: "ANTICIPO PAGADO", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" };
+  return { label: "PAGO PARCIAL", color: "bg-orange-500/10 text-orange-500 border-orange-500/20" };
 }
 
 type SortKey = "fecha" | "cliente" | "monto" | "estado"
@@ -267,9 +281,9 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
         </div>
       )}
 
-      <div className="bg-card border border-border/40 rounded-2xl overflow-hidden shadow-sm">
-        <table className="w-full text-left border-collapse">
-          <thead>
+      <div className="bg-card border border-border/40 rounded-2xl overflow-x-auto shadow-sm">
+        <table className="w-full text-left border-collapse block md:table">
+          <thead className="hidden md:table-header-group">
             <tr className="bg-blue-600/10 border-b border-border/40">
               <th className="px-6 py-4 w-12 text-center">
                 <button onClick={toggleSelectAll} className="w-5 h-5 mx-auto rounded border border-border/40 flex items-center justify-center hover:border-blue-600/50 transition-colors">
@@ -287,14 +301,14 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                       placeholder="Filtro cliente..."
                       value={columnFilters.cliente}
                       onChange={e => setColumnFilters(prev => ({ ...prev, cliente: e.target.value }))}
-                      className="w-full bg-black/20 border border-white/5 rounded px-2 py-1 text-[10px] text-foreground focus:outline-none focus:border-blue-500/30"
+                      className="w-full bg-muted/20 border border-border/20 rounded px-2 py-1 text-[10px] text-foreground focus:outline-none focus:border-blue-500/30"
                     />
                     <input 
                       type="text" 
                       placeholder="ID..."
                       value={columnFilters.id}
                       onChange={e => setColumnFilters(prev => ({ ...prev, id: e.target.value }))}
-                      className="w-16 bg-black/20 border border-white/5 rounded px-2 py-1 text-[10px] text-foreground focus:outline-none focus:border-blue-500/30"
+                      className="w-16 bg-muted/20 border border-border/20 rounded px-2 py-1 text-[10px] text-foreground focus:outline-none focus:border-blue-500/30"
                     />
                   </div>
                 </div>
@@ -318,16 +332,16 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
               <th className="px-6 py-4 text-[10px] font-bold text-blue-600 uppercase tracking-widest text-right">Opciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="block md:table-row-group divide-y-0 md:divide-y md:divide-white/5 p-4 md:p-0 space-y-4 md:space-y-0">
             {filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-muted-foreground text-sm">Sin resultados para la búsqueda actual.</td></tr>
+              <tr className="block md:table-row"><td colSpan={6} className="block md:table-cell px-6 py-12 text-center text-muted-foreground text-sm">Sin resultados para la búsqueda actual.</td></tr>
             )}
             {filtered.map(reserva => (
               <tr 
                 key={reserva.id} 
-                className={`hover:bg-blue-600/5 transition-colors group ${selectedIds.has(reserva.id) ? 'bg-blue-600/5' : ''}`}
+                className={`block md:table-row bg-card md:bg-transparent border border-border/40 md:border-none rounded-xl md:rounded-none p-4 md:p-0 hover:bg-blue-600/5 transition-colors group relative ${selectedIds.has(reserva.id) ? 'bg-blue-600/5' : ''}`}
               >
-                <td className="px-6 py-4">
+                <td className="flex justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 border-b border-border/10 md:border-none items-center">
                   <button 
                     onClick={() => toggleSelect(reserva.id)}
                     className="w-5 h-5 rounded border border-border/40 flex items-center justify-center hover:border-blue-600/50 transition-colors"
@@ -339,15 +353,16 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                     )}
                   </button>
                 </td>
-                <td className="px-6 py-4">
+                <td className="flex justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 border-b border-border/10 md:border-none items-center">
                   <Link 
                     href={`/admin/ventas/${reserva.id}`}
-                    className="font-bold text-foreground hover:text-primary hover:underline transition-colors block"
+                    className="font-bold text-foreground hover:text-primary hover:underline transition-colors block truncate max-w-[200px] md:max-w-none"
+                    title={reserva.event?.customName || reserva.clientName}
                   >
                     {reserva.event?.customName || reserva.clientName}
                   </Link>
                   {reserva.event?.customName && (
-                    <div className="text-[10px] text-muted-foreground mt-0.5">{reserva.clientName}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px] md:max-w-none" title={reserva.clientName}>{reserva.clientName}</div>
                   )}
                   <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
                     {reserva.clientPhone && reserva.clientPhone !== "5500000000" && reserva.clientPhone !== "0000000000" 
@@ -356,25 +371,28 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                   </div>
                   <div className="text-[10px] text-muted-foreground font-mono mt-0.5">{reserva.shortId || "S/F"}</div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="flex justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 border-b border-border/10 md:border-none items-center">
                   <div className="text-sm text-foreground flex items-center gap-2">
                     <Calendar className="w-3 h-3 text-blue-600" />
                     {formatDateMX(reserva.requestedDate, "dd/MM/yyyy")}
                   </div>
                   <div className="text-[10px] text-muted-foreground mt-0.5">{reserva.packageName}</div>
                 </td>
-                <td className="px-6 py-4 font-mono">
-                  <div className="flex items-center gap-2">
+                <td className="flex justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 border-b border-border/10 md:border-none items-center font-mono">
+                  <div className="flex flex-wrap items-center gap-2">
                     <div className="text-sm font-black text-foreground">{formatCurrency(Number(reserva.baseAmount) + Number(reserva.viaticosAmount || 0))}</div>
-                    {reserva.paymentStatus === "paid" ? (
-                      <span className="text-[8px] font-black bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded border border-green-500/20 uppercase tracking-tighter">PAGADO</span>
-                    ) : (
-                      <span className="text-[8px] font-black bg-yellow-500/10 text-yellow-600 px-1.5 py-0.5 rounded border border-yellow-500/20 uppercase tracking-tighter">PAGO PENDIENTE</span>
-                    )}
+                    {(() => {
+                      const st = getDynamicPaymentStatus(reserva)
+                      return (
+                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-tighter whitespace-nowrap ${st.color}`}>
+                          {st.label}
+                        </span>
+                      )
+                    })()}
                   </div>
                   <div className="text-[9px] text-muted-foreground">Anticipo: {formatCurrency(Number(reserva.depositAmount))}</div>
                 </td>
-                <td className="px-6 py-4 text-center">
+                <td className="flex justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 border-b border-border/10 md:border-none items-center md:text-center">
                   <StatusSwitcher 
                     status={reserva.status} 
                     id={reserva.id} 
@@ -383,13 +401,13 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                     isUpdating={updatingId === reserva.id}
                   />
                 </td>
-                <td className="px-6 py-4 text-center">
+                <td className="flex justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 border-b border-border/10 md:border-none items-center md:text-center">
                   <ContractStatusSwitcher 
                     bookingId={reserva.id} 
                     status={reserva.contractStatus || "pending"} 
                   />
                 </td>
-                <td className="px-6 py-4 text-right">
+                <td className="flex justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 border-b border-border/10 md:border-none items-center md:text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted/50 rounded-lg">
@@ -557,6 +575,7 @@ function NotificationSemaphore({ bookingId, stats, variant = "default" }: { book
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleResend = async (type: "admin" | "client" | "musician") => {
+    if (!window.confirm(`¿Estás seguro que deseas reenviar la notificación automática para: ${type}?`)) return;
     setLoading(type)
     try {
       const res = await resendNotificationAction(bookingId, type)

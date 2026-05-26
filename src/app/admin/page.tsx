@@ -27,6 +27,12 @@ export default async function AdminDashboardPage() {
   const thisYear = now.getFullYear()
   
   // -- Fetch en paralelo ------------------------------------------
+  
+  // Establecer el inicio del día (compensando huso horario MX) para no ocultar eventos del día en curso
+  const todayStart = new Date()
+  todayStart.setUTCHours(todayStart.getUTCHours() - 6) // Aproximación CST
+  todayStart.setUTCHours(0, 0, 0, 0)
+
   const [
     upcomingEvents,
     bandEvents,
@@ -43,7 +49,7 @@ export default async function AdminDashboardPage() {
     musicianProfiles
   ] = await Promise.all([
     db.event.findMany({
-      where: { date: { gte: now }, status: { not: "cancelado" } },
+      where: { date: { gte: todayStart }, status: { not: "cancelado" } },
       orderBy: { date: "asc" },
       take: 5,
       include: { 

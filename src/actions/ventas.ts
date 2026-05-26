@@ -38,6 +38,126 @@ export async function markBookingAsCompleted(bookingId: string) {
 
 export async function updateBookingStatusAction(bookingId: string, newStatus: string) {
   try {
+    const brCheck = await db.bookingRequest.findUnique({
+      where: { id: bookingId },
+      include: {
+        event: {
+          include: {
+            client: true,
+            location: true,
+          }
+        }
+      }
+    })
+
+    if (!brCheck) return { success: false, error: "Booking no encontrada." }
+
+    if (newStatus === "agendado") {
+      // 1. Validadores estrictos
+      if (!brCheck.requestedDate) return { success: false, error: "Falta definir la fecha del evento." }
+      if (!brCheck.packageId && !brCheck.packageName) return { success: false, error: "Falta asignar un paquete." }
+      if (!brCheck.clientName || !brCheck.clientPhone) return { success: false, error: "Falta asignar información del cliente." }
+
+      // 2. Crear o actualizar ClientProfile (Fuente de la verdad)
+      let clientId = brCheck.clientId || brCheck.event?.clientId
+      
+      // Si no hay clientId pero tenemos correo, intentamos buscar el usuario
+      let userId = brCheck.clientUserId
+      if (!userId && brCheck.clientEmail) {
+        const user = await db.user.upsert({
+          where: { email: brCheck.clientEmail },
+          create: {
+            email: brCheck.clientEmail,
+            name: brCheck.clientName,
+            role: "CLIENT",
+          },
+          update: {
+            name: brCheck.clientName,
+          }
+        })
+        userId = user.id
+      } else if (!userId) {
+        // Fallback: Si no hay correo, creamos un usuario placeholder
+        const user = await db.user.create({
+          data: {
+            name: brCheck.clientName,
+            role: "CLIENT",
+          }
+        })
+        userId = user.id
+      }
+
+      if (userId) {
+        const clientProfile = await db.clientProfile.upsert({
+          where: { userId: userId },
+          create: {
+            userId: userId,
+            whatsapp: brCheck.clientPhone,
+            city: brCheck.city,
+            state: brCheck.state,
+          },
+          update: {
+            whatsapp: brCheck.clientPhone,
+            city: brCheck.city,
+            state: brCheck.state,
+          }
+        })
+        clientId = clientProfile.id
+      }
+
+      // 3. Crear o actualizar Location
+      let locationId = brCheck.event?.locationId
+      if (brCheck.address || brCheck.venueType) {
+        const locationName = brCheck.venueType || "Locación del Cliente"
+        const locationAddress = [brCheck.calle, brCheck.numero, brCheck.colonia, brCheck.municipio, brCheck.state, brCheck.zipCode].filter(Boolean).join(", ") || brCheck.address
+
+        if (locationId) {
+          await db.location.update({
+            where: { id: locationId },
+            data: {
+              name: locationName,
+              address: locationAddress,
+              mapsLink: brCheck.mapsLink,
+              city: brCheck.city,
+              state: brCheck.state,
+            }
+          })
+        } else {
+          const newLoc = await db.location.create({
+            data: {
+              name: locationName,
+              address: locationAddress,
+              mapsLink: brCheck.mapsLink,
+              city: brCheck.city,
+              state: brCheck.state,
+            }
+          })
+          locationId = newLoc.id
+        }
+      }
+
+      // 4. Actualizar el Evento con los IDs sincronizados
+      if (brCheck.eventId) {
+        await db.event.update({
+          where: { id: brCheck.eventId },
+          data: {
+            clientId: clientId,
+            locationId: locationId,
+            status: newStatus
+          }
+        })
+      }
+      
+      // 5. Actualizar el BookingRequest con el clientId
+      await db.bookingRequest.update({
+        where: { id: bookingId },
+        data: {
+          clientId: clientId,
+          clientUserId: userId,
+        }
+      })
+    }
+
     await db.bookingRequest.update({
       where: { id: bookingId },
       data: { 
@@ -61,10 +181,12 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
     })
 
     if (br?.eventId && br.event) {
-      await db.event.update({
-        where: { id: br.eventId },
-        data: { status: newStatus }
-      })
+      if (newStatus !== "agendado") {
+        await db.event.update({
+          where: { id: br.eventId },
+          data: { status: newStatus }
+        })
+      }
 
       if (newStatus === "agendado") {
         // Verificamos de forma independiente si ya se le avisó al cliente
@@ -110,6 +232,29 @@ export async function markBookingAsPaidAction(bookingId: string) {
     })
 
     if (booking.eventId) {
+      // Create payment record for the remaining balance
+      const event = await db.event.findUnique({
+        where: { id: booking.eventId },
+        include: { payments: true }
+      })
+      
+      const total = booking.baseAmount + (booking.viaticosAmount || 0) - (booking.discountAmount || 0);
+      const paid = (event?.payments || []).filter(p => p.status === 'completed' || p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0);
+      const balance = total - paid;
+      
+      if (balance > 0) {
+        await db.payment.create({
+          data: {
+            eventId: booking.eventId,
+            bookingRequestId: booking.id,
+            amount: balance,
+            method: "TRANSFER",
+            status: "completed",
+            reference: "Liquidación Manual"
+          }
+        })
+      }
+
       await db.event.update({
         where: { id: booking.eventId },
         data: { balance: 0 }
@@ -337,6 +482,24 @@ export async function confirmDepositPaidAction(bookingId: string) {
     })
 
     if (booking.eventId) {
+      // Crear registro de pago
+      const existingPayments = await db.payment.findMany({
+        where: { bookingRequestId: booking.id, status: { in: ["completed", "paid"] } }
+      });
+      
+      if (existingPayments.length === 0) {
+        await db.payment.create({
+          data: {
+            eventId: booking.eventId,
+            bookingRequestId: booking.id,
+            amount: booking.depositAmount || 0,
+            method: "TRANSFER",
+            status: "completed",
+            reference: "Anticipo Manual"
+          }
+        })
+      }
+
       // Al confirmar anticipo, actualizamos el balance del evento
       await db.event.update({
         where: { id: booking.eventId },

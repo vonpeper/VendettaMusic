@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
         isPublic: Boolean(isPublic),
         clientProvidesAudio: Boolean(clientProvidesAudio),
         mapsLink: mapsLink || null,
-        status: computedStatus || "pending",
+        status: computedStatus || "pendiente",
         source: "manual",
         bandHours: parseInt(bandHours) || 2,
         djHours: parseInt(djHours) || 0,

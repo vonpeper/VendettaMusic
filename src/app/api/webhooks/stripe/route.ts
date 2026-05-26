@@ -219,6 +219,10 @@ async function confirmBookingFromPayment(bookingId: string) {
     console.error("Error sending confirmation notification:", e)
   )
 
+  const { dispatchAdminAlert } = await import("@/lib/notifications")
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://vendettamusic.com"
+  await dispatchAdminAlert(`💰 *NUEVO PAGO / ANTICIPO*\nEl cliente *${booking.clientName}* ha pagado el anticipo para el evento del *${booking.requestedDate?.toLocaleDateString("es-MX", { day: 'numeric', month: 'long' })}*.\n\nEl evento ya puede pasar a Confirmado. Revisa y cambia el estatus aquí:\n${appUrl}/admin/ventas/${booking.id}\n\nFolio: ${booking.shortId || "N/A"}`).catch(e => console.error("Error dispatching admin alert:", e))
+
   await notifyMusicians(
     event.id,
     {

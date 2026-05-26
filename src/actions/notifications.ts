@@ -303,3 +303,37 @@ export async function sendAutomatedClientWhatsAppAction(bookingId: string, force
     return { success: false, error: error.message }
   }
 }
+
+export async function sendManualClientThanksAction(bookingId: string) {
+  const session = await auth()
+  if (!session?.user || !["ADMIN"].includes(session.user.role as string)) {
+    return { success: false, error: "No autorizado" }
+  }
+
+  try {
+    const { dispatchNotification } = await import("@/lib/notifications")
+    const booking = await db.bookingRequest.findUnique({ where: { id: bookingId } })
+    
+    if (!booking) return { success: false, error: "Reserva no encontrada" }
+
+    const messageId = await dispatchNotification({
+      type: "CLIENT_THANKS",
+      bookingId: bookingId,
+      forceResend: true
+    })
+
+    if (!messageId) {
+      const lastFailed = await db.notification.findFirst({
+        where: { bookingRequestId: bookingId, type: "client_thanks", status: "failed" },
+        orderBy: { createdAt: "desc" }
+      })
+      return { success: false, error: "No se pudo enviar el mensaje a Evolution API.", rawMessage: lastFailed?.message || "" }
+    }
+
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    return { success: true, message: "Mensaje de agradecimiento enviado con éxito." }
+  } catch (error: any) {
+    console.error("Error sending manual client thanks WhatsApp:", error)
+    return { success: false, error: error.message }
+  }
+}

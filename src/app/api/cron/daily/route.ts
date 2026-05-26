@@ -28,59 +28,65 @@ export async function GET(request: Request) {
       errors: [] as string[]
     }
 
-    // 1. Follow-ups (5 días)
-    const fiveDaysAgo = startOfDay(subDays(now, 5))
-    const fiveDaysAgoEnd = endOfDay(subDays(now, 5))
-    
-    const pending5Days = await db.bookingRequest.findMany({
-      where: {
-        status: "pendiente",
-        followUpCount: 0,
-        createdAt: {
-          gte: fiveDaysAgo,
-          lte: fiveDaysAgoEnd
+    // Check if followups are enabled
+    const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+    const autoFollowUpEnabled = config?.autoFollowUpEnabled ?? true
+
+    if (autoFollowUpEnabled) {
+      // 1. Follow-ups (5 días)
+      const fiveDaysAgo = startOfDay(subDays(now, 5))
+      const fiveDaysAgoEnd = endOfDay(subDays(now, 5))
+      
+      const pending5Days = await db.bookingRequest.findMany({
+        where: {
+          status: "pendiente",
+          followUpCount: 0,
+          createdAt: {
+            gte: fiveDaysAgo,
+            lte: fiveDaysAgoEnd
+          }
+        }
+      })
+
+      for (const booking of pending5Days) {
+        try {
+          await dispatchNotification({ type: "CLIENT_FOLLOWUP", bookingId: booking.id })
+          await db.bookingRequest.update({
+            where: { id: booking.id },
+            data: { followUpCount: 1 }
+          })
+          results.followups5Days++
+        } catch (err: any) {
+          results.errors.push(`Error in 5-day followup for ${booking.id}: ${err.message}`)
         }
       }
-    })
 
-    for (const booking of pending5Days) {
-      try {
-        await dispatchNotification({ type: "CLIENT_FOLLOWUP", bookingId: booking.id })
-        await db.bookingRequest.update({
-          where: { id: booking.id },
-          data: { followUpCount: 1 }
-        })
-        results.followups5Days++
-      } catch (err: any) {
-        results.errors.push(`Error in 5-day followup for ${booking.id}: ${err.message}`)
-      }
-    }
-
-    // 2. Follow-ups (10 días)
-    const tenDaysAgo = startOfDay(subDays(now, 10))
-    const tenDaysAgoEnd = endOfDay(subDays(now, 10))
-    
-    const pending10Days = await db.bookingRequest.findMany({
-      where: {
-        status: "pendiente",
-        followUpCount: 1, // Already had the first follow-up
-        createdAt: {
-          gte: tenDaysAgo,
-          lte: tenDaysAgoEnd
+      // 2. Follow-ups (10 días)
+      const tenDaysAgo = startOfDay(subDays(now, 10))
+      const tenDaysAgoEnd = endOfDay(subDays(now, 10))
+      
+      const pending10Days = await db.bookingRequest.findMany({
+        where: {
+          status: "pendiente",
+          followUpCount: 1, // Already had the first follow-up
+          createdAt: {
+            gte: tenDaysAgo,
+            lte: tenDaysAgoEnd
+          }
         }
-      }
-    })
+      })
 
-    for (const booking of pending10Days) {
-      try {
-        await dispatchNotification({ type: "CLIENT_FOLLOWUP", bookingId: booking.id })
-        await db.bookingRequest.update({
-          where: { id: booking.id },
-          data: { followUpCount: 2 }
-        })
-        results.followups10Days++
-      } catch (err: any) {
-        results.errors.push(`Error in 10-day followup for ${booking.id}: ${err.message}`)
+      for (const booking of pending10Days) {
+        try {
+          await dispatchNotification({ type: "CLIENT_FOLLOWUP", bookingId: booking.id })
+          await db.bookingRequest.update({
+            where: { id: booking.id },
+            data: { followUpCount: 2 }
+          })
+          results.followups10Days++
+        } catch (err: any) {
+          results.errors.push(`Error in 10-day followup for ${booking.id}: ${err.message}`)
+        }
       }
     }
 
@@ -123,7 +129,6 @@ export async function GET(request: Request) {
     const yesterdayEnd = endOfDay(subDays(now, 1))
     
     // Check if the thank you message feature is active
-    const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
     const msgThanksActive = config?.msgThanksActive ?? false
 
     if (msgThanksActive) {
@@ -186,7 +191,6 @@ export async function GET(request: Request) {
           })
           // Alert Admin if max retries reached
           if (notif.retries + 1 >= 3) {
-            const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
             if (config?.adminWhatsapp) {
               await sendWhatsApp(config.adminWhatsapp, `🚨 *FALLO CRÍTICO DE ENVÍO*\nSe ha intentado enviar un mensaje 3 veces sin éxito.\n\nDestino: ${notif.recipient}\nTipo: ${notif.type}\nError: ${error}\n\nPor favor, revisa el panel de notificaciones.`)
             }

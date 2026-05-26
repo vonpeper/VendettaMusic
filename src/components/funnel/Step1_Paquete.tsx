@@ -236,9 +236,9 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
                 <div className="flex items-center gap-3 bg-black/20 p-2 rounded-2xl border border-white/5 w-fit">
                   <Button variant="ghost" size="icon" onClick={() => setBandHrs(Math.max(2, bandHrs - 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">-</Button>
                   <span className="text-xl font-black text-white w-10 text-center">{bandHrs}h</span>
-                  <Button variant="ghost" size="icon" onClick={() => setBandHrs(bandHrs + 1)} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
+                  <Button variant="ghost" size="icon" onClick={() => setBandHrs(Math.min(5, bandHrs + 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
                 </div>
-                <p className="text-[10px] text-gray-500 font-bold tracking-tight">* Mínimo 2 horas para contratación.</p>
+                <p className="text-[10px] text-gray-500 font-bold tracking-tight">* Mínimo 2 horas para contratación. Máximo 5 horas.</p>
               </div>
 
               <div className="space-y-3">
@@ -248,7 +248,7 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
                 <div className="flex items-center gap-3 bg-black/20 p-2 rounded-2xl border border-white/5 w-fit">
                   <Button variant="ghost" size="icon" onClick={() => setDjHrs(Math.max(0, djHrs - 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">-</Button>
                   <span className="text-xl font-black text-white w-10 text-center">{djHrs}h</span>
-                  <Button variant="ghost" size="icon" onClick={() => setDjHrs(djHrs + 1)} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
+                  <Button variant="ghost" size="icon" onClick={() => setDjHrs(Math.min(5, djHrs + 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
                 </div>
                 {djHrs > 0 && (
                   <label className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-all group mt-2">

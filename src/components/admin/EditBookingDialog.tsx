@@ -87,7 +87,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
           </Button>
         )}
       />
-      <DialogContent className="bg-card border-border/40 backdrop-blur-xl sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-card border-border/40 backdrop-blur-xl sm:max-w-[500px] w-[95vw] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <Edit3 className="w-5 h-5 text-primary" /> 
