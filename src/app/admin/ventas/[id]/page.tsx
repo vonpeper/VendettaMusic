@@ -25,7 +25,9 @@ import {
   Disc,
   Music2,
   Sparkles,
-  Users
+  Users,
+  ChevronRight,
+  LayoutList
 } from "lucide-react"
 import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
@@ -135,10 +137,26 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
   return (
     <div className="p-8 bg-background min-h-screen">
       <div className="max-w-5xl mx-auto">
-        {/* Breadcrumbs / Back Link */}
-        <Link href="/admin/ventas" className="flex items-center gap-2 text-muted-foreground hover:text-blue-600 transition-colors mb-6 text-sm font-medium">
-          <ArrowLeft className="w-4 h-4" /> Volver al Centro de Ventas
-        </Link>
+        {/* Breadcrumb trail + accesos rápidos */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          {/* Breadcrumb izquierdo */}
+          <nav className="flex items-center gap-1 text-sm text-muted-foreground font-medium">
+            <Link href="/admin" className="hover:text-foreground transition-colors">Admin</Link>
+            <ChevronRight className="w-3.5 h-3.5 opacity-40" />
+            <Link href="/admin/ventas" className="hover:text-foreground transition-colors">Centro de Ventas</Link>
+            <ChevronRight className="w-3.5 h-3.5 opacity-40" />
+            <span className="text-foreground font-black">{booking.shortId}</span>
+          </nav>
+
+          {/* Acceso rápido a Eventos */}
+          <Link
+            href="/admin/eventualidades"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all"
+          >
+            <LayoutList className="w-3.5 h-3.5" />
+            Ver Eventos
+          </Link>
+        </div>
 
         {/* Header con ID y Estado */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">

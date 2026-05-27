@@ -519,3 +519,36 @@ export async function confirmDepositPaidAction(bookingId: string) {
     return { success: false, error: "Error al confirmar el anticipo." }
   }
 }
+
+export async function deleteContractAction(bookingId: string) {
+  try {
+    const booking = await db.bookingRequest.findUnique({
+      where: { id: bookingId },
+      include: { event: { include: { contracts: true } } }
+    })
+
+    if (!booking) return { success: false, error: "Reserva no encontrada." }
+
+    // 1. Borrar los registros de Contract vinculados al evento
+    if (booking.eventId && booking.event?.contracts?.length) {
+      await db.contract.deleteMany({ where: { eventId: booking.eventId } })
+    }
+
+    // 2. Limpiar firmas y fecha de firma en BookingRequest
+    await db.bookingRequest.update({
+      where: { id: bookingId },
+      data: {
+        clientSignature: null,
+        adminSignature: null,
+        signedAt: null,
+      }
+    })
+
+    revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting contract:", error)
+    return { success: false, error: "Error al eliminar el contrato." }
+  }
+}
