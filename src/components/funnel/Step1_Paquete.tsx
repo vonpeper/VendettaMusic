@@ -378,19 +378,29 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                  </div>
 
                  {activeExtrasList.map(ex => {
-                   // Excluir rubros de DJ y Audio de la lista genérica (se manejan arriba)
+                   // Excluir rubros de DJ, Audio y Hora Extra de la lista (se manejan arriba)
                    const isDjOrAudio = ex.name.toLowerCase().includes("dj") || ex.name.toLowerCase().includes("audio upgrade")
-                   if (isDjOrAudio) return null
+                   const isHoraExtra = ex.name.toLowerCase().includes("hora extra") || ex.name.toLowerCase().includes("hora adicional")
+                   if (isDjOrAudio || isHoraExtra) return null
 
                    const isSel = selectedExtraIds.includes(ex.id)
                    const isExtraUnavailable = (ex as any).active === false
                    const setup = ex.setupCost || 0
                    const hourly = ex.hourlyCost || 0
                    
-                   // Si el extra está inactivo y no está seleccionado, o está inactivo pero no se puede elegir
-                   const priceDesc = hourly > 0 
-                     ? `+$${setup.toLocaleString()} setup + $${hourly}/h`
-                     : `+$${setup.toLocaleString()}`
+                   // Formato limpio del precio
+                   let priceDisplay: string
+                   if (setup > 0 && hourly > 0) {
+                     // Muestra el costo proyectado total (setup + hourly × horas)
+                     const projected = setup + (hourly * bandHrs)
+                     priceDisplay = `+${formatMXN(projected)}`
+                   } else if (hourly > 0) {
+                     // Solo costo por hora — muestra proyectado
+                     priceDisplay = `+${formatMXN(hourly * bandHrs)}`
+                   } else {
+                     // Solo pago único
+                     priceDisplay = `+${formatMXN(setup)}`
+                   }
 
                    return (
                     <button 
@@ -425,7 +435,7 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                         </span>
                       </div>
                       <span className={`text-xs font-black ${isExtraUnavailable ? "text-neutral-500 line-through" : "text-primary"}`}>
-                        {isExtraUnavailable ? "No disponible" : `+${priceDesc}`}
+                        {isExtraUnavailable ? "No disponible" : priceDisplay}
                       </span>
                     </button>
                    )
