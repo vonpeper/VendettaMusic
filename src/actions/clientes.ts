@@ -245,7 +245,9 @@ export async function ensureGenericClienteAction() {
       },
       include: { clientProfile: true }
     })
-    
+    if (!user.clientProfile) {
+      return { success: false, message: "Error al crear el perfil del cliente." }
+    }
     return { success: true, id: user.clientProfile.id, name: user.name }
   } catch (error) {
     console.error("Error ensuring generic client:", error)

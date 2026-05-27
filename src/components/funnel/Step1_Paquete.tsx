@@ -152,7 +152,7 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
       isDjWithTvs:  djTvs,
       hasTemplete:  hasTempleteSelected,
       hasPista:     hasPistaSelected,
-      hasRobot:     robot, // mantenemos robot actual
+      hasRobot:     hasRobotSelected, // mantenemos robot actual
       hasPantalla:  false, // Coming soon
       promoCode:    promoCode.toUpperCase(),
       discountAmount: discountAmount
@@ -313,7 +313,7 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                 <label className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
                   <RadioTower className="w-4 h-4 text-primary" /> 3. Horas de DJ
                 </label>
-                {djExtra?.active === false ? (
+                {(djExtra as any)?.active === false ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-3 bg-black/25 p-2 rounded-2xl border border-white/5 w-fit opacity-50 cursor-not-allowed">
                       <Button variant="ghost" size="icon" disabled className="h-8 w-8 rounded-full border border-white/10">-</Button>
@@ -332,7 +332,7 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                       <Button variant="ghost" size="icon" onClick={() => setDjHrs(Math.min(5, djHrs + 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
                     </div>
                     {djHrs > 0 && (
-                      djTvsExtra?.active === false ? (
+                      (djTvsExtra as any)?.active === false ? (
                         <label className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-not-allowed opacity-50 group mt-2">
                           <input type="checkbox" disabled checked={false} className="w-4 h-4 rounded" />
                           <div className="flex flex-col">
@@ -383,7 +383,7 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                    if (isDjOrAudio) return null
 
                    const isSel = selectedExtraIds.includes(ex.id)
-                   const isExtraUnavailable = ex.active === false
+                   const isExtraUnavailable = (ex as any).active === false
                    const setup = ex.setupCost || 0
                    const hourly = ex.hourlyCost || 0
                    

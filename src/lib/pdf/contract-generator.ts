@@ -1,5 +1,6 @@
 import { PDFDocument, rgb, StandardFonts, PDFPage, PDFFont, degrees } from "pdf-lib"
 import fontkit from "@pdf-lib/fontkit"
+import { db } from "@/lib/db"
 import { FunnelData } from "@/components/funnel/FunnelWizard"
 import { formatDateMX } from "@/lib/utils"
 
@@ -214,9 +215,9 @@ export async function generateContractPdf(
       })
       if (pkg) {
         if (pkg.serviceItems && pkg.serviceItems.length > 0) {
-          inclusions = pkg.serviceItems.map(item => item.name)
+          inclusions = pkg.serviceItems.map((item: any) => item.name)
         } else if (pkg.includes) {
-          inclusions = pkg.includes.split(",").map(inc => inc.trim()).filter(Boolean)
+          inclusions = pkg.includes.split(",").map((inc: string) => inc.trim()).filter(Boolean)
         }
       }
     } catch (err) {
