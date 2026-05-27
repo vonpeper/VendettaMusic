@@ -36,6 +36,8 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
       if (locId) finalLocationId = locId
     }
 
+    const ivaAmount = invoice ? Math.round(amount * 0.16 * 100) / 100 : 0
+
     await db.event.update({
       where: { id },
       data: {
@@ -43,7 +45,7 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
         amount,
         deposit,
         balance: amount - deposit,
-        ivaAmount: parseFloat(data.ivaAmount as string || "0"),
+        ivaAmount,
         totalIncome: parseFloat(data.totalIncome as string || "0") || amount,
         paymentMethod: (data.paymentMethod as string) || (data.depositMethod as string) || null,
         paymentRef: (data.paymentRef as string) || null,
@@ -58,7 +60,7 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
         package: data.packageId ? { connect: { id: data.packageId as string } } : { disconnect: true },
         guestCount: parseInt(data.guestCount as string || "0"),
         invoice,
-        totalWithTax: invoice ? amount * 1.16 : amount,
+        totalWithTax: amount + ivaAmount,
         depositMethod: (data.depositMethod as string) || null,
         musicianNotes: (data.musicianNotes as string) || null,
         customName: (data.customName as string) || null,
@@ -242,6 +244,7 @@ export async function createEventAction(_prev: any, formData: FormData) {
     const data = Object.fromEntries(formData.entries())
     const amount = parseFloat(data.amount as string || "0")
     const deposit = parseFloat(data.deposit as string || "0")
+    const invoiceCreate = data.invoice === "on" || data.invoice === "true"
     
     let finalLocationId = data.locationId as string
 
@@ -292,7 +295,7 @@ export async function createEventAction(_prev: any, formData: FormData) {
         amount,
         deposit,
         balance: amount - deposit,
-        ivaAmount: parseFloat(data.ivaAmount as string || "0"),
+        ivaAmount: invoiceCreate ? Math.round(amount * 0.16 * 100) / 100 : 0,
         totalIncome: parseFloat(data.totalIncome as string || "0") || amount,
         paymentMethod: (data.paymentMethod as string) || (data.depositMethod as string) || null,
         paymentRef: (data.paymentRef as string) || null,
@@ -306,7 +309,7 @@ export async function createEventAction(_prev: any, formData: FormData) {
         dressCode: (data.dressCode as string) || null,
         status: (data.status as string) === "scheduled" ? "agendado" : (data.status as string) || "agendado",
         musicianNotes: (data.musicianNotes as string) || null,
-        invoice: data.invoice === "on" || data.invoice === "true",
+        invoice: invoiceCreate,
         depositMethod: (data.depositMethod as string) || null,
         customName: (data.customName as string) || null,
         isPublic: data.isPublic === "on" || data.isPublic === "true",

@@ -110,7 +110,10 @@ export async function GET(
       clientEmail: booking.clientEmail || "",
       originalPrice: booking.originalPrice || 0,
       discountAmount: booking.discountAmount || 0,
-    }
+      // IVA / Factura
+      invoice: booking.event?.invoice || booking.invoice || false,
+      ivaAmount: booking.event?.ivaAmount || 0,
+    } as any
 
     const isQuote = booking.status === "pendiente"
     const pdfBytes = await generateContractPdf(funnelData, booking.shortId || booking.id, {

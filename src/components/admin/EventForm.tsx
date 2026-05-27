@@ -77,6 +77,12 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
   const [copied, setCopied] = useState(false)
   const [notifyingIds, setNotifyingIds] = useState<string[]>([])
 
+  // IVA auto-calculation
+  const [amount, setAmount] = useState<number>(parseFloat(initialData?.amount) || 0)
+  const [requiresInvoice, setRequiresInvoice] = useState<boolean>(initialData?.invoice || false)
+  const ivaAmount = requiresInvoice ? Math.round(amount * 0.16 * 100) / 100 : 0
+  const totalWithTax = amount + ivaAmount
+
   // Local clients list & selected state
   const [clientsList, setClientsList] = useState(clients)
   const [selectedClientId, setSelectedClientId] = useState(initialData?.clientId || "")
@@ -482,7 +488,8 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
               <div className="space-y-2">
                 <Label htmlFor="amount">Total del Paquete (MXN)</Label>
                 <Input id="amount" name="amount" type="number" step="0.01" min="0"
-                  defaultValue={initialData?.amount}
+                  value={amount || ""}
+                  onChange={e => setAmount(parseFloat(e.target.value) || 0)}
                   className="bg-background border-border/40 text-foreground" />
               </div>
               <div className="space-y-2">
@@ -505,12 +512,6 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ivaAmount">IVA (Opcional)</Label>
-                <Input id="ivaAmount" name="ivaAmount" type="number" step="0.01" min="0"
-                  defaultValue={initialData?.ivaAmount || 0}
-                  className="bg-background border-border/40 text-foreground" />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="totalIncome">Total Cobrado (Neto)</Label>
                 <Input id="totalIncome" name="totalIncome" type="number" step="0.01" min="0" placeholder="Ej. 15000"
                   defaultValue={initialData?.totalIncome || initialData?.amount}
@@ -523,14 +524,46 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
               </div>
               <input type="hidden" name="source" value={initialData?.source || "manual"} />
               <input type="hidden" name="paymentMethod" value={initialData?.depositMethod || ""} />
+              {/* Campos ocultos para IVA calculado automáticamente */}
+              <input type="hidden" name="ivaAmount" value={ivaAmount} />
             </div>
+
+            {/* Toggle Factura + Resumen IVA */}
             <label className="flex items-center gap-3 cursor-pointer mt-4">
-              <input type="checkbox" name="invoice" className="sr-only peer" id="invoice" defaultChecked={initialData?.invoice} />
+              <input
+                type="checkbox"
+                name="invoice"
+                className="sr-only peer"
+                id="invoice"
+                checked={requiresInvoice}
+                onChange={e => setRequiresInvoice(e.target.checked)}
+              />
               <div className="relative w-10 h-5 bg-primary/10 rounded-full peer-checked:bg-primary transition-colors">
-                <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${requiresInvoice ? 'translate-x-5' : ''}`}></div>
               </div>
               <span className="text-sm text-muted-foreground">Requiere Factura (se aplica IVA 16%)</span>
             </label>
+
+            {/* Resumen de IVA — solo visible cuando se requiere factura */}
+            {requiresInvoice && amount > 0 && (
+              <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-sm">
+                <div className="font-bold text-amber-700 text-[10px] uppercase tracking-widest mb-2">📄 Desglose con IVA</div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Subtotal</div>
+                    <div className="font-bold text-foreground">${amount.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground uppercase">IVA 16%</div>
+                    <div className="font-bold text-amber-600">${ivaAmount.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+                  </div>
+                  <div className="bg-amber-500/20 rounded-lg py-1">
+                    <div className="text-[10px] text-amber-800 uppercase font-black">Total</div>
+                    <div className="font-black text-amber-700">${totalWithTax.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </fieldset>
 
           {/* Nuevos controles de visibilidad pública (Movido al final) */}

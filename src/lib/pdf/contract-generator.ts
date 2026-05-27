@@ -164,7 +164,9 @@ export async function generateContractPdf(
   const extraSoundcheck = isEarlySoundcheck ? 2000 : 0
   // fullAddress se define abajo para evitar ReferenceError en algunos entornos de ejecución
   const baseTotal = data.packagePrice + (data.viaticosAmount || 0)
-  const total = baseTotal + extraSoundcheck
+  const subtotal = baseTotal + extraSoundcheck
+  const ivaAmount = (data as any).invoice ? Math.round(subtotal * 0.16 * 100) / 100 : ((data as any).ivaAmount || 0)
+  const total = subtotal + ivaAmount
 
   const logoDims = logoImage ? logoImage.scale(0.16) : { width: 0, height: 0 }
   if (logoImage) {
@@ -264,6 +266,7 @@ export async function generateContractPdf(
 
   if (data.viaticosAmount > 0) tableRows.push({ no: String(tableRows.length + 1), desc: data.viaticosLabel || "Viáticos y gastos logísticos", pu: MXN(data.viaticosAmount) })
   if (extraSoundcheck > 0) tableRows.push({ no: String(tableRows.length + 1), desc: "Disponibilidad Extendida (Soundcheck)", pu: MXN(extraSoundcheck) })
+  if (ivaAmount > 0) tableRows.push({ no: String(tableRows.length + 1), desc: `IVA (16%) — Factura requerida`, pu: MXN(ivaAmount) })
 
   drawDetailedTable(ctx, tableRows)
 
@@ -283,11 +286,19 @@ export async function generateContractPdf(
   ctx.y -= 15
   const summaryY = ctx.y
   page.drawText("SUBTOTAL", { x: pageWidth - margin - 220, y: summaryY, size: 9, font: montserratBold })
-  page.drawText(MXN(total), { x: pageWidth - margin - 100, y: summaryY, size: 9, font: montserrat })
-  
-  ctx.y = summaryY - 30
+  page.drawText(MXN(subtotal), { x: pageWidth - margin - 100, y: summaryY, size: 9, font: montserrat })
+
+  if (ivaAmount > 0) {
+    ctx.y = summaryY - 18
+    page.drawText("IVA (16%)", { x: pageWidth - margin - 220, y: ctx.y, size: 9, font: montserratBold, color: rgb(0.6, 0.45, 0) })
+    page.drawText(MXN(ivaAmount), { x: pageWidth - margin - 100, y: ctx.y, size: 9, font: montserrat, color: rgb(0.6, 0.45, 0) })
+    ctx.y -= 12
+  } else {
+    ctx.y = summaryY - 30
+  }
+
   page.drawRectangle({ x: pageWidth - margin - 230, y: ctx.y - 7, width: 230, height: 28, color: SUCCESS_GREEN })
-  page.drawText("TOTAL ESTIMADO", { x: pageWidth - margin - 220, y: ctx.y, size: 11, font: montserratBold, color: WHITE_COLOR })
+  page.drawText("TOTAL" + (ivaAmount > 0 ? " CON IVA" : " ESTIMADO"), { x: pageWidth - margin - 220, y: ctx.y, size: 11, font: montserratBold, color: WHITE_COLOR })
   page.drawText(MXN(total), { x: pageWidth - margin - 100, y: ctx.y, size: 11, font: montserratBold, color: WHITE_COLOR })
 
   ctx.y -= 35
