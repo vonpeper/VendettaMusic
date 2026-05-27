@@ -155,22 +155,28 @@ export async function saveViaticosConfigAction(arg1: any, arg2?: any) {
 
     const zona2Rate = parseFloat(formData.get("zona2Rate") as string) || 1500
     const zona3Rate = parseFloat(formData.get("zona3Rate") as string) || 3000
+    const zona2Cities = (formData.get("zona2Cities") as string || "").trim()
+    const zona3Cities = (formData.get("zona3Cities") as string || "").trim()
 
     await db.globalConfig.upsert({
       where: { id: "vendetta_config" },
       update: {
         zona2Rate,
         zona3Rate,
+        zona2Cities,
+        zona3Cities,
       },
       create: {
         id: "vendetta_config",
         zona2Rate,
         zona3Rate,
+        zona2Cities,
+        zona3Cities,
       }
     })
 
     revalidatePath("/admin/configuracion")
-    return { success: true, message: "Tarifas de viáticos actualizadas" }
+    return { success: true, message: "Tarifas y zonas de viáticos actualizadas" }
   } catch (error) {
     console.error("Error saving viaticos config:", error)
     return { success: false, message: "Error al guardar la configuración de viáticos" }

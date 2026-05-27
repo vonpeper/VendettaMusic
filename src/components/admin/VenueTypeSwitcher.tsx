@@ -12,7 +12,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuLabel,
-  DropdownMenuSeparator
+  DropdownMenuSeparator,
+  DropdownMenuGroup
 } from "@/components/ui/dropdown-menu"
 import { updateVenueTypeAction } from "@/actions/ventas"
 
@@ -68,20 +69,22 @@ export function VenueTypeSwitcher({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-48" align="start">
-        <DropdownMenuLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-          Cambiar Tipo
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {VENUE_TYPES.map((type) => (
-          <DropdownMenuItem
-            key={type.value}
-            onClick={() => handleUpdate(type.value)}
-            className="text-xs cursor-pointer flex items-center"
-          >
-            {type.value === currentType ? <Check className="w-3 h-3 mr-2 text-blue-600" /> : <div className="w-5" />}
-            <span>{type.label}</span>
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            Cambiar Tipo
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {VENUE_TYPES.map((type) => (
+            <DropdownMenuItem
+              key={type.value}
+              onClick={() => handleUpdate(type.value)}
+              className="text-xs cursor-pointer flex items-center"
+            >
+              {type.value === currentType ? <Check className="w-3 h-3 mr-2 text-blue-600" /> : <div className="w-5" />}
+              <span>{type.label}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )

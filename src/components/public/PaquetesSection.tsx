@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input }  from "@/components/ui/input"
 import * as Icons from "lucide-react"
 import Link from "next/link"
-import { calcularViatcos } from "@/lib/viaticos"
+import { calcularViatcos, type ViaticosConfig } from "@/lib/viaticos"
 import Image from "next/image"
 
 const {
@@ -37,6 +37,7 @@ interface PackageData {
   serviceItems: ServiceItem[]
   includes?: string
   exclusions?: string
+  active?: boolean
 }
 
 // Estilos visuales por defecto para paquetes (se pueden personalizar en el futuro)
@@ -123,10 +124,12 @@ function LocationModal({
   pkg,
   onClose,
   isCustom = false,
+  viaticosConfig,
 }: {
   pkg: PackageData & { emoji?: string; accentColor?: string; badgeColor?: string }
   onClose: () => void
   isCustom?: boolean
+  viaticosConfig?: ViaticosConfig
 }) {
   const [city,         setCity]         = useState("")
   const [state,        setState]        = useState("Estado de México")
@@ -151,7 +154,7 @@ function LocationModal({
     if (!city.trim()) return
     setLoading(true)
     await new Promise(r => setTimeout(r, 600))
-    const result = calcularViatcos(city, state)
+    const result = calcularViatcos(city, state, viaticosConfig)
     setViaticos(result)
     setLoading(false)
     setChecked(true)
@@ -229,7 +232,7 @@ function LocationModal({
   )
 }
 
-export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[] }) {
+export function PaquetesSection({ dbPackages, viaticosConfig }: { dbPackages: PackageData[]; viaticosConfig?: ViaticosConfig }) {
   const [selectedPkg, setSelectedPkg] = useState<any>(null)
 
   return (
@@ -238,6 +241,7 @@ export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[] }) {
         <LocationModal
           pkg={selectedPkg}
           onClose={() => setSelectedPkg(null)}
+          viaticosConfig={viaticosConfig}
         />
       )}
 
@@ -268,17 +272,27 @@ export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[] }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
             {dbPackages.map((pkg, i) => {
               const style = PACKAGE_STLYES[i % 3] || PACKAGE_STLYES[0]
+              const isUnavailable = pkg.active === false
               
               return (
                 <div
                   key={pkg.id}
-                  className={`relative flex flex-col rounded-3xl border p-7 transition-all duration-300 bg-gradient-to-br ${style.gradient} ${style.border} ${
-                    style.highlight ? `shadow-2xl ${style.glow} lg:-translate-y-5 scale-[1.03]` : "hover:scale-[1.01] hover:shadow-xl"
+                  className={`relative flex flex-col rounded-3xl border p-7 transition-all duration-300 bg-gradient-to-br ${style.gradient} ${
+                    isUnavailable 
+                      ? "border-neutral-800 opacity-60 filter grayscale-[40%] cursor-not-allowed" 
+                      : style.border
+                  } ${
+                    !isUnavailable && style.highlight ? `shadow-2xl ${style.glow} lg:-translate-y-5 scale-[1.03]` : "hover:scale-[1.01] hover:shadow-xl"
                   }`}
                 >
-                  {style.highlight && (
+                  {style.highlight && !isUnavailable && (
                     <div className={`absolute -top-4 left-1/2 -translate-x-1/2 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full border ${style.badgeColor}`}>
                       ★ Más Solicitado
+                    </div>
+                  )}
+                  {isUnavailable && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-neutral-900 text-neutral-400 text-[9px] font-black uppercase tracking-wider px-3.5 py-0.5 rounded-full border border-neutral-700">
+                      No Disponible
                     </div>
                   )}
 
@@ -342,12 +356,18 @@ export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[] }) {
                   </div>
 
                   <Button
+                    disabled={isUnavailable}
                     onClick={() => setSelectedPkg({ ...pkg, ...style })}
                     className={`w-full h-12 font-black gap-2 ${
-                      style.highlight ? "bg-red-600 hover:bg-red-500 text-white" : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                      isUnavailable
+                        ? "bg-neutral-800 border border-neutral-700/50 text-neutral-500 cursor-not-allowed"
+                        : style.highlight
+                          ? "bg-red-600 hover:bg-red-500 text-white animate-pulse"
+                          : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
                     }`}
                   >
-                    Apartar Fecha <ChevronRight className="w-4 h-4" />
+                    {isUnavailable ? "No Disponible" : "Apartar Fecha"}
+                    {!isUnavailable && <ChevronRight className="w-4 h-4" />}
                   </Button>
                 </div>
               )

@@ -146,9 +146,13 @@ export async function PublicFooter() {
           <p className="text-[10px] font-bold uppercase tracking-[0.3em]">
             © {new Date().getFullYear()} Vendetta Music Group. All rights reserved.
           </p>
-          <div className="flex gap-8">
-             <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Live Music</span>
-             <span className="text-[10px] font-bold uppercase tracking-[0.3em]">High Production</span>
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2">
+             <Link href="/aviso-privacidad" className="text-[10px] font-bold uppercase tracking-[0.3em] hover:text-primary transition-colors">
+               Aviso de Privacidad
+             </Link>
+             <Link href="/terminos-condiciones" className="text-[10px] font-bold uppercase tracking-[0.3em] hover:text-primary transition-colors">
+               Términos y Condiciones
+             </Link>
           </div>
         </div>
       </div>

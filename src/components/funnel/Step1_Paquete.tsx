@@ -15,23 +15,46 @@ const VENUE_TYPES = [
 ]
 
 interface Props {
-  packages: { id: string; name: string; baseCostPerHour: number; minDuration: number; description: string | null; includes: string | null; isCustom?: boolean }[]
+  packages: { id: string; name: string; baseCostPerHour: number; minDuration: number; maxDuration?: number; description: string | null; includes: string | null; isCustom?: boolean; active?: boolean }[]
+  extras?: { id: string; name: string; setupCost: number; hourlyCost: number; description: string | null; active?: boolean }[]
   data: Partial<FunnelData>
   onNext: (d: Partial<FunnelData>) => void
 }
 
-export default function Step1_Paquete({ packages, data, onNext }: Props) {
+export default function Step1_Paquete({ packages, extras = [], data, onNext }: Props) {
   const [selectedPkg, setSelectedPkg] = useState<string>(data.packageId ?? "")
   const [guests,      setGuests]       = useState<number>(data.guestCount ?? 100)
   const [venueType,   setVenueType]    = useState<string>(data.venueType ?? "salon")
   const [bandHrs,     setBandHrs]      = useState<number>(data.bandHours ?? 2)
   const [djHrs,       setDjHrs]        = useState<number>(data.djHours ?? 0)
   const [djTvs,       setDjTvs]        = useState<boolean>(data.isDjWithTvs ?? false)
-  const [templete,    setTemplete]     = useState<boolean>(data.hasTemplete ?? false)
-  const [pista,       setPista]        = useState<boolean>(data.hasPista ?? false)
-  const [robot,       setRobot]        = useState<boolean>(data.hasRobot ?? false)
   const [promoCode,   setPromoCode]    = useState<string>(data.promoCode ?? "")
   const [error,       setError]        = useState("")
+
+  // --- LOGICA DINAMICA DE SERVICIOS ADICIONALES (EXTRAS) ---
+  const defaultExtras = [
+    { id: "templete", name: "Templete", setupCost: 3800, hourlyCost: 0, description: "Un pago único" },
+    { id: "pista", name: "Pista Iluminada", setupCost: 7500, hourlyCost: 0, description: "Un pago único" },
+    { id: "robot", name: "Robot LED (Batucada)", setupCost: 700, hourlyCost: 0, description: "Un pago único" },
+  ]
+  const activeExtrasList = extras && extras.length > 0 ? extras : defaultExtras
+
+  const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>(() => {
+    const init: string[] = []
+    if (data.hasTemplete) {
+      const tId = activeExtrasList.find(e => e.name.toLowerCase().includes("templete") || e.name.toLowerCase().includes("escenario"))?.id || "templete"
+      init.push(tId)
+    }
+    if (data.hasPista) {
+      const pId = activeExtrasList.find(e => e.name.toLowerCase().includes("pista"))?.id || "pista"
+      init.push(pId)
+    }
+    if (data.hasRobot) {
+      const rId = activeExtrasList.find(e => e.name.toLowerCase().includes("robot") || e.name.toLowerCase().includes("batucada"))?.id || "robot"
+      init.push(rId)
+    }
+    return init
+  })
 
   const pkg = packages.find(p => p.id === selectedPkg)
   const isCustom = selectedPkg === "custom" || 
@@ -41,38 +64,55 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
   
   const discountAmount = (promoCode.toUpperCase() === "CLIENTEVIP" && pkg?.name === "Essential") ? 1000 : 0
 
+  const formatMXN = (v: number) => "$" + Math.round(v).toLocaleString("es-MX")
+
+  // --- DETECTAR COSTOS DINÁMICOS DE BANDA, DJ Y AUDIO FEE ---
+  const djExtra = activeExtrasList.find(e => e.name.toLowerCase().includes("dj") && !e.name.toLowerCase().includes("pantalla"))
+  const djTvsExtra = activeExtrasList.find(e => e.name.toLowerCase().includes("dj") && e.name.toLowerCase().includes("pantalla"))
+  const audioMediumExtra = activeExtrasList.find(e => e.name.toLowerCase().includes("audio") && (e.name.includes(">100") || e.name.toLowerCase().includes("pro")))
+  const audioLargeExtra = activeExtrasList.find(e => e.name.toLowerCase().includes("audio") && (e.name.includes(">300") || e.name.toLowerCase().includes("festival")))
+
+  const bandHourRate = pkg?.baseCostPerHour || 4000
+  const djRateDefault = djExtra ? djExtra.hourlyCost : 800
+  const djTvsRateDefault = djTvsExtra ? djTvsExtra.hourlyCost : 1500
+  const audioMediumFee = audioMediumExtra ? audioMediumExtra.setupCost : 7500
+  const audioLargeFee = audioLargeExtra ? audioLargeExtra.setupCost : 10000
+
   // Calclular precio total dinámico
   const calculateTotal = () => {
     if (!pkg) return 0
     
     let total = 0
     
-    // 1. Banda (Tarifa especial para Arma tu Show: $4,000/hr)
+    // 1. Banda (Tarifa especial para Arma tu Show - Leída dinámicamente del costo por hora del paquete en la BD)
     if (isCustom) {
-      total = 4000 * bandHrs
+      total = bandHourRate * bandHrs
     } else {
       total = (pkg.baseCostPerHour || 0) * (pkg.minDuration || 1)
     }
 
-    // 2. Invitados (Audio Fee - Solo si no es local, o basado en reglas de audio)
-    // El usuario menciona que viáticos no están incluídos, pero el audio fee se mantiene por capacidad
+    // 2. Invitados (Audio Fee - Basado dinámicamente en los extras)
     if (guests > 300) {
-      total += 10000
+      total += audioLargeFee
     } else if (guests > 100) {
-      total += 7500
+      total += audioMediumFee
     }
 
-    // 3. DJ
+    // 3. DJ (Basado dinámicamente en los extras)
     if (isCustom && djHrs > 0) {
-      const djRate = djTvs ? 1500 : 800
+      const djRate = djTvs ? djTvsRateDefault : djRateDefault
       total += djRate * djHrs
     }
 
-    // 4. Extras
+    // 4. Extras dinámicos de la base de datos
     if (isCustom) {
-      if (templete) total += 3800
-      if (pista)    total += 7500
-      if (robot)    total += 700
+      activeExtrasList.forEach(ex => {
+        // Excluir rubros de DJ y Audio de la suma genérica (ya que se calculan arriba)
+        const isDjOrAudio = ex.name.toLowerCase().includes("dj") || ex.name.toLowerCase().includes("audio upgrade")
+        if (selectedExtraIds.includes(ex.id) && !isDjOrAudio) {
+          total += (ex.setupCost || 0) + ((ex.hourlyCost || 0) * (bandHrs || 0))
+        }
+      })
     }
 
     return total - discountAmount
@@ -85,6 +125,20 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
     if (!venueType)   { setError("Selecciona el tipo de venue."); return }
     
     const pkg = packages.find(p => p.id === selectedPkg)!
+
+    // Extraer booleanos basados en nombres de los extras seleccionados para compatibilidad
+    const hasTempleteSelected = selectedExtraIds.some(id => {
+      const ex = activeExtrasList.find(e => e.id === id)
+      return ex?.name.toLowerCase().includes("templete") || ex?.name.toLowerCase().includes("escenario")
+    })
+    const hasPistaSelected = selectedExtraIds.some(id => {
+      const ex = activeExtrasList.find(e => e.id === id)
+      return ex?.name.toLowerCase().includes("pista")
+    })
+    const hasRobotSelected = selectedExtraIds.some(id => {
+      const ex = activeExtrasList.find(e => e.id === id)
+      return ex?.name.toLowerCase().includes("robot") || ex?.name.toLowerCase().includes("batucada")
+    })
     
     onNext({
       packageId:    selectedPkg,
@@ -96,9 +150,9 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
       bandHours:    bandHrs,
       djHours:      djHrs,
       isDjWithTvs:  djTvs,
-      hasTemplete:  templete,
-      hasPista:     pista,
-      hasRobot:     robot,
+      hasTemplete:  hasTempleteSelected,
+      hasPista:     hasPistaSelected,
+      hasRobot:     robot, // mantenemos robot actual
       hasPantalla:  false, // Coming soon
       promoCode:    promoCode.toUpperCase(),
       discountAmount: discountAmount
@@ -132,12 +186,15 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
           <div className="grid gap-3">
             {sorted.map(p => {
               const isSelect = selectedPkg === p.id
+              const isUnavailable = p.active === false
               const features = FEATURES[p.name] ?? ["Opción personalizable"]
               const basePrice = p.baseCostPerHour * p.minDuration
               return (
                 <button
                   key={p.id}
+                  disabled={isUnavailable}
                   onClick={() => { 
+                    if (isUnavailable) return;
                     setSelectedPkg(p.id); 
                     setError(""); 
                     // Si es un paquete estándar, reseteamos a sus horas mínimas
@@ -148,10 +205,12 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
                       setDjHrs(0); 
                     }
                   }}
-                  className={`w-full text-left rounded-2xl border p-4 transition-all ${
-                    isSelect
-                      ? "border-primary bg-primary/10 shadow-lg"
-                      : "border-white/10 bg-card/40 hover:border-white/20"
+                  className={`w-full text-left rounded-2xl border p-4 transition-all relative ${
+                    isUnavailable
+                      ? "border-white/5 bg-white/5 opacity-55 cursor-not-allowed filter grayscale-[30%]"
+                      : isSelect
+                        ? "border-primary bg-primary/10 shadow-lg"
+                        : "border-white/10 bg-card/40 hover:border-white/20"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -159,15 +218,24 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
                       <div className="font-bold text-white text-lg flex items-center gap-2">
                         {p.name}
                         {p.name.includes("Premium") && <Sparkles className="w-3 h-3 text-primary" />}
+                        {isUnavailable && (
+                          <span className="text-[9px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded font-black tracking-widest uppercase">
+                            No Disponible
+                          </span>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-2 mt-2">
                         {features.map(f => (
-                          <span key={f} className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-gray-400 capitalize">{f}</span>
+                          <span key={f} className={`text-[10px] border px-2 py-0.5 rounded capitalize ${
+                            isUnavailable 
+                              ? "bg-white/5 border-white/5 text-gray-500" 
+                              : "bg-white/5 border-white/10 text-gray-400"
+                          }`}>{f}</span>
                         ))}
                       </div>
                     </div>
                     <div className="text-right">
-                       <div className="text-xl font-black text-white">
+                       <div className={`text-xl font-black ${isUnavailable ? "text-neutral-500 line-through" : "text-white"}`}>
                          {p.name.toLowerCase().includes("arma") || p.name.toLowerCase().includes("custom") || p.id === "custom"
                            ? "$0" 
                            : `$${basePrice.toLocaleString()}`}
@@ -221,8 +289,8 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
             </div>
             <p className="text-[11px] text-gray-400 font-medium">
               {guests <= 100 ? "✓ Audio estándar incluido (Hasta 100 personas)." : 
-               guests <= 300 ? "⚠️ Upgrade de audio Pro necesario (+$7,500)." : 
-               "🔥 Sistema Line Array Festival necesario (+$10,000)."}
+               guests <= 300 ? `⚠️ Upgrade de audio Pro necesario (+${formatMXN(audioMediumFee)}).` : 
+               `🔥 Sistema Line Array Festival necesario (+${formatMXN(audioLargeFee)}).`}
             </p>
           </div>
 
@@ -234,30 +302,55 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
                   <Clock className="w-4 h-4 text-primary" /> 2. Horas de Show (Banda)
                 </label>
                 <div className="flex items-center gap-3 bg-black/20 p-2 rounded-2xl border border-white/5 w-fit">
-                  <Button variant="ghost" size="icon" onClick={() => setBandHrs(Math.max(2, bandHrs - 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">-</Button>
+                  <Button variant="ghost" size="icon" onClick={() => setBandHrs(Math.max(pkg?.minDuration || 2, bandHrs - 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">-</Button>
                   <span className="text-xl font-black text-white w-10 text-center">{bandHrs}h</span>
-                  <Button variant="ghost" size="icon" onClick={() => setBandHrs(Math.min(5, bandHrs + 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
+                  <Button variant="ghost" size="icon" onClick={() => setBandHrs(Math.min(pkg?.maxDuration || 5, bandHrs + 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
                 </div>
-                <p className="text-[10px] text-gray-500 font-bold tracking-tight">* Mínimo 2 horas para contratación. Máximo 5 horas.</p>
+                <p className="text-[10px] text-gray-500 font-bold tracking-tight">* Mínimo {pkg?.minDuration || 2} horas para contratación. Máximo {pkg?.maxDuration || 5} horas.</p>
               </div>
 
               <div className="space-y-3">
                 <label className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
                   <RadioTower className="w-4 h-4 text-primary" /> 3. Horas de DJ
                 </label>
-                <div className="flex items-center gap-3 bg-black/20 p-2 rounded-2xl border border-white/5 w-fit">
-                  <Button variant="ghost" size="icon" onClick={() => setDjHrs(Math.max(0, djHrs - 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">-</Button>
-                  <span className="text-xl font-black text-white w-10 text-center">{djHrs}h</span>
-                  <Button variant="ghost" size="icon" onClick={() => setDjHrs(Math.min(5, djHrs + 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
-                </div>
-                {djHrs > 0 && (
-                  <label className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-all group mt-2">
-                    <input type="checkbox" checked={djTvs} onChange={e => setDjTvs(e.target.checked)} className="w-4 h-4 accent-primary rounded" />
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-bold text-white group-hover:text-primary transition-colors">¿Incluir 2 Pantallas LED de 45"?</span>
-                      <span className="text-[9px] text-primary font-black">+$700 por hora extra</span>
+                {djExtra?.active === false ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 bg-black/25 p-2 rounded-2xl border border-white/5 w-fit opacity-50 cursor-not-allowed">
+                      <Button variant="ghost" size="icon" disabled className="h-8 w-8 rounded-full border border-white/10">-</Button>
+                      <span className="text-xl font-black text-gray-500 w-10 text-center">0h</span>
+                      <Button variant="ghost" size="icon" disabled className="h-8 w-8 rounded-full border border-white/10">+</Button>
                     </div>
-                  </label>
+                    <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded font-black tracking-widest uppercase inline-block">
+                      No Disponible
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 bg-black/20 p-2 rounded-2xl border border-white/5 w-fit">
+                      <Button variant="ghost" size="icon" onClick={() => setDjHrs(Math.max(0, djHrs - 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">-</Button>
+                      <span className="text-xl font-black text-white w-10 text-center">{djHrs}h</span>
+                      <Button variant="ghost" size="icon" onClick={() => setDjHrs(Math.min(5, djHrs + 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
+                    </div>
+                    {djHrs > 0 && (
+                      djTvsExtra?.active === false ? (
+                        <label className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-not-allowed opacity-50 group mt-2">
+                          <input type="checkbox" disabled checked={false} className="w-4 h-4 rounded" />
+                          <div className="flex flex-col">
+                            <span className="text-[11px] font-bold text-gray-500">¿Incluir 2 Pantallas LED de 45"?</span>
+                            <span className="text-[9px] text-red-400 font-black">No disponible</span>
+                          </div>
+                        </label>
+                      ) : (
+                        <label className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-all group mt-2">
+                          <input type="checkbox" checked={djTvs} onChange={e => setDjTvs(e.target.checked)} className="w-4 h-4 accent-primary rounded" />
+                          <div className="flex flex-col">
+                            <span className="text-[11px] font-bold text-white group-hover:text-primary transition-colors">¿Incluir 2 Pantallas LED de 45"?</span>
+                            <span className="text-[9px] text-primary font-black">+{formatMXN(djTvsRateDefault - djRateDefault)} por hora extra</span>
+                          </div>
+                        </label>
+                      )
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -268,43 +361,75 @@ export default function Step1_Paquete({ packages, data, onNext }: Props) {
                 <Box className="w-4 h-4 text-primary" /> 4. Equipamiento y Base
               </label>
               <div className="grid grid-cols-1 gap-2">
-                 {/* Ítem fijo de 2 horas base */}
+                 {/* Ítem fijo de horas base de la banda, dinámico según baseCostPerHour y minDuration del paquete */}
                  <div className="w-full flex items-center justify-between p-4 rounded-2xl border border-primary bg-primary/20 shadow-lg shadow-primary/10 cursor-default">
                     <div className="flex flex-col items-start">
                       <div className="flex items-center gap-2">
                         <Check className="w-3 h-3 text-primary" />
-                        <span className="text-xs font-black text-white uppercase tracking-tighter">2 Horas de Música en Vivo</span>
+                        <span className="text-xs font-black text-white uppercase tracking-tighter">
+                          {pkg?.minDuration || 2} Horas de Música en Vivo
+                        </span>
                       </div>
                       <span className="text-[10px] text-gray-400">Contratación mínima obligatoria</span>
                     </div>
-                    <span className="text-xs text-primary font-black">$8,000</span>
+                    <span className="text-xs text-primary font-black">
+                      {formatMXN(bandHourRate * (pkg?.minDuration || 2))}
+                    </span>
                  </div>
 
-                 {[
-                   { id: 'templete', label: 'Templete', price: 3800, state: templete, set: setTemplete },
-                   { id: 'pista', label: 'Pista Iluminada', price: 7500, state: pista, set: setPista },
-                   { id: 'robot', label: 'Robot LED (Batucada)', price: 700, state: robot, set: setRobot },
-                 ].map(ex => (
-                  <button 
-                    key={ex.id}
-                    onClick={() => ex.set(!ex.state)}
-                    className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${
-                      ex.state 
-                        ? "border-primary bg-primary/20 shadow-lg shadow-primary/10" 
-                        : "border-white/5 bg-black/40 hover:border-white/20"
-                    }`}
-                  >
-                    <div className="flex flex-col items-start">
-                      <span className="text-xs font-black text-white uppercase tracking-tighter">{ex.label}</span>
-                      <span className="text-[10px] text-gray-500">Un pago único</span>
-                    </div>
-                    <span className="text-xs text-primary font-black">+${ex.price.toLocaleString()}</span>
-                  </button>
-                 ))}
-                 <div className="w-full flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-black/10 opacity-40 grayscale cursor-not-allowed">
-                    <span className="text-xs font-bold text-gray-600">Pantalla LED 3x2</span>
-                    <span className="text-[9px] text-gray-600 uppercase tracking-tighter">Próximamente</span>
-                 </div>
+                 {activeExtrasList.map(ex => {
+                   // Excluir rubros de DJ y Audio de la lista genérica (se manejan arriba)
+                   const isDjOrAudio = ex.name.toLowerCase().includes("dj") || ex.name.toLowerCase().includes("audio upgrade")
+                   if (isDjOrAudio) return null
+
+                   const isSel = selectedExtraIds.includes(ex.id)
+                   const isExtraUnavailable = ex.active === false
+                   const setup = ex.setupCost || 0
+                   const hourly = ex.hourlyCost || 0
+                   
+                   // Si el extra está inactivo y no está seleccionado, o está inactivo pero no se puede elegir
+                   const priceDesc = hourly > 0 
+                     ? `+$${setup.toLocaleString()} setup + $${hourly}/h`
+                     : `+$${setup.toLocaleString()}`
+
+                   return (
+                    <button 
+                      key={ex.id}
+                      type="button"
+                      disabled={isExtraUnavailable}
+                      onClick={() => {
+                        if (isExtraUnavailable) return
+                        setSelectedExtraIds(prev => 
+                          prev.includes(ex.id) ? prev.filter(id => id !== ex.id) : [...prev, ex.id]
+                        )
+                      }}
+                      className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all text-left relative ${
+                        isExtraUnavailable
+                          ? "border-white/5 bg-white/5 opacity-55 cursor-not-allowed filter grayscale-[30%]"
+                          : isSel 
+                            ? "border-primary bg-primary/20 shadow-lg shadow-primary/10" 
+                            : "border-white/5 bg-black/40 hover:border-white/20"
+                      }`}
+                    >
+                      <div className="flex flex-col items-start">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black text-white uppercase tracking-tighter">{ex.name}</span>
+                          {isExtraUnavailable && (
+                            <span className="text-[8px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded font-black tracking-widest uppercase">
+                              Agotado
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-gray-500">
+                          {ex.description || (hourly > 0 ? "Precio variable por hora" : "Un pago único")}
+                        </span>
+                      </div>
+                      <span className={`text-xs font-black ${isExtraUnavailable ? "text-neutral-500 line-through" : "text-primary"}`}>
+                        {isExtraUnavailable ? "No disponible" : `+${priceDesc}`}
+                      </span>
+                    </button>
+                   )
+                 })}
               </div>
             </div>
           </div>

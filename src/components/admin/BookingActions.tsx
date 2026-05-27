@@ -33,14 +33,16 @@ export function BookingActions({
   const [loading, setLoading] = useState<"confirm" | "reject" | "sync" | "whatsapp" | null>(null)
   const [done,    setDone]    = useState(false)
   const [selectedMusicians, setSelectedMusicians] = useState<string[]>(
-    currentMusicianIds.length > 0 
+    (currentMusicianIds.length > 0 
       ? currentMusicianIds.filter(id => {
           const em = eventMusicians.find(e => e.musicianId === id);
           return em?.status !== "REJECTED";
         })
       : musicians
-          .filter(m => m.isTitular && !["Proveedor"].includes(m.instrument || ""))
+          // Default automatically selected to titular musicians only
+          .filter(m => m.isTitular && m.status === "active" && !["Proveedor"].includes(m.instrument || ""))
           .map(m => m.id)
+    ).filter(id => musicians.some(m => m.id === id))
   )
   const router = useRouter()
 

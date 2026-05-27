@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
 import { sendWhatsApp } from "@/lib/notifications"
+import { getValidWhatsappPhone } from "@/lib/phone"
 
 export async function clearAllNotificationsAction() {
   const session = await auth()
@@ -29,6 +30,7 @@ export async function sendTestNotificationAction(target: "admin" | "musician" | 
 
   try {
     const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+    const isSandbox = config?.isSandbox ?? false
 
     let phone = ""
     let recipientName = "Prueba"
@@ -51,15 +53,19 @@ export async function sendTestNotificationAction(target: "admin" | "musician" | 
       recipientName = musician.user.name || "Músico"
       message = `🤖 *PRUEBA AUTOMÁTICA — MÚSICO*\n\nHola ${recipientName}, esta es una prueba técnica de convocatoria.\nNo es necesario responder.\n\n— Administración Vendetta`
     } else if (target === "client") {
-      const client = await db.clientProfile.findFirst({
-        where: { whatsapp: { not: null } },
-        include: { user: true }
-      })
-      if (!client) return { success: false, error: "No hay clientes con teléfono registrado" }
-      phone = client.whatsapp || ""
-      recipientName = client.user.name || "Cliente"
-      message = `🤖 *PRUEBA AUTOMÁTICA — CLIENTE*\n\nHola ${recipientName}, esta es una prueba técnica de seguimiento.\nNo es necesario responder.\n\n— Ventas Vendetta`
-    }
+        const client = await db.clientProfile.findFirst({
+          where: { whatsapp: { not: null } },
+          include: { user: true }
+        })
+        if (!client) return { success: false, error: "No hay clientes con teléfono registrado" }
+        const validated = getValidWhatsappPhone(client.whatsapp || "")
+        if (!validated) {
+          return { success: false, error: "El teléfono del cliente no es válido o está vacío. Revisa el número en el detalle de la venta." }
+        }
+        phone = validated
+        recipientName = client.user.name || "Cliente"
+        message = `🤖 *PRUEBA AUTOMÁTICA — CLIENTE*\n\nHola ${recipientName}, esta es una prueba técnica de seguimiento.\nNo es necesario responder.\n\n— Ventas Vendetta`
+      }
 
     if (!phone) {
       return {
@@ -70,21 +76,34 @@ export async function sendTestNotificationAction(target: "admin" | "musician" | 
       }
     }
 
+    // Determine real recipient phone
+    const realRecipient = phone || "";
+    const sandboxRecipient = config?.adminWhatsapp || "";
+    const finalRecipient = config?.isSandbox ? sandboxRecipient : realRecipient;
+    if (!finalRecipient) {
+      return { success: false, error: `No recipient phone number available for ${target}.` };
+    }
+    console.log('[OFFICIAL REAL RECIPIENT]', realRecipient);
+    console.log('[SANDBOX TARGET]', sandboxRecipient);
+    console.log('[OFFICIAL FINAL RECIPIENT]', finalRecipient);
+
+    const finalMessage = isSandbox ? `[SANDBOX - Destinatario original: ${phone}]\n\n${message}` : message;
+
     // Use sendWhatsApp (raw Evolution API call)
-    const { messageId, error } = await sendWhatsApp(phone, message)
+    const { messageId, error } = await sendWhatsApp(finalRecipient, finalMessage);
     const status = messageId ? "sent" : "failed"
 
     // Log to Notification table so it shows in the notification center
     await db.notification.create({
       data: {
-        type: "admin_booking",
+        type: `test_${target}`,
         channel: "whatsapp",
         status,
-        message,
-        recipient: phone,
+        message: finalMessage,
+        recipient: realRecipient,
         template: `test_${target}`,
         messageId: messageId || undefined,
-        errorDetails: error,
+        errorDetails: error ? error : (isSandbox ? `SANDBOX: destinatario real era ${phone}` : null),
         category: "automatic_notification"
       }
     })
@@ -273,31 +292,52 @@ export async function sendAutomatedClientWhatsAppAction(bookingId: string, force
 
   try {
     const { dispatchNotification } = await import("@/lib/notifications")
+    const { db } = await import("@/lib/db")
+    const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+    const isSandbox = config?.isSandbox ?? false
+
     const booking = await db.bookingRequest.findUnique({ where: { id: bookingId } })
-    
     if (!booking) return { success: false, error: "Reserva no encontrada" }
 
-    const notificationType = (booking.status === "agendado" || booking.status === "completado") 
-      ? "CLIENT_CONFIRMED" 
+    const notificationType = (booking.status === "agendado" || booking.status === "completado")
+      ? "CLIENT_CONFIRMED"
       : "CLIENT_QUOTE"
 
+    console.log("[OFFICIAL BUTTON CLICK]", { bookingId, notificationType, isSandbox })
+
+    // Determine real recipient phone
+    const rawPhone = booking.clientPhone || ""
+    const realRecipient = getValidWhatsappPhone(rawPhone) || ""
+    const sandboxRecipient = config?.adminWhatsapp || "7222417045"
+    const finalRecipient = (config?.isSandbox ? sandboxRecipient : realRecipient) || ""
+    if (!finalRecipient) {
+      return { success: false, error: "No recipient phone number available." }
+    }
+    console.log('[OFFICIAL REAL RECIPIENT]', realRecipient);
+    console.log('[SANDBOX TARGET]', sandboxRecipient);
+    console.log('[OFFICIAL FINAL RECIPIENT]', finalRecipient);
+
+    // Dispatch the notification and obtain messageId
     const messageId = await dispatchNotification({
       type: notificationType,
       bookingId: bookingId,
-      forceResend
+      forceResend,
     })
 
+    // Removed duplicate recipient handling block (now managed earlier)
+    console.log('[OFFICIAL DISPATCH RESULT]', { messageId })
+
+    // Handle failure case where no messageId is returned
     if (!messageId) {
-      // Fetch the generated message from the DB to return it as a fallback
-      const lastFailed = await db.notification.findFirst({
-        where: { bookingRequestId: bookingId, type: notificationType.toLowerCase(), status: "failed" },
-        orderBy: { createdAt: "desc" }
-      })
-      return { success: false, error: "No se pudo enviar el mensaje a Evolution API.", rawMessage: lastFailed?.message || "" }
+      const errorMsg = 'No se pudo enviar el mensaje a Evolution API.'
+      console.error('[OFFICIAL ERROR]', errorMsg)
+      return { success: false, error: errorMsg, isSandbox }
     }
 
+    // Success path: revalidate and return toast message
     revalidatePath(`/admin/ventas/${bookingId}`)
-    return { success: true, message: "Mensaje automático enviado con éxito." }
+    const toastMsg = isSandbox ? "Sandbox activo: mensaje enviado al número de prueba." : "Mensaje automático enviado con éxito."
+    return { success: true, message: toastMsg, isSandbox }
   } catch (error: any) {
     console.error("Error sending automated client WhatsApp:", error)
     return { success: false, error: error.message }

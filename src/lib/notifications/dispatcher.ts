@@ -24,8 +24,11 @@ export async function dispatchNotification({
 }) {
   const { db } = await import("../db")
   
-  // Deduplication check
-  if (!forceResend) {
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+  
+  // Deduplication check (skip in sandbox mode)
+  const isSandbox = config?.isSandbox ?? false;
+  if (!forceResend && !isSandbox) {
     const existing = await db.notification.findFirst({
       where: {
         type: type.toLowerCase(),
@@ -41,7 +44,6 @@ export async function dispatchNotification({
     }
   }
 
-  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   const baseUrl = getAppUrl()
 
   if (!config) {
@@ -105,14 +107,18 @@ export async function dispatchNotification({
     recipient = config?.adminWhatsapp || recipient
   }
 
-  let template = getTemplateForType(type, config, payload)
+  const template = getTemplateForType(type, config, payload)
 
   // --- MODO SANDBOX GLOBAL: DESVÍO DE TODOS LOS MENSAJES ---
-  const sandboxConfigs: any[] = await db.$queryRaw`SELECT isSandbox FROM GlobalConfig WHERE id = 'vendetta_config' LIMIT 1`
-  const isSandbox = sandboxConfigs.length > 0 ? Boolean(sandboxConfigs[0].isSandbox) : false
+  // Moved sandbox config retrieval earlier; removed duplicate query
+  // const sandboxConfigs: any[] = await db.$queryRaw`SELECT isSandbox FROM GlobalConfig WHERE id = 'vendetta_config' LIMIT 1`
+  // const isSandbox = sandboxConfigs.length > 0 ? Boolean(sandboxConfigs[0].isSandbox) : false
+  console.log('[DISPATCHER SANDBOX]', isSandbox)
+  let originalRecipient: string | undefined = undefined
   if (isSandbox && type !== "ADMIN_NEW_BOOKING") {
     const sandboxRecipient = config?.adminWhatsapp || "7222417045"
     console.log(`🧪 [SANDBOX GLOBAL] Desviando [${type}] de ${recipient} -> ADMIN (${sandboxRecipient})`)
+    originalRecipient = recipient
     recipient = sandboxRecipient
   }
 
@@ -137,6 +143,9 @@ export async function dispatchNotification({
     const originalName = payload.fullName || payload.clientName || "Destinatario"
     const label = type.startsWith("CLIENT") ? "Cliente" : "Músico"
     finalMessage = `🧪 *[MODO SANDBOX — PRUEBA]*\n_Originalmente para: ${originalName} (${label})_\n\n${finalMessage}`
+    if (originalRecipient) {
+      finalMessage = `🧪 SANDBOX: destinatario real era ${originalRecipient}\n${finalMessage}`
+    }
   }
 
   // 4. Generar PDF si es Cotización o Confirmación
@@ -145,6 +154,7 @@ export async function dispatchNotification({
 
   if ((type === "CLIENT_QUOTE" || type === "CLIENT_CONFIRMED") && bookingId) {
     try {
+    console.log('[OFFICIAL WHATSAPP] Starting official WhatsApp notification flow')
       const { generateContractPdf } = await import("../pdf/contract-generator")
       // Re-fetcheamos para tener los datos completos para el generador
       const booking = await db.bookingRequest.findUnique({ 
@@ -206,7 +216,12 @@ export async function dispatchNotification({
 
   // 5. Enviar y Registrar
   const { messageId, error } = await sendWhatsApp(recipient, finalMessage, payload.fullName || recipient, media, fileName)
+  console.log(`[NOTIFICATION STATUS] messageId: ${messageId}, error: ${error}`)
   
+  if (!messageId) {
+    console.log('[WHATSAPP RESPONSE] No messageId returned, possible failure')
+  }
+
   await db.notification.create({
     data: {
       bookingRequestId: bookingId || null,
@@ -217,7 +232,7 @@ export async function dispatchNotification({
       message: finalMessage,
       status: messageId ? "sent" : "failed",
       messageId: messageId || null,
-      errorDetails: error,
+      errorDetails: isSandbox && originalRecipient ? `Sandbox: original recipient ${originalRecipient}` : error,
       category: "push_notification"
     }
   }).catch((e: any) => console.error("Error logging notification:", e))

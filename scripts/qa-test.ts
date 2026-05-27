@@ -78,12 +78,12 @@ async function runTests() {
 
   console.log("\n--- TEST 1: Brenda Menel Notification ---");
   await notifyMusicians(fakeEventId, gigDetails, db, [brenda.id]);
-  let notifs1 = await db.notification.findMany({ where: { type: "musician_gig" }, orderBy: { createdAt: "desc" }, take: 2 });
+  const notifs1 = await db.notification.findMany({ where: { type: "musician_gig" }, orderBy: { createdAt: "desc" }, take: 2 });
   console.log("Notified Brenda?", notifs1.some(n => n.recipient === "525512345678"));
 
   console.log("\n--- TEST 2 & 3: Deselection Logic & Other Musician ---");
   await notifyMusicians(fakeEventId, gigDetails, db, [other.id]);
-  let notifs2 = await db.notification.findMany({ where: { type: "musician_gig" }, orderBy: { createdAt: "desc" }, take: 2 });
+  const notifs2 = await db.notification.findMany({ where: { type: "musician_gig" }, orderBy: { createdAt: "desc" }, take: 2 });
   console.log("Notified Other?", notifs2.some(n => n.recipient === "525587654321"));
   
   const assignments = await db.eventMusician.findMany({ where: { eventId: fakeEventId } });

@@ -101,20 +101,53 @@ export async function updateClienteAction(prevState: any, formData: FormData) {
 
 export async function deleteClienteAction(profileId: string) {
   try {
+    // Obtener el perfil y el userId asociado
     const profile = await db.clientProfile.findUnique({
-      where: { id: profileId }
+      where: { id: profileId },
+      select: { userId: true }
     })
     if (!profile) return { success: false, message: "Cliente no encontrado." }
 
-    await db.user.delete({ where: { id: profile.userId } })
+    const userId = profile.userId
+
+    // Ejecutar borrado en cascada dentro de una transacción
+    await db.$transaction(async (tx) => {
+      // Notificaciones vinculadas a eventos del cliente
+      const events = await tx.event.findMany({
+        where: { clientId: profileId },
+        select: { id: true }
+      })
+      const eventIds = events.map(e => e.id)
+      if (eventIds.length > 0) {
+        await tx.notification.deleteMany({ where: { eventId: { in: eventIds } } })
+      }
+
+      // Borrar solicitudes de booking asociadas
+      await tx.bookingRequest.deleteMany({ where: { clientId: profileId } })
+      await tx.bookingRequest.deleteMany({ where: { clientUserId: userId } })
+
+      // Borrar eventos del cliente (cascada elimina contratos, pagos, etc.)
+      await tx.event.deleteMany({ where: { clientId: profileId } })
+
+      // Borrar cotizaciones del cliente
+      await tx.quote.deleteMany({ where: { clientId: profileId } })
+
+      // Finalmente borrar el usuario (cascada elimina el perfil)
+      await tx.user.delete({ where: { id: userId } })
+    })
 
     revalidatePath("/admin/clientes")
-    return { success: true, message: "Cliente eliminado." }
+    return { success: true, message: "Cliente y datos asociados eliminados." }
   } catch (error) {
     console.error("Error eliminar cliente:", error)
     return { success: false, message: "Error al eliminar el cliente." }
   }
 }
+
+
+
+
+
 export async function deleteClientesAction(profileIds: string[]) {
   try {
     if (!profileIds || profileIds.length === 0) {
@@ -173,5 +206,49 @@ export async function deleteClientesAction(profileIds: string[]) {
   } catch (error) {
     console.error("Error eliminar clientes masivo:", error)
     return { success: false, message: "Error al eliminar los clientes. Es posible que tengan dependencias complejas." }
+  }
+}
+
+export async function ensureGenericClienteAction() {
+  try {
+    const name = "Cliente Genérico"
+    const email = "generico@vendettamusic.com"
+    
+    let existingUser = await db.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { name: { contains: "Genérico" } }
+        ]
+      },
+      include: { clientProfile: true }
+    })
+    
+    if (existingUser && existingUser.clientProfile) {
+      return { success: true, id: existingUser.clientProfile.id, name: existingUser.name }
+    }
+    
+    const passwordHash = await hash("VendettaGeneric2026!", 12)
+    const user = await db.user.create({
+      data: {
+        name,
+        email,
+        password: passwordHash,
+        role: "CLIENT",
+        clientProfile: {
+          create: {
+            whatsapp: "5210000000000",
+            type: "generic",
+            notes: "Cliente genérico para shows directos"
+          }
+        }
+      },
+      include: { clientProfile: true }
+    })
+    
+    return { success: true, id: user.clientProfile.id, name: user.name }
+  } catch (error) {
+    console.error("Error ensuring generic client:", error)
+    return { success: false, message: "Error al asegurar el cliente genérico." }
   }
 }

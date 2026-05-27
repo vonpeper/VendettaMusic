@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { isValidWhatsappPhone } from "@/lib/phone";
 
 export async function getSystemDiagnostics() {
   const activeBookings = await db.bookingRequest.findMany({
@@ -17,7 +18,7 @@ export async function getSystemDiagnostics() {
   return activeBookings.map(b => {
     const flags = [];
     if (!b.clientId) flags.push("Sin ClientProfile asignado");
-    if (b.clientPhone === "5500000000" || !b.clientPhone) flags.push("Teléfono inválido/vacío en Booking");
+    if (!isValidWhatsappPhone(b.clientPhone)) flags.push("Teléfono inválido/vacío en Booking");
     if (!b.eventId) flags.push("Sin Evento creado (solo Booking)");
     if (b.eventId && !b.event?.locationId) flags.push("Evento sin Venue/Ubicación oficial");
     if (b.packageName?.toLowerCase().includes("full") && (b.venueType?.toLowerCase().includes("bar") || b.packageName.toLowerCase().includes("bar"))) flags.push("Paquete Full en evento de Bar");

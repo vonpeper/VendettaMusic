@@ -132,7 +132,7 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
         </div>
 
         {/* SCROLLABLE CONTENT */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-10">
+        <div className="flex-1 overflow-y-auto p-6 space-y-10 pb-24">
           
           <form id="musician-edit-form" action={handleMusicianUpdate} className="space-y-10">
             
@@ -335,8 +335,7 @@ export function MusicianDetailsSheet({ musician, open, onOpenChange }: { musicia
             </div>
           </section>
 
-          {/* Padding for bottom sticky bar */}
-          <div className="h-24"></div>
+
         </div>
 
         {/* BOTTOM STICKY ACTION BAR */}

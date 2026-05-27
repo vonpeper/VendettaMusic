@@ -14,11 +14,17 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", c
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
 
 import { auth } from "@/lib/auth"
+import { getValidWhatsappPhone } from "@/lib/phone"
 import { RepairSyncButton } from "@/components/admin/RepairSyncButton"
 import { NuevoEventoButton } from "@/components/admin/EventActions"
 import { Plus, UserPlus, FilePlus, CalendarDays } from "lucide-react"
 
 export default async function AdminDashboardPage() {
+  // Helper to normalize phone numbers according to business rules
+  const normalizePhone = (p: string | undefined): string => {
+    const valid = getValidWhatsappPhone(p ?? "");
+    return valid ?? "";
+  };
   const session = await auth()
   const isAdmin = session?.user?.role === "ADMIN"
 
@@ -440,13 +446,31 @@ export default async function AdminDashboardPage() {
                         <div className="text-xs font-black text-foreground">
                           {MXN(amount)}
                         </div>
-                        <FollowUpButton 
-                          id={q.id}
-                          type={isWebFunnel ? "booking" : "quote"}
-                          phone={isWebFunnel ? (q as any).clientPhone : (q as any).client?.clientProfile?.whatsapp || ""}
-                          clientName={clientName}
-                          currentCount={(q as any).followUpCount || 0}
-                        />
+                        {(() => {
+                         let phoneCandidate = "";
+                         // Prefer clientProfile.whatsapp for manual quotes
+                         if (!isWebFunnel) {
+                           phoneCandidate = (q as any).client?.clientProfile?.whatsapp || "";
+                         }
+                         // Fallback to clientPhone for web funnel
+                         if (!phoneCandidate) {
+                           phoneCandidate = isWebFunnel ? (q as any).clientPhone : "";
+                         }
+                         // Fallback to user phone
+                         if (!phoneCandidate) {
+                           phoneCandidate = (q as any).client?.user?.phone || "";
+                         }
+                         const phone = normalizePhone(phoneCandidate);
+                         return (
+                           <FollowUpButton
+                             id={q.id}
+                             type={isWebFunnel ? "booking" : "quote"}
+                             phone={phone}
+                             clientName={clientName}
+                             currentCount={(q as any).followUpCount || 0}
+                           />
+                         );
+                       })()}
                       </div>
                     </Link>
                   )

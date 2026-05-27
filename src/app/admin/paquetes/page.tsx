@@ -43,6 +43,7 @@ export default async function AdminPaquetesPage() {
       <PackagesManager 
         initialPackages={packages as any} 
         serviceCatalog={serviceCatalog as any}
+        initialExtras={extras as any}
       />
 
       <div className="border-t border-border/40 my-8" />
@@ -53,11 +54,15 @@ export default async function AdminPaquetesPage() {
 
       <div>
         <div className="mb-6">
+          <div className="flex items-center gap-3 text-primary mb-2">
+            <Zap className="w-5 h-5" />
+            <span className="text-sm font-bold uppercase tracking-widest">Configuración de Precios Unitarios</span>
+          </div>
           <h2 className="text-3xl font-heading font-bold text-foreground tracking-tight">
-            Servicios Adicionales (Funnel)
+            Costos Unitarios de "Arma tu Show"
           </h2>
           <p className="text-muted-foreground mt-2">
-            Configura los servicios y costos extras que el cliente puede elegir al "Armar su Show".
+            Configura los costos fijos (instalación/setup) y variables (costo por hora) de los servicios adicionales que el cliente puede elegir al armar y personalizar su show en el funnel.
           </p>
         </div>
         <ExtrasManager initialExtras={extras as any} />

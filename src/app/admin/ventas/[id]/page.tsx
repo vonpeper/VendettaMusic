@@ -94,7 +94,10 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
 
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   const musicianProfiles = await db.musicianProfile.findMany({
-    where: { whatsapp: { not: null } },
+    where: { 
+      whatsapp: { not: null }, 
+      status: "active"
+    },
     include: { user: true },
     orderBy: { instrument: 'asc' }
   })
@@ -105,8 +108,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     name:       m.user?.name || "Músico",
     instrument: m.instrument || null,
     whatsapp:   m.whatsapp,
-
     isTitular:  m.isTitular,
+    status:     m.status,
   }))
 
   if (!booking) notFound()

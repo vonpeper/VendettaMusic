@@ -21,6 +21,8 @@ import { MarkCompletedButton } from "@/components/admin/MarkCompletedButton"
 import { ContractStatusSwitcher } from "@/components/admin/ContractStatusSwitcher"
 import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
+// Temporary diagnostics
+console.log("[DB URL]", process.env.DATABASE_URL)
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 

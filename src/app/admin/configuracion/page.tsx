@@ -433,27 +433,78 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                 </div>
                 <div>
                   <h2 className="text-2xl font-heading font-bold text-foreground">Tabulador de Viáticos Fijos</h2>
-                  <p className="text-sm text-muted-foreground">Define las tarifas planas para eventos foráneos según la zona de impacto.</p>
+                  <p className="text-sm text-muted-foreground">Define las tarifas planas y las zonas de cobertura (ciudades/estados) para eventos foráneos.</p>
                 </div>
               </div>
 
-              <ConfigFormWrapper action={saveViaticosConfigAction} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="zona2Rate" className="text-foreground">Zona 2 (CDMX, Valle de Bravo, Ixtapan, Tenancingo)</Label>
-                  <Input id="zona2Rate" name="zona2Rate" type="number" step="100" 
-                    defaultValue={(config as any)?.zona2Rate || 1500} 
-                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zona3Rate" className="text-foreground">Zona 3 (Querétaro, Cuernavaca, Puebla, Pachuca)</Label>
-                  <Input id="zona3Rate" name="zona3Rate" type="number" step="100" 
-                    defaultValue={(config as any)?.zona3Rate || 3000} 
-                    className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
+              <ConfigFormWrapper action={saveViaticosConfigAction} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* CARD ZONA 2 */}
+                  <div className="bg-slate-900/40 border border-border/30 rounded-2xl p-6 space-y-5 backdrop-blur-sm hover:border-amber-500/20 transition-all duration-300">
+                    <div className="flex items-center gap-3 pb-3 border-b border-border/30">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold text-sm">
+                        Z2
+                      </div>
+                      <div>
+                        <h3 className="font-heading font-bold text-foreground text-lg">Zona 2 (Media Distancia)</h3>
+                        <p className="text-xs text-muted-foreground">Destinos con tarifas intermedias.</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="zona2Rate" className="text-foreground text-sm font-bold">Monto de la Tarifa ($ MXN)</Label>
+                      <Input id="zona2Rate" name="zona2Rate" type="number" step="100" 
+                        defaultValue={(config as any)?.zona2Rate || 1500} 
+                        className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="zona2Cities" className="text-foreground text-sm font-bold">Ciudades y Municipios Incluidos</Label>
+                      <Textarea id="zona2Cities" name="zona2Cities" rows={4}
+                        defaultValue={(config as any)?.zona2Cities ?? "valle de bravo, avandaro, malinalco, ixtapan de la sal, tonatico, ciudad de mexico, cdmx, df, distrito federal, naucalpan, tlalnepantla, huixquilucan, interlomas, santa fe, cuajimalpa, alvaro obregon, coyoacan, tlalpan, tepotzotlan, atizapan, izcalli"} 
+                        placeholder="Separa cada ciudad o municipio con comas. Ej: valle de bravo, cdmx, malinalco..."
+                        className="bg-card border-border/40 text-foreground font-sans text-sm min-h-[100px] leading-relaxed resize-y focus:border-amber-400" />
+                      <p className="text-[10px] text-muted-foreground leading-tight">
+                        Cualquier coincidencia parcial en nombre de municipio o estado activará esta tarifa. Separar exclusivamente por comas.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* CARD ZONA 3 */}
+                  <div className="bg-slate-900/40 border border-border/30 rounded-2xl p-6 space-y-5 backdrop-blur-sm hover:border-amber-500/20 transition-all duration-300">
+                    <div className="flex items-center gap-3 pb-3 border-b border-border/30">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold text-sm">
+                        Z3
+                      </div>
+                      <div>
+                        <h3 className="font-heading font-bold text-foreground text-lg">Zona 3 (Larga Distancia)</h3>
+                        <p className="text-xs text-muted-foreground">Destinos lejanos o estados colindantes.</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="zona3Rate" className="text-foreground text-sm font-bold">Monto de la Tarifa ($ MXN)</Label>
+                      <Input id="zona3Rate" name="zona3Rate" type="number" step="100" 
+                        defaultValue={(config as any)?.zona3Rate || 3000} 
+                        className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="zona3Cities" className="text-foreground text-sm font-bold">Ciudades y Estados Incluidos</Label>
+                      <Textarea id="zona3Cities" name="zona3Cities" rows={4}
+                        defaultValue={(config as any)?.zona3Cities ?? "cuernavaca, tepoztlan, jiutepec, morelos, queretaro, san juan del rio, juriquilla, puebla, cholula, atlixco, pachuca, hidalgo, tlaxcala"} 
+                        placeholder="Separa cada ciudad o estado con comas. Ej: queretaro, puebla, cuernavaca..."
+                        className="bg-card border-border/40 text-foreground font-sans text-sm min-h-[100px] leading-relaxed resize-y focus:border-amber-400" />
+                      <p className="text-[10px] text-muted-foreground leading-tight">
+                        Cualquier coincidencia parcial en nombre de ciudad o estado activará esta tarifa. Separar exclusivamente por comas.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="md:col-span-2">
-                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold h-12 text-lg text-white">
-                    Actualizar Tarifas
+                <div className="w-full">
+                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold h-12 text-lg text-white rounded-xl transition-all">
+                    Actualizar Tarifas y Zonas
                   </Button>
                 </div>
               </ConfigFormWrapper>
@@ -462,20 +513,20 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                  <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center shrink-0">
                   <Settings className="w-5 h-5 text-blue-400" />
                  </div>
-                 <div className="text-xs text-slate-300 leading-relaxed space-y-4">
+                 <div className="text-xs text-slate-300 leading-relaxed space-y-4 text-left">
                    <p className="text-white font-black text-[10px] uppercase tracking-widest">Lógica de Cálculo de Viáticos</p>
                    <ul className="space-y-2.5">
                      <li className="flex items-start gap-3">
                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                       <span className="text-[11px]"><strong className="text-white font-bold">Zona 1 (Toluca / Metepec):</strong> Tarifa base sin cargos adicionales ($0 MXN).</span>
+                       <span className="text-[11px]"><strong className="text-white font-bold">Zona 1 (Toluca / Metepec):</strong> Tarifa base sin cargos adicionales ($0 MXN). Municipios predeterminados del Valle de Toluca no cambian por viáticos fijos.</span>
                      </li>
                      <li className="flex items-start gap-3">
                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                       <span className="text-[11px]"><strong className="text-white font-bold">Zonas de Media y Larga Distancia:</strong> Se aplicará el monto configurado arriba multiplicado por la logística del evento.</span>
+                       <span className="text-[11px]"><strong className="text-white font-bold">Coincidencias Dinámicas:</strong> Al cotizar o reservar, si el municipio o estado coincide exactamente con el texto de tu lista de Zona 2 o Zona 3 (sin acentos, en minúsculas), se aplicará la tarifa correspondiente.</span>
                      </li>
                      <li className="flex items-start gap-3">
                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                       <span className="text-[11px]"><strong className="text-white font-bold">Resto de México:</strong> El sistema indicará que la cotización debe ser validada por un agente.</span>
+                       <span className="text-[11px]"><strong className="text-white font-bold">Resto de México (Zona 4):</strong> Si un municipio no coincide con ninguna lista, el cotizador indicará "Cotización Manual" para que un agente cotice la logística exacta en la llamada.</span>
                      </li>
                    </ul>
                  </div>

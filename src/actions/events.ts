@@ -201,7 +201,10 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
       }).catch(() => {})
 
       const notifyMusicianIds = formData.getAll("notifyMusicianIds") as string[]
-      await notifyMusicians(id, gigDetails, db, notifyMusicianIds.length > 0 ? notifyMusicianIds : undefined)
+      // Añadir ingeniero de audio si está seleccionado en el formulario
+      const engineerId = data.audioEngineer as string
+      if (engineerId) notifyMusicianIds.push(engineerId)
+      await notifyMusicians(id, gigDetails, db, notifyMusicianIds.length ? notifyMusicianIds : undefined)
     }
 
     if ((data.status as string) === "cancelado") {
@@ -437,7 +440,13 @@ export async function createEventAction(_prev: any, formData: FormData) {
         isPublic: event.isPublic,
         packageName: packageName
       }
-      await notifyMusicians(event.id, gigDetails, db)
+      // Construir lista de IDs a notificar (ingeniero + músicos explícitos)
+      const targetIds: string[] = []
+      const engineerId = data.audioEngineer as string
+      if (engineerId) targetIds.push(engineerId)
+      const extraNotifyIds = formData.getAll("notifyMusicianIds") as string[]
+      if (extraNotifyIds.length) targetIds.push(...extraNotifyIds)
+      await notifyMusicians(event.id, gigDetails, db, targetIds.length ? targetIds : undefined)
     }
 
     return { 

@@ -13,8 +13,11 @@ interface Props {
 export default async function CotizarPage({ searchParams }: Props) {
   const params = await searchParams
   const packages = await db.package.findMany({
-    where:   { active: true },
     orderBy: { baseCostPerHour: "asc" }
+  })
+
+  const extras = await db.packageService.findMany({
+    orderBy: { createdAt: "desc" }
   })
 
   const initialStep = params.step ? parseInt(params.step, 10) : 0
@@ -23,12 +26,15 @@ export default async function CotizarPage({ searchParams }: Props) {
   return (
     <FunnelWizard
       packages={packages}
+      extras={extras}
       initialStep={initialStep}
       initialPkgId={params.pkg}
       initialCity={params.city}
       viaticosConfig={{
         zona2Rate: config?.zona2Rate || undefined,
         zona3Rate: config?.zona3Rate || undefined,
+        zona2Cities: (config as any)?.zona2Cities || undefined,
+        zona3Cities: (config as any)?.zona3Cities || undefined,
       }}
       paymentConfig={{
         payMercadoPagoActive: config?.payMercadoPagoActive ?? true,

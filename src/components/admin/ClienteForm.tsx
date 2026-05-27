@@ -38,7 +38,8 @@ interface ClienteFormProps {
 export function ClienteForm({ onClose, editing }: ClienteFormProps) {
   const isEditing = !!editing
   const action = isEditing ? updateClienteAction : createClienteAction
-  const [state, formAction, isPending] = useActionState(action, null)
+  const [state, formAction, isPending] = useActionState(action, null) as [any, any, boolean]
+  const [clientType, setClientType] = useState(editing?.type || "private")
 
   useEffect(() => {
     if (state && !state.success) {
@@ -83,14 +84,14 @@ export function ClienteForm({ onClose, editing }: ClienteFormProps) {
           </div>
         )}
 
-        <form action={formAction} className="p-6 space-y-6">
+        <form action={formAction} className="p-6 space-y-4">
           {isEditing && <input type="hidden" name="profileId" value={editing!.profileId} />}
 
-          {/* Datos Personales */}
-          <fieldset className="space-y-4">
-            <legend className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Datos Personales</legend>
+          {/* Datos de contacto */}
+          <fieldset className="space-y-2">
+            <legend className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Datos de contacto</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Nombre completo *</Label>
                 <Input id="name" name="name" defaultValue={editing?.name} required placeholder="Ej. María González Pérez" className="bg-background border-border/40" />
               </div>
@@ -99,62 +100,76 @@ export function ClienteForm({ onClose, editing }: ClienteFormProps) {
                 <Input id="email" name="email" type="email" defaultValue={editing?.email} placeholder="correo@ejemplo.com" className="bg-background border-border/40" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="whatsapp">WhatsApp</Label>
+                <Label htmlFor="whatsapp">Teléfono / WhatsApp</Label>
                 <Input id="whatsapp" name="whatsapp" defaultValue={editing?.whatsapp || ""} placeholder="Ej. +52 55 1234 5678" className="bg-background border-border/40" />
               </div>
             </div>
           </fieldset>
 
-          {/* Ubicación */}
-          <fieldset className="space-y-4 border-t border-border/40 pt-4">
-            <legend className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Ubicación</legend>
+
+
+          {/* Clasificación */}
+          <fieldset className="space-y-2 border-t border-border/40 pt-2">
+            <legend className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Clasificación</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="state">Estado</Label>
-                <select id="state" name="state" defaultValue={editing?.state || ""} className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <option value="">Seleccionar estado</option>
-                  {ESTADOS_MX.map(e => <option key={e} value={e}>{e}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">Municipio / Ciudad</Label>
-                <Input id="city" name="city" defaultValue={editing?.city || ""} placeholder="Ej. Zapopan" className="bg-background border-border/40" />
-              </div>
-            </div>
-          </fieldset>
-
-          {/* Tipo de cliente */}
-          <fieldset className="space-y-4 border-t border-border/40 pt-4">
-            <legend className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Clasificación</legend>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2 md:col-span-1">
                 <Label htmlFor="type">Tipo de Cliente</Label>
-                <select id="type" name="type" defaultValue={editing?.type || "private"} className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <option value="private">Social / Privado</option>
+                <select
+                  id="type"
+                  name="type"
+                  value={clientType}
+                  onChange={e => setClientType(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-border/40 bg-card px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="private">Particular</option>
+                  <option value="bar">Bar / Establecimiento</option>
                   <option value="corporate">Corporativo</option>
                 </select>
+                <p className="text-xs text-muted-foreground mt-1">Tipo de cliente: representa a la persona o entidad que contrata el servicio.</p>
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="company">Empresa (si aplica)</Label>
-                <Input id="company" name="company" defaultValue={editing?.company || ""} placeholder="Nombre de la empresa u organización" className="bg-background border-border/40" />
+              {clientType !== "private" && (
+                <div className="space-y-2">
+                  <Label htmlFor="company">Empresa (si aplica)</Label>
+                  <Input
+                    id="company"
+                    name="company"
+                    defaultValue={editing?.company || ""}
+                    placeholder="Nombre de la empresa u organización"
+                    className="bg-card border-border/40"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Obligatorio para clientes tipo Bar / Establecimiento o Corporativo cuando sea relevante.</p>
+                </div>
+              )}
+            </div>
+            {clientType !== "private" && (
+              <div className="space-y-2 mt-2">
+                <Label htmlFor="rfc">RFC (para facturación)</Label>
+                <Input
+                  id="rfc"
+                  name="rfc"
+                  defaultValue={editing?.rfc || ""}
+                  placeholder="XAXX010101000"
+                  className="bg-card border-border/40"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Requerido para facturación cuando el cliente es Corporativo o Bar / Establecimiento.</p>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="rfc">RFC (para facturación)</Label>
-              <Input id="rfc" name="rfc" defaultValue={editing?.rfc || ""} placeholder="XAXX010101000" className="bg-background border-border/40" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notas internas</Label>
-              <textarea id="notes" name="notes" defaultValue={editing?.notes || ""} rows={3} placeholder="Observaciones relevantes del cliente..." className="flex w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-            </div>
+            )}
           </fieldset>
 
+          {/* Notas internas */}
+          <div className="space-y-2 mt-2">
+            <Label htmlFor="notes">Notas internas</Label>
+            <textarea id="notes" name="notes" defaultValue={editing?.notes || ""} rows={3} placeholder="Observaciones relevantes del cliente..." className="flex w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+          </div>
+
+          {/* Información de seguimiento */}
           {!isEditing && (
             <p className="text-xs text-muted-foreground bg-primary/10 rounded-lg p-3 border border-border/40">
-              🔒 El cliente recibirá acceso con contraseña temporal: <strong className="text-primary">Vendetta2026!</strong> (debe cambiarla al ingresar).
+              ℹ️ El cliente podrá consultar su evento mediante su ID o enlace de seguimiento.
             </p>
           )}
 
+          {/* Botones */}
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-border/40">
               Cancelar

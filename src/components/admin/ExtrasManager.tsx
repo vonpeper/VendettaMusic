@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { createExtraAction, updateExtraAction, deleteExtraAction } from "@/actions/extras"
+import { createExtraAction, updateExtraAction, deleteExtraAction, initializeDefaultExtrasAction } from "@/actions/extras"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Pencil, Trash2, Plus, X, Check, Loader2, Sparkles } from "lucide-react"
+import { Pencil, Trash2, Plus, X, Check, Loader2, Sparkles, Wand2, RadioTower, Box, Users } from "lucide-react"
 import { toast } from "sonner"
 
 interface Extra {
@@ -15,6 +15,7 @@ interface Extra {
   description: string | null
   setupCost: number
   hourlyCost: number
+  active?: boolean
 }
 
 export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
@@ -50,7 +51,8 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
       name: extra.name,
       description: extra.description,
       setupCost: extra.setupCost,
-      hourlyCost: extra.hourlyCost
+      hourlyCost: extra.hourlyCost,
+      active: extra.active
     })
     if (res.success) {
       toast.success("Servicio actualizado")
@@ -74,46 +76,298 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
     setLoading(null)
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-           <Sparkles className="w-5 h-5 text-primary" />
-           <h2 className="text-2xl font-bold text-foreground">Servicios Adicionales (Extras)</h2>
+  // Clasificar extras para mostrarlos agrupados tal como en el funnel
+  const djExtra = extras.find(e => e.name.toLowerCase().includes("dj") && !e.name.toLowerCase().includes("pantalla"))
+  const djTvsExtra = extras.find(e => e.name.toLowerCase().includes("dj") && e.name.toLowerCase().includes("pantalla"))
+  
+  const templeteExtra = extras.find(e => e.name.toLowerCase().includes("templete") || e.name.toLowerCase().includes("escenario"))
+  const pistaExtra = extras.find(e => e.name.toLowerCase().includes("pista"))
+  const robotExtra = extras.find(e => e.name.toLowerCase().includes("robot") || e.name.toLowerCase().includes("batucada"))
+  const pantallaExtra = extras.find(e => e.name.toLowerCase().includes("pantalla") && e.name.includes("3x2"))
+  
+  const audioMediumExtra = extras.find(e => e.name.toLowerCase().includes("audio") && (e.name.includes(">100") || e.name.toLowerCase().includes("pro")))
+  const audioLargeExtra = extras.find(e => e.name.toLowerCase().includes("audio") && (e.name.includes(">300") || e.name.toLowerCase().includes("festival")))
+
+  // Obtener IDs clasificados para filtrar la sección de "Otros"
+  const classifiedIds = new Set([
+    djExtra?.id, djTvsExtra?.id, templeteExtra?.id, pistaExtra?.id,
+    robotExtra?.id, pantallaExtra?.id, audioMediumExtra?.id, audioLargeExtra?.id
+  ].filter(Boolean))
+
+  const otherExtras = extras.filter(e => !classifiedIds.has(e.id))
+
+  function renderExtraRow(extra: Extra | undefined, defaultName: string, defaultDesc: string) {
+    if (!extra) {
+      // Si el extra no existe en la base de datos, mostramos un renglón para poder crearlo
+      return (
+        <div key={`empty-${defaultName}`} className="flex flex-col lg:grid lg:grid-cols-[2fr_1.1fr_1.2fr_1.2fr_1fr] gap-4 items-start lg:items-center p-4 rounded-xl border border-dashed border-border/40 bg-muted/5 opacity-60">
+          <div className="flex flex-col min-w-0 w-full">
+            <span className="text-sm font-bold text-muted-foreground/80 truncate">{defaultName}</span>
+            <span className="text-xs text-muted-foreground/60 line-clamp-1">{defaultDesc}</span>
+          </div>
+          <div className="text-xs text-muted-foreground/60 italic font-medium lg:block hidden">No inicializado</div>
+          <div className="text-xs text-muted-foreground/40 lg:block hidden">-</div>
+          <div className="text-xs text-muted-foreground/40 lg:block hidden">-</div>
+          <div className="flex lg:justify-end w-full lg:w-auto mt-2 lg:mt-0">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={async () => {
+                setLoading(`create-${defaultName}`)
+                const defaultSetupCost = defaultName.includes("Templete") ? 3800 : defaultName.includes("Pista") ? 7500 : defaultName.includes("Robot") ? 700 : defaultName.includes("Pantalla") ? 15000 : 0
+                const defaultHourlyCost = defaultName.includes("DJ") ? (defaultName.includes("Pantalla") ? 1500 : 800) : 0
+                const res = await createExtraAction({
+                  name: defaultName,
+                  description: defaultDesc,
+                  setupCost: defaultSetupCost,
+                  hourlyCost: defaultHourlyCost
+                })
+                if (res.success) {
+                  toast.success(`Servicio "${defaultName}" pre-creado exitosamente.`)
+                  window.location.reload()
+                } else {
+                  toast.error(res.error)
+                }
+                setLoading(null)
+              }}
+              className="text-xs font-semibold h-9 px-3 w-full lg:w-auto text-primary border-primary/20 hover:border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors"
+              disabled={loading === `create-${defaultName}`}
+            >
+              {loading === `create-${defaultName}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Pre-crear"}
+            </Button>
+          </div>
         </div>
-        <Button onClick={() => setIsAdding(true)} variant="outline" className="gap-2 border-primary/40 text-primary hover:bg-primary/10">
-          <Plus className="w-4 h-4" /> Agregar Extra
+      )
+    }
+
+    const isEditing = editingId === extra.id
+    const isUpdating = loading === extra.id
+
+    return (
+      <div 
+        key={extra.id} 
+        className={`flex flex-col lg:grid lg:grid-cols-[2fr_1.1fr_1.2fr_1.2fr_1fr] gap-4 p-4 rounded-xl border transition-all ${
+          isEditing 
+            ? "border-primary bg-card ring-1 ring-primary/20 shadow-md" 
+            : extra.active !== false 
+              ? "border-border/60 bg-card/10 hover:border-border/100 hover:bg-card/25" 
+              : "border-neutral-900 bg-neutral-950/20 opacity-70 filter grayscale-[10%]"
+        }`}
+      >
+        {/* Servicio Column */}
+        <div className="flex flex-col min-w-0">
+          {isEditing ? (
+            <div className="flex flex-col gap-2 w-full">
+              <Input 
+                value={extra.name} 
+                onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, name: e.target.value} : p))}
+                className="h-9 font-bold bg-background text-sm text-foreground w-full border border-border"
+                placeholder="Nombre del servicio"
+              />
+              <Input 
+                value={extra.description || ""} 
+                onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, description: e.target.value} : p))}
+                className="h-9 text-xs bg-background text-muted-foreground w-full border border-border"
+                placeholder="Descripción del servicio..."
+              />
+            </div>
+          ) : (
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-bold text-foreground text-sm uppercase tracking-tight block truncate">{extra.name}</span>
+                <span className={`text-[9px] px-2 py-0.5 rounded-full border uppercase font-extrabold tracking-wider lg:hidden ${
+                  extra.active !== false 
+                    ? "bg-green-500/10 text-green-500 border-green-500/20" 
+                    : "bg-red-500/10 text-red-500 border-red-500/20"
+                }`}>
+                  {extra.active !== false ? "Disponible" : "Agotado"}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{extra.description || "Sin descripción registrada."}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Disponibilidad Column (Desktop Only, mobile gets inline status) */}
+        <div className="hidden lg:flex items-center gap-2">
+          {isEditing ? (
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                checked={extra.active !== false} 
+                onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, active: e.target.checked} : p))}
+                className="rounded border-border bg-background text-primary focus:ring-primary w-4.5 h-4.5 cursor-pointer"
+              />
+              <span className="text-xs font-semibold text-foreground">Disponible</span>
+            </label>
+          ) : (
+            <span className={`text-[10px] px-2.5 py-1 rounded-full border uppercase font-extrabold tracking-wider ${
+              extra.active !== false 
+                ? "bg-green-500/10 text-green-500 border-green-500/20" 
+                : "bg-red-500/10 text-red-500 border-red-500/20"
+            }`}>
+              {extra.active !== false ? "Disponible" : "Agotado"}
+            </span>
+          )}
+        </div>
+
+        {/* Inline editing switch for Mobile */}
+        {isEditing && (
+          <div className="flex lg:hidden items-center gap-2 mt-1">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                checked={extra.active !== false} 
+                onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, active: e.target.checked} : p))}
+                className="rounded border-border bg-background text-primary focus:ring-primary w-4.5 h-4.5 cursor-pointer"
+              />
+              <span className="text-xs font-semibold text-foreground">Disponible</span>
+            </label>
+          </div>
+        )}
+
+        {/* Costo Setup Column */}
+        <div className="flex flex-col lg:block">
+          {isEditing ? (
+            <div className="space-y-1.5 lg:space-y-0 w-full">
+              <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider lg:hidden">Costo Fijo (Setup)</span>
+              <div className="relative w-full max-w-[150px] lg:max-w-[120px]">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-semibold">$</span>
+                <Input 
+                  type="number"
+                  value={extra.setupCost} 
+                  onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, setupCost: parseFloat(e.target.value) || 0} : p))}
+                  className="h-9 pl-7 pr-2 text-sm bg-background text-foreground border border-border/80 focus:border-primary w-full font-semibold"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex lg:block items-center justify-between text-xs lg:text-sm font-semibold text-muted-foreground lg:text-foreground lg:font-bold">
+              <span className="lg:hidden text-[10px] font-bold text-muted-foreground/60 uppercase">Costo Fijo Setup:</span>
+              <span className="text-foreground font-bold">${extra.setupCost.toLocaleString("es-MX")}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Costo por Hora Column */}
+        <div className="flex flex-col lg:block mt-1 lg:mt-0">
+          {isEditing ? (
+            <div className="space-y-1.5 lg:space-y-0 w-full">
+              <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider lg:hidden">Costo por Hora</span>
+              <div className="relative w-full max-w-[150px] lg:max-w-[120px]">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-semibold">$</span>
+                <Input 
+                  type="number"
+                  value={extra.hourlyCost} 
+                  onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, hourlyCost: parseFloat(e.target.value) || 0} : p))}
+                  className="h-9 pl-7 pr-2 text-sm bg-background text-foreground border border-border/80 focus:border-primary w-full font-semibold"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex lg:block items-center justify-between text-xs lg:text-sm font-semibold text-muted-foreground lg:text-foreground lg:font-bold">
+              <span className="lg:hidden text-[10px] font-bold text-muted-foreground/60 uppercase">Costo por Hora:</span>
+              <span className="text-foreground font-bold">${extra.hourlyCost.toLocaleString("es-MX")}/h</span>
+            </div>
+          )}
+        </div>
+
+        {/* Acciones Column */}
+        <div className="flex items-center gap-2 lg:justify-end border-t lg:border-t-0 border-border/10 pt-3 lg:pt-0 mt-3 lg:mt-0 w-full lg:w-auto">
+          {isEditing ? (
+            <>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                disabled={isUpdating} 
+                onClick={() => handleUpdate(extra.id)} 
+                className="h-9 flex-1 lg:flex-none px-3 gap-1.5 text-green-600 border-green-600/30 bg-green-600/5 hover:bg-green-600/10 text-xs font-bold justify-center"
+              >
+                {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                Guardar
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => setEditingId(null)} 
+                className="h-9 flex-1 lg:flex-none px-3 gap-1.5 text-muted-foreground hover:bg-muted/10 text-xs font-bold justify-center"
+              >
+                <X className="w-3.5 h-3.5" />
+                Cancelar
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setEditingId(extra.id)} 
+                className="h-9 flex-1 lg:flex-none px-3 gap-1.5 text-primary/80 border-primary/20 hover:text-primary hover:bg-primary/5 text-xs font-bold justify-center"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Editar
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleDelete(extra.id)} 
+                className="h-9 flex-1 lg:flex-none px-3 gap-1.5 text-destructive/80 border-destructive/20 hover:text-destructive hover:bg-destructive/5 text-xs font-bold justify-center"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Eliminar
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Title block */}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center bg-[#0a0a0a]/30 p-5 rounded-2xl border border-border/40 gap-4">
+        <div className="flex items-center gap-3">
+           <Sparkles className="w-5 h-5 text-primary" />
+           <div className="flex flex-col">
+             <span className="font-bold text-foreground text-sm uppercase tracking-wider">Servicios Adicionales (Extras)</span>
+             <span className="text-xs text-muted-foreground mt-0.5">Controla la disponibilidad y los precios individuales de los servicios.</span>
+           </div>
+        </div>
+        <Button onClick={() => setIsAdding(true)} variant="outline" size="sm" className="gap-2 border-primary/40 text-primary hover:bg-primary/10 h-9.5 font-bold text-xs uppercase tracking-wider w-full sm:w-auto">
+          <Plus className="w-4 h-4" /> Agregar Extra Custom
         </Button>
       </div>
 
+      {/* Adding card */}
       {isAdding && (
         <Card className="bg-card border-primary/30 shadow-xl">
           <CardHeader>
-            <CardTitle>Configurar Nuevo Extra</CardTitle>
+            <CardTitle className="text-lg">Configurar Nuevo Extra</CardTitle>
             <CardDescription>Define el nombre y los costos base para el arma tu show.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Nombre del Servicio</Label>
-                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej. Pista de Cristal LED" className="bg-background" />
+                <Label className="text-sm font-semibold text-foreground">Nombre del Servicio</Label>
+                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej. Pista de Cristal LED" className="bg-background border-border text-sm h-10" />
               </div>
               <div className="space-y-2">
-                <Label>Descripción</Label>
-                <Input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Setup premium de 5x5m..." className="bg-background" />
+                <Label className="text-sm font-semibold text-foreground">Descripción</Label>
+                <Input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Setup premium de 5x5m..." className="bg-background border-border text-sm h-10" />
               </div>
               <div className="space-y-2">
-                <Label>Costo Fijo / Instalación ($)</Label>
-                <Input type="number" value={formData.setupCost} onChange={e => setFormData({...formData, setupCost: parseFloat(e.target.value)})} className="bg-background" />
+                <Label className="text-sm font-semibold text-foreground">Costo Fijo / Instalación ($)</Label>
+                <Input type="number" value={formData.setupCost} onChange={e => setFormData({...formData, setupCost: parseFloat(e.target.value) || 0})} className="bg-background border-border text-sm h-10" />
               </div>
               <div className="space-y-2">
-                <Label>Costo por Hora ($)</Label>
-                <Input type="number" value={formData.hourlyCost} onChange={e => setFormData({...formData, hourlyCost: parseFloat(e.target.value)})} className="bg-background" />
+                <Label className="text-sm font-semibold text-foreground">Costo por Hora ($)</Label>
+                <Input type="number" value={formData.hourlyCost} onChange={e => setFormData({...formData, hourlyCost: parseFloat(e.target.value) || 0})} className="bg-background border-border text-sm h-10" />
               </div>
             </div>
-            <div className="flex gap-2 justify-end">
-              <Button variant="ghost" onClick={() => setIsAdding(false)}>Cancelar</Button>
-              <Button onClick={handleCreate} disabled={loading === "new"}>
+            <div className="flex gap-3 justify-end pt-2">
+              <Button variant="ghost" onClick={() => setIsAdding(false)} className="h-9.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Cancelar</Button>
+              <Button onClick={handleCreate} disabled={loading === "new"} className="h-9.5 font-semibold text-xs uppercase tracking-wider text-white">
                 {loading === "new" ? <Loader2 className="animate-spin w-4 h-4" /> : "Guardar Servicio"}
               </Button>
             </div>
@@ -121,79 +375,119 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {extras.map(extra => (
-          <Card key={extra.id} className={`bg-card/50 border-border/40 transition-all ${editingId === extra.id ? 'ring-2 ring-primary border-transparent' : ''}`}>
-            <CardContent className="pt-6 space-y-4">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1 flex-1">
-                  {editingId === extra.id ? (
-                    <Input 
-                      value={extra.name} 
-                      onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, name: e.target.value} : p))}
-                      className="h-8 font-bold bg-background mb-2"
-                    />
-                  ) : (
-                    <div className="font-bold text-foreground">{extra.name}</div>
-                  )}
-                  {editingId === extra.id ? (
-                    <Input 
-                      value={extra.description || ""} 
-                      onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, description: e.target.value} : p))}
-                      className="h-8 text-xs bg-background"
-                      placeholder="Descripción..."
-                    />
-                  ) : (
-                    <div className="text-xs text-muted-foreground line-clamp-1">{extra.description}</div>
-                  )}
-                </div>
-                <div className="flex gap-1 ml-2">
-                  {editingId === extra.id ? (
-                    <Button size="icon" variant="ghost" onClick={() => handleUpdate(extra.id)} className="h-7 w-7 text-green-500">
-                      <Check className="w-4 h-4" />
-                    </Button>
-                  ) : (
-                    <Button size="icon" variant="ghost" onClick={() => setEditingId(extra.id)} className="h-7 w-7 text-primary/60 hover:text-primary">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
-                  <Button size="icon" variant="ghost" onClick={() => handleDelete(extra.id)} className="h-7 w-7 text-destructive/60 hover:text-destructive">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              </div>
+      {/* Grid of Tables */}
+      <div className="space-y-8">
+        
+        {/* DJ Category */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/20">
+            <RadioTower className="w-4 h-4 text-primary" /> Horas de DJ
+          </h3>
+          <div className="space-y-2.5">
+            {/* Table Header on Desktop */}
+            <div className="hidden lg:grid grid-cols-[2fr_1.1fr_1.2fr_1.2fr_1fr] gap-4 px-4 py-2 border-b border-border/10 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+              <div>Servicio</div>
+              <div>Disponibilidad</div>
+              <div>Costo Setup (Fijo)</div>
+              <div>Costo por Hora</div>
+              <div className="text-right">Acciones</div>
+            </div>
+            {renderExtraRow(djExtra, "DJ (Hora Extra)", "DJ continuo en descansos o extensión de horario")}
+            {renderExtraRow(djTvsExtra, "DJ con Pantallas (Hora Extra)", "DJ con 2 pantallas LED de 45 pulgadas")}
+          </div>
+        </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/20">
-                <div className="space-y-0.5">
-                  <span className="text-[9px] uppercase text-muted-foreground font-black">Fijo/Setup</span>
-                  {editingId === extra.id ? (
-                    <Input 
-                      type="number"
-                      value={extra.setupCost} 
-                      onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, setupCost: parseFloat(e.target.value)} : p))}
-                      className="h-7 text-xs bg-background"
-                    />
-                  ) : (
-                    <div className="text-xs font-bold text-foreground">${extra.setupCost.toLocaleString()}</div>
-                  )}
-                </div>
-                <div className="space-y-0.5">
-                  <span className="text-[9px] uppercase text-muted-foreground font-black">Por Hora</span>
-                  {editingId === extra.id ? (
-                    <Input 
-                      type="number"
-                      value={extra.hourlyCost} 
-                      onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, hourlyCost: parseFloat(e.target.value)} : p))}
-                      className="h-7 text-xs bg-background"
-                    />
-                  ) : (
-                    <div className="text-xs font-bold text-foreground">${extra.hourlyCost.toLocaleString()}</div>
-                  )}
-                </div>
+        {/* Equipamiento Category */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/20">
+            <Box className="w-4 h-4 text-primary" /> Equipamiento y Base (Extras)
+          </h3>
+          <div className="space-y-2.5">
+            {/* Table Header on Desktop */}
+            <div className="hidden lg:grid grid-cols-[2fr_1.1fr_1.2fr_1.2fr_1fr] gap-4 px-4 py-2 border-b border-border/10 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+              <div>Servicio</div>
+              <div>Disponibilidad</div>
+              <div>Costo Setup (Fijo)</div>
+              <div>Costo por Hora</div>
+              <div className="text-right">Acciones</div>
+            </div>
+            {renderExtraRow(templeteExtra, "Templete", "Escenario elevado para la banda")}
+            {renderExtraRow(pistaExtra, "Pista Iluminada", "Pista LED premium para la pista de baile")}
+            {renderExtraRow(robotExtra, "Robot LED (Batucada)", "Show visual con robots LED durante la batucada")}
+            {renderExtraRow(pantallaExtra, "Pantalla LED 3x2", "Pantalla LED gigante detrás del escenario")}
+          </div>
+        </div>
+
+        {/* Audio Upgrades Category */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/20">
+            <Users className="w-4 h-4 text-primary" /> Upgrades de Audio (Capacidad de Invitados)
+          </h3>
+          <div className="space-y-2.5">
+            {/* Table Header on Desktop */}
+            <div className="hidden lg:grid grid-cols-[2fr_1.1fr_1.2fr_1.2fr_1fr] gap-4 px-4 py-2 border-b border-border/10 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+              <div>Servicio</div>
+              <div>Disponibilidad</div>
+              <div>Costo Setup (Fijo)</div>
+              <div>Costo por Hora</div>
+              <div className="text-right">Acciones</div>
+            </div>
+            {renderExtraRow(audioMediumExtra, "Audio Upgrade (>100 personas)", "Upgrade a sistema de audio Pro")}
+            {renderExtraRow(audioLargeExtra, "Audio Upgrade (>300 personas)", "Upgrade a sistema Line Array tipo festival")}
+          </div>
+        </div>
+
+        {/* Other custom extras */}
+        {otherExtras.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/20">
+              <Plus className="w-4 h-4 text-primary" /> Otros Extras
+            </h3>
+            <div className="space-y-2.5">
+              {/* Table Header on Desktop */}
+              <div className="hidden lg:grid grid-cols-[2fr_1.1fr_1.2fr_1.2fr_1fr] gap-4 px-4 py-2 border-b border-border/10 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                <div>Servicio</div>
+                <div>Disponibilidad</div>
+                <div>Costo Setup (Fijo)</div>
+                <div>Costo por Hora</div>
+                <div className="text-right">Acciones</div>
               </div>
+              {otherExtras.map(ex => renderExtraRow(ex, ex.name, ex.description || ""))}
+            </div>
+          </div>
+        )}
+
+        {extras.length === 0 && (
+          <Card className="border-2 border-dashed border-border/40 bg-card/5 p-12 text-center">
+            <CardHeader className="items-center pb-2">
+              <Wand2 className="w-12 h-12 text-primary/30 animate-pulse mb-3" />
+              <CardTitle className="text-lg">¿Sin Rubros Configurables?</CardTitle>
+              <CardDescription className="max-w-md">
+                No hay servicios adicionales o costos del "Arma tu show" registrados en la base de datos de extras.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <Button 
+                onClick={async () => {
+                  setLoading("init")
+                  const res = await initializeDefaultExtrasAction()
+                  if (res.success) {
+                    toast.success("¡Rubros e inyecciones de costos pre-cargados con éxito!")
+                    window.location.reload()
+                  } else {
+                    toast.error(res.error)
+                  }
+                  setLoading(null)
+                }}
+                disabled={loading === "init"}
+                className="gap-2 bg-gradient-to-r from-primary to-rose-600 font-semibold text-xs uppercase tracking-widest text-white px-5 py-3.5 rounded-lg"
+              >
+                {loading === "init" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                Pre-cargar Rubros por Defecto de Arma tu Show
+              </Button>
             </CardContent>
           </Card>
-        ))}
+        )}
       </div>
     </div>
   )

@@ -27,24 +27,30 @@ export function CancelBookingButton({ bookingId, shortId, hasEvent = false }: Ca
   const router = useRouter()
 
   async function handleCancel() {
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/booking?id=${bookingId}`, {
-        method: "DELETE",
-      })
-      const json = await res.json()
-      if (json.success) {
-        toast.success("Solicitud/Evento cancelado con éxito")
-        router.push("/admin/ventas")
-        router.refresh()
-      } else {
-        toast.error("Error al cancelar: " + (json.error || "Desconocido"))
+    console.log(`[DELETE BOOKING] ${bookingId}`);
+  setLoading(true);
+  try {
+    const res = await fetch(`/api/booking?id=${bookingId}`, {
+      method: "DELETE",
+    });
+    const json = await res.json();
+    console.log(`[DELETE BOOKING RESULT]`, json);
+    if (json.success) {
+      toast.success("Solicitud/Evento cancelado con éxito");
+      // Refresh current page to update data
+      router.refresh();
+      // If rendered on detail view, navigate back to list
+      if (hasEvent) {
+        router.push("/admin/ventas");
       }
-    } catch (err) {
-      toast.error("Error de conexión al servidor")
-    } finally {
-      setLoading(false)
+    } else {
+      toast.error("Error al cancelar: " + (json.error || "Desconocido"));
     }
+  } catch (err) {
+    toast.error("Error de conexión al servidor");
+  } finally {
+    setLoading(false);
+  }
   }
 
   return (
@@ -89,6 +95,22 @@ export function CancelBookingButton({ bookingId, shortId, hasEvent = false }: Ca
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             Sí, cancelar y borrar todo
           </Button>
+          {/** After successful deletion, also navigate to admin dashboard **/}
+          <script>
+            {`(function(){
+              // Hook into toast success to redirect both admin pages
+              const origSuccess = window.toast?.success;
+              if(origSuccess){
+                window.toast.success = (...args)=>{
+                  origSuccess.apply(window.toast, args);
+                  // Navigate to admin and ventas list
+                  if(typeof window.location !== 'undefined'){
+                    window.location.href = '/admin';
+                  }
+                };
+              }
+            })();`}
+          </script>
         </DialogFooter>
       </DialogContent>
     </Dialog>

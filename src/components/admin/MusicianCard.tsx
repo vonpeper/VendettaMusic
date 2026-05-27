@@ -1,6 +1,8 @@
 import { Phone, Users as UsersIcon, AlertTriangle, MessageCircle, Star } from "lucide-react"
+import { useState } from "react"
 
 export function MusicianCard({ musician, onViewDetails }: { musician: any, onViewDetails: () => void }) {
+  const [imgError, setImgError] = useState(false);
   const isInactive = musician.status !== "active"
   const actualAvailability = isInactive ? "No Aplica" : musician.availability
   const isAvailable = actualAvailability === "Disponible"
@@ -35,8 +37,8 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
 
       <div className="flex items-start gap-4 mb-4">
         <div className="w-12 h-12 rounded-full bg-card flex items-center justify-center border border-primary/30 shrink-0 overflow-hidden shadow-inner">
-          {musician.user.image ? (
-            <img src={musician.user.image} alt={musician.user.name} className="w-full h-full object-cover" />
+          {musician.user.image && !imgError ? (
+            <img src={musician.user.image} alt={musician.user.name} className="w-full h-full object-cover" onError={() => setImgError(true)} />
           ) : (
             <span className="text-xl font-black text-white">
               {musician.user.name.charAt(0).toUpperCase()}

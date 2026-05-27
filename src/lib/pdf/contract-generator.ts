@@ -34,8 +34,8 @@ function stripBase64Prefix(base64: string) {
 
 const PACKAGE_INCLUSIONS: Record<string, string[]> = {
   "61a5477c-de10-4788-a8bd-1dfa8b57d256": [
-    "Audio Electro-Voice (2 tops + 1 sub + consola digital)",
-    "Backline completo",
+    "Audio Electro-Voice",
+    "Backline de gira",
     "Iluminación básica RGB",
     "4 integrantes + Ingeniero + Staff"
   ],
@@ -187,9 +187,14 @@ export async function generateContractPdf(
   page.drawText(p1Title, { x: (pageWidth - montserratBold.widthOfTextAtSize(p1Title, 16)) / 2, y: ctx.y, size: 16, font: montserratBold })
   ctx.y -= 40
 
+  const capitalize = (str: string) => {
+    if (!str) return str
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+  }
+
   drawEventHeader(ctx, "DATOS DEL EVENTO", [
     { label: "CLIENTE:", value: safeValue(data.clientName, "CLIENTE") },
-    { label: "TIPO VENUE:", value: safeValue(data.venueType, "SALÓN") },
+    { label: "TIPO VENUE:", value: capitalize(safeValue(data.venueType, "SALÓN")) },
     { label: "UBICACIÓN:", value: data.address || `${safeValue(data.street)} ${safeValue(data.houseNumber)}, ${safeValue(data.colonia)}, ${safeValue(data.municipio)}` },
     { label: "GOOGLE MAPS:", value: safeValue(data.mapsLink, "NO PROPORCIONADO") },
     { label: "FECHA:", value: formatDateSpanish(data.requestedDate) },
@@ -199,18 +204,42 @@ export async function generateContractPdf(
 
   const isBarPackage = data.packageId === "bar" || data.packageName?.toLowerCase().includes("bar") || data.venueType?.toLowerCase() === "bar";
 
-  let inclusions = PACKAGE_INCLUSIONS[data.packageId] 
-    || (isBarPackage ? PACKAGE_INCLUSIONS["bar"] : ["Show Vendetta Rock", "Producción profesional"])
+  // 🚀 CARGAR INCLUSIONES DE FORMA 100% DINÁMICA DESDE LA BASE DE DATOS
+  let inclusions: string[] = []
+  if (data.packageId) {
+    try {
+      const pkg = await db.package.findUnique({
+        where: { id: data.packageId },
+        include: { serviceItems: { orderBy: { order: "asc" } } }
+      })
+      if (pkg) {
+        if (pkg.serviceItems && pkg.serviceItems.length > 0) {
+          inclusions = pkg.serviceItems.map(item => item.name)
+        } else if (pkg.includes) {
+          inclusions = pkg.includes.split(",").map(inc => inc.trim()).filter(Boolean)
+        }
+      }
+    } catch (err) {
+      console.error("❌ Error al cargar inclusiones del paquete de la base de datos:", err)
+    }
+  }
+
+  // Fallback a las constantes estáticas si no se encontraron inclusiones en la base de datos
+  if (!inclusions || inclusions.length === 0) {
+    inclusions = PACKAGE_INCLUSIONS[data.packageId] 
+      || (isBarPackage ? PACKAGE_INCLUSIONS["bar"] : ["Show Vendetta Rock", "Producción profesional"])
+  }
   
   if (data.clientProvidesAudio) {
     inclusions = inclusions.filter(inc => !inc.toLowerCase().includes("audio") && !inc.toLowerCase().includes("sonido"))
   }
 
   // Personalización dinámica en la tabla
+  const bandHours = data.bandHours && data.bandHours > 0 ? data.bandHours : 2
   const showDetails = [
     isBarPackage 
       ? `• Música en Vivo: 2 turnos de 45 minutos`
-      : `• Música en Vivo: ${data.bandHours} Horas`,
+      : `• Música en Vivo: ${bandHours} Horas`,
     data.djHours > 0 ? `• DJ: ${data.djHours} Horas ${data.isDjWithTvs ? '(Con Pantallas)' : '(Audio)'}` : null,
     data.hasTemplete ? "• Incluye Escenario (Templete)" : null,
     data.hasPista ? "• Incluye Pista LED" : null,
@@ -355,18 +384,18 @@ export async function generateContractPdf(
       if (ctx.y < 80) { ctx.page = doc.addPage([pageWidth, pageHeight]); ctx.y = pageHeight - margin }
       const prefix = cl.n ? `${cl.n}.-` : ""
       if (prefix) {
-        ctx.page.drawText(prefix, { x: margin, y: ctx.y, size: 8, font: montserratBold })
-        const prefixWidth = montserratBold.widthOfTextAtSize(prefix, 8) + 5
-        drawJustifiedText(ctx, cl.t, 8, 11, pageWidth - margin * 2, margin + prefixWidth, margin)
+        ctx.page.drawText(prefix, { x: margin, y: ctx.y, size: 7.5, font: montserratBold })
+        const prefixWidth = montserratBold.widthOfTextAtSize(prefix, 7.5) + 5
+        drawJustifiedText(ctx, cl.t, 7.5, 10, pageWidth - margin * 2, margin + prefixWidth, margin)
       } else {
-        drawJustifiedText(ctx, cl.t, 8, 11, pageWidth - margin * 2, margin, margin)
+        drawJustifiedText(ctx, cl.t, 7.5, 10, pageWidth - margin * 2, margin, margin)
       }
-      ctx.y -= 6
+      ctx.y -= 5
     })
 
     // --- FIRMAS ---
-    ctx.y -= 40
-    if (ctx.y < 160) { ctx.page = doc.addPage([pageWidth, pageHeight]); ctx.y = pageHeight - margin }
+    ctx.y -= 25
+    if (ctx.y < 100) { ctx.page = doc.addPage([pageWidth, pageHeight]); ctx.y = pageHeight - margin }
 
     const sw = 160
     const sy = ctx.y - 60

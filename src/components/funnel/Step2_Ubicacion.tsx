@@ -15,6 +15,8 @@ interface Props {
   viaticosConfig?: {
     zona2Rate?: number
     zona3Rate?: number
+    zona2Cities?: string
+    zona3Cities?: string
   }
 }
 
@@ -129,13 +131,32 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
             </div>
             <div className="space-y-2">
               <Label htmlFor="state" className="text-white font-bold text-xs uppercase tracking-wider">Estado</Label>
-              <Input
-                id="state"
-                value={state}
-                onChange={e => { setState(e.target.value); setError("") }}
-                placeholder="Estado de México"
-                className="bg-card/50 border-white/15 h-12 text-base focus:border-primary rounded-xl"
-              />
+              <div className="relative">
+                <select
+                  id="state"
+                  value={state}
+                  onChange={e => { 
+                    const val = e.target.value
+                    setState(val)
+                    setError("")
+                  }}
+                  className="w-full bg-[#161616]/80 border border-white/15 h-12 px-3 text-base focus:border-primary focus:outline-none rounded-xl text-white cursor-pointer appearance-none pr-10"
+                >
+                  <option value="Estado de México" className="bg-[#161616] text-white">Estado de México</option>
+                  <option value="Ciudad de México" className="bg-[#161616] text-white">Ciudad de México (CDMX)</option>
+                  <option value="Querétaro" className="bg-[#161616] text-white">Querétaro</option>
+                  <option value="Morelos" className="bg-[#161616] text-white">Morelos</option>
+                  <option value="Puebla" className="bg-[#161616] text-white">Puebla</option>
+                  <option value="Hidalgo" className="bg-[#161616] text-white">Hidalgo</option>
+                  <option value="Tlaxcala" className="bg-[#161616] text-white">Tlaxcala</option>
+                  <option value="Otro" className="bg-[#161616] text-white">Otro Estado (Resto de la República)</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -111,6 +111,7 @@ model Package {
   name            String
   baseCostPerHour Float
   minDuration     Int
+  maxDuration     Int?             @default(5)
   description     String?
   includes        String?
   active          Boolean          @default(true)
@@ -142,6 +143,7 @@ model PackageService {
   description String?
   setupCost   Float    @default(0)
   hourlyCost  Float    @default(0)
+  active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
   package     Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
@@ -510,6 +512,8 @@ model GlobalConfig {
   msgTemplateBarClose    String?
   zona2Rate              Float?    @default(1500.0)
   zona3Rate              Float?    @default(3000.0)
+  zona2Cities            String?   @default("valle de bravo, avandaro, malinalco, ixtapan de la sal, tonatico, ciudad de mexico, cdmx, df, distrito federal, naucalpan, tlalnepantla, huixquilucan, interlomas, santa fe, cuajimalpa, alvaro obregon, coyoacan, tlalpan, tepotzotlan, atizapan, izcalli")
+  zona3Cities            String?   @default("cuernavaca, tepoztlan, jiutepec, morelos, queretaro, san juan del rio, juriquilla, puebla, cholula, atlixco, pachuca, hidalgo, tlaxcala")
   bankName               String?
   bankAccount            String?
   bankClabe              String?

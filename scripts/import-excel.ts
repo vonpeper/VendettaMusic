@@ -103,7 +103,7 @@ async function main() {
   const raw: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null })
 
   let currentMonth = "Enero"
-  let currentYear  = new Date().getFullYear()
+  const currentYear  = new Date().getFullYear()
   let imported = 0
   let skipped  = 0
 

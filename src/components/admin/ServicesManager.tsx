@@ -96,11 +96,11 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceI
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
            <Zap className="w-5 h-5 text-primary" /> Catálogo Maestro de Servicios
         </h2>
-        <Button onClick={() => setIsAdding(true)} className="gap-2 text-white">
+        <Button onClick={() => setIsAdding(true)} className="gap-2 text-white w-full sm:w-auto justify-center h-10 font-semibold text-sm">
           <Plus className="w-4 h-4" /> Nuevo Servicio
         </Button>
       </div>

@@ -80,12 +80,15 @@ interface PkgOption {
 
 interface WizardProps {
   packages: PkgOption[]
+  extras?: any[]
   initialStep?:  number
   initialPkgId?: string
   initialCity?:  string
   viaticosConfig?: {
     zona2Rate?: number
     zona3Rate?: number
+    zona2Cities?: string
+    zona3Cities?: string
   }
   paymentConfig?: {
     payMercadoPagoActive: boolean
@@ -95,7 +98,7 @@ interface WizardProps {
   }
 }
 
-export default function FunnelWizard({ packages, initialStep = 0, initialPkgId, initialCity, viaticosConfig, paymentConfig }: WizardProps) {
+export default function FunnelWizard({ packages, extras = [], initialStep = 0, initialPkgId, initialCity, viaticosConfig, paymentConfig }: WizardProps) {
   // If coming from "Show Personalizado" we pre-select the package and jump to step
   const preselectedPkg = initialPkgId
     ? packages.find(p => p.id === initialPkgId)
@@ -182,6 +185,7 @@ export default function FunnelWizard({ packages, initialStep = 0, initialPkgId, 
             {step === 0 && (
               <Step1_Paquete
                 packages={packages}
+                extras={extras}
                 data={data}
                 onNext={next}
               />

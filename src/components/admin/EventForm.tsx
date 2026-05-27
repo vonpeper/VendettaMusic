@@ -5,10 +5,11 @@ import { createEventAction, updateEventAction } from "@/actions/events"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, CheckCircle2, AlertCircle, Bell, MessageCircle, Copy, Check, Users, Send, Loader2 } from "lucide-react"
+import { X, CheckCircle2, AlertCircle, Bell, MessageCircle, Copy, Check, Users, Send, Loader2, Plus, UserPlus } from "lucide-react"
 import Image from "next/image"
 import { notifySingleMusicianAction } from "@/actions/events"
 import { toast } from "sonner"
+import { createClienteAction, ensureGenericClienteAction } from "@/actions/clientes"
 
 const CEREMONY_TYPES = [
   { value: "boda",       label: "💒 Boda" },
@@ -76,6 +77,18 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
   const [copied, setCopied] = useState(false)
   const [notifyingIds, setNotifyingIds] = useState<string[]>([])
 
+  // Local clients list & selected state
+  const [clientsList, setClientsList] = useState(clients)
+  const [selectedClientId, setSelectedClientId] = useState(initialData?.clientId || "")
+  const [loadingAction, setLoadingAction] = useState<string | null>(null)
+
+  // New Client Popup Modal States
+  const [showNewClientModal, setShowNewClientModal] = useState(false)
+  const [newClientName, setNewClientName] = useState("")
+  const [newClientEmail, setNewClientEmail] = useState("")
+  const [newClientPhone, setNewClientPhone] = useState("")
+  const [creatingClient, setCreatingClient] = useState(false)
+
   const currentMusicianIds = initialData?.musicians?.map((m: any) => m.musicianId) || []
   const [selectedMusicians, setSelectedMusicians] = useState<string[]>(
     currentMusicianIds.length > 0 
@@ -111,6 +124,62 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
       navigator.clipboard.writeText(state.gigMessage)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  async function handleSelectGenericClient() {
+    setLoadingAction("generic")
+    try {
+      const res = await ensureGenericClienteAction()
+      if (res.success && res.id) {
+        if (!clientsList.some(c => c.id === res.id)) {
+          setClientsList(prev => [...prev, { id: res.id, name: res.name! }])
+        }
+        setSelectedClientId(res.id)
+        toast.success("Cliente Genérico seleccionado con éxito")
+      } else {
+        toast.error(res.message || "Error al habilitar cliente genérico")
+      }
+    } catch (err) {
+      toast.error("Error de comunicación con el servidor")
+    } finally {
+      setLoadingAction(null)
+    }
+  }
+
+  async function handleCreateClientSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newClientName.trim()) {
+      toast.error("El nombre del cliente es obligatorio.")
+      return
+    }
+    setCreatingClient(true)
+    try {
+      const fd = new FormData()
+      fd.append("name", newClientName)
+      fd.append("email", newClientEmail)
+      fd.append("whatsapp", newClientPhone)
+      fd.append("type", "private")
+      
+      const res = await createClienteAction(null, fd)
+      if (res.success && res.id) {
+        toast.success("Cliente creado y vinculado correctamente.")
+        // Add to list and select it
+        setClientsList(prev => [...prev, { id: res.id, name: newClientName }])
+        setSelectedClientId(res.id)
+        
+        // Reset states and close modal
+        setNewClientName("")
+        setNewClientEmail("")
+        setNewClientPhone("")
+        setShowNewClientModal(false)
+      } else {
+        toast.error(res.message || "Error al crear el cliente.")
+      }
+    } catch (err) {
+      toast.error("Error interno al registrar cliente.")
+    } finally {
+      setCreatingClient(false)
     }
   }
 
@@ -160,7 +229,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-card backdrop-blur-sm p-4">
-      <div className="bg-card border border-border/40 rounded-2xl shadow-2xl w-[95vw] sm:w-full max-w-3xl max-h-[85vh] overflow-y-auto">
+      <div className="bg-card border border-border/40 rounded-2xl shadow-2xl w-[95vw] sm:w-full max-w-3xl max-h-[85vh] overflow-y-auto relative">
 
         {/* Header */}
         <div className="border-b border-border/40 sticky top-0 bg-card z-10">
@@ -199,13 +268,39 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
           <fieldset>
             <legend className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Identidad del Evento</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="clientId">Cliente (Opcional)</Label>
-                <select id="clientId" name="clientId" defaultValue={initialData?.clientId || ""}
-                  className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <option value="">(Sin cliente asignado)</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+              <div className="space-y-2 flex flex-col justify-between">
+                <Label htmlFor="clientId" className="text-sm font-semibold">Cliente *</Label>
+                <div className="flex gap-2">
+                  <select 
+                    id="clientId" 
+                    name="clientId" 
+                    required 
+                    value={selectedClientId}
+                    onChange={(e) => setSelectedClientId(e.target.value)}
+                    className="flex-1 h-10 rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="" disabled>Seleccionar cliente...</option>
+                    {clientsList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div className="flex items-center gap-3 mt-1.5 px-0.5">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowNewClientModal(true)}
+                    className="text-xs text-primary font-bold hover:underline flex items-center gap-1"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" /> + Crear Nuevo
+                  </button>
+                  <span className="text-muted-foreground/30">•</span>
+                  <button 
+                    type="button" 
+                    onClick={handleSelectGenericClient}
+                    disabled={loadingAction === "generic"}
+                    className="text-xs text-primary font-bold hover:underline flex items-center gap-1 disabled:opacity-50"
+                  >
+                    {loadingAction === "generic" ? <Loader2 className="w-3 h-3 animate-spin" /> : "👤 Usar Genérico"}
+                  </button>
+                </div>
               </div>
               <div className="space-y-2 col-span-1 md:col-span-2">
                 <Label htmlFor="customName">Nombre del Show / Evento (Opcional)</Label>
@@ -293,23 +388,6 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                 placeholder="Instrucciones específicas del show..."
                 defaultValue={initialData?.musicianNotes || ""}
                 className="flex w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-            </div>
-            
-            <div className="space-y-2 mt-4 p-4 border border-primary/20 bg-primary/10 rounded-xl">
-              <Label htmlFor="bitacora" className="text-primary font-bold flex items-center gap-2">
-                📓 Bitácora / Observaciones del Show
-              </Label>
-              <p className="text-[10px] text-muted-foreground mb-2">Redacta aquí los highlights, horarios reales de llegada, incidentes u observaciones generales del evento.</p>
-              <textarea id="bitacora" name="bitacora" rows={4}
-                placeholder="Ej. El vocalista llegó 15 mins tarde, el audio falló al inicio pero se solucionó..."
-                defaultValue={initialData?.bitacora || ""}
-                className="flex w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-            </div>
-            
-            <div className="space-y-2 mt-4">
-              <SelectField id="audioEngineer" name="audioEngineer" label="Ingeniero en Audio / Staff Asignado"
-                defaultValue={initialData?.audioEngineer || ""}
-                options={[{ value: "", label: "Ninguno" }, ...staff.map(s => ({ value: s.name, label: s.name }))]} />
             </div>
 
             {/* Gestión de Músicos Individual */}
@@ -516,6 +594,88 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
           </div>
         </form>
       </div>
+
+      {/* Pop Up / Modal for creating a new client */}
+      {showNewClientModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+          <div className="bg-card border border-border/60 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            {/* Modal Header */}
+            <div className="bg-muted/40 p-5 border-b border-border/30 flex justify-between items-center">
+              <div className="flex items-center gap-2.5">
+                <UserPlus className="w-5 h-5 text-primary" />
+                <span className="font-bold text-foreground text-sm uppercase tracking-wider">Crear Nuevo Cliente</span>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowNewClientModal(false)}
+                className="p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleCreateClientSubmit} className="p-5 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="modal_clientName" className="text-xs font-bold text-foreground">Nombre Completo *</Label>
+                <Input 
+                  id="modal_clientName" 
+                  type="text" 
+                  required
+                  value={newClientName}
+                  onChange={(e) => setNewClientName(e.target.value)}
+                  placeholder="Ej. Juan Pérez González"
+                  className="bg-background h-10 text-sm w-full border border-border"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="modal_clientPhone" className="text-xs font-bold text-foreground">WhatsApp (12 o 13 dígitos) *</Label>
+                <Input 
+                  id="modal_clientPhone" 
+                  type="tel"
+                  required
+                  value={newClientPhone}
+                  onChange={(e) => setNewClientPhone(e.target.value)}
+                  placeholder="Ej. 5217222880045"
+                  className="bg-background h-10 text-sm w-full border border-border"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="modal_clientEmail" className="text-xs font-bold text-foreground">Correo Electrónico (Opcional)</Label>
+                <Input 
+                  id="modal_clientEmail" 
+                  type="email"
+                  value={newClientEmail}
+                  onChange={(e) => setNewClientEmail(e.target.value)}
+                  placeholder="Ej. juan@correo.com"
+                  className="bg-background h-10 text-sm w-full border border-border"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-3 justify-end border-t border-border/10">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  onClick={() => setShowNewClientModal(false)}
+                  className="h-9.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={creatingClient}
+                  className="h-9.5 font-semibold text-xs uppercase tracking-wider text-white gap-2"
+                >
+                  {creatingClient ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  {creatingClient ? "Registrando..." : "Crear Cliente"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

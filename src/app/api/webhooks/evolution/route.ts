@@ -118,8 +118,8 @@ async function handleMessageEvent(event: string, payload: any, config: any) {
     
     // 2. LÓGICA DE CLASIFICACIÓN Y ESCALACIÓN
     let shouldEscalate = false
-    let itemType = isKnown ? "customer_action_required" : "new_lead"
-    let category = classification.category
+    const itemType = isKnown ? "customer_action_required" : "new_lead"
+    const category = classification.category
 
     if (!isKnown) {
       // A) Si el número NO existe: Crear nuevo lead

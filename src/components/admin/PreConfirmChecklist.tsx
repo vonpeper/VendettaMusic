@@ -11,7 +11,8 @@ import {
   DialogFooter 
 } from "@/components/ui/dialog"
 import { Loader2, AlertTriangle, CheckCircle, MapPin, Phone, Users, FileText } from "lucide-react"
-
+import { sendWhatsApp } from "@/lib/notifications"
+import { getValidWhatsappPhone } from "@/lib/phone";
 export interface PreConfirmData {
   bookingId: string
   clientName: string
@@ -30,7 +31,7 @@ interface PreConfirmChecklistProps {
 export function PreConfirmChecklist({ data, isOpen, onOpenChange, onConfirm }: PreConfirmChecklistProps) {
   const [loading, setLoading] = useState(false)
 
-  const hasPhone = data.clientPhone && data.clientPhone !== "5500000000" && data.clientPhone !== "0000000000"
+  const hasPhone = Boolean(getValidWhatsappPhone(data.clientPhone))
   const hasMaps = !!data.mapsLink && data.mapsLink.trim().length > 0
   const hasStaff = data.musiciansCount > 0
 
@@ -66,7 +67,7 @@ export function PreConfirmChecklist({ data, isOpen, onOpenChange, onConfirm }: P
             <div>
               <p className={`text-sm font-bold ${hasPhone ? 'text-green-500' : 'text-red-500'}`}>Teléfono del Cliente</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {hasPhone ? `Registrado: ${data.clientPhone}` : "Falta número de teléfono válido para enviar notificaciones de WhatsApp."}
+                {hasPhone ? `Registrado: ${data.clientPhone}` : "El teléfono del cliente no es válido o está vacío. Revisa el número en el detalle de la venta."}
               </p>
             </div>
           </div>

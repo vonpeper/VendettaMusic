@@ -48,13 +48,16 @@ function normalize(str: string): string {
 export interface ViaticosConfig {
   zona2Rate?: number
   zona3Rate?: number
+  zona2Cities?: string
+  zona3Cities?: string
 }
 
 export function calcularViatcos(city: string, state?: string, config?: ViaticosConfig): ViaticosResult {
   const normCity = normalize(city)
   const normState = state ? normalize(state) : ""
 
-  const isLocal = ZONA_LOCAL.some(z => normalize(z) === normCity)
+  const isLocal = ZONA_LOCAL.some(z => normalize(z) === normCity) && 
+                  (!normState || normState === "estado de mexico" || normState === "edomex" || normState === "mexico" || normState === "estado de mex")
   if (isLocal) {
     return {
       isOutsideZone: false,
@@ -64,7 +67,16 @@ export function calcularViatcos(city: string, state?: string, config?: ViaticosC
     }
   }
 
-  const isZona2 = ZONA_2.some(z => normalize(z) === normCity || (normState && normalize(z) === normState))
+  // Parse dynamic zones if configured in DB, with clean normalized entries
+  const activeZona2 = config?.zona2Cities 
+    ? config.zona2Cities.split(",").map(c => c.trim()).filter(Boolean)
+    : ZONA_2;
+
+  const activeZona3 = config?.zona3Cities 
+    ? config.zona3Cities.split(",").map(c => c.trim()).filter(Boolean)
+    : ZONA_3;
+
+  const isZona2 = activeZona2.some(z => normalize(z) === normCity || (normState && normalize(z) === normState))
   if (isZona2) {
     return {
       isOutsideZone: true,
@@ -74,7 +86,7 @@ export function calcularViatcos(city: string, state?: string, config?: ViaticosC
     }
   }
 
-  const isZona3 = ZONA_3.some(z => normalize(z) === normCity || (normState && normalize(z) === normState))
+  const isZona3 = activeZona3.some(z => normalize(z) === normCity || (normState && normalize(z) === normState))
   if (isZona3) {
     return {
       isOutsideZone: true,

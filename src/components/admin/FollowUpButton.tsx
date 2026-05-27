@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { MessageCircle, Zap, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getValidWhatsappPhone } from "@/lib/phone"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { sendAutoFollowUpAction } from "@/actions/ventas"
@@ -27,10 +28,10 @@ export function FollowUpButton({ id, type, phone, clientName, currentCount, temp
     e.stopPropagation()
     e.preventDefault()
 
-    const cleanPhone = (phone || "").replace(/\D/g, "")
-    if (!cleanPhone || cleanPhone.length < 10 || cleanPhone === "5500000000") {
-      toast.error("Este cliente tiene un número no válido o de prueba (5500000000).")
-      return
+    const validPhone = getValidWhatsappPhone(phone);
+    if (!validPhone) {
+      toast.error("El teléfono del cliente no es válido o está vacío. Revisa el número en el detalle de la venta.");
+      return;
     }
 
     setLoadingAuto(true)
@@ -52,10 +53,10 @@ export function FollowUpButton({ id, type, phone, clientName, currentCount, temp
     e.stopPropagation()
     e.preventDefault()
 
-    const cleanPhone = (phone || "").replace(/\D/g, "")
-    if (!cleanPhone || cleanPhone.length < 10 || cleanPhone === "5500000000") {
-      toast.error("Este cliente tiene un número no válido o de prueba (5500000000).")
-      return
+    const validPhone = getValidWhatsappPhone(phone);
+    if (!validPhone) {
+      toast.error("El teléfono del cliente no es válido o está vacío. Revisa el número en el detalle de la venta.");
+      return;
     }
 
     setLoadingManual(true)
@@ -77,7 +78,7 @@ export function FollowUpButton({ id, type, phone, clientName, currentCount, temp
         .replace(/{{followUpCount}}/g, String(currentCount + 1))
 
       const message = encodeURIComponent(formattedMessage)
-      const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, "")}?text=${message}`
+      const whatsappUrl = `https://wa.me/${validPhone}?text=${message}`
       window.open(whatsappUrl, "_blank")
 
       toast.success("Seguimiento registrado")
@@ -91,8 +92,7 @@ export function FollowUpButton({ id, type, phone, clientName, currentCount, temp
   }
 
   if (variant === "dropdown") {
-    const cleanPhone = (phone || "").replace(/\D/g, "")
-    const hasPhone = cleanPhone && cleanPhone.length >= 10 && cleanPhone !== "5500000000"
+    const hasPhone = Boolean(getValidWhatsappPhone(phone))
     
     return (
       <>

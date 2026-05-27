@@ -34,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const title = config?.ogTitle || "Vendetta | Música en Vivo para Eventos";
   const description = config?.ogDescription || "Grupo musical versátil de alto nivel para bodas, eventos corporativos y festivales en México. Experiencia premium y energía inigualable.";
-  const image = config?.ogImage || '/images/shows/arma-tu-show.jpg';
+  const image = config?.ogImage || 'https://vendetta.mx/images/shows/arma-tu-show.jpg';
 
   return {
     title,

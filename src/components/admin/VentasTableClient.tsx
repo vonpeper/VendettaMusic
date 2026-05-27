@@ -26,7 +26,9 @@ import {
   RefreshCw
 } from "lucide-react"
 import { resendNotificationAction } from "@/actions/notifications"
+import { getValidWhatsappPhone } from "@/lib/phone"
 import { Button } from "@/components/ui/button"
+
 import { 
   Dialog, 
   DialogTrigger, 
@@ -365,9 +367,10 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                     <div className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px] md:max-w-none" title={reserva.clientName}>{reserva.clientName}</div>
                   )}
                   <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                    {reserva.clientPhone && reserva.clientPhone !== "5500000000" && reserva.clientPhone !== "0000000000" 
-                      ? reserva.clientPhone 
-                      : ((reserva as any).client?.whatsapp || "Sin teléfono")}
+                    {(() => {
+                      const phone = getValidWhatsappPhone(reserva?.client?.whatsapp || reserva?.clientPhone || "");
+                      return phone ? phone : "El teléfono del cliente no es válido o está vacío. Revisa el número en el detalle de la venta.";
+                    })()}
                   </div>
                   <div className="text-[10px] text-muted-foreground font-mono mt-0.5">{reserva.shortId || "S/F"}</div>
                 </td>
@@ -477,7 +480,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                           <FollowUpButton 
                             id={reserva.id}
                             type="booking"
-                            phone={(reserva.clientPhone && reserva.clientPhone !== "5500000000" && reserva.clientPhone !== "0000000000") ? reserva.clientPhone : (reserva.client?.whatsapp || "")}
+                            phone={getValidWhatsappPhone(reserva?.client?.whatsapp || reserva?.clientPhone || "") ?? ""}
                             clientName={reserva.clientName || reserva.client?.name || "Cliente"}
                             currentCount={reserva.followUpCount}
                             template={followUpTemplate || undefined}

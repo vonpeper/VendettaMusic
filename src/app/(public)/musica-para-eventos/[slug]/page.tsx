@@ -33,10 +33,24 @@ const LOCATIONS: Record<string, any> = {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const loc = LOCATIONS[params.slug]
   if (!loc) return {}
+  const title = loc.title;
+  const description = loc.description;
+  const image = 'https://vendetta.mx/images/shows/arma-tu-show.jpg'; // absolute OG image URL
   return {
-    title: loc.title,
-    description: loc.description,
-  }
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: image }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image],
+    },
+  };
 }
 
 export default function LocationPage({ params }: { params: { slug: string } }) {

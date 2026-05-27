@@ -54,6 +54,7 @@ const CLIENTS = [
 ]
 
 export default async function HomePage() {
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   const allMedia = await db.siteMedia.findMany()
   const mediaMap = {
     hero: allMedia.find((m: any) => m.section === "hero")?.url || "https://images.unsplash.com/photo-1468359601543-843bfaef291a?q=80&w=2074&auto=format&fit=crop",
@@ -73,7 +74,7 @@ export default async function HomePage() {
   })
 
   const dbPackages = await db.package.findMany({
-    where: { active: true, NOT: { isCustom: true } },
+    where: { NOT: { isCustom: true } },
     include: { serviceItems: { orderBy: { order: "asc" } } },
     orderBy: { baseCostPerHour: "asc" }
   })
@@ -148,7 +149,15 @@ export default async function HomePage() {
       </section>
 
       {/* -- PAQUETES ------------------------------------------------------- */}
-      <PaquetesSection dbPackages={dbPackages as any} />
+      <PaquetesSection 
+        dbPackages={dbPackages as any} 
+        viaticosConfig={{
+          zona2Rate: config?.zona2Rate || undefined,
+          zona3Rate: config?.zona3Rate || undefined,
+          zona2Cities: (config as any)?.zona2Cities || undefined,
+          zona3Cities: (config as any)?.zona3Cities || undefined,
+        }}
+      />
 
       {mediaMap.video_home && <VideoSection videoUrl={mediaMap.video_home} />}
       {!mediaMap.video_home && <VideoSection />}
