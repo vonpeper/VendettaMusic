@@ -21,11 +21,11 @@ export async function sendWhatsApp(
 
   if (!baseUrl || !apiKey || !to) return { messageId: null, error: "Faltan credenciales o destino" }
 
-  // Normalización Inteligente
+  // Normalización Inteligente — Evolution API requiere 13 dígitos: 521XXXXXXXXXX
   let cleanNumber = to.replace(/\D/g, "")
-  if (cleanNumber.length === 10) cleanNumber = `52${cleanNumber}`
-  else if (cleanNumber.length === 12 && cleanNumber.startsWith("521")) cleanNumber = `52${cleanNumber.substring(3)}`
-  else if (cleanNumber.length === 11 && cleanNumber.startsWith("1")) cleanNumber = `52${cleanNumber.substring(1)}`
+  if (cleanNumber.length === 10) cleanNumber = `521${cleanNumber}`
+  else if (cleanNumber.length === 12 && cleanNumber.startsWith("52") && !cleanNumber.startsWith("521")) cleanNumber = `521${cleanNumber.substring(2)}`
+  else if (cleanNumber.length === 11 && cleanNumber.startsWith("1")) cleanNumber = `52${cleanNumber}`
   
   const isMedia = !!media
   const endpoint = isMedia ? "sendMedia" : "sendText"

@@ -200,14 +200,19 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     }
 
     const cleanPhone = realRecipient.replace(/\D/g, "")
-    // Ensure we handle local and international correctly
+    // Build WhatsApp JID — Evolution API requires 13-digit Mexican format: 521XXXXXXXXXX
     let jid = ""
     if (cleanPhone.length === 10) {
-      jid = `52${cleanPhone}@s.whatsapp.net`
-    } else if (cleanPhone.length === 12 && cleanPhone.startsWith("521")) {
-      // Sometimes Mexico adds a 1
-      jid = `52${cleanPhone.substring(3)}@s.whatsapp.net`
+      // Local 10-digit number → prepend 521 (country + mobile prefix)
+      jid = `521${cleanPhone}@s.whatsapp.net`
+    } else if (cleanPhone.length === 12 && cleanPhone.startsWith("52") && !cleanPhone.startsWith("521")) {
+      // 52XXXXXXXXXX (missing the 1) → insert 1 after country code
+      jid = `521${cleanPhone.substring(2)}@s.whatsapp.net`
+    } else if (cleanPhone.length === 13 && cleanPhone.startsWith("521")) {
+      // Already correct 13-digit format
+      jid = `${cleanPhone}@s.whatsapp.net`
     } else if (cleanPhone.length >= 11) {
+      // Fallback: use as-is
       jid = `${cleanPhone}@s.whatsapp.net`
     } else {
       console.warn(`Número inválido para ${r.name}: ${cleanPhone}`)
