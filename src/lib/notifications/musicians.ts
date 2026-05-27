@@ -2,6 +2,7 @@ import { formatDateMX } from "../utils"
 import { getAppUrl } from "../url"
 import { parseTemplate } from "./templates"
 import { dispatchNotification } from "./dispatcher"
+import { toWhatsAppJid } from "../phone"
 
 /**
  * Notificador de Músicos optimizado (Bucle centralizado)
@@ -199,23 +200,9 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
       continue
     }
 
-    const cleanPhone = realRecipient.replace(/\D/g, "")
-    // Build WhatsApp JID — Evolution API requires 13-digit Mexican format: 521XXXXXXXXXX
-    let jid = ""
-    if (cleanPhone.length === 10) {
-      // Local 10-digit number → prepend 521 (country + mobile prefix)
-      jid = `521${cleanPhone}@s.whatsapp.net`
-    } else if (cleanPhone.length === 12 && cleanPhone.startsWith("52") && !cleanPhone.startsWith("521")) {
-      // 52XXXXXXXXXX (missing the 1) → insert 1 after country code
-      jid = `521${cleanPhone.substring(2)}@s.whatsapp.net`
-    } else if (cleanPhone.length === 13 && cleanPhone.startsWith("521")) {
-      // Already correct 13-digit format
-      jid = `${cleanPhone}@s.whatsapp.net`
-    } else if (cleanPhone.length >= 11) {
-      // Fallback: use as-is
-      jid = `${cleanPhone}@s.whatsapp.net`
-    } else {
-      console.warn(`Número inválido para ${r.name}: ${cleanPhone}`)
+    const jid = toWhatsAppJid(realRecipient)
+    if (!jid) {
+      console.warn(`⚠️ Número inválido para ${r.name}: "${realRecipient}" — omitiendo.`)
       continue
     }
 

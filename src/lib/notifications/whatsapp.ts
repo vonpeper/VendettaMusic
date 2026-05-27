@@ -1,6 +1,4 @@
-/**
- * Envío físico via Evolution API v2
- */
+import { toWhatsAppNumber } from "../phone"
 export async function sendWhatsApp(
   to: string, 
   message: string, 
@@ -21,11 +19,13 @@ export async function sendWhatsApp(
 
   if (!baseUrl || !apiKey || !to) return { messageId: null, error: "Faltan credenciales o destino" }
 
-  // Normalización Inteligente — Evolution API requiere 13 dígitos: 521XXXXXXXXXX
-  let cleanNumber = to.replace(/\D/g, "")
-  if (cleanNumber.length === 10) cleanNumber = `521${cleanNumber}`
-  else if (cleanNumber.length === 12 && cleanNumber.startsWith("52") && !cleanNumber.startsWith("521")) cleanNumber = `521${cleanNumber.substring(2)}`
-  else if (cleanNumber.length === 11 && cleanNumber.startsWith("1")) cleanNumber = `52${cleanNumber}`
+  // Normalización Inteligente — usa toWhatsAppNumber() de phone.ts
+  const normalized = toWhatsAppNumber(to)
+  if (!normalized) {
+    console.warn(`⚠️ Número inválido o no normalizable: "${to}" — abortando envío.`)
+    return { messageId: null, error: `Número inválido: ${to}` }
+  }
+  const cleanNumber = normalized
   
   const isMedia = !!media
   const endpoint = isMedia ? "sendMedia" : "sendText"

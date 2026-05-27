@@ -9,59 +9,74 @@ export function cleanPhone(phone: string): string {
 
 /**
  * Determine if a phone number is a dummy placeholder.
- * Dummy numbers are any 10-digit sequence where all digits are identical
- * (e.g. "0000000000", "1111111111", "5555555555") or the specific
- * values "5500000000" and "0000000000" (or their cleaned equivalents).
  */
 export function isDummyPhone(phone: string): boolean {
   const cleaned = cleanPhone(phone);
-  // Empty string is also considered dummy/invalid
   if (!cleaned) return true;
-  // Specific known dummy numbers
   if (cleaned === "5500000000" || cleaned === "0000000000") return true;
-  // All digits identical (e.g., 1111111111)
   const allSame = /^([0-9])\1+$/.test(cleaned);
   return allSame;
 }
 
 /**
- * Normalize a Mexican WhatsApp phone number to the 13-digit format:
- *   52 + 1 + 10-digit mobile number
- *   e.g. "7226342452" => "5217226342452"
- *   e.g. "+52 1 722 634 2452" => "5217226342452"
+ * Normalize any Mexican phone to the 13-digit WhatsApp format: 521XXXXXXXXXX
+ *
+ * Handles all common input formats:
+ *   "722 784 4738"        → "5217227844738"   (10 digits, local)
+ *   "52 1 722 537 2550"   → "5217225372550"   (13 digits, already correct)
+ *   "7222417045"          → "5217222417045"   (10 digits, no spaces)
+ *   "521 722 784 4738"    → "5217227844738"   (13 digits with spaces)
+ *   "+52 722 784 4738"    → "5217227844738"   (12 digits, missing the 1)
+ *   "1 722 784 4738"      → "5217227844738"   (11 digits with leading 1)
  */
-export function normalizeMexicanWhatsapp(phone: string): string | null {
-  const cleaned = cleanPhone(phone);
-  // Reject dummy numbers
-  if (isDummyPhone(cleaned)) return null;
+export function toWhatsAppNumber(phone: string): string | null {
+  const digits = cleanPhone(phone);
+  if (!digits || isDummyPhone(digits)) return null;
 
-  // If already full length (13) and starts with 52, assume it's normalized.
-  if (cleaned.length === 13 && cleaned.startsWith("52")) {
-    return cleaned;
-  }
+  // Already correct: 521 + 10 digits = 13 digits
+  if (digits.length === 13 && digits.startsWith("521")) return digits;
 
-  // If length is 11 and starts with "1", prepend country code.
-  if (cleaned.length === 11 && cleaned.startsWith("1")) {
-    return `52${cleaned}`;
-  }
+  // 52 + 10 digits = 12 digits (missing the mobile "1")
+  if (digits.length === 12 && digits.startsWith("52")) return `521${digits.substring(2)}`;
 
-  // If length is 10, assume it's the mobile number without the leading "1".
-  if (cleaned.length === 10) {
-    return `521${cleaned}`;
-  }
+  // 1 + 10 digits = 11 digits (US-style with leading 1, no country code)
+  if (digits.length === 11 && digits.startsWith("1")) return `52${digits}`;
 
-  // Reject anything else.
+  // 10 digits: bare local number
+  if (digits.length === 10) return `521${digits}`;
+
   return null;
 }
 
 /**
+ * Returns the full WhatsApp JID for Evolution API: 521XXXXXXXXXX@s.whatsapp.net
+ * Returns null if the phone is invalid.
+ */
+export function toWhatsAppJid(phone: string): string | null {
+  const number = toWhatsAppNumber(phone);
+  return number ? `${number}@s.whatsapp.net` : null;
+}
+
+/**
+ * Returns wa.me deep link for a Mexican phone number.
+ */
+export function toWaLink(phone: string): string | null {
+  const number = toWhatsAppNumber(phone);
+  return number ? `https://wa.me/${number}` : null;
+}
+
+/**
+ * @deprecated Use toWhatsAppNumber instead.
+ */
+export function normalizeMexicanWhatsapp(phone: string): string | null {
+  return toWhatsAppNumber(phone);
+}
+
+/**
  * Validate that a phone number is a proper Mexican WhatsApp number.
- * Returns true for normalized 13-digit numbers starting with "52"
- * and not a dummy placeholder.
  */
 export function isValidWhatsappPhone(phone: string): boolean {
-  const normalized = normalizeMexicanWhatsapp(phone);
-  return normalized !== null;
+  return toWhatsAppNumber(phone) !== null;
 }
 
 /**
@@ -69,6 +84,5 @@ export function isValidWhatsappPhone(phone: string): boolean {
  */
 export function getValidWhatsappPhone(phone: string | undefined | null): string | null {
   if (!phone) return null;
-  const normalized = normalizeMexicanWhatsapp(phone);
-  return normalized;
+  return toWhatsAppNumber(phone);
 }

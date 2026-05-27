@@ -1,5 +1,6 @@
 import { Phone, Users as UsersIcon, AlertTriangle, MessageCircle, Star } from "lucide-react"
 import { useState } from "react"
+import { toWaLink } from "@/lib/phone"
 
 export function MusicianCard({ musician, onViewDetails }: { musician: any, onViewDetails: () => void }) {
   const [imgError, setImgError] = useState(false);
@@ -18,13 +19,9 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
 
   const badgeColor = availabilityColors[actualAvailability] || "bg-gray-500/20 text-muted-foreground border-gray-500/30"
   
-  // Format phone for whatsapp link
+  // Format phone for WhatsApp link — uses centralized normalization (521XXXXXXXXXX)
   const rawPhone = musician.whatsapp
-  const cleanPhone = rawPhone ? String(rawPhone).replace(/\D/g, "") : ""
-  
-  // Basic validation for Mexico (52) if 10 digits
-  const formattedPhone = (cleanPhone.length === 10) ? `52${cleanPhone}` : cleanPhone
-  const waLink = (cleanPhone.length >= 10) ? `https://wa.me/${formattedPhone}` : null
+  const waLink = rawPhone ? toWaLink(rawPhone) : null
 
   return (
     <div className={`bg-card border ${isAtRisk ? 'border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-border/40'} rounded-xl p-5 relative overflow-hidden transition-all hover:border-primary/50`}>

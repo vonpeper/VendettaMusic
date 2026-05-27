@@ -6,6 +6,7 @@ import { Zap, Loader2, ExternalLink, Copy, CheckCircle2, Clock, AlertCircle } fr
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { sendAutomatedClientWhatsAppAction, sendManualClientThanksAction } from "@/actions/notifications"
+import { toWaLink } from "@/lib/phone"
 
 export function ClientWhatsappActions({ 
   bookingId, 
@@ -78,8 +79,7 @@ export function ClientWhatsappActions({
     }
   }
 
-  const cleanPhone = clientPhone.replace(/\D/g, "")
-  const whatsappLink = `https://wa.me/52${cleanPhone.length === 10 ? cleanPhone : cleanPhone.slice(-10)}`
+  const whatsappLink = toWaLink(clientPhone) ?? `https://wa.me/${clientPhone.replace(/\D/g, "")}`
 
   return (
     <div className="space-y-3 w-full bg-muted/20 p-4 rounded-xl border border-border/40">
