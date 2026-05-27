@@ -156,8 +156,40 @@ export function ClienteForm({ onClose, editing }: ClienteFormProps) {
             )}
           </fieldset>
 
+          {/* Ubicación de referencia */}
+          <fieldset className="space-y-2 border-t border-border/40 pt-2">
+            <legend className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Ubicación de referencia</legend>
+            <p className="text-xs text-muted-foreground mb-3">Ciudad y estado del cliente — solo como referencia de contacto, no como venue del evento.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">Ciudad</Label>
+                <Input
+                  id="city"
+                  name="city"
+                  defaultValue={editing?.city || ""}
+                  placeholder="Ej. Toluca, Metepec, CDMX..."
+                  className="bg-background border-border/40"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="state">Estado</Label>
+                <select
+                  id="state"
+                  name="state"
+                  defaultValue={editing?.state || ""}
+                  className="flex h-10 w-full rounded-md border border-border/40 bg-card px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">— Sin especificar —</option>
+                  {ESTADOS_MX.map(e => (
+                    <option key={e} value={e}>{e}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </fieldset>
+
           {/* Notas internas */}
-          <div className="space-y-2 mt-2">
+          <div className="space-y-2">
             <Label htmlFor="notes">Notas internas</Label>
             <textarea id="notes" name="notes" defaultValue={editing?.notes || ""} rows={3} placeholder="Observaciones relevantes del cliente..." className="flex w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
           </div>
