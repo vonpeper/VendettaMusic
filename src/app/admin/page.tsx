@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, Banknote, FileText, TrendingUp, Music, Bell, ShieldAlert, CheckCircle2, AlertCircle, XCircle, ExternalLink, LayoutDashboard, Inbox } from "lucide-react"
-import { IncomeChart } from "@/components/admin/IncomeChart"
+import { IncomeChart, type MonthChartData, type ChartMicroKPIs } from "@/components/admin/IncomeChart"
 import Link from "next/link"
 import { formatDateMX } from "@/lib/utils"
 import { FollowUpButton } from "@/components/admin/FollowUpButton"
@@ -188,11 +188,84 @@ export default async function AdminDashboardPage() {
   const monthNames = chartDataRaw.map(d => d.month)
   const hasDupes   = monthNames.some((m, i) => monthNames.indexOf(m) !== i)
 
-  const chartData = chartDataRaw.map(d => ({
-    month: hasDupes ? `${d.month.slice(0, 3)} '${String(d.year).slice(2)}` : d.month,
-    total: d.total,
-    count: d.count,
-  }))
+  // -- Datos enriquecidos para Centro de Mando Financiero ---------------
+  const allBookingsForChart = await db.bookingRequest.findMany({
+    select: { createdAt: true, updatedAt: true, status: true, packageName: true, baseAmount: true }
+  })
+
+  const CONVERTED_STATUSES = ["CONFIRMED", "agendado", "completado"]
+
+  // Pipeline perdido por mes (EXPIRED agrupados por mes de expiración)
+  const lostByMonthMap: Record<string, number> = {}
+  allBookingsForChart.filter(b => b.status === "EXPIRED").forEach(b => {
+    const d = b.updatedAt
+    const key = `${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+    lostByMonthMap[key] = (lostByMonthMap[key] || 0) + (b.baseAmount || 0)
+  })
+
+  // Conversión por mes: leads creados ese mes vs confirmados
+  const leadsCreatedByMonth:    Record<string, number> = {}
+  const confirmedCreatedByMonth: Record<string, number> = {}
+  allBookingsForChart.forEach(b => {
+    const d   = b.createdAt
+    const key = `${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+    leadsCreatedByMonth[key] = (leadsCreatedByMonth[key] || 0) + 1
+    if (CONVERTED_STATUSES.includes(b.status)) {
+      confirmedCreatedByMonth[key] = (confirmedCreatedByMonth[key] || 0) + 1
+    }
+  })
+
+  // Micro-KPIs
+  const confirmedBookingsAll = allBookingsForChart.filter(b => CONVERTED_STATUSES.includes(b.status))
+
+  const avgTicket = confirmedBookingsAll.length > 0
+    ? confirmedBookingsAll.reduce((s, b) => s + (b.baseAmount || 0), 0) / confirmedBookingsAll.length
+    : 0
+
+  const avgDaysToClose = confirmedBookingsAll.length > 0
+    ? confirmedBookingsAll.reduce((s, b) => {
+        const days = (b.updatedAt.getTime() - b.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+        return s + Math.max(days, 0)
+      }, 0) / confirmedBookingsAll.length
+    : 0
+
+  const pkgCount: Record<string, number> = {}
+  confirmedBookingsAll.forEach(b => {
+    if (b.packageName) pkgCount[b.packageName] = (pkgCount[b.packageName] || 0) + 1
+  })
+  const topPkgEntry = Object.entries(pkgCount).sort((a, b) => b[1] - a[1])[0]
+  const topPackageName  = topPkgEntry ? topPkgEntry[0] : "—"
+  const topPackagePct   = topPkgEntry && confirmedBookingsAll.length > 0
+    ? Math.round((topPkgEntry[1] / confirmedBookingsAll.length) * 100)
+    : 0
+
+  const peakMonthEntry   = Object.entries(monthMap).sort((a, b) => b[1].total - a[1].total)[0]
+  const peakMonthLabel   = peakMonthEntry ? peakMonthEntry[0] : ""
+  const peakMonthIncome  = peakMonthEntry ? peakMonthEntry[1].total : 0
+
+  const chartMicroKPIs: ChartMicroKPIs = {
+    avgTicket,
+    avgDaysToClose,
+    topPackage:      topPackageName,
+    topPackagePct,
+    peakMonthLabel,
+    peakMonthIncome,
+  }
+
+  // Chart data enriquecido
+  const chartData: MonthChartData[] = chartDataRaw.map(d => {
+    const key          = `${d.month} ${d.year}`
+    const totalLeads   = leadsCreatedByMonth[key] || 0
+    const totalConf    = confirmedCreatedByMonth[key] || 0
+    const convPct      = totalLeads > 0 ? Math.round((totalConf / totalLeads) * 100) : 0
+    return {
+      month:         hasDupes ? `${d.month.slice(0, 3)} '${String(d.year).slice(2)}` : d.month,
+      income:        d.total,
+      lost:          lostByMonthMap[key] || 0,
+      conversionPct: convPct,
+      count:         d.count,
+    }
+  })
 
   // -- Upcoming events próximos 7 días para alerta principal ---------
   const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
@@ -334,40 +407,57 @@ export default async function AdminDashboardPage() {
 
       {/* -- Gráfica + Pérdida Potencial -- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Gráfica ingresos por mes */}
+        {/* ── Centro de Mando Financiero ── */}
         <Card className={`${isAdmin ? "lg:col-span-2" : "lg:col-span-3"} bg-white border-border/40 shadow-sm`}>
-          <CardHeader className="flex flex-row items-center justify-between border-b border-border/5 mb-4">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/5 mb-2">
             <div>
               <CardTitle className="font-heading font-black text-xl">
-                {isAdmin ? "Tendencia de Ingresos" : "Próximas Reservas"}
+                {isAdmin ? "Centro de Mando Financiero" : "Próximas Reservas"}
               </CardTitle>
               <CardDescription>
-                {isAdmin ? "Historial de facturación — últimos 6 meses." : "Resumen de actividad reciente."}
+                {isAdmin
+                  ? "Ingresos vs pipeline perdido · tasa de cierre · últimos 6 meses"
+                  : "Resumen de actividad reciente."}
               </CardDescription>
             </div>
-            <Link href="/admin/ventas"
-              className="px-4 py-2 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
-               Ver detalle
-            </Link>
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <div className="hidden sm:flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded" style={{ background: "#E91E63" }} />
+                    Ingresos
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded opacity-60" style={{ background: "#FF5722" }} />
+                    Perdido
+                  </span>
+                </div>
+              )}
+              <Link href="/admin/ventas"
+                className="px-4 py-2 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
+                 Ver detalle
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             {isAdmin ? (
               <>
-                <IncomeChart data={chartData} />
-                <div className="grid grid-cols-3 gap-6 mt-6 pt-6 border-t border-border/40">
-                  <div className="text-center">
-                    <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Acumulado Histórico</div>
-                    <div className="text-xl font-black text-foreground mt-1">{MXN(totalAllTime)}</div>
+                {/* 3 cifras clave sobre la gráfica */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="text-center p-2 rounded-xl bg-muted/20">
+                    <div className="text-[8px] text-muted-foreground uppercase font-black tracking-widest">Acumulado histórico</div>
+                    <div className="text-lg font-black text-foreground">{MXN(totalAllTime)}</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Leads Totales</div>
-                    <div className="text-xl font-black text-foreground mt-1">{allBookingRequests}</div>
+                  <div className="text-center p-2 rounded-xl bg-muted/20">
+                    <div className="text-[8px] text-muted-foreground uppercase font-black tracking-widest">Leads totales</div>
+                    <div className="text-lg font-black text-foreground">{allBookingRequests}</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Promedio/Mes</div>
-                    <div className="text-xl font-black text-foreground mt-1">{MXN(totalAllTime / 12)}</div>
+                  <div className="text-center p-2 rounded-xl bg-muted/20">
+                    <div className="text-[8px] text-muted-foreground uppercase font-black tracking-widest">Promedio / mes</div>
+                    <div className="text-lg font-black text-foreground">{MXN(totalAllTime / Math.max(Object.keys(monthMap).length, 1))}</div>
                   </div>
                 </div>
+                <IncomeChart data={chartData} kpis={chartMicroKPIs} />
               </>
             ) : (
               <div className="space-y-4">
