@@ -78,7 +78,35 @@ Partíamos de 13 vulnerabilidades. Estado tras la limpieza: **7 moderate, 0 high
 
 ---
 
-## 5. Notas de operación
+## 5. Validación pre-deploy — sin regresiones de frontend (2026-05-27)
+
+Antes del deploy se verificó que la limpieza y los fixes de seguridad **no eliminaran
+ninguna funcionalidad, botón ni sección visible**.
+
+### Auditoría del diff
+- Único archivo de UI tocado en ambos commits: **borrado de `admin/upload-test/page.tsx`**.
+- Cero componentes en `src/components/**` y cero páginas existentes modificadas → por
+  construcción no se pudo quitar un botón de ninguna pantalla en uso.
+- `admin/upload-test` tenía **0 referencias entrantes** (ningún `Link`/`href`/`router.push`/
+  `redirect`): página huérfana de pruebas, no estaba en el sidebar ni en ningún menú.
+- Los 3 botones de export (`ventas`, `clientes`, `eventualidades`) intactos; solo cambió
+  el backend del endpoint (xlsx→exceljs) con comportamiento idéntico.
+
+### Smoke test de runtime (Next 16.2.6, dev server real)
+| Prueba | Resultado |
+|---|---|
+| Home `/` | 200 — secciones presentes: Músicos, Paquetes, Servicios, Galería, Contacto, Cotizar |
+| `/paquetes`, `/repertorio`, `/servicios`, `/contacto`, `/cotizar` | todas 200 |
+| `/api/admin/export` (bookings/clients/events) | 401 — endpoint vivo y protegido (no 404) |
+| Generación de `.xlsx` con exceljs | buffer válido (magic `PK`), verificado con datos dummy |
+| Log del server | sin errores de runtime |
+
+> Las pantallas admin (dashboard, tablas) requieren login y no se navegaron logueadas;
+> el diff garantiza que ninguna fue modificada.
+
+---
+
+## 6. Notas de operación
 
 - **DB local vs CLI**: `src/lib/db.ts` resuelve por default a `file:./prisma/dev.db`,
   pero `prisma.config.js` usa `file:./prisma/prod.db`. Conviene unificar para evitar
