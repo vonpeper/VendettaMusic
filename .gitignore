@@ -79,3 +79,6 @@ antigravity/
 /query.ts
 /db_audit.js
 /audit_output*.txt
+
+# prompts/notas internas (no versionar en repo público)
+/SYNC_JOSE.md
