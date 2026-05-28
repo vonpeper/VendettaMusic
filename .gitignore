@@ -65,3 +65,17 @@ scratch/
 .gemini/
 antigravity/
 .antigravity/
+
+# deploy/maintenance scripts (NUNCA commitear — pueden contener credenciales)
+*.exp
+
+# data dumps / exports (pueden contener PII de clientes)
+*.csv
+*.txt
+!requirements.txt
+
+# scripts de debug/test sueltos en la raíz
+/test-*.ts
+/query.ts
+/db_audit.js
+/audit_output*.txt
