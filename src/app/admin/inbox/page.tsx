@@ -35,8 +35,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 export default async function InboxPage({
   searchParams
 }: {
-  searchParams: { tab?: string }
+  searchParams: Promise<{ tab?: string }>
 }) {
+  const params = await searchParams
+
   const session = await auth()
   if (!session?.user || !["ADMIN", "AGENTE"].includes(session.user.role as string)) {
     redirect("/admin")
@@ -44,10 +46,7 @@ export default async function InboxPage({
 
   const items = await db.inboxItem.findMany({
     orderBy: { createdAt: "desc" },
-    include: {
-      client: true,
-      bookingRequest: true,
-    }
+    take: 200,
   })
 
   const incomingMessages = await db.notification.findMany({
@@ -84,7 +83,7 @@ export default async function InboxPage({
         </div>
       </div>
 
-      <Tabs defaultValue={searchParams.tab === "log" ? "log" : "pendientes"} className="space-y-6">
+      <Tabs defaultValue={params.tab === "log" ? "log" : "pendientes"} className="space-y-6">
         <TabsList className="bg-muted/50 p-1 border border-border/40 rounded-xl">
           <TabsTrigger value="pendientes" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <Inbox className="w-4 h-4" /> Pendientes de Atención

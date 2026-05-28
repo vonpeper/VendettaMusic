@@ -150,6 +150,9 @@ las tablas existen, pero **a `GlobalConfig` le faltan `zona2Cities` y `zona3Citi
 | **Mensajería** (`notificaciones`) | `globalConfig.findUnique` sin `select` trae las 54 columnas → "no such column: zona2Cities" | Migrar prod (`prisma db push`) |
 | **Banda y suplentes** | Bug de código: `musician.user.name.charAt(0)` crashea si `name` es null (`User.name` es `String?`). **Arreglado** en `MusicianCard.tsx` + `BandaClientView.tsx` con null-guards | Fix en código + deploy |
 | **Proveedores** | Query y render correctos contra el backup; si falla en prod, es drift de columnas en `Provider` no visible en el backup | Confirmar con diagnóstico en VPS + migrar |
+| **Inbox / Log de mensajes** | `inbox/page.tsx` accedía a `searchParams.tab` de forma síncrona; en Next 16 `searchParams` es `Promise` y debe await-earse → crash al abrir `?tab=log`. **Arreglado** con `await searchParams`. Además se quitaron includes innecesarios (`client`, `bookingRequest`) y se limitó a `take: 200` para la lentitud de la bandeja | Fix en código + deploy |
+
+> **Hallazgo en producción (2026-05-28)**: la DB de prod YA tenía las columnas `zona2Cities`/`zona3Cities`/`maxDuration`/`active` (alguien migró tras el backup del 25). El problema real era **(a)** falta de índices (aplicados vía SQL directo: 38 índices) y **(b)** el bug de `searchParams` en inbox. Las columnas no eran la causa.
 
 > El layout admin (`admin/layout.tsx:20`) usa `.catch(()=>null)` al leer globalConfig, por
 > eso el dashboard carga aunque falten columnas; las páginas que leen globalConfig SIN catch
