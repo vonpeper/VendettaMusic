@@ -61,6 +61,10 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
 
   const currentStatus = statusMap[mainBooking.status] || statusMap.pendiente
 
+  const totalAmount = mainBooking.invoice 
+    ? mainBooking.baseAmount + (mainBooking.ivaAmount || mainBooking.baseAmount * 0.16)
+    : mainBooking.baseAmount;
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden py-20">
       <RockBackground />
@@ -123,8 +127,8 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                       <span className="text-[10px] font-black text-foreground uppercase tracking-[0.2em]">Resumen Económico</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Inversión Total</span>
-                      <span className="text-foreground font-bold">{MXN(mainBooking.baseAmount)}</span>
+                      <span className="text-muted-foreground">Inversión Total {mainBooking.invoice ? '(IVA inc.)' : ''}</span>
+                      <span className="text-foreground font-bold">{MXN(totalAmount)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Anticipo Pago</span>
@@ -158,7 +162,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                 }
                 eventDate={mainBooking.requestedDate}
                 eventTime={mainBooking.startTime}
-                eventAmount={mainBooking.baseAmount}
+                eventAmount={totalAmount}
                 packageName={mainBooking.packageName}
                 eventAddress={mainBooking.address}
               />
