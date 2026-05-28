@@ -40,15 +40,34 @@ No se borraron por falta de certeza sobre su uso actual.
 
 ---
 
-## 3. Pendiente — refactors de mayor esfuerzo (recomendados)
+## 3. Refactors — estado
 
+### Hecho
+| # | Acción | Resultado |
+|---|---|---|
+| ✅ | Centralizar `requireAdmin()` en `lib/auth-guards.ts` | Eliminadas 5 definiciones locales duplicadas + 5 `ADMIN_ROLES` sets. Tres variantes (`requireAdminApi` para route handlers → `Response` 401; `requireAdminMsg`/`requireAdminErr` para server actions). Migrados: `config.ts`, `services.ts`, `extras.ts`, `api/booking`, `api/admin/locations`. Cero cambios de comportamiento (imports con alias mantienen los callsites). Build verde |
+
+> **Nota de seguridad descubierta al migrar**: los checks de auth NO son uniformes.
+> `actions/notifications.ts` y `actions/users.ts` exigen **solo ADMIN** (no AGENTE);
+> `actions/quote.ts` solo exige autenticación (clientes). Estos NO se centralizaron a
+> propósito: unificarlos al set `{ADMIN, AGENTE}` **ampliaría permisos** (un cambio de
+> seguridad). Si en el futuro se centralizan, usar un guard `requireAdminStrict` separado.
+
+### Pendiente
 | # | Acción | Impacto estimado | Esfuerzo | Riesgo |
 |---|---|---|---|---|
-| 1 | Consolidar `actions/config.ts` (13 funciones que repiten `requireAdmin → FormData → upsert vendetta_config → revalidatePath`) en una sola `saveConfigSectionAction` + mapa de campos | −~360 LOC | 1–2 h | Bajo |
-| 2 | Mover `requireAdmin()` a `lib/auth.ts` y reusarlo en los ~16 sitios que lo reimplementan inline | −~150 LOC, consistencia | 1 h | Bajo |
-| 3 | Fusionar `lib/notifications/{templates,musicians,dispatcher}.ts` (la separación actual no agrega valor; solo `dispatcher` y `whatsapp` tienen callsites externos) | −~200 LOC, 3→1 archivo | 2 h | Medio (8 callsites) |
-| 4 | Extraer un `<CrudManager<T>>` genérico para los 6 managers casi idénticos (Packages 535, Extras 494, Repertoire 406, Locations 321, Users 276, Services 230 ≈ 2262 LOC) | −~1200 LOC | 6–10 h | Medio |
-| 5 | Split de `admin/configuracion/page.tsx` (793 LOC) en sub-componentes por tab | Organización | 1 h | Nulo |
+| 1 | Consolidar `actions/config.ts` (13 funciones) | −~360 LOC | 1–2 h | **Medio/Alto** (revisado — ver abajo) |
+| 3 | Fusionar `lib/notifications/{templates,musicians,dispatcher}.ts` | −~200 LOC, 3→1 archivo | 2 h | Medio (8 callsites) |
+| 4 | `<CrudManager<T>>` genérico para 6 managers (≈2262 LOC) | −~1200 LOC | 6–10 h | Medio |
+| 5 | Split de `admin/configuracion/page.tsx` (793 LOC) por tab | Organización | 1 h | Nulo |
+
+> **`config.ts` reclasificado a riesgo Medio/Alto** (no Bajo como estimó la auditoría
+> inicial): las 13 funciones no son puro boilerplate — cada una tiene transformaciones
+> propias (preservar `"********"`, `parseFloat` con defaults, checkboxes `"on"`,
+> normalización de teléfono, coerción a `null`, mapeos form→DB). Además son form actions
+> consumidas por `<form action={...}>`, así que consolidarlas obliga a reescribir el
+> panel de configuración (pagos/Stripe/Evolution/textos legales). No hacer sin validación
+> visual del panel logueado.
 
 **Por verificar antes de tocar**: modelos `Setlist`/`SetlistSong` y `Quote`/`QuoteItem`
 podrían estar sin uso real (si todo el flujo va por `BookingRequest`). Confirmar

@@ -2,17 +2,7 @@
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { auth } from "@/lib/auth"
-
-const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
-
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
-    return { success: false as const, message: "No autorizado" }
-  }
-  return null
-}
+import { requireAdminMsg as requireAdmin } from "@/lib/auth-guards"
 
 export async function saveBankConfigAction(arg1: any, arg2?: any) {
   const u = await requireAdmin(); if (u) return u

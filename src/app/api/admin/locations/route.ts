@@ -1,23 +1,10 @@
 import { db } from "@/lib/db"
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import fs from "fs"
 import path from "path"
-import { auth } from "@/lib/auth"
+import { requireAdminApi as requireAdmin } from "@/lib/auth-guards"
 
 export const dynamic = "force-dynamic"
-
-const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
-
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' }
-    })
-  }
-  return null
-}
 
 const DEBUG_FILE = path.join(process.cwd(), "debug_crash.log")
 

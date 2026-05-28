@@ -6,18 +6,8 @@ import { calcularViatcos } from "@/lib/viaticos"
 import { findOrCreateClient } from "@/lib/clients"
 import { formatDateMX } from "@/lib/utils"
 import crypto from "crypto"
-import { auth } from "@/lib/auth"
 import { getAppUrl } from "@/lib/url"
-
-const ADMIN_ROLES = new Set(["ADMIN", "AGENTE"])
-
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-  return null
-}
+import { requireAdminApi as requireAdmin } from "@/lib/auth-guards"
 
 // --- 🛡️ IN-MEMORY RATE LIMITER (Anti-Spam) ---
 const bookingAttempts = new Map<string, { count: number; firstAttempt: number }>()
