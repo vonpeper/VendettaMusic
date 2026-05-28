@@ -61,8 +61,10 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
 
   const currentStatus = statusMap[mainBooking.status] || statusMap.pendiente
 
-  const totalAmount = mainBooking.invoice 
-    ? mainBooking.baseAmount + (mainBooking.ivaAmount || mainBooking.baseAmount * 0.16)
+  const hasInvoice = mainBooking.event?.invoice || false;
+  const ivaAmount = mainBooking.event?.ivaAmount || (mainBooking.baseAmount * 0.16);
+  const totalAmount = hasInvoice 
+    ? mainBooking.baseAmount + ivaAmount
     : mainBooking.baseAmount;
 
   return (
@@ -127,7 +129,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                       <span className="text-[10px] font-black text-foreground uppercase tracking-[0.2em]">Resumen Económico</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Inversión Total {mainBooking.invoice ? '(IVA inc.)' : ''}</span>
+                      <span className="text-muted-foreground">Inversión Total {hasInvoice ? '(IVA inc.)' : ''}</span>
                       <span className="text-foreground font-bold">{MXN(totalAmount)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
