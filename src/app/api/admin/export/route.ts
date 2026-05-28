@@ -141,13 +141,18 @@ export async function GET(req: NextRequest) {
     }
 
     // Crear Workbook y Worksheet
-    const XLSX = await import("xlsx")
-    const worksheet = XLSX.utils.json_to_sheet(data)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Datos")
+    const ExcelJS = (await import("exceljs")).default
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet("Datos")
+
+    if (data.length > 0) {
+      const keys = Object.keys(data[0])
+      worksheet.columns = keys.map(key => ({ header: key, key }))
+      worksheet.addRows(data)
+    }
 
     // Generar Buffer
-    const buf = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
+    const buf = await workbook.xlsx.writeBuffer()
 
     return new Response(buf, {
       status: 200,

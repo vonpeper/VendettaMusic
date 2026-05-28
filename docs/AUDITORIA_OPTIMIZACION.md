@@ -56,7 +56,29 @@ referencias antes de eliminar — implican migración de DB.
 
 ---
 
-## 4. Notas de operación
+## 4. Seguridad — vulnerabilidades (2026-05-27)
+
+Partíamos de 13 vulnerabilidades. Estado tras la limpieza: **7 moderate, 0 high**.
+
+### Resuelto
+| Acción | Detalle |
+|---|---|
+| `npm audit fix` no-breaking | Subió Next `16.2.4 → 16.2.6` (parcha XSS, cache poisoning, SSRF, DoS) y arregló `postcss`, `qs`, `ws`, `fast-uri`, `hono`, `brace-expansion` transitivos |
+| `xlsx → exceljs` | Eliminado el único **high** (Prototype Pollution + ReDoS de SheetJS, sin fix en npm). Migrado el endpoint `api/admin/export` a `exceljs@4.4.0`. El export solo escribe (nunca parsea), así que el vector ya era inexplotable; aun así se eliminó la dep de raíz |
+
+### Restante (NO accionable sin romper — riesgo real nulo en este contexto)
+| Vuln | Cadena | Por qué no se toca |
+|---|---|---|
+| `@hono/node-server` (moderate) | `@prisma/dev` → `prisma` | Dep de **dev-tooling** de Prisma (dev server/studio), no entra al runtime de producción. Su fix `--force` haría downgrade Prisma 7→6 |
+| `postcss` (moderate) | interno de `next` | Bundle interno de Next 16.2.6. Su fix `--force` haría downgrade Next a v9. Se resolverá cuando Next actualice su propio postcss |
+| `uuid` (moderate) | `exceljs` | El advisory afecta `uuid.v3/v5/v6` con buffer de salida; exceljs usa `v4` sin buffer → no explotable. Su fix `--force` haría downgrade exceljs a 3.4.0 |
+
+**Regla**: no correr `npm audit fix --force` — todos sus "fixes" son downgrades mayores
+(Prisma 7→6, Next 16→9, exceljs 4→3) que romperían el proyecto.
+
+---
+
+## 5. Notas de operación
 
 - **DB local vs CLI**: `src/lib/db.ts` resuelve por default a `file:./prisma/dev.db`,
   pero `prisma.config.js` usa `file:./prisma/prod.db`. Conviene unificar para evitar
