@@ -57,6 +57,8 @@ model MusicianProfile {
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   rehearsalMusicians RehearsalMusician[]
   substitutes        Substitute[]
+
+  @@index([status])
 }
 
 model Substitute {
@@ -71,6 +73,8 @@ model Substitute {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @default(now()) @updatedAt
   musician          MusicianProfile @relation(fields: [musicianProfileId], references: [id], onDelete: Cascade)
+
+  @@index([musicianProfileId])
 }
 
 model Location {
@@ -147,6 +151,8 @@ model PackageService {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
   package     Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId])
 }
 
 model Song {
@@ -185,6 +191,9 @@ model SetlistSong {
   updatedAt DateTime @default(now()) @updatedAt
   setlist   Setlist  @relation(fields: [setlistId], references: [id], onDelete: Cascade)
   song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([setlistId])
+  @@index([songId])
 }
 
 model BandEvent {
@@ -258,6 +267,9 @@ model Quote {
   event          Event?
   client         ClientProfile @relation(fields: [clientId], references: [id])
   items          QuoteItem[]
+
+  @@index([clientId])
+  @@index([status])
 }
 
 model QuoteItem {
@@ -269,6 +281,8 @@ model QuoteItem {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
   quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
 }
 
 model Event {
@@ -320,6 +334,13 @@ model Event {
   quote               Quote?          @relation(fields: [quoteId], references: [id])
   musicians           EventMusician[]
   payments            Payment[]
+
+  @@index([clientId])
+  @@index([locationId])
+  @@index([packageId])
+  @@index([bandEventId])
+  @@index([date])
+  @@index([status])
 }
 
 model Payment {
@@ -343,6 +364,10 @@ model Payment {
   updatedAt             DateTime        @default(now()) @updatedAt
   event                 Event?          @relation(fields: [eventId], references: [id], onDelete: Cascade)
   bookingRequest        BookingRequest? @relation(fields: [bookingRequestId], references: [id])
+
+  @@index([eventId])
+  @@index([bookingRequestId])
+  @@index([status])
 }
 
 model Contract {
@@ -354,6 +379,8 @@ model Contract {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
   event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
 }
 
 model Notification {
@@ -374,6 +401,11 @@ model Notification {
   retries          Int       @default(0)
   lastRetryAt      DateTime?
   actorId          String?
+
+  @@index([eventId])
+  @@index([bookingRequestId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model BookingRequest {
@@ -436,6 +468,11 @@ model BookingRequest {
   client                ClientProfile? @relation(fields: [clientId], references: [id])
   inboxItems            InboxItem[]
   payments              Payment[]
+
+  @@index([clientId])
+  @@index([packageId])
+  @@index([status])
+  @@index([status, createdAt])
 }
 
 model Rehearsal {
@@ -448,6 +485,9 @@ model Rehearsal {
   location   Location?           @relation(fields: [locationId], references: [id])
   musicians  RehearsalMusician[]
   songs      RehearsalSong[]
+
+  @@index([locationId])
+  @@index([datetime])
 }
 
 model RehearsalSong {
@@ -458,6 +498,9 @@ model RehearsalSong {
   updatedAt   DateTime  @default(now()) @updatedAt
   song        Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
   rehearsal   Rehearsal @relation(fields: [rehearsalId], references: [id], onDelete: Cascade)
+
+  @@index([rehearsalId])
+  @@index([songId])
 }
 
 model RehearsalMusician {
@@ -469,6 +512,9 @@ model RehearsalMusician {
   updatedAt   DateTime        @default(now()) @updatedAt
   musician    MusicianProfile @relation(fields: [musicianId], references: [id], onDelete: Cascade)
   rehearsal   Rehearsal       @relation(fields: [rehearsalId], references: [id], onDelete: Cascade)
+
+  @@index([rehearsalId])
+  @@index([musicianId])
 }
 
 model EventMusician {
@@ -480,6 +526,9 @@ model EventMusician {
   updatedAt  DateTime        @default(now()) @updatedAt
   musician   MusicianProfile @relation(fields: [musicianId], references: [id], onDelete: Cascade)
   event      Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([musicianId])
 }
 
 model GlobalConfig {
@@ -556,4 +605,9 @@ model InboxItem {
   bookingRequestId String?
   client           ClientProfile?  @relation(fields: [clientId], references: [id])
   bookingRequest   BookingRequest? @relation(fields: [bookingRequestId], references: [id])
+
+  @@index([status])
+  @@index([clientId])
+  @@index([bookingRequestId])
+  @@index([createdAt])
 }

@@ -34,17 +34,17 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
 
       <div className="flex items-start gap-4 mb-4">
         <div className="w-12 h-12 rounded-full bg-card flex items-center justify-center border border-primary/30 shrink-0 overflow-hidden shadow-inner">
-          {musician.user.image && !imgError ? (
-            <img src={musician.user.image} alt={musician.user.name} className="w-full h-full object-cover" onError={() => setImgError(true)} />
+          {musician.user?.image && !imgError ? (
+            <img src={musician.user.image} alt={musician.user?.name ?? "Músico"} className="w-full h-full object-cover" onError={() => setImgError(true)} />
           ) : (
             <span className="text-xl font-black text-white">
-              {musician.user.name.charAt(0).toUpperCase()}
+              {(musician.user?.name ?? "?").charAt(0).toUpperCase()}
             </span>
           )}
         </div>
-        
+
         <div className="flex-1 pr-12">
-          <h3 className="font-bold text-lg text-foreground leading-tight">{musician.user.name}</h3>
+          <h3 className="font-bold text-lg text-foreground leading-tight">{musician.user?.name ?? "Sin nombre"}</h3>
           <p className="text-sm font-black text-primary uppercase tracking-wider mt-0.5">{musician.instrument || "Músico"}</p>
           
           <div className="flex flex-wrap gap-2 mt-2">

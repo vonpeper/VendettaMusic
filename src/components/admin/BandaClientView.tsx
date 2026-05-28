@@ -14,8 +14,8 @@ export function BandaClientView({ initialMusicians }: { initialMusicians: any[] 
   
   const selectedMusician = initialMusicians.find(m => m.id === selectedMusicianId)
   
-  const searchMatched = initialMusicians.filter(m => 
-    m.user.name.toLowerCase().includes(search.toLowerCase()) || 
+  const searchMatched = initialMusicians.filter(m =>
+    (m.user?.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
     (m.instrument && m.instrument.toLowerCase().includes(search.toLowerCase()))
   )
 

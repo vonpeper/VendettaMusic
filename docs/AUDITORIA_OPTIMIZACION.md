@@ -125,7 +125,39 @@ ninguna funcionalidad, botón ni sección visible**.
 
 ---
 
-## 6. Notas de operación
+## 6. Performance + errores del panel (2026-05-28)
+
+### Lentitud del panel — faltan índices
+El schema tenía **29 modelos y 0 `@@index`**. En SQLite las foreign keys NO se indexan
+solas, así que cada `findMany` con `include`/`where`/`orderBy` sobre una FK hacía full
+table scan. Se agregaron `@@index` en:
+- FKs de joins/uniones: `Substitute.musicianProfileId`, `EventMusician.{eventId,musicianId}`,
+  `Payment.{eventId,bookingRequestId}`, `Contract.eventId`, `Notification.{eventId,bookingRequestId}`,
+  `PackageService.packageId`, `SetlistSong.*`, `RehearsalSong.*`, `RehearsalMusician.*`, `QuoteItem.quoteId`
+- FKs + filtros en tablas de listado: `Event.{clientId,locationId,packageId,bandEventId,date,status}`,
+  `BookingRequest.{clientId,packageId,status,(status,createdAt)}`, `Quote.{clientId,status}`,
+  `InboxItem.{status,clientId,bookingRequestId,createdAt}`, `Notification.{status,createdAt}`,
+  `Rehearsal.{locationId,datetime}`, `MusicianProfile.status`
+- **Requiere `prisma db push` en el VPS** para crear los índices en la DB de prod.
+
+### Causa raíz de los 3 errores — schema de prod desincronizado
+Diagnóstico ejecutando las queries reales contra el backup de prod (`prod.db.bak_20260525`):
+las tablas existen, pero **a `GlobalConfig` le faltan `zona2Cities` y `zona3Cities`**
+(agregadas en el commit de viáticos editables) y a `Package` le falta `maxDuration`.
+
+| Herramienta | Causa | Fix |
+|---|---|---|
+| **Mensajería** (`notificaciones`) | `globalConfig.findUnique` sin `select` trae las 54 columnas → "no such column: zona2Cities" | Migrar prod (`prisma db push`) |
+| **Banda y suplentes** | Bug de código: `musician.user.name.charAt(0)` crashea si `name` es null (`User.name` es `String?`). **Arreglado** en `MusicianCard.tsx` + `BandaClientView.tsx` con null-guards | Fix en código + deploy |
+| **Proveedores** | Query y render correctos contra el backup; si falla en prod, es drift de columnas en `Provider` no visible en el backup | Confirmar con diagnóstico en VPS + migrar |
+
+> El layout admin (`admin/layout.tsx:20`) usa `.catch(()=>null)` al leer globalConfig, por
+> eso el dashboard carga aunque falten columnas; las páginas que leen globalConfig SIN catch
+> (notificaciones) sí crashean. El fix de raíz es **migrar prod en cada deploy que cambie el schema**.
+
+---
+
+## 7. Notas de operación
 
 - **DB local vs CLI**: `src/lib/db.ts` resuelve por default a `file:./prisma/dev.db`,
   pero `prisma.config.js` usa `file:./prisma/prod.db`. Conviene unificar para evitar
