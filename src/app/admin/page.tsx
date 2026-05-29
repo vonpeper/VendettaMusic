@@ -188,12 +188,81 @@ export default async function AdminDashboardPage() {
   const monthNames = chartDataRaw.map(d => d.month)
   const hasDupes   = monthNames.some((m, i) => monthNames.indexOf(m) !== i)
 
+  // -- Datos enriquecidos para Centro de Mando Financiero ---------------
+  const allBookingsForChart = await db.bookingRequest.findMany({
+    select: { createdAt: true, updatedAt: true, status: true, packageName: true, baseAmount: true }
+  })
+
+  const CONVERTED_STATUSES = ["CONFIRMED", "agendado", "completado"]
+
+  // Pipeline perdido por mes (EXPIRED agrupados por mes de expiración)
+  const lostByMonthMap: Record<string, number> = {}
+  allBookingsForChart.filter(b => b.status === "EXPIRED").forEach(b => {
+    const d = b.updatedAt
+    const key = `${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+    lostByMonthMap[key] = (lostByMonthMap[key] || 0) + (b.baseAmount || 0)
+  })
+
+  // Conversión por mes: leads creados ese mes vs confirmados
+  const leadsCreatedByMonth:    Record<string, number> = {}
+  const confirmedCreatedByMonth: Record<string, number> = {}
+  allBookingsForChart.forEach(b => {
+    const d   = b.createdAt
+    const key = `${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+    leadsCreatedByMonth[key] = (leadsCreatedByMonth[key] || 0) + 1
+    if (CONVERTED_STATUSES.includes(b.status)) {
+      confirmedCreatedByMonth[key] = (confirmedCreatedByMonth[key] || 0) + 1
+    }
+  })
+
+  // Micro-KPIs
+  const confirmedBookingsAll = allBookingsForChart.filter(b => CONVERTED_STATUSES.includes(b.status))
+
+  const avgTicket = confirmedBookingsAll.length > 0
+    ? confirmedBookingsAll.reduce((s, b) => s + (b.baseAmount || 0), 0) / confirmedBookingsAll.length
+    : 0
+
+  const avgDaysToClose = confirmedBookingsAll.length > 0
+    ? confirmedBookingsAll.reduce((s, b) => {
+        const days = (b.updatedAt.getTime() - b.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+        return s + Math.max(days, 0)
+      }, 0) / confirmedBookingsAll.length
+    : 0
+
+  const pkgCount: Record<string, number> = {}
+  confirmedBookingsAll.forEach(b => {
+    if (b.packageName) pkgCount[b.packageName] = (pkgCount[b.packageName] || 0) + 1
+  })
+  const topPkgEntry = Object.entries(pkgCount).sort((a, b) => b[1] - a[1])[0]
+  const topPackageName  = topPkgEntry ? topPkgEntry[0] : "—"
+  const topPackagePct   = topPkgEntry && confirmedBookingsAll.length > 0
+    ? Math.round((topPkgEntry[1] / confirmedBookingsAll.length) * 100)
+    : 0
+
+  const peakMonthEntry   = Object.entries(monthMap).sort((a, b) => b[1].total - a[1].total)[0]
+  const chartMicroKPIs = {
+    avgTicket,
+    avgDaysToClose,
+    topPackage: topPackageName,
+    topPackagePct,
+    peakMonthLabel: peakMonthEntry ? peakMonthEntry[0] : "",
+    peakMonthIncome: peakMonthEntry ? peakMonthEntry[1].total : 0
+  }
+
   // Map a formato para IncomeChart
-  const chartDataAll = chartDataRaw.map(d => ({
-    month: hasDupes ? `${d.month.slice(0, 3)} '${String(d.year).slice(2)}` : d.month,
-    total: d.total,
-    count: d.count
-  }))
+  const chartDataAll: any[] = chartDataRaw.map(d => {
+    const key          = `${d.month} ${d.year}`
+    const totalLeads   = leadsCreatedByMonth[key] || 0
+    const totalConf    = confirmedCreatedByMonth[key] || 0
+    const convPct      = totalLeads > 0 ? Math.round((totalConf / totalLeads) * 100) : 0
+    return {
+      month:         hasDupes ? `${d.month.slice(0, 3)} '${String(d.year).slice(2)}` : d.month,
+      income:        d.total,
+      lost:          lostByMonthMap[key] || 0,
+      conversionPct: convPct,
+      count:         d.count,
+    }
+  })
   const chartData = chartDataAll.slice(-6)
 
 
@@ -377,7 +446,7 @@ export default async function AdminDashboardPage() {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="mt-4 overflow-x-auto scrollbar-thin">
-                    <IncomeChart data={chartDataAll} />
+                    <IncomeChart data={chartDataAll} kpis={chartMicroKPIs} />
                   </div>
                 </DialogContent>
               </Dialog>
@@ -401,7 +470,7 @@ export default async function AdminDashboardPage() {
                     <div className="text-lg font-black text-foreground">{MXN(totalAllTime / Math.max(Object.keys(monthMap).length, 1))}</div>
                   </div>
                 </div>
-                <IncomeChart data={chartData} />
+                <IncomeChart data={chartData} kpis={chartMicroKPIs} />
               </>
             ) : (
               <div className="space-y-4">
