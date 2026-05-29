@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, Banknote, FileText, TrendingUp, Music, Bell, ShieldAlert, CheckCircle2, AlertCircle, XCircle, ExternalLink, LayoutDashboard, Inbox } from "lucide-react"
 import { IncomeChart } from "@/components/admin/IncomeChart"
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import Link from "next/link"
 import { formatDateMX } from "@/lib/utils"
 import { FollowUpButton } from "@/components/admin/FollowUpButton"
@@ -188,11 +189,12 @@ export default async function AdminDashboardPage() {
   const hasDupes   = monthNames.some((m, i) => monthNames.indexOf(m) !== i)
 
   // Map a formato para IncomeChart
-  const chartData = chartDataRaw.map(d => ({
+  const chartDataAll = chartDataRaw.map(d => ({
     month: hasDupes ? `${d.month.slice(0, 3)} '${String(d.year).slice(2)}` : d.month,
     total: d.total,
     count: d.count
-  })).slice(-6)
+  }))
+  const chartData = chartDataAll.slice(-6)
 
 
   // -- Upcoming events próximos 7 días para alerta principal ---------
@@ -212,12 +214,12 @@ export default async function AdminDashboardPage() {
         {soonEvents.length > 0 && (
           <div className="flex items-center gap-3">
             <RepairSyncButton />
-            <div className="flex items-center gap-2 bg-primary/15 border border-primary/40 rounded-lg px-4 py-2">
+            <Link href="/admin/eventos" className="flex items-center gap-2 bg-primary/15 border border-primary/40 rounded-lg px-4 py-2 hover:bg-primary/20 transition-all no-underline">
               <Bell className="w-4 h-4 text-primary animate-pulse" />
               <span className="text-sm text-primary font-bold">
                 {soonEvents.length} show{soonEvents.length > 1 ? "s" : ""} esta semana
               </span>
-            </div>
+            </Link>
           </div>
         )}
         {!soonEvents.length && (
@@ -361,10 +363,24 @@ export default async function AdminDashboardPage() {
                   </span>
                 </div>
               )}
-              <Link href="/admin/ventas"
-                className="px-4 py-2 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
-                 Ver detalle
-              </Link>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="px-4 py-2 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all cursor-pointer">
+                    Ver gráfica completa
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] w-max max-w-6xl p-6 max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Historial Financiero Completo</DialogTitle>
+                    <DialogDescription>
+                      Desempeño mensual histórico de ingresos
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="mt-4 overflow-x-auto scrollbar-thin">
+                    <IncomeChart data={chartDataAll} />
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardHeader>
           <CardContent>
