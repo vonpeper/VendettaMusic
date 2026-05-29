@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, Banknote, FileText, TrendingUp, Music, Bell, ShieldAlert, CheckCircle2, AlertCircle, XCircle, ExternalLink, LayoutDashboard, Inbox } from "lucide-react"
 import { IncomeChart } from "@/components/admin/IncomeChart"
-import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import Link from "next/link"
 import { formatDateMX } from "@/lib/utils"
 import { FollowUpButton } from "@/components/admin/FollowUpButton"
@@ -15,17 +14,11 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", c
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
 
 import { auth } from "@/lib/auth"
-import { getValidWhatsappPhone } from "@/lib/phone"
 import { RepairSyncButton } from "@/components/admin/RepairSyncButton"
 import { NuevoEventoButton } from "@/components/admin/EventActions"
 import { Plus, UserPlus, FilePlus, CalendarDays } from "lucide-react"
 
 export default async function AdminDashboardPage() {
-  // Helper to normalize phone numbers according to business rules
-  const normalizePhone = (p: string | undefined): string => {
-    const valid = getValidWhatsappPhone(p ?? "");
-    return valid ?? "";
-  };
   const session = await auth()
   const isAdmin = session?.user?.role === "ADMIN"
 
@@ -34,12 +27,6 @@ export default async function AdminDashboardPage() {
   const thisYear = now.getFullYear()
   
   // -- Fetch en paralelo ------------------------------------------
-  
-  // Establecer el inicio del día (compensando huso horario MX) para no ocultar eventos del día en curso
-  const todayStart = new Date()
-  todayStart.setUTCHours(todayStart.getUTCHours() - 6) // Aproximación CST
-  todayStart.setUTCHours(0, 0, 0, 0)
-
   const [
     upcomingEvents,
     bandEvents,
@@ -56,7 +43,7 @@ export default async function AdminDashboardPage() {
     musicianProfiles
   ] = await Promise.all([
     db.event.findMany({
-      where: { date: { gte: todayStart }, status: { not: "cancelado" } },
+      where: { date: { gte: now }, status: { not: "cancelado" } },
       orderBy: { date: "asc" },
       take: 5,
       include: { 
@@ -184,87 +171,16 @@ export default async function AdminDashboardPage() {
       return { month, year: parseInt(year), total: v.total, count: v.count }
     })
     .sort((a, b) => a.year !== b.year ? a.year - b.year : MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month))
+    .slice(-6)
 
   const monthNames = chartDataRaw.map(d => d.month)
   const hasDupes   = monthNames.some((m, i) => monthNames.indexOf(m) !== i)
 
-  // -- Datos enriquecidos para Centro de Mando Financiero ---------------
-  const allBookingsForChart = await db.bookingRequest.findMany({
-    select: { createdAt: true, updatedAt: true, status: true, packageName: true, baseAmount: true }
-  })
-
-  const CONVERTED_STATUSES = ["CONFIRMED", "agendado", "completado"]
-
-  // Pipeline perdido por mes (EXPIRED agrupados por mes de expiración)
-  const lostByMonthMap: Record<string, number> = {}
-  allBookingsForChart.filter(b => b.status === "EXPIRED").forEach(b => {
-    const d = b.updatedAt
-    const key = `${MONTHS[d.getMonth()]} ${d.getFullYear()}`
-    lostByMonthMap[key] = (lostByMonthMap[key] || 0) + (b.baseAmount || 0)
-  })
-
-  // Conversión por mes: leads creados ese mes vs confirmados
-  const leadsCreatedByMonth:    Record<string, number> = {}
-  const confirmedCreatedByMonth: Record<string, number> = {}
-  allBookingsForChart.forEach(b => {
-    const d   = b.createdAt
-    const key = `${MONTHS[d.getMonth()]} ${d.getFullYear()}`
-    leadsCreatedByMonth[key] = (leadsCreatedByMonth[key] || 0) + 1
-    if (CONVERTED_STATUSES.includes(b.status)) {
-      confirmedCreatedByMonth[key] = (confirmedCreatedByMonth[key] || 0) + 1
-    }
-  })
-
-  // Micro-KPIs
-  const confirmedBookingsAll = allBookingsForChart.filter(b => CONVERTED_STATUSES.includes(b.status))
-
-  const avgTicket = confirmedBookingsAll.length > 0
-    ? confirmedBookingsAll.reduce((s, b) => s + (b.baseAmount || 0), 0) / confirmedBookingsAll.length
-    : 0
-
-  const avgDaysToClose = confirmedBookingsAll.length > 0
-    ? confirmedBookingsAll.reduce((s, b) => {
-        const days = (b.updatedAt.getTime() - b.createdAt.getTime()) / (1000 * 60 * 60 * 24)
-        return s + Math.max(days, 0)
-      }, 0) / confirmedBookingsAll.length
-    : 0
-
-  const pkgCount: Record<string, number> = {}
-  confirmedBookingsAll.forEach(b => {
-    if (b.packageName) pkgCount[b.packageName] = (pkgCount[b.packageName] || 0) + 1
-  })
-  const topPkgEntry = Object.entries(pkgCount).sort((a, b) => b[1] - a[1])[0]
-  const topPackageName  = topPkgEntry ? topPkgEntry[0] : "—"
-  const topPackagePct   = topPkgEntry && confirmedBookingsAll.length > 0
-    ? Math.round((topPkgEntry[1] / confirmedBookingsAll.length) * 100)
-    : 0
-
-  const peakMonthEntry   = Object.entries(monthMap).sort((a, b) => b[1].total - a[1].total)[0]
-  const chartMicroKPIs = {
-    avgTicket,
-    avgDaysToClose,
-    topPackage: topPackageName,
-    topPackagePct,
-    peakMonthLabel: peakMonthEntry ? peakMonthEntry[0] : "",
-    peakMonthIncome: peakMonthEntry ? peakMonthEntry[1].total : 0
-  }
-
-  // Map a formato para IncomeChart
-  const chartDataAll: any[] = chartDataRaw.map(d => {
-    const key          = `${d.month} ${d.year}`
-    const totalLeads   = leadsCreatedByMonth[key] || 0
-    const totalConf    = confirmedCreatedByMonth[key] || 0
-    const convPct      = totalLeads > 0 ? Math.round((totalConf / totalLeads) * 100) : 0
-    return {
-      month:         hasDupes ? `${d.month.slice(0, 3)} '${String(d.year).slice(2)}` : d.month,
-      income:        d.total,
-      lost:          lostByMonthMap[key] || 0,
-      conversionPct: convPct,
-      count:         d.count,
-    }
-  })
-  const chartData = chartDataAll.slice(-6)
-
+  const chartData = chartDataRaw.map(d => ({
+    month: hasDupes ? `${d.month.slice(0, 3)} '${String(d.year).slice(2)}` : d.month,
+    total: d.total,
+    count: d.count,
+  }))
 
   // -- Upcoming events próximos 7 días para alerta principal ---------
   const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
@@ -283,12 +199,12 @@ export default async function AdminDashboardPage() {
         {soonEvents.length > 0 && (
           <div className="flex items-center gap-3">
             <RepairSyncButton />
-            <Link href="/admin/eventos" className="flex items-center gap-2 bg-primary/15 border border-primary/40 rounded-lg px-4 py-2 hover:bg-primary/20 transition-all no-underline">
+            <div className="flex items-center gap-2 bg-primary/15 border border-primary/40 rounded-lg px-4 py-2">
               <Bell className="w-4 h-4 text-primary animate-pulse" />
               <span className="text-sm text-primary font-bold">
                 {soonEvents.length} show{soonEvents.length > 1 ? "s" : ""} esta semana
               </span>
-            </Link>
+            </div>
           </div>
         )}
         {!soonEvents.length && (
@@ -306,7 +222,7 @@ export default async function AdminDashboardPage() {
         />
         
         <Link href="/admin/ventas?new=quote" className="no-underline">
-          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-blue-600/40 hover:border-blue-600 hover:bg-blue-600/10 rounded-xl group transition-all">
+          <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-primary/40 hover:border-primary hover:bg-primary/10 rounded-xl group transition-all">
             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
               <FilePlus className="w-4 h-4" />
             </div>
@@ -406,76 +322,45 @@ export default async function AdminDashboardPage() {
 
       {/* -- Gráfica + Pérdida Potencial -- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* ── Centro de Mando Financiero ── */}
+        {/* Gráfica ingresos por mes */}
         <Card className={`${isAdmin ? "lg:col-span-2" : "lg:col-span-3"} bg-white border-border/40 shadow-sm`}>
-          <CardHeader className="flex flex-row items-center justify-between border-b border-border/5 mb-2">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/5 mb-4">
             <div>
               <CardTitle className="font-heading font-black text-xl">
-                {isAdmin ? "Centro de Mando Financiero" : "Próximas Reservas"}
+                {isAdmin ? "Tendencia de Ingresos" : "Próximas Reservas"}
               </CardTitle>
               <CardDescription>
-                {isAdmin
-                  ? "Ingresos vs pipeline perdido · tasa de cierre · últimos 6 meses"
-                  : "Resumen de actividad reciente."}
+                {isAdmin ? "Historial de facturación — últimos 6 meses." : "Resumen de actividad reciente."}
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              {isAdmin && (
-                <div className="hidden sm:flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded" style={{ background: "#E91E63" }} />
-                    Ingresos
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded opacity-60" style={{ background: "#FF5722" }} />
-                    Perdido
-                  </span>
-                </div>
-              )}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button className="px-4 py-2 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all cursor-pointer">
-                    Ver gráfica completa
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[95vw] w-max max-w-6xl p-6 max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Historial Financiero Completo</DialogTitle>
-                    <DialogDescription>
-                      Desempeño mensual histórico de ingresos
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="mt-4 overflow-x-auto scrollbar-thin">
-                    <IncomeChart data={chartDataAll} kpis={chartMicroKPIs} />
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+            <Link href="/admin/ventas"
+              className="px-4 py-2 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
+               Ver detalle
+            </Link>
           </CardHeader>
           <CardContent>
             {isAdmin ? (
               <>
-                {/* 3 cifras clave sobre la gráfica */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="text-center p-2 rounded-xl bg-muted/20">
-                    <div className="text-[8px] text-muted-foreground uppercase font-black tracking-widest">Acumulado histórico</div>
-                    <div className="text-lg font-black text-foreground">{MXN(totalAllTime)}</div>
+                <IncomeChart data={chartData} />
+                <div className="grid grid-cols-3 gap-6 mt-6 pt-6 border-t border-border/40">
+                  <div className="text-center">
+                    <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Acumulado Histórico</div>
+                    <div className="text-xl font-black text-foreground mt-1">{MXN(totalAllTime)}</div>
                   </div>
-                  <div className="text-center p-2 rounded-xl bg-muted/20">
-                    <div className="text-[8px] text-muted-foreground uppercase font-black tracking-widest">Leads totales</div>
-                    <div className="text-lg font-black text-foreground">{allBookingRequests}</div>
+                  <div className="text-center">
+                    <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Leads Totales</div>
+                    <div className="text-xl font-black text-foreground mt-1">{allBookingRequests}</div>
                   </div>
-                  <div className="text-center p-2 rounded-xl bg-muted/20">
-                    <div className="text-[8px] text-muted-foreground uppercase font-black tracking-widest">Promedio / mes</div>
-                    <div className="text-lg font-black text-foreground">{MXN(totalAllTime / Math.max(Object.keys(monthMap).length, 1))}</div>
+                  <div className="text-center">
+                    <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Promedio/Mes</div>
+                    <div className="text-xl font-black text-foreground mt-1">{MXN(totalAllTime / 12)}</div>
                   </div>
                 </div>
-                <IncomeChart data={chartData} kpis={chartMicroKPIs} />
               </>
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="w-5 h-5 text-blue-600" />
+                  <Calendar className="w-5 h-5 text-primary" />
                   <span className="text-sm font-bold uppercase tracking-widest">Próximos en Agenda</span>
                 </div>
                 {upcomingEvents.length === 0 ? (
@@ -530,11 +415,11 @@ export default async function AdminDashboardPage() {
                     <Link 
                       key={q.id} 
                       href={`/admin/ventas/${q.id}`}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/10 hover:border-blue-600/40 hover:bg-white transition-all shadow-sm group cursor-pointer no-underline text-inherit active:scale-[0.98]"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/10 hover:border-primary/40 hover:bg-white transition-all shadow-sm group cursor-pointer no-underline text-inherit active:scale-[0.98]"
                       title="Ver detalles de la negociación"
                     >
                       <div className="w-10 h-10 rounded-lg bg-white border border-border/40 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                        <FileText className="w-4 h-4 text-blue-600" />
+                        <FileText className="w-4 h-4 text-primary" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-black text-foreground text-sm truncate uppercase tracking-tight">
@@ -549,31 +434,13 @@ export default async function AdminDashboardPage() {
                         <div className="text-xs font-black text-foreground">
                           {MXN(amount)}
                         </div>
-                        {(() => {
-                         let phoneCandidate = "";
-                         // Prefer clientProfile.whatsapp for manual quotes
-                         if (!isWebFunnel) {
-                           phoneCandidate = (q as any).client?.clientProfile?.whatsapp || "";
-                         }
-                         // Fallback to clientPhone for web funnel
-                         if (!phoneCandidate) {
-                           phoneCandidate = isWebFunnel ? (q as any).clientPhone : "";
-                         }
-                         // Fallback to user phone
-                         if (!phoneCandidate) {
-                           phoneCandidate = (q as any).client?.user?.phone || "";
-                         }
-                         const phone = normalizePhone(phoneCandidate);
-                         return (
-                           <FollowUpButton
-                             id={q.id}
-                             type={isWebFunnel ? "booking" : "quote"}
-                             phone={phone}
-                             clientName={clientName}
-                             currentCount={(q as any).followUpCount || 0}
-                           />
-                         );
-                       })()}
+                        <FollowUpButton 
+                          id={q.id}
+                          type={isWebFunnel ? "booking" : "quote"}
+                          phone={isWebFunnel ? (q as any).clientPhone : (q as any).client?.clientProfile?.whatsapp || (q as any).client?.clientProfile?.phone || ""}
+                          clientName={clientName}
+                          currentCount={(q as any).followUpCount || 0}
+                        />
                       </div>
                     </Link>
                   )
@@ -624,7 +491,7 @@ export default async function AdminDashboardPage() {
                     ? "bg-green-600 text-white border-green-700"
                     : isUrgent
                       ? "bg-red-600 text-white border-red-700"
-                      : "bg-blue-600 text-white border-blue-700"
+                      : "bg-primary text-white border-primary"
 
                   const linkedBooking = ev.bookingRequest || (confirmedBookings as any[]).find(b => 
                     b.eventId === ev.id || 
@@ -655,7 +522,7 @@ export default async function AdminDashboardPage() {
                           <div className="font-black text-foreground text-sm uppercase tracking-tight flex flex-wrap items-center gap-1.5">
                             {ev.client?.user?.name ?? ev.customName ?? "Cliente"}
                             {linkedBooking && (
-                              <span className="text-[10px] font-black bg-gradient-to-r from-blue-600 to-blue-800 text-white px-2 py-0.5 rounded-full shadow-sm">
+                              <span className="text-[10px] font-black bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white px-2 py-0.5 rounded-full shadow-sm">
                                 {linkedBooking.shortId}
                               </span>
                             )}
