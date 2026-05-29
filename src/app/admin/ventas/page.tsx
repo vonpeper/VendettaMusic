@@ -8,17 +8,18 @@ import {
   FileText, 
   CheckCircle2, 
   TrendingDown, 
-  Plus, 
-  Calendar, 
-  Download, 
-  Clock, 
-  User, 
   Users,
-  AlertCircle 
+  AlertCircle,
+  User,
+  Clock,
+  Plus,
+  Calendar,
+  Download
 } from "lucide-react"
 import { VentasTableClient } from "@/components/admin/VentasTableClient"
 import { MarkCompletedButton } from "@/components/admin/MarkCompletedButton"
 import { ContractStatusSwitcher } from "@/components/admin/ContractStatusSwitcher"
+import { CancelBookingButton } from "@/components/admin/CancelBookingButton"
 import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
 // Temporary diagnostics
@@ -81,8 +82,11 @@ export default async function AdminVentasPage() {
         }
       }
     }),
-    db.quote.findMany({ include: { client: { include: { user: true } } }, orderBy: { createdAt: "desc" } }),
+    db.quote.findMany({
+      orderBy: { createdAt: "desc" }
+    }),
     db.bookingRequest.aggregate({
+      _count: true,
       _sum: { baseAmount: true },
       where: { status: "EXPIRED" }
     }),
@@ -339,23 +343,43 @@ function ContratosGrid({ items, isCompleted }: { items: any[], isCompleted: bool
                       </div>
                       <div className="pt-2 border-t border-border/40 flex flex-col gap-3">
                         <div className="flex items-center justify-between">
-                          <div className="text-sm font-black text-foreground">{MXN(c.baseAmount + (c.viaticosAmount || 0))}</div>
+                          <div className="text-sm font-black text-foreground">
+                            {(() => {
+                              const base = c.baseAmount + (c.viaticosAmount || 0)
+                              const ivaAmt = c.event?.invoice ? (c.event.ivaAmount || base * 0.16) : 0
+                              return MXN(base + ivaAmt)
+                            })()}
+                          </div>
                           <ContractStatusSwitcher bookingId={c.id} status={c.contractStatus || "pending"} />
                         </div>
-                        <div className="flex gap-2">
-                          {!isCompleted && (
-                            <MarkCompletedButton bookingId={c.id} />
-                          )}
+                        <div className="grid grid-cols-2 gap-2">
                           <Button 
                             size="sm" 
                             variant="outline" 
                             asChild
-                            className="h-8 gap-2 border-green-600/30 text-green-400 hover:bg-green-600 hover:text-foreground" 
+                            className="h-9 gap-2 border-green-600/30 text-green-400 hover:bg-green-600 hover:text-foreground" 
                           >
                             <a href={`/api/admin/contract/${c.id}`}>
-                              <Download className="w-3 h-3" /> Contrato PDF
+                              <Download className="w-3 h-3" /> Contrato
                             </a>
                           </Button>
+
+                          {!isCompleted && (
+                            <MarkCompletedButton bookingId={c.id} />
+                          )}
+
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            asChild
+                            className="h-9 gap-2 border-blue-600/30 text-blue-400 hover:bg-blue-600 hover:text-foreground"
+                          >
+                            <Link href={`/admin/ventas/${c.id}`}>
+                              <FileText className="w-3 h-3" /> Info/Editar
+                            </Link>
+                          </Button>
+
+                          <CancelBookingButton bookingId={c.id} shortId={c.shortId || "S/F"} hasEvent={true} />
                         </div>
                       </div>
                     </CardContent>

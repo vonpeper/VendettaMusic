@@ -37,11 +37,11 @@ export function CancelBookingButton({ bookingId, shortId, hasEvent = false }: Ca
     console.log(`[DELETE BOOKING RESULT]`, json);
     if (json.success) {
       toast.success("Solicitud/Evento cancelado con éxito");
-      // Refresh current page to update data
-      router.refresh();
-      // If rendered on detail view, navigate back to list
       if (hasEvent) {
         router.push("/admin/ventas");
+      } else {
+        // En caso de borrar desde modal, refresh
+        router.refresh()
       }
     } else {
       toast.error("Error al cancelar: " + (json.error || "Desconocido"));
@@ -95,22 +95,6 @@ export function CancelBookingButton({ bookingId, shortId, hasEvent = false }: Ca
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             Sí, cancelar y borrar todo
           </Button>
-          {/** After successful deletion, also navigate to admin dashboard **/}
-          <script>
-            {`(function(){
-              // Hook into toast success to redirect both admin pages
-              const origSuccess = window.toast?.success;
-              if(origSuccess){
-                window.toast.success = (...args)=>{
-                  origSuccess.apply(window.toast, args);
-                  // Navigate to admin and ventas list
-                  if(typeof window.location !== 'undefined'){
-                    window.location.href = '/admin';
-                  }
-                };
-              }
-            })();`}
-          </script>
         </DialogFooter>
       </DialogContent>
     </Dialog>
