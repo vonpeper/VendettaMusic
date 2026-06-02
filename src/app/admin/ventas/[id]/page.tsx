@@ -46,6 +46,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
   let booking = await db.bookingRequest.findUnique({
     where: { id: id },
     include: { 
+      client: { include: { user: true } },
       payments: { orderBy: { createdAt: "desc" } },
       event: { 
         include: { 
@@ -133,6 +134,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
   if (!booking.clientPhone || booking.clientPhone.trim() === "") {
     missingFields.push("Teléfono del cliente")
   }
+
+  const finalClientName = booking.client?.user?.name || booking.clientName;
 
   return (
     <div className="p-8 bg-background min-h-screen">
@@ -294,8 +297,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
 
             {/* Desglose Financiero */}
             {(() => {
-              const total = Number(booking.baseAmount) + Number(booking.viaticosAmount || 0) - Number(booking.discountAmount || 0);
-              const deposit = Number(booking.depositAmount || 0);
+              const total = Number((booking as any).baseAmount) + Number((booking as any).viaticosAmount || 0) + Number((booking as any).ivaAmount || 0) - Number((booking as any).discountAmount || 0);
+              const deposit = Number((booking as any).depositAmount || 0);
               const paid = ((booking as any).payments || []).filter((p: any) => p.status === 'completed' || p.status === 'paid').reduce((sum: number, p: any) => sum + Number(p.amount), 0);
               const balance = total - paid;
               
@@ -371,7 +374,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                     <User className="text-blue-600 w-5 h-5 md:w-6 md:h-6" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-lg md:text-xl font-black text-foreground tracking-tighter truncate" title={booking.clientName}>{booking.clientName}</div>
+                    <div className="text-lg md:text-xl font-black text-foreground tracking-tighter truncate" title={finalClientName}>{finalClientName}</div>
                     <div className="text-[10px] md:text-xs text-muted-foreground font-bold truncate">Origen: <span className="text-blue-600 font-black uppercase tracking-widest">{booking.source || 'WEB'}</span></div>
                   </div>
                 </div>
@@ -413,7 +416,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 <CardContent>
                   <BookingActions 
                     bookingId={booking.id} 
-                    clientName={booking.clientName} 
+                    clientName={finalClientName} 
                     musicians={musicians}
                     isAlreadyScheduled={!!booking.eventId}
                     currentMusicianIds={booking.event?.musicians?.map((m: any) => m.musicianId) || []}
@@ -431,7 +434,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-xs text-muted-foreground font-medium">Esta reserva está confirmada pero aún no se ha generado el evento oficial en la agenda.</p>
-                  <BookingActions bookingId={booking.id} clientName={booking.clientName} forceSync={true} />
+                  <BookingActions bookingId={booking.id} clientName={finalClientName} forceSync={true} />
                 </CardContent>
               </Card>
             )}

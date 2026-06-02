@@ -84,6 +84,12 @@ interface Booking {
   payments?: any[]
 }
 
+const formatTotal = (r: any) => {
+  const base = Number(r.agreedAmount || r.packagePrice || 0)
+  const iva = r.requiresInvoice ? Number(r.ivaAmount || 0) : 0
+  return formatCurrency(base + iva)
+}
+
 const getDynamicPaymentStatus = (r: Booking) => {
   const total = Number(r.baseAmount) + Number(r.viaticosAmount || 0);
   const deposit = Number(r.depositAmount || 0);
