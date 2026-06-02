@@ -100,23 +100,22 @@ export function AdminPaquetesClient({
 
   return (
     <Tabs defaultValue="base-packages" className="space-y-8">
-      {/* Selector de Pestañas Premium */}
-      <TabsList className="bg-muted p-1 rounded-2xl border border-border/40 w-full sm:w-auto grid grid-cols-3 sm:inline-flex">
+      <TabsList className="bg-card p-1.5 rounded-2xl border border-border/40 w-full sm:w-auto grid grid-cols-3 sm:inline-flex !h-auto gap-2">
         <TabsTrigger 
           value="base-packages" 
-          className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all text-muted-foreground hover:text-foreground data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md cursor-pointer"
+          className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all text-muted-foreground hover:text-blue-600 data-[state=active]:bg-blue-600/10 data-[state=active]:text-blue-600 data-[state=active]:shadow-none cursor-pointer"
         >
           <Package className="w-4 h-4 mr-2 inline-block" /> Paquetes Base
         </TabsTrigger>
         <TabsTrigger 
           value="customization" 
-          className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all text-muted-foreground hover:text-foreground data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md cursor-pointer"
+          className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all text-muted-foreground hover:text-blue-600 data-[state=active]:bg-blue-600/10 data-[state=active]:text-blue-600 data-[state=active]:shadow-none cursor-pointer"
         >
           <Settings className="w-4 h-4 mr-2 inline-block" /> Personalización
         </TabsTrigger>
         <TabsTrigger 
           value="catalog" 
-          className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all text-muted-foreground hover:text-foreground data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md cursor-pointer"
+          className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all text-muted-foreground hover:text-blue-600 data-[state=active]:bg-blue-600/10 data-[state=active]:text-blue-600 data-[state=active]:shadow-none cursor-pointer"
         >
           <ClipboardList className="w-4 h-4 mr-2 inline-block" /> Catálogo de Inclusiones
         </TabsTrigger>
