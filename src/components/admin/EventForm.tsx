@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useState, useEffect } from "react"
+import { useActionState, useState, useEffect, useRef } from "react"
 import { createEventAction, updateEventAction } from "@/actions/events"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -66,16 +66,21 @@ function SelectField({ id, name, label, options, defaultValue, required }: {
 export function EventForm({ onClose, clients, locations, packages, staff = [], allMusicians = [], initialData }: EventFormProps) {
   const action = initialData ? updateEventAction.bind(null, initialData.id) : createEventAction
   const [state, formAction, isPending] = useActionState(action, null) as [any, any, boolean]
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    if (state && !state.success) {
-      toast.error(state.message || "Error al procesar la solicitud")
+    if (state) {
+      setIsSubmitting(false)
+      if (!state.success) {
+        toast.error(state.message || "Error al procesar la solicitud")
+      }
     }
   }, [state])
 
   const [sendNotif, setSendNotif] = useState(false)
   const [copied, setCopied] = useState(false)
   const [notifyingIds, setNotifyingIds] = useState<string[]>([])
+  const notifyingIdsRef = useRef<string[]>([])
 
   // IVA auto-calculation
   const [amount, setAmount] = useState<number>(parseFloat(initialData?.amount) || 0)
@@ -102,25 +107,50 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
       : allMusicians.filter(m => m.isTitular).map(m => m.id)
   )
 
+  const [musiciansToNotify, setMusiciansToNotify] = useState<string[]>(
+    currentMusicianIds.length > 0 
+      ? currentMusicianIds 
+      : allMusicians.filter(m => m.isTitular).map(m => m.id)
+  )
+
   const toggleMusician = (id: string) => {
-    setSelectedMusicians(prev => 
+    setSelectedMusicians(prev => {
+      const isCurrentlySelected = prev.includes(id)
+      if (isCurrentlySelected) {
+        setMusiciansToNotify(notifyPrev => notifyPrev.filter(mid => mid !== id))
+        return prev.filter(mid => mid !== id)
+      } else {
+        setMusiciansToNotify(notifyPrev => [...notifyPrev, id])
+        return [...prev, id]
+      }
+    })
+  }
+
+  const toggleNotifyMusician = (id: string) => {
+    setMusiciansToNotify(prev =>
       prev.includes(id) ? prev.filter(mid => mid !== id) : [...prev, id]
     )
   }
 
   async function handleNotifySingle(musicianId: string) {
     if (!initialData?.id) return
+    if (notifyingIdsRef.current.includes(musicianId)) return
+
+    notifyingIdsRef.current.push(musicianId)
     setNotifyingIds(prev => [...prev, musicianId])
     try {
       const res = await notifySingleMusicianAction(initialData.id, musicianId)
       if (res.success) {
         toast.success("Notificación enviada")
+        // Automatically uncheck group notification for this musician to avoid duplicate on save
+        setMusiciansToNotify(prev => prev.filter(id => id !== musicianId))
       } else {
         toast.error(res.error || "Error al enviar")
       }
     } catch (err) {
       toast.error("Error de conexión")
     } finally {
+      notifyingIdsRef.current = notifyingIdsRef.current.filter(id => id !== musicianId)
       setNotifyingIds(prev => prev.filter(id => id !== musicianId))
     }
   }
@@ -268,7 +298,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
           </div>
         )}
 
-        <form action={formAction} className="p-6 space-y-6">
+        <form action={formAction} onSubmit={() => setIsSubmitting(true)} className="p-6 space-y-6">
 
           {/* Identidad */}
           <fieldset>
@@ -452,7 +482,8 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                               type="checkbox" 
                               name="notifyMusicianIds" 
                               value={m.id} 
-                              defaultChecked={true} 
+                              checked={musiciansToNotify.includes(m.id)}
+                              onChange={() => toggleNotifyMusician(m.id)}
                               className="rounded border-primary/30 text-primary h-3 w-3" 
                             />
                             <span className="text-muted-foreground font-medium">Incluir en notificación de grupo</span>
@@ -619,8 +650,8 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-border/40">Cancelar</Button>
-            <Button type="submit" disabled={isPending} className="flex-1 font-bold text-white">
-              {isPending 
+            <Button type="submit" disabled={isPending || isSubmitting} className="flex-1 font-bold text-white">
+              {isPending || isSubmitting
                 ? (initialData ? "Actualizando..." : "Creando y sincronizando...") 
                 : (initialData ? "Guardar Cambios" : "Crear Evento")}
             </Button>
