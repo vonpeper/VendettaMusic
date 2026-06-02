@@ -10,7 +10,7 @@ echo "=== Container status ==="
 docker compose ps
 
 echo "=== Applying Prisma schema (db push) ==="
-docker compose exec -T vendetta-v4 npx prisma db push --accept-data-loss --skip-generate
+docker compose exec -T -u root vendetta-v4 npx prisma db push --accept-data-loss
 
 echo "=== Logs (last 40 lines) ==="
 docker compose logs --tail=40 vendetta-v4
