@@ -401,7 +401,7 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                   <h4 className="text-xs font-black uppercase tracking-widest text-foreground mb-4 flex items-center gap-2">
                     <Info className="w-4 h-4" /> Guía de Variables Dinámicas
                   </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                       { v: "{{clientName}}", d: "Nombre corto" },
                       { v: "{{fullName}}", d: "Nombre completo" },

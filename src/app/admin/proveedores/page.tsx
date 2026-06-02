@@ -24,7 +24,7 @@ export default async function AdminProveedoresPage() {
         <NuevoProveedorButton />
       </div>
 
-      <div className="border border-border/40 rounded-xl bg-card overflow-hidden">
+      <div className="border border-border/40 rounded-xl bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-border/40 hover:bg-transparent bg-card">

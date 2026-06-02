@@ -82,7 +82,7 @@ export default async function EventualidadesPage() {
 
   return (
     <div className="p-8 bg-background min-h-full">
-      <div className="flex justify-between items-start mb-10">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-10">
         <div>
           <h1 className="text-3xl font-heading font-bold text-foreground tracking-tight">
             Eventualidades e Ingresos

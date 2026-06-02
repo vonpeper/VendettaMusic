@@ -43,7 +43,7 @@ export default async function AdminDashboardPage() {
     musicianProfiles
   ] = await Promise.all([
     db.event.findMany({
-      where: { date: { gte: now }, status: { not: "cancelado" } },
+      where: { date: { gte: new Date(now.getTime() - 12 * 60 * 60 * 1000) }, status: { not: "cancelado" } },
       orderBy: { date: "asc" },
       take: 5,
       include: { 
@@ -67,6 +67,7 @@ export default async function AdminDashboardPage() {
     db.bookingRequest.findMany({
       where: { status: { in: ["pending", "pendiente"] } },
       orderBy: { createdAt: "desc" },
+      include: { client: { include: { user: true } } }
     }),
     // Pipeline: Quotes Manuales
     db.quote.findMany({
@@ -266,7 +267,7 @@ export default async function AdminDashboardPage() {
       {/* Quick Actions Row handled above */}
 
       {/* -- KPIs Row -- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
           isAdmin && {
             label: "Proyección del Mes",
@@ -405,7 +406,7 @@ export default async function AdminDashboardPage() {
               <div className="space-y-4">
                 {[...pendingBookingRequests, ...pendingQuotes].slice(0, 4).map(q => {
                   const isWebFunnel = "clientName" in q;
-                  const clientName = isWebFunnel ? q.clientName : q.client?.user?.name ?? "Sin nombre";
+                  const clientName = q.client?.user?.name || (isWebFunnel ? q.clientName : "Sin nombre");
                   const dateInfo = isWebFunnel ? q.requestedDate : q.eventDate;
                   const amount = isWebFunnel ? q.baseAmount : q.totalEstimated;
                   const createdAt = q.createdAt;

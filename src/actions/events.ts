@@ -77,6 +77,21 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
       where: { id },
       include: { location: true, package: true, client: { include: { user: true } } }
     })
+
+    // Sincronizar con ClientProfile si existe para mantener el dato maestro actualizado
+    if (updatedEvent?.clientId && data.customName) {
+      await db.clientProfile.update({
+        where: { id: updatedEvent.clientId },
+        data: {
+          user: {
+            update: {
+              name: data.customName as string
+            }
+          }
+        }
+      })
+    }
+
     if (updatedEvent?.quoteId) {
       await db.quote.update({
         where: { id: updatedEvent.quoteId },

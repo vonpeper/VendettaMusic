@@ -126,22 +126,23 @@ export default async function AdminVentasPage() {
   return (
     <div className="p-8 bg-background min-h-screen">
       {/* Header */}
-      <div className="flex justify-between items-end mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
         <div>
           <h1 className="text-4xl font-heading font-black text-foreground tracking-tight">Centro de <span className="text-blue-600">Ventas</span></h1>
           <p className="text-muted-foreground mt-1 text-sm">Gestiona pedidos web, cotizaciones manuales y contratos legales.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <Button 
+            variant="outline"
             asChild
-            className="bg-muted-foreground/10 hover:bg-muted-foreground/20 text-foreground border border-border/40 gap-2 h-11 px-6 rounded-xl font-bold transition-all"
+            className="w-full sm:w-auto border-border/40 hover:bg-muted gap-2 h-11 px-6 rounded-xl font-bold transition-all shadow-sm"
           >
             <a href="/api/admin/export?type=bookings" download>
               <Download className="w-5 h-5" /> Exportar Excel
             </a>
           </Button>
-          <Link href="/admin/ventas/manual">
-            <Button className="bg-blue-600 hover:bg-blue-700 gap-2 h-11 px-6 rounded-xl font-bold shadow-lg shadow-blue-600/20 text-white">
+          <Link href="/admin/ventas/manual" className="w-full sm:w-auto">
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 gap-2 h-11 px-6 rounded-xl font-bold shadow-lg shadow-blue-600/20 text-white">
               <Plus className="w-5 h-5" /> Nueva Cotización Manual
             </Button>
           </Link>

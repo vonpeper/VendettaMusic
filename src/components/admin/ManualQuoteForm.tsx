@@ -93,7 +93,8 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
               hasPista: data.hasPista || false,
               hasRobot: data.hasRobot || false,
               originalPrice: data.originalPrice || 0,
-              discountAmount: data.discountAmount || 0
+              discountAmount: data.discountAmount || 0,
+              viaticosAmount: data.viaticosAmount || 0
             })
           }
         })
@@ -135,7 +136,8 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
     hasPista: false,
     hasRobot: false,
     originalPrice: 0,
-    discountAmount: 0
+    discountAmount: 0,
+    viaticosAmount: 0
   })
 
   const handlePackageChange = (id: string | null) => {
@@ -454,7 +456,7 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-2">
               <label className="flex items-center gap-2 cursor-pointer group">
                 <input 
                   type="checkbox" 
@@ -583,6 +585,15 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
                     })
                   }}
                   className="bg-primary/5 border-primary shadow-inner"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Viáticos ($)</Label>
+                <Input 
+                  type="number"
+                  value={formData.viaticosAmount} 
+                  onFocus={(e) => e.target.select()}
+                  onChange={e => setFormData({...formData, viaticosAmount: parseFloat(e.target.value) || 0})}
                 />
               </div>
               <div className="space-y-2">

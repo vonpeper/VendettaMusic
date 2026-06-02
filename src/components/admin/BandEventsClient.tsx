@@ -145,12 +145,12 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
       {/* Anticipos (Standalone) */}
       <Dialog>
         <DialogTrigger asChild>
-          <button className="w-full text-left mb-6 rounded-xl border border-blue-500/30 bg-blue-500/10 p-5 flex items-center justify-between cursor-pointer hover:bg-blue-500/20 transition-all shadow-sm">
+          <button className="w-full text-left mb-6 rounded-xl border border-blue-500/30 bg-blue-500/10 p-5 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between cursor-pointer hover:bg-blue-500/20 transition-all shadow-sm">
              <div>
                 <span className="text-xs uppercase tracking-[0.2em] text-blue-800 font-bold">Reserva en Banco (Eventos Próximos)</span>
                 <p className="text-sm text-blue-700 mt-1">Suma exclusiva de anticipos cobrados para shows que aún no suceden. Click para ver detalles.</p>
              </div>
-             <div className="text-3xl font-black text-blue-800">
+             <div className="text-3xl font-black text-blue-800 shrink-0">
                 {MXN(currentAnticipos)}
              </div>
           </button>
@@ -162,7 +162,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
               <span className="text-blue-600">{MXN(currentAnticipos)}</span>
             </DialogTitle>
           </DialogHeader>
-          <div className="mt-4 border border-border/40 rounded-xl overflow-hidden bg-card">
+          <div className="mt-4 border border-border/40 rounded-xl overflow-x-auto bg-card">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/40">
                 <tr>
@@ -194,7 +194,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
       </Dialog>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         {[
           { label: "Total Acumulado",       value: MXN(kpis.total),     highlight: true },
           { label: "Mes Actual",            value: MXN(kpis.monthTotal), highlight: false },
@@ -211,7 +211,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
       </div>
 
       {/* Filtros */}
-      <div className="bg-card border border-border/40 rounded-xl p-4 mb-6 grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="bg-card border border-border/40 rounded-xl p-4 mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
         <Input placeholder="🔍 Buscar cliente..." value={search} onChange={e => setSearch(e.target.value)}
           className="bg-background border-border/40 text-foreground placeholder:text-muted-foreground" />
         <select value={monthFilter} onChange={e => setMonth(e.target.value)}

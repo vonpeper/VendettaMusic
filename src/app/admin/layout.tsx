@@ -17,7 +17,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/")
   }
 
-  const config = await (db as any).globalConfig?.findUnique({ where: { id: "vendetta_config" } }).catch(() => null)
   const pendingInbox = await (db as any).inboxItem?.count?.({ where: { status: "pending" } }).catch(() => 0) || 0
 
   return (

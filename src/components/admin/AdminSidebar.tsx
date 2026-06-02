@@ -165,7 +165,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
     }
   ]
 
-  if (!mounted) return null
+  // Removed !mounted return null so sidebar renders immediately during SSR
 
   return (
     <>

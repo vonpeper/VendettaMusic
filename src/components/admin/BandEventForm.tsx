@@ -37,14 +37,11 @@ export function BandEventForm({ onClose, editing }: any) {
       .catch(console.error)
   }, [])
 
-  const [base, setBase]   = useState(editing?.baseIncome  ?? 0)
-  const [iva,  setIva]    = useState(editing?.ivaAmount   ?? 0)
-  const [total, setTotal] = useState(editing?.totalIncome ?? 0)
-  const [manualTotal, setManualTotal] = useState(false)
-
-  useEffect(() => {
-    if (!manualTotal) setTotal(parseFloat((base + iva).toFixed(2)))
-  }, [base, iva, manualTotal])
+  const [base, setBase] = useState(editing?.baseIncome ?? 0)
+  const [requiresInvoice, setRequiresInvoice] = useState(editing?.invoice || (editing?.ivaAmount > 0))
+  
+  const ivaAmount = requiresInvoice ? Math.round(base * 0.16 * 100) / 100 : 0
+  const totalWithTax = base + ivaAmount
 
   if (state?.success) {
     return (
@@ -134,26 +131,56 @@ export function BandEventForm({ onClose, editing }: any) {
             <legend className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
               <Calculator className="w-3.5 h-3.5" /> Finanzas
             </legend>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="ivaAmount">IVA (MXN)</Label>
-                <Input id="ivaAmount" name="ivaAmount" type="number" step="0.01" min="0"
-                  value={iva} onChange={e => { setIva(parseFloat(e.target.value)||0); setManualTotal(false) }}
-                  className="bg-background border-border/40" />
-              </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="amount">Subtotal / Base</Label>
                 <Input id="amount" name="amount" type="number" step="0.01"
-                  value={base} onChange={e => { setBase(parseFloat(e.target.value)||0); setManualTotal(false) }}
+                  value={base} onChange={e => setBase(parseFloat(e.target.value) || 0)}
                   className="bg-background border-border/40" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="totalIncome">Total Cobrado (Neto)</Label>
                 <Input id="totalIncome" name="totalIncome" type="number" step="0.01"
-                  value={total} onChange={e => { setManualTotal(true); setTotal(parseFloat(e.target.value)||0) }}
-                  className="bg-background border-border/40 font-bold text-primary" />
+                  value={totalWithTax}
+                  readOnly
+                  className="bg-background border-border/40 font-bold text-primary opacity-80" />
               </div>
+              <input type="hidden" name="ivaAmount" value={ivaAmount} />
             </div>
+
+            <label className="flex items-center gap-3 cursor-pointer mt-4">
+              <input
+                type="checkbox"
+                name="invoice"
+                className="sr-only peer"
+                checked={requiresInvoice}
+                onChange={e => setRequiresInvoice(e.target.checked)}
+              />
+              <div className="relative w-10 h-5 bg-primary/10 rounded-full peer-checked:bg-primary transition-colors">
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${requiresInvoice ? 'translate-x-5' : ''}`}></div>
+              </div>
+              <span className="text-sm text-muted-foreground">Requiere Factura (se aplica IVA 16%)</span>
+            </label>
+
+            {requiresInvoice && base > 0 && (
+              <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-sm">
+                <div className="font-bold text-amber-700 text-[10px] uppercase tracking-widest mb-2">📄 Desglose con IVA</div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Subtotal</div>
+                    <div className="font-bold text-foreground">${base.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground uppercase">IVA 16%</div>
+                    <div className="font-bold text-amber-600">${ivaAmount.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+                  </div>
+                  <div className="bg-amber-500/20 rounded-lg py-1">
+                    <div className="text-[10px] text-amber-800 uppercase font-black">Total</div>
+                    <div className="font-black text-amber-700">${totalWithTax.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </fieldset>
 
           <fieldset className="space-y-4 border-t border-border/40 pt-4">

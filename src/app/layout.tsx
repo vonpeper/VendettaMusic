@@ -78,7 +78,7 @@ export default function RootLayout({
       lang="es"
       className={`${inter.variable} ${montserrat.variable} ${advent.variable} dark antialiased scroll-smooth`}
     >
-      <body className="min-h-screen bg-background text-foreground flex flex-col">
+      <body className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden max-w-[100vw]">
         <Toaster theme="dark" position="bottom-right" richColors />
         <SchemaMarkup />
         {children}

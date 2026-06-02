@@ -33,44 +33,44 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
   return (
-    <div className="p-8 max-w-5xl mx-auto pb-24 admin-deploy-v3">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto pb-24 admin-deploy-v3 w-full">
       {/* Header */}
-      <div className="mb-10">
+      <div className="mb-8 md:mb-10">
         <div className="flex items-center gap-3 text-primary mb-2">
           <Settings className="w-6 h-6" />
           <span className="text-sm font-bold uppercase tracking-widest">Ajustes del Sistema</span>
         </div>
-        <h1 className="text-4xl font-heading font-bold text-foreground tracking-tight">
+        <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground tracking-tight">
           Configuración Maestro
         </h1>
-        <p className="text-muted-foreground mt-2 max-w-2xl">
+        <p className="text-muted-foreground mt-2 max-w-2xl text-sm md:text-base">
           Administra las conexiones con servicios externos. Estos ajustes afectan las notificaciones automáticas y la sincronización de agenda.
         </p>
       </div>
 
-      <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList className="flex flex-row overflow-x-auto hide-scrollbar snap-x snap-mandatory w-full bg-card/50 border border-border/40 h-auto p-1.5 mb-8 rounded-2xl gap-2 justify-start md:justify-center">
-          <TabsTrigger value="integraciones" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold bg-transparent">
+      <Tabs defaultValue={defaultTab} className="w-full min-w-0">
+        <TabsList className="flex flex-row overflow-x-auto hide-scrollbar snap-x snap-mandatory w-full bg-card border border-border/40 h-auto p-1.5 mb-8 rounded-2xl gap-2 justify-start md:justify-center">
+          <TabsTrigger value="integraciones" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold">
             <Plug className="w-4 h-4 mr-2" />
             Integraciones
           </TabsTrigger>
-          <TabsTrigger value="seo" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 font-bold bg-transparent">
+          <TabsTrigger value="seo" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 font-bold">
             <Search className="w-4 h-4 mr-2" />
             Marketing
           </TabsTrigger>
-          <TabsTrigger value="redes" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 font-bold bg-transparent">
+          <TabsTrigger value="redes" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 font-bold">
             <Share2 className="w-4 h-4 mr-2" />
             Redes
           </TabsTrigger>
-          <TabsTrigger value="viaticos" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold bg-transparent">
+          <TabsTrigger value="viaticos" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold">
             <Map className="w-4 h-4 mr-2" />
             Viáticos
           </TabsTrigger>
-          <TabsTrigger value="contrato" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 font-bold bg-transparent">
+          <TabsTrigger value="contrato" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 font-bold">
             <FileText className="w-4 h-4 mr-2" />
             Contrato
           </TabsTrigger>
-          <TabsTrigger value="pagos" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 font-bold bg-transparent">
+          <TabsTrigger value="pagos" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 font-bold">
             <CreditCard className="w-4 h-4 mr-2" />
             Pagos
           </TabsTrigger>

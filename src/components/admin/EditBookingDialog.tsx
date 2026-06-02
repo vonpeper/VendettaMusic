@@ -25,6 +25,9 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
   // El estado calcData ha sido eliminado por solicitud del usuario
   
   const [formData, setFormData] = useState({
+    clientName:    booking.client?.user?.name || booking.clientName || "",
+    clientPhone:   booking.clientPhone || booking.client?.whatsapp || "",
+    clientEmail:   booking.clientEmail || booking.client?.user?.email || "",
     packageName:   booking.packageName   || "",
     guestCount:    booking.guestCount    || 0,
     venueType:     booking.venueType     || "salon",
@@ -99,7 +102,42 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
         </DialogHeader>
 
         <form onSubmit={handleUpdate} className="space-y-6 pt-4">
-          <div className="grid grid-cols-2 gap-4">
+          
+          <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/40">
+            <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2">Datos del Cliente</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="clientName">Nombre Completo</Label>
+                <Input 
+                  id="clientName" 
+                  value={formData.clientName} 
+                  onChange={e => setFormData({...formData, clientName: e.target.value})}
+                  className="bg-background"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="clientPhone">WhatsApp</Label>
+                <Input 
+                  id="clientPhone" 
+                  value={formData.clientPhone} 
+                  onChange={e => setFormData({...formData, clientPhone: e.target.value})}
+                  className="bg-background"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="clientEmail">Correo Electrónico</Label>
+                <Input 
+                  id="clientEmail" 
+                  type="email"
+                  value={formData.clientEmail} 
+                  onChange={e => setFormData({...formData, clientEmail: e.target.value})}
+                  className="bg-background"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="packageName">Paquete / Servicio</Label>
               <Input 
@@ -120,7 +158,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="requestedDate">Fecha del Evento</Label>
               <Input 
@@ -143,7 +181,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startTime">Hora Inicio (ej: 21:00)</Label>
               <Input 
@@ -186,7 +224,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
 
           <div className="space-y-4 bg-muted/30 p-4 rounded-xl border border-border/40">
             <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2 text-center">Configuración de Show</h4>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="bandHours">Horas Banda</Label>
                 <Input 
@@ -209,7 +247,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-y-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 pt-2">
               <div className="flex items-center space-x-2">
                 <input 
                   type="checkbox" 
@@ -268,7 +306,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="originalPrice">Precio de Lista (Original) ($)</Label>
               <Input 

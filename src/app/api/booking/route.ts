@@ -340,6 +340,9 @@ export async function PUT(req: NextRequest) {
 
     // 1. Limpiar data de entrada
     const dataToUpdate: any = {}
+    if (updates.clientName !== undefined) dataToUpdate.clientName = updates.clientName
+    if (updates.clientPhone !== undefined) dataToUpdate.clientPhone = updates.clientPhone
+    if (updates.clientEmail !== undefined) dataToUpdate.clientEmail = updates.clientEmail
     if (updates.packageName)   dataToUpdate.packageName   = updates.packageName
     if (updates.guestCount)    dataToUpdate.guestCount    = parseInt(updates.guestCount)
     if (updates.venueType)     dataToUpdate.venueType     = updates.venueType
@@ -370,11 +373,28 @@ export async function PUT(req: NextRequest) {
       data: dataToUpdate
     })
 
+    // Sincronizar con ClientProfile si existe para no dejar datos huérfanos
+    if (booking.clientId && (updates.clientName !== undefined || updates.clientPhone !== undefined || updates.clientEmail !== undefined)) {
+      await db.clientProfile.update({
+        where: { id: booking.clientId },
+        data: {
+          ...(updates.clientPhone !== undefined ? { whatsapp: updates.clientPhone } : {}),
+          user: {
+            update: {
+              ...(updates.clientName !== undefined ? { name: updates.clientName } : {}),
+              ...(updates.clientEmail !== undefined ? { email: updates.clientEmail } : {}),
+            }
+          }
+        }
+      })
+    }
+
     // 2. Si tiene evento sincronizado, actualizarlo también
     if (booking.eventId) {
       await db.event.update({
         where: { id: booking.eventId },
         data: {
+          ...(updates.clientName !== undefined ? { customName: updates.clientName } : {}),
           date:             booking.requestedDate,
           guestCount:       booking.guestCount,
           performanceStart: booking.startTime,

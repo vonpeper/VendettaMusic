@@ -38,7 +38,7 @@ export default async function AdminBandaPage() {
       </div>
 
       {/* Metrics Dashboard */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         <div className="bg-card border border-border/40 p-4 rounded-xl shadow-sm">
           <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <Users className="w-4 h-4 text-primary" />

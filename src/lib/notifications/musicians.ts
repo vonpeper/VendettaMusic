@@ -191,9 +191,9 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     const message = parseTemplate(template, templateData)
 
     // Enviar directamente via Evolution sin pasar por dispatchNotification
-    const evolutionUrl = (config as any)?.evolutionUrl || process.env.EVOLUTION_API_URL
+    const evolutionUrl = (config as any)?.evolutionUrl || process.env.EVOLUTION_BASE_URL
     const evolutionKey = (config as any)?.evolutionApiKey || process.env.EVOLUTION_API_KEY
-    const evolutionInstance = (config as any)?.evolutionInstance || process.env.EVOLUTION_INSTANCE_NAME
+    const evolutionInstance = (config as any)?.evolutionInstance || process.env.EVOLUTION_INSTANCE || "vendetta_admin"
 
     if (!evolutionUrl || !evolutionKey || !evolutionInstance) {
       console.error(`❌ Evolution API no configurada. URL: ${evolutionUrl}, Instance: ${evolutionInstance}`)
