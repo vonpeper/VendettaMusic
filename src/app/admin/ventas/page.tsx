@@ -425,7 +425,7 @@ function ContratosGrid({
                             size="sm" 
                             variant="outline" 
                             asChild
-                            className="h-9 gap-2 border-green-600/30 text-green-400 hover:bg-green-600 hover:text-foreground" 
+                            className="h-9 gap-2 border-green-600/30 text-green-400 hover:bg-green-600 hover:text-foreground w-full flex items-center justify-center rounded-lg border text-xs font-bold transition-all cursor-pointer" 
                           >
                             <a href={`/api/admin/contract/${c.id}`}>
                               <Download className="w-3 h-3" /> Contrato
@@ -440,7 +440,7 @@ function ContratosGrid({
                             size="sm"
                             variant="outline"
                             asChild
-                            className="h-9 gap-2 border-blue-600/30 text-blue-400 hover:bg-blue-600 hover:text-foreground"
+                            className="h-9 gap-2 border-blue-600/30 text-blue-400 hover:bg-blue-600 hover:text-foreground w-full flex items-center justify-center rounded-lg border text-xs font-bold transition-all cursor-pointer"
                           >
                             <Link href={`/admin/ventas/${c.id}`}>
                               <FileText className="w-3 h-3" /> Info/Editar
@@ -463,7 +463,17 @@ function ContratosGrid({
                             />
                           )}
 
-                          <CancelBookingButton bookingId={c.id} shortId={c.shortId || "S/F"} hasEvent={true} />
+                          <CancelBookingButton 
+                            bookingId={c.id} 
+                            shortId={c.shortId || "S/F"} 
+                            hasEvent={true} 
+                            variant="outline"
+                            label="Eliminar"
+                            className={cn(
+                              "h-9 gap-2 border-red-500/30 text-red-500 hover:bg-red-500 hover:text-foreground w-full flex items-center justify-center rounded-lg border text-xs font-bold transition-all cursor-pointer",
+                              ((!isCompleted && c.event) || (isCompleted && !c.event)) ? "col-span-2" : ""
+                            )}
+                          />
                         </div>
                       </div>
                     </CardContent>

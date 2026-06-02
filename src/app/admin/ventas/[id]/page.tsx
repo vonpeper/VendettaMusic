@@ -216,7 +216,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             <p className="text-muted-foreground mt-1">Registrado el {formatDateMX(booking.createdAt, "PPPP")}</p>
           </div>
           
-          {(booking.status === "agendado" || booking.status === "confirmed" || booking.status === "pendiente") && (
+          {(booking.status === "agendado" || booking.status === "confirmed" || booking.status === "pendiente" || booking.status === "completado") && (
             <div className="flex flex-wrap gap-3">
               <ContractStatusSwitcher 
                 bookingId={booking.id} 

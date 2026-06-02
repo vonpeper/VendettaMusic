@@ -20,9 +20,19 @@ interface CancelBookingButtonProps {
   bookingId: string;
   shortId: string;
   hasEvent?: boolean;
+  className?: string;
+  variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost";
+  label?: string;
 }
 
-export function CancelBookingButton({ bookingId, shortId, hasEvent = false }: CancelBookingButtonProps) {
+export function CancelBookingButton({ 
+  bookingId, 
+  shortId, 
+  hasEvent = false,
+  className,
+  variant = "outline",
+  label = "Eliminar"
+}: CancelBookingButtonProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -59,10 +69,10 @@ export function CancelBookingButton({ bookingId, shortId, hasEvent = false }: Ca
         render={(triggerProps) => (
           <Button 
             {...triggerProps}
-            variant="outline" 
-            className="w-full border-red-500/30 text-red-500 hover:bg-red-500 hover:text-foreground transition-all rounded-xl h-11 px-2 gap-1.5 font-black text-xs uppercase tracking-widest overflow-hidden"
+            variant={variant} 
+            className={className || "w-full border-red-500/30 text-red-500 hover:bg-red-500 hover:text-foreground transition-all rounded-xl h-11 px-2 gap-1.5 font-black text-xs uppercase tracking-widest overflow-hidden"}
           >
-            <Trash2 className="w-4 h-4 shrink-0" /> Eliminar
+            <Trash2 className="w-4 h-4 shrink-0" /> {label}
           </Button>
         )}
       />
