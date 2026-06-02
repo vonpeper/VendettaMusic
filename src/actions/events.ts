@@ -170,7 +170,7 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
     revalidatePath("/")
 
     // Notificación automática
-    const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true") || (updatedEvent?.status === "agendado" && !updatedEvent?.notificationSent)
+    const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true")
 
     if (shouldNotify && updatedEvent) {
       // ASEGURAR QUE HAYA MÚSICOS: Si no hay músicos asignados, intentar asignar los titulares por default
@@ -425,7 +425,7 @@ export async function createEventAction(_prev: any, formData: FormData) {
     revalidatePath("/")
 
     // Notificación automática
-    const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true") || (event.status === "agendado")
+    const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true")
 
     if (shouldNotify) {
       // ASEGURAR QUE HAYA MÚSICOS
