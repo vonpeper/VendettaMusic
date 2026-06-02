@@ -52,7 +52,7 @@ export function NuevoEventoButton({ clients, locations, packages, staff, allMusi
   )
 }
 
-export function EditEventoButton({ eventId, initialData, clients, locations, packages, staff, allMusicians = [], showText }: {
+export function EditEventoButton({ eventId, initialData, clients, locations, packages, staff, allMusicians = [], showText, className, variant, label }: {
   eventId: string
   initialData: any
   clients: { id: string; name: string }[]
@@ -61,6 +61,9 @@ export function EditEventoButton({ eventId, initialData, clients, locations, pac
   staff: { id: string; name: string }[]
   allMusicians?: any[]
   showText?: boolean
+  className?: string
+  variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost"
+  label?: string
 }) {
   const [showForm, setShowForm] = useState(false)
 
@@ -78,14 +81,14 @@ export function EditEventoButton({ eventId, initialData, clients, locations, pac
         />
       )}
       <Button 
-        variant="ghost" 
+        variant={variant || "ghost"} 
         size={showText ? "sm" : "icon"} 
         onClick={() => setShowForm(true)}
-        className={`${showText ? "px-3 gap-2" : "h-8 w-8"} text-muted-foreground hover:text-primary hover:bg-primary/10`}
+        className={className || `${showText ? "px-3 gap-2" : "h-8 w-8"} text-muted-foreground hover:text-primary hover:bg-primary/10`}
         title="Editar evento"
       >
         <Edit2 className="w-3.5 h-3.5" />
-        {showText && <span>Editar</span>}
+        {showText && <span>{label || "Editar"}</span>}
       </Button>
     </>
   )

@@ -21,6 +21,7 @@ import { VentasTableClient } from "@/components/admin/VentasTableClient"
 import { MarkCompletedButton } from "@/components/admin/MarkCompletedButton"
 import { ContractStatusSwitcher } from "@/components/admin/ContractStatusSwitcher"
 import { CancelBookingButton } from "@/components/admin/CancelBookingButton"
+import { EditEventoButton } from "@/components/admin/EventActions"
 import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
 // Temporary diagnostics
@@ -69,7 +70,7 @@ export default async function AdminVentasPage() {
   }
 
   // 3. Fetch de datos unificados
-  const [bookings, quotes, expiredStats, config] = await Promise.all([
+  const [bookings, quotes, expiredStats, config, clients, locations, packages, musicianProfiles] = await Promise.all([
     db.bookingRequest.findMany({ 
       orderBy: { createdAt: "desc" },
       include: {
@@ -91,8 +92,35 @@ export default async function AdminVentasPage() {
       _sum: { baseAmount: true },
       where: { status: "EXPIRED" }
     }),
-    db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+    db.globalConfig.findUnique({ where: { id: "vendetta_config" } }),
+    db.clientProfile.findMany({
+      include: { user: true },
+      orderBy: { user: { name: "asc" } }
+    }),
+    db.$queryRawUnsafe<any[]>(`SELECT * FROM Location ORDER BY name ASC`),
+    db.package.findMany({ orderBy: { name: "asc" } }),
+    db.musicianProfile.findMany({
+      include: { user: true },
+      orderBy: { user: { name: "asc" } }
+    }),
   ])
+
+  const clientsMapped = clients.map(c => ({ id: c.id, name: c.user.name ?? c.user.email ?? "Sin nombre" }))
+  
+  // Filtrar solo Ingenieros y Staff para el campo de Audio Engineer
+  const staffMapped = musicianProfiles
+    .filter(p => 
+      p.instrument?.toLowerCase().includes("ingeniero") || 
+      p.instrument?.toLowerCase().includes("staff")
+    )
+    .map(p => ({ id: p.id, name: p.user.name ?? "Sin nombre" }))
+
+  const allMusiciansMapped = musicianProfiles.map(p => ({ 
+    id: p.id, 
+    name: p.user.name ?? "Sin nombre",
+    instrument: p.instrument || "Músico",
+    isTitular: p.isTitular
+  }))
 
   // 4. Obtener estados de notificaciones para el semáforo
   const bookingIds = bookings.map(b => b.id)
@@ -225,18 +253,50 @@ export default async function AdminVentasPage() {
         </TabsContent>
 
         <TabsContent value="contratos" className="space-y-4">
-          <ContratosGrid items={confirmed} isCompleted={false} />
+          <ContratosGrid 
+            items={confirmed} 
+            isCompleted={false} 
+            clients={clientsMapped}
+            locations={locations}
+            packages={packages}
+            staff={staffMapped}
+            allMusicians={allMusiciansMapped}
+          />
         </TabsContent>
 
         <TabsContent value="completados" className="space-y-4">
-          <ContratosGrid items={completados} isCompleted={true} />
+          <ContratosGrid 
+            items={completados} 
+            isCompleted={true} 
+            clients={clientsMapped}
+            locations={locations}
+            packages={packages}
+            staff={staffMapped}
+            allMusicians={allMusiciansMapped}
+          />
         </TabsContent>
       </Tabs>
     </div>
   )
 }
 
-function ContratosGrid({ items, isCompleted }: { items: any[], isCompleted: boolean }) {
+function ContratosGrid({ 
+  items, 
+  isCompleted,
+  clients,
+  locations,
+  packages,
+  staff,
+  allMusicians
+}: { 
+  items: any[]
+  isCompleted: boolean 
+  clients: any[]
+  locations: any[]
+  packages: any[]
+  staff: any[]
+  allMusicians: any[]
+}) {
   if (items.length === 0) return (
     <div className="py-20 text-center border-2 border-dashed border-border/40 rounded-3xl">
       <p className="text-muted-foreground">
@@ -314,6 +374,12 @@ function ContratosGrid({ items, isCompleted }: { items: any[], isCompleted: bool
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Clock className="w-3 h-3 text-muted-foreground" /> {c.startTime} a {c.endTime} HRS
                         </div>
+
+                        {c.eventId && (
+                          <div className="text-[10px] text-muted-foreground font-mono flex items-center gap-1.5 bg-muted/60 px-2 py-1 rounded w-fit select-all truncate max-w-full" title={c.eventId}>
+                            <span className="font-bold opacity-60">ID EVENTO:</span> {c.eventId}
+                          </div>
+                        )}
                         
                         {/* Semáforo de Staff */}
                         <div className="pt-2">
@@ -350,7 +416,7 @@ function ContratosGrid({ items, isCompleted }: { items: any[], isCompleted: bool
                               const base = c.baseAmount + (c.viaticosAmount || 0)
                               const ivaAmt = c.event?.invoice ? (c.event.ivaAmount || base * 0.16) : 0
                               return MXN(base + ivaAmt)
-                            })()}
+                             })()}
                           </div>
                           <ContractStatusSwitcher bookingId={c.id} status={c.contractStatus || "pending"} />
                         </div>
@@ -380,6 +446,22 @@ function ContratosGrid({ items, isCompleted }: { items: any[], isCompleted: bool
                               <FileText className="w-3 h-3" /> Info/Editar
                             </Link>
                           </Button>
+
+                          {c.event && (
+                            <EditEventoButton 
+                              eventId={c.event.id}
+                              initialData={c.event}
+                              clients={clients}
+                              locations={locations}
+                              packages={packages}
+                              staff={staff}
+                              allMusicians={allMusicians}
+                              showText={true}
+                              variant="outline"
+                              label="Ver/Editar Show"
+                              className="h-9 gap-2 border-blue-600/30 text-blue-400 hover:bg-blue-600 hover:text-foreground w-full flex items-center justify-center rounded-lg border text-xs font-bold transition-all cursor-pointer"
+                            />
+                          )}
 
                           <CancelBookingButton bookingId={c.id} shortId={c.shortId || "S/F"} hasEvent={true} />
                         </div>

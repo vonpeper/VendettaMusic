@@ -33,6 +33,7 @@ import {
 import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
 import { MusicianStatusList } from "@/components/admin/MusicianStatusList"
+import { EditEventoButton } from "@/components/admin/EventActions"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 
@@ -96,15 +97,23 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     }
   }
 
-  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
-  const musicianProfiles = await db.musicianProfile.findMany({
-    where: { 
-      whatsapp: { not: null }, 
-      status: "active"
-    },
-    include: { user: true },
-    orderBy: { instrument: 'asc' }
-  })
+  const [config, musicianProfiles, clients, locations, packages] = await Promise.all([
+    db.globalConfig.findUnique({ where: { id: "vendetta_config" } }),
+    db.musicianProfile.findMany({
+      where: { 
+        whatsapp: { not: null }, 
+        status: "active"
+      },
+      include: { user: true },
+      orderBy: { instrument: 'asc' }
+    }),
+    db.clientProfile.findMany({
+      include: { user: true },
+      orderBy: { user: { name: "asc" } }
+    }),
+    db.$queryRawUnsafe<any[]>(`SELECT * FROM Location ORDER BY name ASC`),
+    db.package.findMany({ orderBy: { name: "asc" } }),
+  ])
 
   // Aplanar para BookingActions (espera m.name, m.instrument)
   const musicians = musicianProfiles.map(m => ({
@@ -114,6 +123,22 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     whatsapp:   m.whatsapp,
     isTitular:  m.isTitular,
     status:     m.status,
+  }))
+
+  const clientsMapped = clients.map(c => ({ id: c.id, name: c.user.name ?? c.user.email ?? "Sin nombre" }))
+  
+  const staffMapped = musicianProfiles
+    .filter(p => 
+      p.instrument?.toLowerCase().includes("ingeniero") || 
+      p.instrument?.toLowerCase().includes("staff")
+    )
+    .map(p => ({ id: p.id, name: p.user.name ?? "Sin nombre" }))
+
+  const allMusiciansMapped = musicianProfiles.map(p => ({ 
+    id: p.id, 
+    name: p.user.name ?? "Sin nombre",
+    instrument: p.instrument || "Músico",
+    isTitular: p.isTitular
   }))
 
   if (!booking) notFound()
@@ -152,14 +177,33 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             <span className="text-foreground font-black">{booking.shortId}</span>
           </nav>
 
-          {/* Acceso rápido a Eventos */}
-          <Link
-            href="/admin/eventualidades"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all"
-          >
-            <LayoutList className="w-3.5 h-3.5" />
-            Ver Eventos
-          </Link>
+          <div className="flex items-center gap-3">
+            {/* Acceso rápido a Editar Evento */}
+            {booking.event && (
+              <EditEventoButton 
+                eventId={booking.event.id}
+                initialData={booking.event}
+                clients={clientsMapped}
+                locations={locations}
+                packages={packages}
+                staff={staffMapped}
+                allMusicians={allMusiciansMapped}
+                showText={true}
+                variant="outline"
+                label="Ver/Editar Show"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-blue-600/30 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all cursor-pointer bg-blue-600/10"
+              />
+            )}
+
+            {/* Acceso rápido a Eventos */}
+            <Link
+              href="/admin/eventualidades"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all"
+            >
+              <LayoutList className="w-3.5 h-3.5" />
+              Ver Eventos
+            </Link>
+          </div>
         </div>
 
         {/* Header con ID y Estado */}
@@ -225,6 +269,11 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                     <div className="text-sm text-muted-foreground font-mono mt-1 font-bold">
                       {booking.startTime} hrs — {booking.endTime} hrs
                     </div>
+                    {booking.eventId && (
+                      <div className="text-[10px] text-muted-foreground font-mono mt-2 flex items-center gap-1.5 bg-muted/60 px-2 py-1 rounded w-fit select-all truncate max-w-full" title={booking.eventId}>
+                        <span className="font-bold opacity-60">ID EVENTO:</span> {booking.eventId}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-4">
