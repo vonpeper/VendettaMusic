@@ -49,28 +49,28 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
       </div>
 
       <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList className="grid grid-cols-2 md:flex md:flex-row w-full bg-card/50 border border-border/40 h-auto p-1.5 mb-8 rounded-2xl gap-2">
-          <TabsTrigger value="integraciones" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold bg-transparent">
+        <TabsList className="flex flex-row overflow-x-auto hide-scrollbar snap-x snap-mandatory w-full bg-card/50 border border-border/40 h-auto p-1.5 mb-8 rounded-2xl gap-2 justify-start md:justify-center">
+          <TabsTrigger value="integraciones" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold bg-transparent">
             <Plug className="w-4 h-4 mr-2" />
             Integraciones
           </TabsTrigger>
-          <TabsTrigger value="seo" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 font-bold bg-transparent">
+          <TabsTrigger value="seo" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 font-bold bg-transparent">
             <Search className="w-4 h-4 mr-2" />
             Marketing
           </TabsTrigger>
-          <TabsTrigger value="redes" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 font-bold bg-transparent">
+          <TabsTrigger value="redes" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 font-bold bg-transparent">
             <Share2 className="w-4 h-4 mr-2" />
             Redes
           </TabsTrigger>
-          <TabsTrigger value="viaticos" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold bg-transparent">
+          <TabsTrigger value="viaticos" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold bg-transparent">
             <Map className="w-4 h-4 mr-2" />
             Viáticos
           </TabsTrigger>
-          <TabsTrigger value="contrato" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 font-bold bg-transparent">
+          <TabsTrigger value="contrato" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 font-bold bg-transparent">
             <FileText className="w-4 h-4 mr-2" />
             Contrato
           </TabsTrigger>
-          <TabsTrigger value="pagos" className="rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 font-bold bg-transparent">
+          <TabsTrigger value="pagos" className="shrink-0 whitespace-nowrap snap-center rounded-xl py-3 !border-transparent !shadow-none data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 font-bold bg-transparent">
             <CreditCard className="w-4 h-4 mr-2" />
             Pagos
           </TabsTrigger>

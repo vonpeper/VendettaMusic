@@ -95,20 +95,20 @@ export default async function NotificacionesPage() {
         </div>
 
         <Tabs defaultValue="control" className="space-y-8">
-          <TabsList className="bg-muted/50 p-1 border border-border/40 rounded-xl">
-            <TabsTrigger value="control" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsList className="flex flex-row overflow-x-auto hide-scrollbar snap-x snap-mandatory bg-muted/50 p-1 border border-border/40 rounded-xl justify-start w-full">
+            <TabsTrigger value="control" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Zap className="w-4 h-4" /> Centro de Control
             </TabsTrigger>
-            <TabsTrigger value="plantillas" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="plantillas" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <FileText className="w-4 h-4" /> Plantillas VIP
             </TabsTrigger>
-            <TabsTrigger value="entrantes" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="entrantes" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <MessageSquare className="w-4 h-4" /> Mensajes Entrantes
             </TabsTrigger>
-            <TabsTrigger value="fallidos" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="fallidos" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <AlertCircle className="w-4 h-4 text-red-500" /> Reintentos / Fallidos
             </TabsTrigger>
-            <TabsTrigger value="historial" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="historial" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <History className="w-4 h-4" /> Historial de Salida
             </TabsTrigger>
           </TabsList>

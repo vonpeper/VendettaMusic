@@ -72,7 +72,7 @@ export default async function AdminVentasPage() {
     db.bookingRequest.findMany({ 
       orderBy: { createdAt: "desc" },
       include: {
-        client: true,
+        client: { include: { user: true } },
         payments: true,
         event: {
           include: {
@@ -182,17 +182,17 @@ export default async function AdminVentasPage() {
       </div>
 
       <Tabs defaultValue="bookings" className="space-y-6">
-        <TabsList className="bg-card border border-border/40 p-1 h-12 rounded-xl">
-          <TabsTrigger value="bookings" className="gap-2 px-6 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-800 data-[state=active]:text-white data-[state=active]:shadow-lg">
+        <TabsList className="flex flex-row overflow-x-auto hide-scrollbar snap-x snap-mandatory bg-card border border-border/40 p-1 h-auto min-h-12 rounded-xl justify-start w-full">
+          <TabsTrigger value="bookings" className="shrink-0 whitespace-nowrap snap-center gap-2 px-6 py-2 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-800 data-[state=active]:text-white data-[state=active]:shadow-lg">
             <ShoppingBag className="w-4 h-4" /> Pedidos Web
           </TabsTrigger>
-          <TabsTrigger value="cotizaciones" className="gap-2 px-6 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-800 data-[state=active]:text-white data-[state=active]:shadow-lg">
+          <TabsTrigger value="cotizaciones" className="shrink-0 whitespace-nowrap snap-center gap-2 px-6 py-2 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-800 data-[state=active]:text-white data-[state=active]:shadow-lg">
             <FileText className="w-4 h-4" /> Ventas Manuales
           </TabsTrigger>
-          <TabsTrigger value="contratos" className="gap-2 px-6 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
+          <TabsTrigger value="contratos" className="shrink-0 whitespace-nowrap snap-center gap-2 px-6 py-2 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
             <CheckCircle2 className="w-4 h-4" /> Contratos
           </TabsTrigger>
-          <TabsTrigger value="completados" className="gap-2 px-6 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
+          <TabsTrigger value="completados" className="shrink-0 whitespace-nowrap snap-center gap-2 px-6 py-2 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
             <CheckCircle2 className="w-4 h-4" /> Completados
           </TabsTrigger>
         </TabsList>

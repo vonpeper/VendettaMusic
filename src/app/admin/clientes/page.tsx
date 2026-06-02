@@ -42,11 +42,11 @@ export default async function AdminClientesPage() {
       </div>
 
       <Tabs defaultValue="clientes" className="space-y-8">
-        <TabsList className="bg-card border border-border/40 p-1 rounded-xl">
-          <TabsTrigger value="clientes" className="gap-2 px-6 rounded-lg text-primary font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+        <TabsList className="flex flex-row overflow-x-auto hide-scrollbar snap-x snap-mandatory bg-card border border-border/40 p-1 rounded-xl justify-start w-full">
+          <TabsTrigger value="clientes" className="shrink-0 whitespace-nowrap snap-center gap-2 px-6 rounded-lg text-primary font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
             <Users className="w-4 h-4" /> Directorio de Clientes
           </TabsTrigger>
-          <TabsTrigger value="lugares" className="gap-2 px-6 rounded-lg text-primary font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+          <TabsTrigger value="lugares" className="shrink-0 whitespace-nowrap snap-center gap-2 px-6 rounded-lg text-primary font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
             <Building2 className="w-4 h-4" /> Ubicaciones y Venues
           </TabsTrigger>
         </TabsList>

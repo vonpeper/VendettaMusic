@@ -84,11 +84,11 @@ export default async function InboxPage({
       </div>
 
       <Tabs defaultValue={params.tab === "log" ? "log" : "pendientes"} className="space-y-6">
-        <TabsList className="bg-muted/50 p-1 border border-border/40 rounded-xl">
-          <TabsTrigger value="pendientes" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+        <TabsList className="flex flex-row overflow-x-auto hide-scrollbar snap-x snap-mandatory bg-muted/50 p-1 border border-border/40 rounded-xl justify-start w-full">
+          <TabsTrigger value="pendientes" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <Inbox className="w-4 h-4" /> Pendientes de Atención
           </TabsTrigger>
-          <TabsTrigger value="log" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="log" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <History className="w-4 h-4 text-blue-600" /> Log de WhatsApp (Hoy)
           </TabsTrigger>
         </TabsList>
