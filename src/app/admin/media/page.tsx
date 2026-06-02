@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { db } from "@/lib/db"
 import { MediaManagerClient } from "@/components/admin/MediaManagerClient"
 import { BandMembersManagerClient } from "@/components/admin/BandMembersManagerClient"

@@ -84,11 +84,11 @@ export default async function InboxPage({
       </div>
 
       <Tabs defaultValue={params.tab === "log" ? "log" : "pendientes"} className="space-y-6">
-        <TabsList className="flex flex-row overflow-x-auto hide-scrollbar snap-x snap-mandatory bg-muted/50 p-1 border border-border/40 rounded-xl justify-start w-full">
-          <TabsTrigger value="pendientes" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+        <TabsList className="flex flex-row flex-wrap bg-muted/50 p-1 border border-border/40 rounded-xl justify-start w-full">
+          <TabsTrigger value="pendientes" className="shrink-0  snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <Inbox className="w-4 h-4" /> Pendientes de Atención
           </TabsTrigger>
-          <TabsTrigger value="log" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="log" className="shrink-0  snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <History className="w-4 h-4 text-blue-600" /> Log de WhatsApp (Hoy)
           </TabsTrigger>
         </TabsList>
@@ -224,13 +224,13 @@ export default async function InboxPage({
                   ) : (
                     incomingMessages.map((notif) => (
                       <tr key={notif.id} className="hover:bg-blue-600/5 transition-colors group">
-                        <td className="px-6 py-4 text-sm font-medium text-foreground whitespace-nowrap">
+                        <td className="px-6 py-4 text-sm font-medium text-foreground ">
                           {formatDateTimeMX(notif.createdAt)}
                         </td>
-                        <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap font-mono">
+                        <td className="px-6 py-4 text-sm text-muted-foreground  font-mono">
                           {notif.recipient || "—"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 ">
                           <Badge variant="outline" className="text-[10px] font-black uppercase tracking-tighter bg-blue-500/10 text-blue-600 border-blue-500/20">
                             {notif.category || "General"}
                           </Badge>

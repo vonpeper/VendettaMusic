@@ -95,20 +95,20 @@ export default async function NotificacionesPage() {
         </div>
 
         <Tabs defaultValue="control" className="space-y-8">
-          <TabsList className="flex flex-row overflow-x-auto hide-scrollbar snap-x snap-mandatory bg-muted/50 p-1 border border-border/40 rounded-xl justify-start w-full">
-            <TabsTrigger value="control" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsList className="flex flex-row flex-wrap bg-muted/50 p-1 border border-border/40 rounded-xl justify-start w-full">
+            <TabsTrigger value="control" className="shrink-0  snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Zap className="w-4 h-4" /> Centro de Control
             </TabsTrigger>
-            <TabsTrigger value="plantillas" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="plantillas" className="shrink-0  snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <FileText className="w-4 h-4" /> Plantillas VIP
             </TabsTrigger>
-            <TabsTrigger value="entrantes" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="entrantes" className="shrink-0  snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <MessageSquare className="w-4 h-4" /> Mensajes Entrantes
             </TabsTrigger>
-            <TabsTrigger value="fallidos" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="fallidos" className="shrink-0  snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <AlertCircle className="w-4 h-4 text-red-500" /> Reintentos / Fallidos
             </TabsTrigger>
-            <TabsTrigger value="historial" className="shrink-0 whitespace-nowrap snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="historial" className="shrink-0  snap-center rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <History className="w-4 h-4" /> Historial de Salida
             </TabsTrigger>
           </TabsList>
@@ -446,13 +446,13 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                     ) : (
                       incomingMessages.map((notif) => (
                         <tr key={notif.id} className="hover:bg-amber-600/5 transition-colors group">
-                          <td className="px-6 py-4 text-sm font-medium text-foreground whitespace-nowrap">
+                          <td className="px-6 py-4 text-sm font-medium text-foreground ">
                             <span className="capitalize">{formatDateTimeMX(notif.createdAt)}</span>
                           </td>
-                          <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap font-mono">
+                          <td className="px-6 py-4 text-sm text-muted-foreground  font-mono">
                             {notif.recipient || "—"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-6 py-4 ">
                             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
                               {notif.category || "General"}
                             </span>
@@ -506,16 +506,16 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                     ) : (
                       failedMessages.map((notif) => (
                         <tr key={notif.id} className="hover:bg-red-600/5 transition-colors group">
-                          <td className="px-6 py-4 text-sm font-medium text-foreground whitespace-nowrap">
+                          <td className="px-6 py-4 text-sm font-medium text-foreground ">
                             <span className="capitalize">{formatDateTimeMX(notif.createdAt)}</span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-6 py-4 ">
                             <span className="text-xs font-bold text-foreground truncate">{getTypeLabel(notif.type)}</span>
                           </td>
-                          <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap font-mono">
+                          <td className="px-6 py-4 text-sm text-muted-foreground  font-mono">
                             {notif.recipient || "—"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <td className="px-6 py-4  text-center">
                             <span className="text-xs text-muted-foreground font-mono">{notif.retries || 0}</span>
                           </td>
                           <td className="px-6 py-4 max-w-md">
@@ -523,7 +523,7 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                               {notif.errorDetails || "Error desconocido"}
                             </p>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <td className="px-6 py-4  text-center">
                             <ResendNotificationButton notificationId={notif.id} />
                           </td>
                         </tr>
@@ -561,19 +561,19 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                     ) : (
                       notifications.map((notif) => (
                         <tr key={notif.id} className="hover:bg-blue-600/5 transition-colors group">
-                          <td className="px-6 py-4 text-sm font-medium text-foreground whitespace-nowrap">
+                          <td className="px-6 py-4 text-sm font-medium text-foreground ">
                             <span className="capitalize">{formatDateTimeMX(notif.createdAt)}</span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-6 py-4 ">
                             <span className="text-xs font-bold text-foreground truncate">{getTypeLabel(notif.type)}</span>
                           </td>
-                          <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap font-mono">
+                          <td className="px-6 py-4 text-sm text-muted-foreground  font-mono">
                             {notif.recipient || "—"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <td className="px-6 py-4  text-center">
                             {getStatusBadge(notif.status)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <td className="px-6 py-4  text-center">
                             <span className="text-xs text-muted-foreground font-mono">{notif.retries || 0}</span>
                           </td>
                           <td className="px-6 py-4 max-w-md">
@@ -586,7 +586,7 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                               </p>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <td className="px-6 py-4  text-center">
                             {notif.status === "failed" && (
                               <ResendNotificationButton notificationId={notif.id} />
                             )}

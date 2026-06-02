@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { db } from "@/lib/db"
 import { ManualQuoteForm } from "@/components/admin/ManualQuoteForm"
 import { ShieldCheck, ChevronLeft } from "lucide-react"

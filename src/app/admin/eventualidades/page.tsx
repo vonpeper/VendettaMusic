@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { db } from "@/lib/db"
 import { BandEventsClient } from "@/components/admin/BandEventsClient"
 import { Button } from "@/components/ui/button"

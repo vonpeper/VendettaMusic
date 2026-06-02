@@ -6,6 +6,8 @@ export const metadata = {
   description: "Elige paquete, verifica disponibilidad y reserva tu fecha en minutos."
 }
 
+export const dynamic = 'force-dynamic'
+
 interface Props {
   searchParams: Promise<{ pkg?: string; city?: string; step?: string }>
 }
@@ -17,6 +19,7 @@ export default async function CotizarPage({ searchParams }: Props) {
   })
 
   const extras = await db.packageService.findMany({
+    where: { packageId: "custom" },
     orderBy: { createdAt: "desc" }
   })
 

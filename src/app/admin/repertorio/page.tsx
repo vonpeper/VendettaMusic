@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { db } from "@/lib/db"
 import { RepertoireManager } from "@/components/admin/RepertoireManager"
 import { Music, ListMusic, Layers, Radio } from "lucide-react"

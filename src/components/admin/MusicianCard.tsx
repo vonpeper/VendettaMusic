@@ -34,13 +34,11 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
 
       <div className="flex items-start gap-4 mb-4">
         <div className="w-12 h-12 rounded-full bg-card flex items-center justify-center border border-primary/30 shrink-0 overflow-hidden shadow-inner">
-          {musician.user?.image && !imgError ? (
-            <img src={musician.user.image} alt={musician.user?.name ?? "Músico"} className="w-full h-full object-cover" onError={() => setImgError(true)} />
-          ) : (
-            <span className="text-xl font-black text-white">
-              {(musician.user?.name ?? "?").charAt(0).toUpperCase()}
-            </span>
-          )}
+          <img 
+            src={musician.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(musician.user?.name ?? "M")}&background=random`}
+            alt={musician.user?.name ?? "Músico"} 
+            className="w-full h-full object-cover" 
+          />
         </div>
 
         <div className="flex-1 pr-12">

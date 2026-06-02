@@ -6,6 +6,7 @@ import { Input }  from "@/components/ui/input"
 import * as Icons from "lucide-react"
 import Link from "next/link"
 import { calcularViatcos, type ViaticosConfig } from "@/lib/viaticos"
+import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import Image from "next/image"
 
 const {
@@ -133,6 +134,7 @@ function LocationModal({
 }) {
   const [city,         setCity]         = useState("")
   const [state,        setState]        = useState("Estado de México")
+  const [isManualCity, setIsManualCity] = useState(false)
   const [checked,      setChecked]      = useState(false)
   const [loading,      setLoading]      = useState(false)
   const [viaticos,     setViaticos]     = useState<{ isOutsideZone: boolean; amount: number; label: string; description: string } | null>(null)
@@ -184,8 +186,45 @@ function LocationModal({
                 <p className="text-sm text-muted-foreground">Ingresa la ubicación para calcular viáticos y precio final.</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Input placeholder="Ej. Metepec, Toluca..." value={city} onChange={e => setCity(e.target.value)} className="bg-white/5 border-white/15 h-11" />
-                <Input placeholder="Estado de México" value={state} onChange={e => setState(e.target.value)} className="bg-white/5 border-white/15 h-11" />
+                {isManualCity ? (
+                  <Input placeholder="Ej. Metepec, Toluca..." value={city === "Otro Municipio (Escribir manualmente)" ? "" : city} onChange={e => setCity(e.target.value)} className="bg-white/5 border-white/15 h-11" />
+                ) : (
+                  <div className="relative">
+                    <select
+                      value={city}
+                      onChange={e => {
+                        const val = e.target.value
+                        if (val === "Otro Municipio (Escribir manualmente)") {
+                          setIsManualCity(true)
+                          setCity("")
+                        } else {
+                          setCity(val)
+                        }
+                      }}
+                      className="w-full bg-[#161616]/80 border border-white/15 h-11 px-3 text-sm focus:border-primary focus:outline-none rounded-md text-white cursor-pointer appearance-none pr-8"
+                    >
+                      <option value="" disabled className="bg-[#161616] text-white">Municipio / Delegación</option>
+                      {(ESTADOS_MUNICIPIOS[state] || []).map(m => (
+                        <option key={m} value={m} className="bg-[#161616] text-white">{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div className="relative">
+                  <select
+                    value={state}
+                    onChange={e => {
+                      setState(e.target.value)
+                      setIsManualCity(false)
+                      setCity("")
+                    }}
+                    className="w-full bg-[#161616]/80 border border-white/15 h-11 px-3 text-sm focus:border-primary focus:outline-none rounded-md text-white cursor-pointer appearance-none pr-8"
+                  >
+                    {Object.keys(ESTADOS_MUNICIPIOS).map(s => (
+                      <option key={s} value={s} className="bg-[#161616] text-white">{s}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <Button onClick={handleCheck} disabled={!city.trim() || loading} className="w-full h-12 font-bold">
                 {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <MapPin className="w-4 h-4 mr-2" />} Verificar ubicación

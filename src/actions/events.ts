@@ -79,18 +79,8 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
     })
 
     // Sincronizar con ClientProfile si existe para mantener el dato maestro actualizado
-    if (updatedEvent?.clientId && data.customName) {
-      await db.clientProfile.update({
-        where: { id: updatedEvent.clientId },
-        data: {
-          user: {
-            update: {
-              name: data.customName as string
-            }
-          }
-        }
-      })
-    }
+    // (Eliminado: No debemos sobreescribir el nombre del cliente con data.customName que es el nombre del show)
+
 
     if (updatedEvent?.quoteId) {
       await db.quote.update({

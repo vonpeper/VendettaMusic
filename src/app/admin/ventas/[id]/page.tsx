@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { db } from "@/lib/db"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -180,7 +181,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               <Button 
                 variant="outline"
                 asChild
-                className={`${booking.status === "pendiente" ? "border-primary/50 text-primary hover:bg-primary" : "border-green-600/50 text-green-400 hover:bg-green-600"} gap-2 h-11 px-6 font-bold rounded-xl whitespace-nowrap hover:text-white transition-all`} 
+                className={`${booking.status === "pendiente" ? "border-primary/50 text-primary hover:bg-primary" : "border-green-600/50 text-green-400 hover:bg-green-600"} gap-2 h-11 px-6 font-bold rounded-xl  hover:text-white transition-all`} 
               >
                 <a href={`/api/admin/contract/${booking.id}`}>
                   <Download className="w-5 h-5" /> {booking.status === "pendiente" ? "Cotización PDF" : "Contrato PDF"}

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { db } from "@/lib/db"
 import { Users, AlertTriangle, CheckCircle, Calendar, Mic } from "lucide-react"
 import { BandaClientView } from "@/components/admin/BandaClientView"

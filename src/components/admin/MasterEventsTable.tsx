@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Calendar, CheckCircle2, XCircle, Clock, Info, Filter, Loader2 } from "lucide-react"
+import { Calendar, CheckCircle2, XCircle, Clock, Info, Filter, Loader2, MapPin, Package, Users } from "lucide-react"
 import { NotifyEventButton, EditEventoButton, DeleteEventoButton } from "./EventActions"
 import { formatDateMX } from "@/lib/utils"
 import Link from "next/link"
@@ -71,19 +71,19 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto min-w-0">
-          <TabsList className="flex flex-row overflow-x-auto hide-scrollbar snap-x snap-mandatory w-full bg-card border border-border/40 p-1.5 h-auto rounded-2xl justify-start md:justify-center">
-            <TabsTrigger value="todos" className="px-5 py-2 whitespace-nowrap rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white font-bold snap-start shrink-0">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
+          <TabsList className="flex w-full bg-card border border-border/40 p-2 rounded-2xl justify-start md:justify-center gap-2 overflow-x-auto overflow-y-hidden no-scrollbar">
+            <TabsTrigger value="todos" className="shrink-0 h-10 px-4 rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white font-bold text-xs whitespace-nowrap">
               Todos
             </TabsTrigger>
-            <TabsTrigger value="agendado" className="px-5 py-2 whitespace-nowrap rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white font-bold snap-start shrink-0">
+            <TabsTrigger value="agendado" className="shrink-0 h-10 px-4 rounded-xl data-[state=active]:bg-green-600 data-[state=active]:text-white font-bold text-xs whitespace-nowrap">
               Agendados
             </TabsTrigger>
-            <TabsTrigger value="completado" className="px-5 py-2 whitespace-nowrap rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white font-bold snap-start shrink-0">
+            <TabsTrigger value="completado" className="shrink-0 h-10 px-4 rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white font-bold text-xs whitespace-nowrap">
               Completados
             </TabsTrigger>
-            <TabsTrigger value="cancelado" className="px-5 py-2 whitespace-nowrap rounded-lg data-[state=active]:bg-red-600 data-[state=active]:text-white font-bold snap-start shrink-0">
+            <TabsTrigger value="cancelado" className="shrink-0 h-10 px-4 rounded-xl data-[state=active]:bg-red-600 data-[state=active]:text-white font-bold text-xs whitespace-nowrap">
               Cancelados
             </TabsTrigger>
           </TabsList>
@@ -92,11 +92,11 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
         <Button 
           variant={showCurrentMonth ? "default" : "outline"}
           onClick={() => setShowCurrentMonth(!showCurrentMonth)}
-          className={`gap-2 h-11 px-6 rounded-xl font-bold transition-all ${
+          className={`w-full md:w-auto gap-2 h-12 md:h-11 px-6 rounded-xl font-bold transition-all mt-2 md:mt-0 ${
             showCurrentMonth ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "border-border/40 text-muted-foreground"
           }`}
         >
-          <Calendar className="w-4 h-4" />
+          <Calendar className="w-5 h-5 md:w-4 md:h-4" />
           {showCurrentMonth ? "Viendo Mes Actual" : "Filtrar por Mes Actual"}
         </Button>
       </div>
@@ -131,8 +131,97 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                 
                 return (
                   <TableRow key={evt.id} className="flex flex-col md:table-row bg-card md:bg-transparent border border-border/40 md:border-b md:border-t-0 md:border-x-0 rounded-2xl md:rounded-none mb-6 md:mb-0 align-top hover:bg-blue-600/5 transition-colors relative shadow-sm md:shadow-none overflow-hidden">
+                    {/* VISTA MÓVIL (Tarjeta Premium Rediseñada) */}
+                    <TableCell className="md:hidden p-0 block border-none">
+                      <div className="flex flex-col h-full">
+                        {/* Cabecera del Evento */}
+                        <div className="p-5 flex items-start gap-4">
+                          <div className={`w-14 h-14 rounded-2xl flex flex-col justify-center items-center shadow-sm shrink-0 ${isCurrentMonth ? "bg-blue-600 text-white shadow-blue-600/20" : "bg-muted/50 border border-border/50 text-foreground"}`}>
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">{eventDate.toLocaleString("es-MX", { month: "short", timeZone: "UTC" })}</span>
+                            <span className="text-xl font-black mt-0.5">{eventDate.getUTCDate()}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-black text-foreground text-lg leading-tight truncate">
+                              {evt.bookingRequest ? (
+                                <Link href={`/admin/ventas/${evt.bookingRequest.id}`} className="hover:text-blue-600 flex items-center gap-1.5 transition-colors">
+                                  <span className="truncate">{evt.customName || evt.client?.user?.name || "Sin nombre"}</span>
+                                  <Info className="w-4 h-4 text-blue-500/50 shrink-0" />
+                                </Link>
+                              ) : (
+                                <span className="truncate">{evt.customName || evt.client?.user?.name || "Sin nombre"}</span>
+                              )}
+                            </div>
+                            <div className="mt-2 space-y-1">
+                              {evt.location && (
+                                <div className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
+                                  <MapPin className="w-3.5 h-3.5 opacity-50 shrink-0" /> 
+                                  <span className="truncate">{evt.location.name}</span>
+                                </div>
+                              )}
+                              {evt.package && (
+                                <div className="text-xs text-blue-600 font-bold uppercase flex items-center gap-1.5 truncate">
+                                  <Package className="w-3.5 h-3.5 opacity-70 shrink-0" /> 
+                                  <span className="truncate">{evt.package.name}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Detalles: Horario y Staff */}
+                        <div className="px-5 pb-5 grid grid-cols-2 gap-3">
+                          <div className="bg-muted/30 rounded-xl p-3 border border-border/20">
+                            <div className="text-[10px] uppercase font-black tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1"><Clock className="w-3 h-3" /> Horario</div>
+                            {evt.performanceStart ? (
+                              <div className="text-sm font-bold text-foreground">
+                                {evt.performanceStart}{evt.performanceEnd ? ` - ${evt.performanceEnd}` : ""}
+                              </div>
+                            ) : <span className="text-xs text-muted-foreground italic">Por confirmar</span>}
+                          </div>
+                          <div className="bg-muted/30 rounded-xl p-3 border border-border/20">
+                            <div className="text-[10px] uppercase font-black tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1"><Users className="w-3 h-3" /> Staff</div>
+                            {evt.musicians && evt.musicians.length > 0 ? (
+                              <div className="text-sm font-bold text-foreground">
+                                <span className="text-blue-600">{evt.musicians.filter((m: any) => m.status === 'confirmed').length}</span><span className="text-muted-foreground">/{evt.musicians.length} Conf.</span>
+                              </div>
+                            ) : <span className="text-xs text-muted-foreground italic">Sin asignar</span>}
+                          </div>
+                        </div>
+
+                        {/* Estatus y Finanzas */}
+                        <div className="px-5 py-4 bg-muted/10 border-y border-border/10 flex justify-between items-center">
+                          <StatusSwitcher status={evt.status} id={evt.id} onStatusChange={handleStatusChange} isUpdating={updatingId === evt.id} />
+                          <div className="text-right">
+                            <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mb-0.5">Saldo Pendiente</div>
+                            <div className={`text-base font-black ${evt.balance > 0 ? "text-red-500" : "text-emerald-500"}`}>
+                              {evt.balance > 0 ? MXN(evt.balance) : "PAGADO ✅"}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Acciones */}
+                        <div className="p-4 flex justify-end gap-2 bg-muted/5">
+                          <NotifyEventButton 
+                            eventId={evt.id} 
+                            alreadySent={evt.notifications?.some((n: any) => n.type === "OFFICIAL" && n.status === "SENT")} 
+                          />
+                          <EditEventoButton 
+                            eventId={evt.id}
+                            initialData={evt}
+                            clients={clients} 
+                            locations={locations} 
+                            packages={packages} 
+                            staff={staff}
+                            allMusicians={allMusicians} 
+                          />
+                          <DeleteEventoButton eventId={evt.id} />
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    {/* VISTA DESKTOP */}
                     {/* Fecha */}
-                    <TableCell className="block md:table-cell p-4 md:py-6 md:pl-8 border-b border-border/10 md:border-none flex-col md:flex-row items-start bg-muted/10 md:bg-transparent">
+                    <TableCell className="hidden md:table-cell md:py-6 md:pl-8 md:border-none items-start md:bg-transparent">
                       <div className={`w-14 h-14 rounded-xl flex flex-col justify-center items-center shadow-sm shrink-0 ${
                         isCurrentMonth ? "bg-blue-600 text-white ring-2 ring-blue-600/20" : "bg-card border border-border text-foreground"
                       }`}>
@@ -144,7 +233,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                     </TableCell>
 
                     {/* Identidad y Detalles Consolidados */}
-                    <TableCell className="block md:table-cell p-4 md:py-6 md:min-w-[300px] border-b border-border/10 md:border-none">
+                    <TableCell className="hidden md:table-cell md:py-6 md:min-w-[300px] md:border-none">
                       <div className="font-bold text-foreground text-lg md:text-base leading-tight">
                         {evt.bookingRequest ? (
                           <Link 
@@ -202,7 +291,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                     </TableCell>
 
                     {/* Horario y Logística */}
-                    <TableCell className="block md:table-cell p-4 md:py-6 border-b border-border/10 md:border-none">
+                    <TableCell className="hidden md:table-cell md:py-6 md:border-none">
                       <div className="flex flex-row md:flex-col items-center md:items-start flex-wrap gap-2 md:gap-2">
                         {evt.arrivalTime && (
                           <div className="text-[10px] font-bold text-muted-foreground flex items-center gap-1.5 bg-muted/20 px-2 py-1 rounded w-fit">
@@ -221,7 +310,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                     </TableCell>
 
                     {/* Staff y Confirmaciones */}
-                    <TableCell className="block md:table-cell p-4 md:py-6 border-b border-border/10 md:border-none">
+                    <TableCell className="hidden md:table-cell md:py-6 md:border-none">
                       {evt.musicians && evt.musicians.length > 0 ? (
                         <div className="space-y-1.5">
                           <div className="flex flex-col items-center gap-1.5">
@@ -252,7 +341,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                     </TableCell>
 
                     {/* Finanzas */}
-                    <TableCell className="block md:table-cell p-4 md:py-6 border-b border-border/10 md:border-none">
+                    <TableCell className="hidden md:table-cell md:py-6 md:border-none">
                       <div className="bg-white p-3 rounded-xl border border-border/40 w-48 shadow-sm space-y-2">
                         <div className="flex justify-between items-center text-[10px]">
                           <span className="text-muted-foreground font-bold uppercase tracking-tight">Subtotal:</span>
@@ -296,7 +385,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                     </TableCell>
 
                     {/* Acciones */}
-                    <TableCell className="block md:table-cell p-4 md:py-6 text-right md:pr-8 bg-muted/5 md:bg-transparent">
+                    <TableCell className="hidden md:table-cell md:py-6 text-right md:pr-8 md:bg-transparent">
                       <div className="flex items-center justify-end gap-1.5">
                         <NotifyEventButton
                           eventId={evt.id}

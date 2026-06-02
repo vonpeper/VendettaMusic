@@ -49,28 +49,28 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
       </div>
 
       <Tabs defaultValue={defaultTab} className="w-full min-w-0">
-        <TabsList className="flex flex-row overflow-x-auto hide-scrollbar snap-x snap-mandatory w-full bg-card border border-border/40 h-auto p-1.5 mb-8 rounded-2xl gap-2 justify-start md:justify-center">
-          <TabsTrigger value="integraciones" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold">
+        <TabsList className="flex w-full bg-card border border-border/40 !h-auto p-1.5 mb-8 rounded-2xl gap-2 justify-start md:justify-center overflow-x-auto overflow-y-hidden no-scrollbar">
+          <TabsTrigger value="integraciones" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold">
             <Plug className="w-4 h-4 mr-2" />
             Integraciones
           </TabsTrigger>
-          <TabsTrigger value="seo" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 font-bold">
+          <TabsTrigger value="seo" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 font-bold">
             <Search className="w-4 h-4 mr-2" />
             Marketing
           </TabsTrigger>
-          <TabsTrigger value="redes" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 font-bold">
+          <TabsTrigger value="redes" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 font-bold">
             <Share2 className="w-4 h-4 mr-2" />
             Redes
           </TabsTrigger>
-          <TabsTrigger value="viaticos" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold">
+          <TabsTrigger value="viaticos" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 font-bold">
             <Map className="w-4 h-4 mr-2" />
             Viáticos
           </TabsTrigger>
-          <TabsTrigger value="contrato" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 font-bold">
+          <TabsTrigger value="contrato" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 font-bold">
             <FileText className="w-4 h-4 mr-2" />
             Contrato
           </TabsTrigger>
-          <TabsTrigger value="pagos" className="shrink-0 whitespace-nowrap snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 font-bold">
+          <TabsTrigger value="pagos" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 font-bold">
             <CreditCard className="w-4 h-4 mr-2" />
             Pagos
           </TabsTrigger>

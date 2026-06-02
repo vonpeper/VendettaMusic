@@ -394,7 +394,6 @@ export async function PUT(req: NextRequest) {
       await db.event.update({
         where: { id: booking.eventId },
         data: {
-          ...(updates.clientName !== undefined ? { customName: updates.clientName } : {}),
           date:             booking.requestedDate,
           guestCount:       booking.guestCount,
           performanceStart: booking.startTime,

@@ -497,6 +497,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                       </DropdownMenuGroup>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  </div>
                 </td>
               </tr>
             ))}

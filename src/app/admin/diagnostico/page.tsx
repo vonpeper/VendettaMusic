@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { getSystemDiagnostics } from "@/actions/diagnostico";
 import DiagnosticoClient from "./DiagnosticoClient";
 import { Metadata } from "next";

@@ -7,6 +7,7 @@ import { Input }       from "@/components/ui/input"
 import { Label }       from "@/components/ui/label"
 import { MapPin, AlertTriangle, CheckCircle2, Car, ExternalLink } from "lucide-react"
 import { calcularViatcos } from "@/lib/viaticos"
+import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 
 interface Props {
   data: Partial<FunnelData>
@@ -31,6 +32,7 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
   const [state,       setState]       = useState(data.state       ?? "Estado de México")
   const [mapsLink,    setMapsLink]    = useState(data.mapsLink    ?? "")
   const [isPublic,    setIsPublic]    = useState(data.isPublic    ?? (data.venueType === "bar" || data.venueType === "festival"))
+  const [isManualCity, setIsManualCity] = useState(data.state === "Otro")
   
   const [viaticos, setViaticos] = useState(() =>
     city ? calcularViatcos(city, state, viaticosConfig) : null
@@ -113,23 +115,6 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
              </div>
            <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="city" className="text-white font-bold text-xs uppercase tracking-wider">Municipio / Delegación</Label>
-              <Input
-                id="city"
-                value={city}
-                onChange={e => { 
-                  const val = e.target.value
-                  setCity(val)
-                  setError("")
-                }}
-                onBlur={() => {
-                  if (city.length > 2) setViaticos(calcularViatcos(city, state, viaticosConfig))
-                }}
-                placeholder="Ej. Metepec"
-                className="bg-card/50 border-white/15 h-12 text-base focus:border-primary rounded-xl"
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="state" className="text-white font-bold text-xs uppercase tracking-wider">Estado</Label>
               <div className="relative">
                 <select
@@ -138,18 +123,21 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
                   onChange={e => { 
                     const val = e.target.value
                     setState(val)
+                    // Reset city if not valid for new state
+                    if (val !== "Otro") {
+                      const options = ESTADOS_MUNICIPIOS[val] || []
+                      if (!options.includes(city)) setCity("")
+                      setIsManualCity(false)
+                    } else {
+                      setIsManualCity(true)
+                    }
                     setError("")
                   }}
                   className="w-full bg-[#161616]/80 border border-white/15 h-12 px-3 text-base focus:border-primary focus:outline-none rounded-xl text-white cursor-pointer appearance-none pr-10"
                 >
-                  <option value="Estado de México" className="bg-[#161616] text-white">Estado de México</option>
-                  <option value="Ciudad de México" className="bg-[#161616] text-white">Ciudad de México (CDMX)</option>
-                  <option value="Querétaro" className="bg-[#161616] text-white">Querétaro</option>
-                  <option value="Morelos" className="bg-[#161616] text-white">Morelos</option>
-                  <option value="Puebla" className="bg-[#161616] text-white">Puebla</option>
-                  <option value="Hidalgo" className="bg-[#161616] text-white">Hidalgo</option>
-                  <option value="Tlaxcala" className="bg-[#161616] text-white">Tlaxcala</option>
-                  <option value="Otro" className="bg-[#161616] text-white">Otro Estado (Resto de la República)</option>
+                  {Object.keys(ESTADOS_MUNICIPIOS).map(st => (
+                    <option key={st} value={st} className="bg-[#161616] text-white">{st}</option>
+                  ))}
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -157,6 +145,57 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
                   </svg>
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="city" className="text-white font-bold text-xs uppercase tracking-wider">Municipio / Delegación</Label>
+              {isManualCity ? (
+                <Input
+                  id="city"
+                  value={city === "Otro Municipio (Escribir manualmente)" ? "" : city}
+                  onChange={e => { 
+                    setCity(e.target.value)
+                    setError("")
+                  }}
+                  onBlur={() => {
+                    if (city.length > 2) setViaticos(calcularViatcos(city, state, viaticosConfig))
+                  }}
+                  placeholder="Ej. Metepec"
+                  className="bg-card/50 border-white/15 h-12 text-base focus:border-primary rounded-xl"
+                  autoFocus
+                />
+              ) : (
+                <div className="relative">
+                  <select
+                    id="city"
+                    value={city}
+                    onChange={e => { 
+                      const val = e.target.value
+                      if (val === "Otro Municipio (Escribir manualmente)") {
+                        setIsManualCity(true)
+                        setCity("")
+                      } else {
+                        setCity(val)
+                        if (val.length > 2) {
+                          setViaticos(calcularViatcos(val, state, viaticosConfig))
+                        }
+                      }
+                      setError("")
+                    }}
+                    className="w-full bg-[#161616]/80 border border-white/15 h-12 px-3 text-base focus:border-primary focus:outline-none rounded-xl text-white cursor-pointer appearance-none pr-10"
+                  >
+                    <option value="" disabled className="bg-[#161616] text-white">Selecciona...</option>
+                    {(ESTADOS_MUNICIPIOS[state] || []).map(m => (
+                      <option key={m} value={m} className="bg-[#161616] text-white">{m}</option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

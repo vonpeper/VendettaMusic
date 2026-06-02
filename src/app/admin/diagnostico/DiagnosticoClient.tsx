@@ -46,10 +46,10 @@ export default function DiagnosticoClient({ initialData }: { initialData: Diagno
             ) : (
               issuesOnly.map(item => (
                 <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-900">
+                  <td className="px-6 py-4  text-gray-900">
                     {new Date(item.requestedDate).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-900">
+                  <td className="px-6 py-4  text-gray-900">
                     {item.clientName}
                   </td>
                   <td className="px-6 py-4">
@@ -59,7 +59,7 @@ export default function DiagnosticoClient({ initialData }: { initialData: Diagno
                       ))}
                     </ul>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 ">
                     <button 
                       className="text-blue-600 hover:text-blue-800 font-medium disabled:opacity-50"
                       disabled={loadingId === item.id}
