@@ -105,7 +105,7 @@ export async function initializeDefaultExtrasAction() {
     ]
 
     for (const item of defaultExtras) {
-      // Evitar duplicados por nombre
+      // Evitar duplicados por nombre, si ya existe actualizamos sus costos por defecto
       const exists = await db.packageService.findFirst({
         where: { packageId: armaPackage.id, name: item.name }
       })
@@ -117,6 +117,15 @@ export async function initializeDefaultExtrasAction() {
             description: item.description,
             setupCost: item.setupCost,
             hourlyCost: item.hourlyCost
+          }
+        })
+      } else {
+        await db.packageService.update({
+          where: { id: exists.id },
+          data: {
+            setupCost: item.setupCost,
+            hourlyCost: item.hourlyCost,
+            description: item.description
           }
         })
       }

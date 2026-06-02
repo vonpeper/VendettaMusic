@@ -114,7 +114,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
               variant="outline" 
               onClick={async () => {
                 setLoading(`create-${defaultName}`)
-                const defaultSetupCost = defaultName.includes("Templete") ? 3800 : defaultName.includes("Pista") ? 7500 : defaultName.includes("Robot") ? 700 : defaultName.includes("Pantalla") ? 15000 : 0
+                const defaultSetupCost = defaultName.includes("Templete") ? 3800 : defaultName.includes("Pista") ? 7500 : defaultName.includes("Robot") ? 700 : (defaultName.includes("Pantalla") && !defaultName.includes("DJ")) ? 15000 : 0
                 const defaultHourlyCost = defaultName.includes("DJ") ? (defaultName.includes("Pantalla") ? 1500 : 800) : 0
                 const res = await createExtraAction({
                   name: defaultName,
@@ -331,7 +331,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
            <Sparkles className="w-5 h-5 text-primary" />
            <div className="flex flex-col">
              <span className="font-bold text-foreground text-sm uppercase tracking-wider">Servicios Adicionales (Extras)</span>
-             <span className="text-xs text-muted-foreground mt-0.5">Controla la disponibilidad y los precios individuales de los servicios.</span>
+             <span className="text-xs text-muted-foreground mt-0.5">Controla la disponibilidad y los precios individuales de los servicios adicionales.</span>
            </div>
         </div>
         <Button onClick={() => setIsAdding(true)} variant="outline" size="sm" className="gap-2 border-primary/40 text-primary hover:bg-primary/10 h-9.5 font-bold text-xs uppercase tracking-wider w-full sm:w-auto">
@@ -375,13 +375,143 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
         </Card>
       )}
 
+      {/* Panel de Control de Audio Dinámico (Umbrales de Invitados) */}
+      <Card className="bg-[#0a0a0a]/30 border border-primary/20 overflow-hidden shadow-lg rounded-2xl">
+        <CardHeader className="bg-primary/5 border-b border-primary/10 p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Users className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-base font-bold text-white uppercase tracking-wider">Audio Dinámico por Aforo</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
+                Configura el costo fijo de instalación del equipo de audio según la cantidad de invitados en el cotizador dinámico.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+            
+            {/* Umbral 1: 0 - 100 Invitados */}
+            <div className="bg-background/20 border border-border/40 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-black text-green-500 tracking-widest bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">Base</span>
+                  <span className="text-xs font-bold text-muted-foreground">0 - 100 Personas</span>
+                </div>
+                <h4 className="text-sm font-bold text-white">Audio Estándar</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Sistema de audio Electro-Voice de alta fidelidad. Cobertura acústica ideal y balanceada para salones medianos y aforo estándar.
+                </p>
+              </div>
+              <div className="pt-2 border-t border-border/10 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Costo de Setup:</span>
+                <span className="text-sm font-black text-green-500">¡Incluido ($0)!</span>
+              </div>
+            </div>
+
+            {/* Umbral 2: 101 - 300 Invitados */}
+            <div className="bg-background/40 border border-primary/10 rounded-2xl p-5 flex flex-col justify-between space-y-4 relative">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-black text-amber-500 tracking-widest bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Upgrade Pro</span>
+                  <span className="text-xs font-bold text-muted-foreground">101 - 300 Personas</span>
+                </div>
+                <h4 className="text-sm font-bold text-white">Audio Upgrade Pro</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Refuerzo de graves y subwoofers adicionales para garantizar la presión sonora y calidad acústica en aforos medianos.
+                </p>
+              </div>
+              <div className="pt-2 border-t border-border/10">
+                {audioMediumExtra ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Costo Fijo Setup:</span>
+                      <div className="relative w-[120px]">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-semibold">$</span>
+                        <Input 
+                          type="number"
+                          value={audioMediumExtra.setupCost}
+                          onChange={e => {
+                            const val = parseFloat(e.target.value) || 0
+                            setExtras(prev => prev.map(ex => ex.id === audioMediumExtra.id ? { ...ex, setupCost: val } : ex))
+                          }}
+                          className="h-8 pl-6 pr-1 text-xs bg-background text-foreground border border-border/80 text-right font-bold w-full"
+                        />
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleUpdate(audioMediumExtra.id)} 
+                      disabled={loading === audioMediumExtra.id}
+                      className="w-full text-[10px] font-bold h-7.5 bg-primary/20 border border-primary/30 text-primary hover:bg-primary/30 uppercase tracking-widest"
+                    >
+                      {loading === audioMediumExtra.id ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : "Guardar Costo"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-2 text-xs text-muted-foreground italic">No inicializado</div>
+                )}
+              </div>
+            </div>
+
+            {/* Umbral 3: 301+ Invitados */}
+            <div className="bg-background/40 border border-primary/10 rounded-2xl p-5 flex flex-col justify-between space-y-4 relative">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-black text-rose-500 tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">Festival</span>
+                  <span className="text-xs font-bold text-muted-foreground">301+ Personas</span>
+                </div>
+                <h4 className="text-sm font-bold text-white">Audio Line Array (Festival)</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Sistema aéreo Line Array tipo concierto para eventos grandes en haciendas, jardines y espacios abiertos masivos.
+                </p>
+              </div>
+              <div className="pt-2 border-t border-border/10">
+                {audioLargeExtra ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Costo Fijo Setup:</span>
+                      <div className="relative w-[120px]">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-semibold">$</span>
+                        <Input 
+                          type="number"
+                          value={audioLargeExtra.setupCost}
+                          onChange={e => {
+                            const val = parseFloat(e.target.value) || 0
+                            setExtras(prev => prev.map(ex => ex.id === audioLargeExtra.id ? { ...ex, setupCost: val } : ex))
+                          }}
+                          className="h-8 pl-6 pr-1 text-xs bg-background text-foreground border border-border/80 text-right font-bold w-full"
+                        />
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleUpdate(audioLargeExtra.id)} 
+                      disabled={loading === audioLargeExtra.id}
+                      className="w-full text-[10px] font-bold h-7.5 bg-primary/20 border border-primary/30 text-primary hover:bg-primary/30 uppercase tracking-widest"
+                    >
+                      {loading === audioLargeExtra.id ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : "Guardar Costo"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-2 text-xs text-muted-foreground italic">No inicializado</div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Grid of Tables */}
       <div className="space-y-8">
         
         {/* DJ Category */}
         <div className="space-y-3">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/20">
-            <RadioTower className="w-4 h-4 text-primary" /> Horas de DJ
+            <RadioTower className="w-4 h-4 text-primary" /> Horas de DJ Adicionales
           </h3>
           <div className="space-y-2.5">
             {/* Table Header on Desktop */}
@@ -400,7 +530,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
         {/* Equipamiento Category */}
         <div className="space-y-3">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/20">
-            <Box className="w-4 h-4 text-primary" /> Equipamiento y Base (Extras)
+            <Box className="w-4 h-4 text-primary" /> Equipamiento y Escenario (Extras)
           </h3>
           <div className="space-y-2.5">
             {/* Table Header on Desktop */}
@@ -415,25 +545,6 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
             {renderExtraRow(pistaExtra, "Pista Iluminada", "Pista LED premium para la pista de baile")}
             {renderExtraRow(robotExtra, "Robot LED (Batucada)", "Show visual con robots LED durante la batucada")}
             {renderExtraRow(pantallaExtra, "Pantalla LED 3x2", "Pantalla LED gigante detrás del escenario")}
-          </div>
-        </div>
-
-        {/* Audio Upgrades Category */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/20">
-            <Users className="w-4 h-4 text-primary" /> Upgrades de Audio (Capacidad de Invitados)
-          </h3>
-          <div className="space-y-2.5">
-            {/* Table Header on Desktop */}
-            <div className="hidden lg:grid grid-cols-[2fr_1.1fr_1.2fr_1.2fr_1fr] gap-4 px-4 py-2 border-b border-border/10 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-              <div>Servicio</div>
-              <div>Disponibilidad</div>
-              <div>Costo Setup (Fijo)</div>
-              <div>Costo por Hora</div>
-              <div className="text-right">Acciones</div>
-            </div>
-            {renderExtraRow(audioMediumExtra, "Audio Upgrade (>100 personas)", "Upgrade a sistema de audio Pro")}
-            {renderExtraRow(audioLargeExtra, "Audio Upgrade (>300 personas)", "Upgrade a sistema Line Array tipo festival")}
           </div>
         </div>
 

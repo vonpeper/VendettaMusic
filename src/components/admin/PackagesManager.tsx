@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Pencil, Trash2, Plus, X, Check, Loader2, Info, Package as PackageIcon, Zap, CheckCircle2, Sparkles, Music2 } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
-import { ExtrasManager } from "./ExtrasManager"
 
 interface ServiceItem {
   id: string
@@ -41,18 +40,15 @@ interface Extra {
 
 export function PackagesManager({ 
   initialPackages, 
-  serviceCatalog,
-  initialExtras = []
+  serviceCatalog
 }: { 
   initialPackages: Package[], 
-  serviceCatalog: ServiceItem[],
-  initialExtras?: Extra[]
+  serviceCatalog: ServiceItem[]
 }) {
   const [packages, setPackages] = useState(initialPackages)
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [loading, setLoading] = useState<string | null>(null)
-  const [armaTab, setArmaTab] = useState<'costs' | 'inclusions'>('costs')
 
   const [formData, setFormData] = useState({
     name: "",
@@ -304,220 +300,58 @@ export function PackagesManager({
 
                 {/* Services Zone or Custom Extras Editor */}
                 <div className="lg:col-span-8 p-6 space-y-4">
-                  {pkg.name.toLowerCase().includes("arma") ? (
-                    <div className="space-y-6">
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border/40 pb-4">
-                        <div>
-                          <div className="flex items-center gap-2 text-primary mb-1">
-                            <Sparkles className="w-4 h-4" />
-                            <span className="text-[10px] uppercase font-black tracking-widest">Configurador Exclusivo</span>
-                          </div>
-                          <h3 className="text-lg font-bold text-foreground">
-                            Costos Unitarios de Personalización (Arma tu Show)
-                          </h3>
-                        </div>
-                        <div className="flex bg-muted/60 p-0.5 rounded-lg border border-border/30">
-                          <button
-                            onClick={() => setArmaTab('costs')}
-                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
-                              armaTab === 'costs' 
-                                ? 'bg-background text-primary shadow-sm' 
-                                : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                          >
-                            Costos del Funnel
-                          </button>
-                          <button
-                            onClick={() => setArmaTab('inclusions')}
-                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
-                              armaTab === 'inclusions' 
-                                ? 'bg-background text-primary shadow-sm' 
-                                : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                          >
-                            Inclusiones en Web
-                          </button>
-                        </div>
-                      </div>
-
-                      {armaTab === 'costs' ? (
-                        <div className="space-y-4">
-                          <div className="p-5 bg-muted/20 border border-border/60 rounded-2xl space-y-4">
-                            <div className="flex items-center gap-2 text-foreground font-bold text-sm border-b border-border/40 pb-2.5">
-                              <Music2 className="w-4.5 h-4.5 text-foreground/80" /> Horas de Show (Banda)
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
-                              <div className="space-y-2">
-                                <Label className="text-xs font-bold text-muted-foreground">Costo por Hora</Label>
-                                <div className="relative">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-semibold">$</span>
-                                  <Input 
-                                    type="number"
-                                    disabled={editingId !== pkg.id}
-                                    value={pkg.baseCostPerHour} 
-                                    onChange={e => setPackages(prev => prev.map(p => p.id === pkg.id ? {...p, baseCostPerHour: parseFloat(e.target.value) || 0} : p))}
-                                    className="pl-7 bg-background h-10 text-sm font-semibold w-full border border-border"
-                                  />
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-bold text-muted-foreground">Mínimo de Horas</Label>
-                                <Input 
-                                  type="number"
-                                  disabled={editingId !== pkg.id}
-                                  value={pkg.minDuration} 
-                                  onChange={e => setPackages(prev => prev.map(p => p.id === pkg.id ? {...p, minDuration: parseInt(e.target.value) || 0} : p))}
-                                  className="bg-background h-10 text-sm font-semibold w-full border border-border"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-bold text-muted-foreground">Máximo de Horas</Label>
-                                <Input 
-                                  type="number"
-                                  disabled={editingId !== pkg.id}
-                                  value={pkg.maxDuration ?? 5} 
-                                  onChange={e => setPackages(prev => prev.map(p => p.id === pkg.id ? {...p, maxDuration: parseInt(e.target.value) || 0} : p))}
-                                  className="bg-background h-10 text-sm font-semibold w-full border border-border"
-                                />
-                              </div>
-                              <div className="bg-muted/30 border border-border/50 rounded-xl p-2.5 flex flex-col justify-center h-10">
-                                <span className="text-[9px] uppercase text-muted-foreground font-bold tracking-wider leading-none">Mínima Base</span>
-                                <span className="text-sm font-bold text-foreground mt-1 leading-none">
-                                  ${(pkg.baseCostPerHour * pkg.minDuration).toLocaleString("es-MX")}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex flex-col sm:flex-row justify-between sm:items-center bg-background/30 border border-border/20 px-4 py-3 rounded-xl gap-3">
-                              <span className="text-xs text-muted-foreground leading-relaxed max-w-xl">
-                                {editingId === pkg.id 
-                                  ? "Modifica los límites u horas de la Banda arriba y haz clic en 'Finalizar Edición' a la derecha para guardar."
-                                  : "Para editar las tarifas y límites de la banda presiona 'Editar Paquete' a la derecha."
-                                }
-                              </span>
-                              {editingId !== pkg.id && (
-                                <Button size="sm" variant="outline" onClick={() => setEditingId(pkg.id)} className="gap-2 border-border text-foreground hover:bg-muted/20 h-9 text-xs font-semibold px-3 w-full sm:w-auto">
-                                  <Pencil className="w-3.5 h-3.5" /> Editar Banda
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="p-4 bg-muted/25 border border-border/60 rounded-2xl">
-                            <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-1.5">
-                              <Sparkles className="w-4 h-4 text-amber-500" /> Modifica, Agrega o Elimina Costos Unitarios
-                            </h4>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                              Configura las tarifas individuales de los servicios para personalizar el show (DJ, Templete, Pista de Cristal, Robots LED, Pantallas LED, Upgrades de Audio, etc.).
-                            </p>
-                          </div>
-                          <ExtrasManager initialExtras={initialExtras} />
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <Label className="text-xs uppercase text-primary font-black tracking-widest flex items-center gap-2">
-                              <Zap className="w-3 h-3" /> Zona de Servicios (Inclusiones)
-                            </Label>
-                            <div className="text-[10px] text-muted-foreground italic">
-                              Selecciona qué servicios del catálogo incluye este paquete
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                            {serviceCatalog.map(service => {
-                              const isLinked = pkg.serviceItems.some(s => s.id === service.id)
-                              const isLoading = loading === `${pkg.id}-${service.id}`
-                              
-                              return (
-                                <button
-                                  key={service.id}
-                                  disabled={isLoading}
-                                  onClick={() => toggleService(pkg.id, service.id, isLinked)}
-                                  className={`flex items-center gap-2 p-3 rounded-xl border transition-all text-left group ${
-                                    isLinked 
-                                      ? 'bg-primary/10 border-primary/40 ring-1 ring-primary/20' 
-                                      : 'bg-background/40 border-border/20 hover:border-blue-600/20 hover:bg-blue-600/5'
-                                  }`}
-                                >
-                                  <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
-                                    isLinked ? 'bg-primary text-white' : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
-                                  }`}>
-                                    {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : (isLinked ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />)}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className={`text-xs font-bold truncate ${isLinked ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                      {service.name}
-                                    </div>
-                                    <div className="text-[9px] uppercase opacity-60 tracking-tighter">{service.category}</div>
-                                  </div>
-                                </button>
-                              )
-                            })}
-                            {serviceCatalog.length === 0 && (
-                              <div className="col-span-full p-4 border border-dashed border-border/40 rounded-xl text-center text-muted-foreground text-xs">
-                                No hay servicios en el catálogo. Créalos abajo.
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-xs uppercase text-primary font-black tracking-widest flex items-center gap-2">
+                      <Zap className="w-3 h-3" /> Zona de Servicios (Inclusiones)
+                    </Label>
+                    <div className="text-[10px] text-muted-foreground italic">
+                      Selecciona qué servicios del catálogo incluye este paquete
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between mb-2">
-                        <Label className="text-xs uppercase text-primary font-black tracking-widest flex items-center gap-2">
-                          <Zap className="w-3 h-3" /> Zona de Servicios (Inclusiones)
-                        </Label>
-                        <div className="text-[10px] text-muted-foreground italic">
-                          Selecciona qué servicios del catálogo incluye este paquete
-                        </div>
-                      </div>
+                  </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {serviceCatalog.map(service => {
-                          const isLinked = pkg.serviceItems.some(s => s.id === service.id)
-                          const isLoading = loading === `${pkg.id}-${service.id}`
-                          
-                          return (
-                            <button
-                              key={service.id}
-                              disabled={isLoading}
-                              onClick={() => toggleService(pkg.id, service.id, isLinked)}
-                              className={`flex items-center gap-2 p-3 rounded-xl border transition-all text-left group ${
-                                isLinked 
-                                  ? 'bg-primary/10 border-primary/40 ring-1 ring-primary/20' 
-                                  : 'bg-background/40 border-border/20 hover:border-blue-600/20 hover:bg-blue-600/5'
-                              }`}
-                            >
-                              <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
-                                isLinked ? 'bg-primary text-white' : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
-                              }`}>
-                                {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : (isLinked ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className={`text-xs font-bold truncate ${isLinked ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                  {service.name}
-                                </div>
-                                <div className="text-[9px] uppercase opacity-60 tracking-tighter">{service.category}</div>
-                              </div>
-                            </button>
-                          )
-                        })}
-                        {serviceCatalog.length === 0 && (
-                          <div className="col-span-full p-4 border border-dashed border-border/40 rounded-xl text-center text-muted-foreground text-xs">
-                            No hay servicios en el catálogo. Créalos abajo.
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {serviceCatalog.map(service => {
+                      const isLinked = pkg.serviceItems.some(s => s.id === service.id)
+                      const isLoading = loading === `${pkg.id}-${service.id}`
+                      
+                      return (
+                        <button
+                          key={service.id}
+                          disabled={isLoading}
+                          onClick={() => toggleService(pkg.id, service.id, isLinked)}
+                          className={`flex items-center gap-2 p-3 rounded-xl border transition-all text-left group ${
+                            isLinked 
+                              ? 'bg-primary/10 border-primary/40 ring-1 ring-primary/20' 
+                              : 'bg-background/40 border-border/20 hover:border-blue-600/20 hover:bg-blue-600/5'
+                          }`}
+                        >
+                          <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
+                            isLinked ? 'bg-primary text-white' : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
+                          }`}>
+                            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : (isLinked ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />)}
                           </div>
-                        )}
+                          <div className="flex-1 min-w-0">
+                            <div className={`text-xs font-bold truncate ${isLinked ? 'text-foreground' : 'text-muted-foreground'}`}>
+                              {service.name}
+                            </div>
+                            <div className="text-[9px] uppercase opacity-60 tracking-tighter">{service.category}</div>
+                          </div>
+                        </button>
+                      )
+                    })}
+                    {serviceCatalog.length === 0 && (
+                      <div className="col-span-full p-4 border border-dashed border-border/40 rounded-xl text-center text-muted-foreground text-xs">
+                        No hay servicios en el catálogo.
                       </div>
+                    )}
+                  </div>
 
-                      <div className="mt-4 p-3 bg-blue-500/5 border border-blue-500/10 rounded-lg flex items-start gap-3">
-                        <Info className="w-4 h-4 text-blue-500 mt-0.5" />
-                        <p className="text-[10px] text-blue-500/80 leading-snug">
-                          <strong>Tip:</strong> Estos servicios aparecerán con sus iconos correspondientes en la web pública. El orden del catálogo define el orden de aparición.
-                        </p>
-                      </div>
-                    </>
-                  )}
+                  <div className="mt-4 p-3 bg-blue-500/5 border border-blue-500/10 rounded-lg flex items-start gap-3">
+                    <Info className="w-4 h-4 text-blue-500 mt-0.5" />
+                    <p className="text-[10px] text-blue-500/80 leading-snug">
+                      <strong>Tip:</strong> Estos servicios aparecerán con sus iconos correspondientes en la web pública. El orden del catálogo define el orden de aparición.
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardContent>
