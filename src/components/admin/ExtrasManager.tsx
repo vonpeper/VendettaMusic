@@ -130,7 +130,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                 }
                 setLoading(null)
               }}
-              className="text-xs font-semibold h-9 px-3 w-full lg:w-auto text-primary border-primary/20 hover:border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors"
+              className="text-xs font-semibold h-9 px-3 w-full lg:w-auto text-blue-600 border-blue-600/20 bg-blue-600/5 hover:bg-blue-600/10 transition-colors"
               disabled={loading === `create-${defaultName}`}
             >
               {loading === `create-${defaultName}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Pre-crear"}
@@ -145,13 +145,13 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
 
     return (
       <div 
-        key={extra.id} 
+        key={extra.id}
         className={`flex flex-col lg:grid lg:grid-cols-[2fr_1.1fr_1.2fr_1.2fr_1fr] gap-4 p-4 rounded-xl border transition-all ${
           isEditing 
-            ? "border-primary bg-card ring-1 ring-primary/20 shadow-md" 
+            ? "border-blue-600 bg-card ring-1 ring-blue-600/20 shadow-md" 
             : extra.active !== false 
               ? "border-border/60 bg-card/10 hover:border-border/100 hover:bg-card/25" 
-              : "border-neutral-900 bg-neutral-950/20 opacity-70 filter grayscale-[10%]"
+              : "border-border/40 bg-muted/20 opacity-70 filter grayscale-[10%]"
         }`}
       >
         {/* Servicio Column */}
@@ -161,13 +161,13 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
               <Input 
                 value={extra.name} 
                 onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, name: e.target.value} : p))}
-                className="h-9 font-bold bg-background text-sm text-foreground w-full border border-border"
+                className="h-9 font-bold bg-background text-sm text-foreground w-full border border-border focus:border-blue-600"
                 placeholder="Nombre del servicio"
               />
               <Input 
                 value={extra.description || ""} 
                 onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, description: e.target.value} : p))}
-                className="h-9 text-xs bg-background text-muted-foreground w-full border border-border"
+                className="h-9 text-xs bg-background text-muted-foreground w-full border border-border focus:border-blue-600"
                 placeholder="Descripción del servicio..."
               />
             </div>
@@ -177,8 +177,8 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                 <span className="font-bold text-foreground text-sm uppercase tracking-tight block truncate">{extra.name}</span>
                 <span className={`text-[9px] px-2 py-0.5 rounded-full border uppercase font-extrabold tracking-wider lg:hidden ${
                   extra.active !== false 
-                    ? "bg-green-500/10 text-green-500 border-green-500/20" 
-                    : "bg-red-500/10 text-red-500 border-red-500/20"
+                    ? "bg-green-500/10 text-green-600 border-green-500/20" 
+                    : "bg-red-500/10 text-red-600 border-red-500/20"
                 }`}>
                   {extra.active !== false ? "Disponible" : "Agotado"}
                 </span>
@@ -187,7 +187,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
             </div>
           )}
         </div>
-
+ 
         {/* Disponibilidad Column (Desktop Only, mobile gets inline status) */}
         <div className="hidden lg:flex items-center gap-2">
           {isEditing ? (
@@ -196,7 +196,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                 type="checkbox" 
                 checked={extra.active !== false} 
                 onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, active: e.target.checked} : p))}
-                className="rounded border-border bg-background text-primary focus:ring-primary w-4.5 h-4.5 cursor-pointer"
+                className="rounded border-border bg-background text-blue-600 focus:ring-blue-600 w-4.5 h-4.5 cursor-pointer"
               />
               <span className="text-xs font-semibold text-foreground">Disponible</span>
             </label>
@@ -219,7 +219,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                 type="checkbox" 
                 checked={extra.active !== false} 
                 onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, active: e.target.checked} : p))}
-                className="rounded border-border bg-background text-primary focus:ring-primary w-4.5 h-4.5 cursor-pointer"
+                className="rounded border-border bg-background text-blue-600 focus:ring-blue-600 w-4.5 h-4.5 cursor-pointer"
               />
               <span className="text-xs font-semibold text-foreground">Disponible</span>
             </label>
@@ -237,7 +237,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                   type="number"
                   value={extra.setupCost} 
                   onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, setupCost: parseFloat(e.target.value) || 0} : p))}
-                  className="h-9 pl-7 pr-2 text-sm bg-background text-foreground border border-border/80 focus:border-primary w-full font-semibold"
+                  className="h-9 pl-7 pr-2 text-sm bg-background text-foreground border border-border/80 focus:border-blue-600 w-full font-semibold"
                 />
               </div>
             </div>
@@ -260,7 +260,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                   type="number"
                   value={extra.hourlyCost} 
                   onChange={e => setExtras(prev => prev.map(p => p.id === extra.id ? {...p, hourlyCost: parseFloat(e.target.value) || 0} : p))}
-                  className="h-9 pl-7 pr-2 text-sm bg-background text-foreground border border-border/80 focus:border-primary w-full font-semibold"
+                  className="h-9 pl-7 pr-2 text-sm bg-background text-foreground border border-border/80 focus:border-blue-600 w-full font-semibold"
                 />
               </div>
             </div>
@@ -302,7 +302,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                 size="sm" 
                 variant="outline" 
                 onClick={() => setEditingId(extra.id)} 
-                className="h-9 flex-1 lg:flex-none px-3 gap-1.5 text-primary/80 border-primary/20 hover:text-primary hover:bg-primary/5 text-xs font-bold justify-center"
+                className="h-9 flex-1 lg:flex-none px-3 gap-1.5 text-blue-600 border-blue-600/20 hover:text-blue-700 hover:bg-blue-600/5 text-xs font-bold justify-center"
               >
                 <Pencil className="w-3.5 h-3.5" />
                 Editar
@@ -326,22 +326,22 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
   return (
     <div className="space-y-8">
       {/* Title block */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center bg-[#0a0a0a]/30 p-5 rounded-2xl border border-border/40 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center bg-muted/45 p-5 rounded-2xl border border-border/40 gap-4">
         <div className="flex items-center gap-3">
-           <Sparkles className="w-5 h-5 text-primary" />
+           <Sparkles className="w-5 h-5 text-blue-600" />
            <div className="flex flex-col">
              <span className="font-bold text-foreground text-sm uppercase tracking-wider">Servicios Adicionales (Extras)</span>
              <span className="text-xs text-muted-foreground mt-0.5">Controla la disponibilidad y los precios individuales de los servicios adicionales.</span>
            </div>
         </div>
-        <Button onClick={() => setIsAdding(true)} variant="outline" size="sm" className="gap-2 border-primary/40 text-primary hover:bg-primary/10 h-9.5 font-bold text-xs uppercase tracking-wider w-full sm:w-auto">
+        <Button onClick={() => setIsAdding(true)} variant="outline" size="sm" className="gap-2 border-blue-600/40 text-blue-600 hover:bg-blue-600/10 h-9.5 font-bold text-xs uppercase tracking-wider w-full sm:w-auto">
           <Plus className="w-4 h-4" /> Agregar Extra Custom
         </Button>
       </div>
 
       {/* Adding card */}
       {isAdding && (
-        <Card className="bg-card border-primary/30 shadow-xl">
+        <Card className="bg-card border-blue-600/30 shadow-xl">
           <CardHeader>
             <CardTitle className="text-lg">Configurar Nuevo Extra</CardTitle>
             <CardDescription>Define el nombre y los costos base para el arma tu show.</CardDescription>
@@ -367,7 +367,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
             </div>
             <div className="flex gap-3 justify-end pt-2">
               <Button variant="ghost" onClick={() => setIsAdding(false)} className="h-9.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Cancelar</Button>
-              <Button onClick={handleCreate} disabled={loading === "new"} className="h-9.5 font-semibold text-xs uppercase tracking-wider text-white">
+              <Button onClick={handleCreate} disabled={loading === "new"} className="h-9.5 bg-blue-600 hover:bg-blue-700 font-semibold text-xs uppercase tracking-wider text-white border-none">
                 {loading === "new" ? <Loader2 className="animate-spin w-4 h-4" /> : "Guardar Servicio"}
               </Button>
             </div>
@@ -376,14 +376,14 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
       )}
 
       {/* Panel de Control de Audio Dinámico (Umbrales de Invitados) */}
-      <Card className="bg-[#0a0a0a]/30 border border-primary/20 overflow-hidden shadow-lg rounded-2xl">
-        <CardHeader className="bg-primary/5 border-b border-primary/10 p-5">
+      <Card className="bg-card border border-blue-600/20 overflow-hidden shadow-lg rounded-2xl">
+        <CardHeader className="bg-blue-600/5 border-b border-blue-600/10 p-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center">
+              <Users className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <CardTitle className="text-base font-bold text-white uppercase tracking-wider">Audio Dinámico por Aforo</CardTitle>
+              <CardTitle className="text-base font-bold text-foreground uppercase tracking-wider">Audio Dinámico por Aforo</CardTitle>
               <CardDescription className="text-xs text-muted-foreground">
                 Configura el costo fijo de instalación del equipo de audio según la cantidad de invitados en el cotizador dinámico.
               </CardDescription>
@@ -394,13 +394,13 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
             
             {/* Umbral 1: 0 - 100 Invitados */}
-            <div className="bg-background/20 border border-border/40 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+            <div className="bg-muted/30 border border-border/40 rounded-2xl p-5 flex flex-col justify-between space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-black text-green-500 tracking-widest bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">Base</span>
+                  <span className="text-[10px] uppercase font-black text-green-600 tracking-widest bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">Base</span>
                   <span className="text-xs font-bold text-muted-foreground">0 - 100 Personas</span>
                 </div>
-                <h4 className="text-sm font-bold text-white">Audio Estándar</h4>
+                <h4 className="text-sm font-bold text-foreground">Audio Estándar</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Sistema de audio Electro-Voice de alta fidelidad. Cobertura acústica ideal y balanceada para salones medianos y aforo estándar.
                 </p>
@@ -412,13 +412,13 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
             </div>
 
             {/* Umbral 2: 101 - 300 Invitados */}
-            <div className="bg-background/40 border border-primary/10 rounded-2xl p-5 flex flex-col justify-between space-y-4 relative">
+            <div className="bg-muted/30 border border-blue-600/10 rounded-2xl p-5 flex flex-col justify-between space-y-4 relative">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-black text-amber-500 tracking-widest bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Upgrade Pro</span>
+                  <span className="text-[10px] uppercase font-black text-amber-700 tracking-widest bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Upgrade Pro</span>
                   <span className="text-xs font-bold text-muted-foreground">101 - 300 Personas</span>
                 </div>
-                <h4 className="text-sm font-bold text-white">Audio Upgrade Pro</h4>
+                <h4 className="text-sm font-bold text-foreground">Audio Upgrade Pro</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Refuerzo de graves y subwoofers adicionales para garantizar la presión sonora y calidad acústica en aforos medianos.
                 </p>
@@ -437,7 +437,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                             const val = parseFloat(e.target.value) || 0
                             setExtras(prev => prev.map(ex => ex.id === audioMediumExtra.id ? { ...ex, setupCost: val } : ex))
                           }}
-                          className="h-8 pl-6 pr-1 text-xs bg-background text-foreground border border-border/80 text-right font-bold w-full"
+                          className="h-8 pl-6 pr-1 text-xs bg-background text-foreground border border-border/80 text-right font-bold w-full focus:border-blue-600"
                         />
                       </div>
                     </div>
@@ -445,7 +445,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                       size="sm" 
                       onClick={() => handleUpdate(audioMediumExtra.id)} 
                       disabled={loading === audioMediumExtra.id}
-                      className="w-full text-[10px] font-bold h-7.5 bg-primary/20 border border-primary/30 text-primary hover:bg-primary/30 uppercase tracking-widest"
+                      className="w-full text-[10px] font-bold h-7.5 bg-blue-600/10 border border-blue-600/20 text-blue-600 hover:bg-blue-600/20 uppercase tracking-widest"
                     >
                       {loading === audioMediumExtra.id ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : "Guardar Costo"}
                     </Button>
@@ -457,13 +457,13 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
             </div>
 
             {/* Umbral 3: 301+ Invitados */}
-            <div className="bg-background/40 border border-primary/10 rounded-2xl p-5 flex flex-col justify-between space-y-4 relative">
+            <div className="bg-muted/30 border border-blue-600/10 rounded-2xl p-5 flex flex-col justify-between space-y-4 relative">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-black text-rose-500 tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">Festival</span>
+                  <span className="text-[10px] uppercase font-black text-rose-700 tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">Festival</span>
                   <span className="text-xs font-bold text-muted-foreground">301+ Personas</span>
                 </div>
-                <h4 className="text-sm font-bold text-white">Audio Line Array (Festival)</h4>
+                <h4 className="text-sm font-bold text-foreground">Audio Line Array (Festival)</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Sistema aéreo Line Array tipo concierto para eventos grandes en haciendas, jardines y espacios abiertos masivos.
                 </p>
@@ -482,7 +482,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                             const val = parseFloat(e.target.value) || 0
                             setExtras(prev => prev.map(ex => ex.id === audioLargeExtra.id ? { ...ex, setupCost: val } : ex))
                           }}
-                          className="h-8 pl-6 pr-1 text-xs bg-background text-foreground border border-border/80 text-right font-bold w-full"
+                          className="h-8 pl-6 pr-1 text-xs bg-background text-foreground border border-border/80 text-right font-bold w-full focus:border-blue-600"
                         />
                       </div>
                     </div>
@@ -490,7 +490,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                       size="sm" 
                       onClick={() => handleUpdate(audioLargeExtra.id)} 
                       disabled={loading === audioLargeExtra.id}
-                      className="w-full text-[10px] font-bold h-7.5 bg-primary/20 border border-primary/30 text-primary hover:bg-primary/30 uppercase tracking-widest"
+                      className="w-full text-[10px] font-bold h-7.5 bg-blue-600/10 border border-blue-600/20 text-blue-600 hover:bg-blue-600/20 uppercase tracking-widest"
                     >
                       {loading === audioLargeExtra.id ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : "Guardar Costo"}
                     </Button>
@@ -511,7 +511,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
         {/* DJ Category */}
         <div className="space-y-3">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/20">
-            <RadioTower className="w-4 h-4 text-primary" /> Horas de DJ Adicionales
+            <RadioTower className="w-4 h-4 text-blue-600" /> Horas de DJ Adicionales
           </h3>
           <div className="space-y-2.5">
             {/* Table Header on Desktop */}
@@ -530,7 +530,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
         {/* Equipamiento Category */}
         <div className="space-y-3">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/20">
-            <Box className="w-4 h-4 text-primary" /> Equipamiento y Escenario (Extras)
+            <Box className="w-4 h-4 text-blue-600" /> Equipamiento y Escenario (Extras)
           </h3>
           <div className="space-y-2.5">
             {/* Table Header on Desktop */}
@@ -552,7 +552,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
         {otherExtras.length > 0 && (
           <div className="space-y-3">
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/20">
-              <Plus className="w-4 h-4 text-primary" /> Otros Extras
+              <Plus className="w-4 h-4 text-blue-600" /> Otros Extras
             </h3>
             <div className="space-y-2.5">
               {/* Table Header on Desktop */}
@@ -571,7 +571,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
         {extras.length === 0 && (
           <Card className="border-2 border-dashed border-border/40 bg-card/5 p-12 text-center">
             <CardHeader className="items-center pb-2">
-              <Wand2 className="w-12 h-12 text-primary/30 animate-pulse mb-3" />
+              <Wand2 className="w-12 h-12 text-blue-600/30 animate-pulse mb-3" />
               <CardTitle className="text-lg">¿Sin Rubros Configurables?</CardTitle>
               <CardDescription className="max-w-md">
                 No hay servicios adicionales o costos del "Arma tu show" registrados en la base de datos de extras.
@@ -591,7 +591,7 @@ export function ExtrasManager({ initialExtras }: { initialExtras: Extra[] }) {
                   setLoading(null)
                 }}
                 disabled={loading === "init"}
-                className="gap-2 bg-gradient-to-r from-primary to-rose-600 font-semibold text-xs uppercase tracking-widest text-white px-5 py-3.5 rounded-lg"
+                className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 font-semibold text-xs uppercase tracking-widest text-white px-5 py-3.5 rounded-lg border-none"
               >
                 {loading === "init" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
                 Pre-cargar Rubros por Defecto de Arma tu Show

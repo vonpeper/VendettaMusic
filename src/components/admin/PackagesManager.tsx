@@ -133,15 +133,15 @@ export function PackagesManager({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-          <PackageIcon className="w-5 h-5 text-primary" /> Paquetes Configurables
+          <PackageIcon className="w-5 h-5 text-blue-600" /> Paquetes Configurables
         </h2>
-        <Button onClick={() => setIsAdding(true)} className="gap-2 text-white w-full sm:w-auto justify-center h-10 font-semibold text-sm">
+        <Button onClick={() => setIsAdding(true)} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto justify-center h-10 font-semibold text-sm">
           <Plus className="w-4 h-4" /> Nuevo Paquete
         </Button>
       </div>
 
       {isAdding && (
-        <Card className="bg-card border-primary/30">
+        <Card className="bg-card border-blue-600/30">
           <CardHeader>
             <CardTitle>Crear Nuevo Paquete</CardTitle>
             <CardDescription>Configura los costos base y descripción inicial.</CardDescription>
@@ -167,7 +167,7 @@ export function PackagesManager({
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="ghost" onClick={() => setIsAdding(false)}>Cancelar</Button>
-              <Button onClick={handleCreate} disabled={loading === "new"}>
+              <Button onClick={handleCreate} disabled={loading === "new"} className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
                 {loading === "new" ? <Loader2 className="animate-spin w-4 h-4" /> : "Crear Paquete"}
               </Button>
             </div>
@@ -177,12 +177,12 @@ export function PackagesManager({
 
       <div className="grid grid-cols-1 gap-6">
         {packages.map(pkg => (
-          <Card key={pkg.id} className={`bg-card/30 border-border/40 overflow-hidden transition-all ${editingId === pkg.id ? 'ring-2 ring-primary bg-card/60' : ''}`}>
+          <Card key={pkg.id} className={`bg-card border-border/40 overflow-hidden transition-all ${editingId === pkg.id ? 'ring-2 ring-blue-600 bg-card' : ''}`}>
             <CardHeader className="bg-muted/30 border-b border-border/20 p-4 sm:p-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex items-start sm:items-center gap-3 w-full md:w-auto">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <PackageIcon className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 rounded-lg bg-blue-600/10 flex items-center justify-center shrink-0">
+                    <PackageIcon className="w-5 h-5 text-blue-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     {editingId === pkg.id ? (
@@ -197,7 +197,7 @@ export function PackagesManager({
                             type="checkbox" 
                             checked={pkg.active} 
                             onChange={e => setPackages(prev => prev.map(p => p.id === pkg.id ? {...p, active: e.target.checked} : p))}
-                            className="rounded border-border bg-background text-primary focus:ring-primary w-4.5 h-4.5"
+                            className="rounded border-border bg-background text-blue-600 focus:ring-blue-600 w-4.5 h-4.5"
                           />
                           <span className="text-xs font-semibold text-foreground">Disponible</span>
                         </label>
@@ -223,7 +223,7 @@ export function PackagesManager({
                       <Check className="w-4 h-4" /> Finalizar Edición
                     </Button>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={() => setEditingId(pkg.id)} className="gap-2 border-primary/30 text-primary hover:bg-primary/5 h-9 px-3 w-full md:w-auto justify-center font-bold">
+                    <Button size="sm" variant="outline" onClick={() => setEditingId(pkg.id)} className="gap-2 border-blue-600/30 text-blue-600 hover:bg-blue-600/5 h-9 px-3 w-full md:w-auto justify-center font-bold">
                       <Pencil className="w-3.5 h-3.5" /> Editar Paquete
                     </Button>
                   )}
@@ -247,10 +247,10 @@ export function PackagesManager({
                           type="number"
                           value={pkg.baseCostPerHour} 
                           onChange={e => setPackages(prev => prev.map(p => p.id === pkg.id ? {...p, baseCostPerHour: parseFloat(e.target.value)} : p))}
-                          className="h-9 bg-background px-2"
+                          className="h-9 bg-background px-2 border-border focus:border-blue-600"
                         />
                       ) : (
-                        <div className="text-xl font-heading font-bold text-primary">${pkg.baseCostPerHour.toLocaleString()}</div>
+                        <div className="text-xl font-heading font-bold text-blue-600">${pkg.baseCostPerHour.toLocaleString()}</div>
                       )}
                     </div>
                     <div className="space-y-1">
@@ -262,7 +262,7 @@ export function PackagesManager({
                           type="number"
                           value={pkg.minDuration} 
                           onChange={e => setPackages(prev => prev.map(p => p.id === pkg.id ? {...p, minDuration: parseInt(e.target.value)} : p))}
-                          className="h-9 bg-background px-2"
+                          className="h-9 bg-background px-2 border-border focus:border-blue-600"
                         />
                       ) : (
                         <div className="text-xl font-heading font-bold text-foreground">{pkg.minDuration}h</div>
@@ -277,7 +277,7 @@ export function PackagesManager({
                           type="number"
                           value={pkg.maxDuration ?? 5} 
                           onChange={e => setPackages(prev => prev.map(p => p.id === pkg.id ? {...p, maxDuration: parseInt(e.target.value)} : p))}
-                          className="h-9 bg-background px-2"
+                          className="h-9 bg-background px-2 border-border focus:border-blue-600"
                         />
                       ) : (
                         <div className="text-xl font-heading font-bold text-foreground">{(pkg.maxDuration ?? 5)}h</div>
@@ -301,7 +301,7 @@ export function PackagesManager({
                 {/* Services Zone or Custom Extras Editor */}
                 <div className="lg:col-span-8 p-6 space-y-4">
                   <div className="flex items-center justify-between mb-2">
-                    <Label className="text-xs uppercase text-primary font-black tracking-widest flex items-center gap-2">
+                    <Label className="text-xs uppercase text-blue-600 font-black tracking-widest flex items-center gap-2">
                       <Zap className="w-3 h-3" /> Zona de Servicios (Inclusiones)
                     </Label>
                     <div className="text-[10px] text-muted-foreground italic">
@@ -321,12 +321,12 @@ export function PackagesManager({
                           onClick={() => toggleService(pkg.id, service.id, isLinked)}
                           className={`flex items-center gap-2 p-3 rounded-xl border transition-all text-left group ${
                             isLinked 
-                              ? 'bg-primary/10 border-primary/40 ring-1 ring-primary/20' 
+                              ? 'bg-blue-600/10 border-blue-600/40 ring-1 ring-blue-600/20' 
                               : 'bg-background/40 border-border/20 hover:border-blue-600/20 hover:bg-blue-600/5'
                           }`}
                         >
                           <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
-                            isLinked ? 'bg-primary text-white' : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
+                            isLinked ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground group-hover:bg-blue-600/20'
                           }`}>
                             {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : (isLinked ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />)}
                           </div>

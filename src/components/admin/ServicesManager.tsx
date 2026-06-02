@@ -98,15 +98,15 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceI
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-           <Zap className="w-5 h-5 text-primary" /> Catálogo Maestro de Servicios
+           <Zap className="w-5 h-5 text-blue-600" /> Catálogo Maestro de Servicios
         </h2>
-        <Button onClick={() => setIsAdding(true)} className="gap-2 text-white w-full sm:w-auto justify-center h-10 font-semibold text-sm">
+        <Button onClick={() => setIsAdding(true)} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto justify-center h-10 font-semibold text-sm">
           <Plus className="w-4 h-4" /> Nuevo Servicio
         </Button>
       </div>
 
       {isAdding && (
-        <Card className="bg-card border-primary/30">
+        <Card className="bg-card border-blue-600/30">
           <CardHeader>
             <CardTitle>Crear Nuevo Servicio</CardTitle>
             <CardDescription>Este servicio podrá ser seleccionado para cualquier paquete.</CardDescription>
@@ -115,14 +115,14 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceI
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Nombre del Servicio</Label>
-                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej. Audio Electro-Voice" className="bg-background" />
+                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej. Audio Electro-Voice" className="bg-background border-border" />
               </div>
               <div className="space-y-2">
                 <Label>Categoría</Label>
                 <select 
                   value={formData.category} 
                   onChange={e => setFormData({...formData, category: e.target.value})}
-                  className="w-full bg-background border border-border/40 rounded-md p-2 text-sm text-foreground"
+                  className="w-full bg-background border border-border rounded-md p-2 text-sm text-foreground focus:border-blue-600 focus:outline-none"
                 >
                   <option value="Inclusión">Inclusión (Default)</option>
                   <option value="Extra">Extra / Adicional</option>
@@ -131,13 +131,13 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceI
               </div>
               <div className="space-y-2">
                 <Label>Icono</Label>
-                <div className="grid grid-cols-5 gap-2 p-2 border border-border/40 rounded-md bg-background">
+                <div className="grid grid-cols-5 gap-2 p-2 border border-border rounded-md bg-background">
                    {ICON_OPTIONS.map(opt => (
                      <button 
                        key={opt.name}
                        type="button"
                        onClick={() => setFormData({...formData, icon: opt.name})}
-                       className={`p-2 rounded-md flex items-center justify-center hover:bg-blue-600/10 transition-colors ${formData.icon === opt.name ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
+                       className={`p-2 rounded-md flex items-center justify-center hover:bg-blue-600/10 transition-colors ${formData.icon === opt.name ? 'bg-blue-600/20 ring-1 ring-blue-600' : ''}`}
                      >
                        <opt.icon className="w-4 h-4 text-foreground" />
                      </button>
@@ -146,12 +146,12 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceI
               </div>
               <div className="space-y-2">
                 <Label>Descripción (Opcional)</Label>
-                <Input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Detalles técnicos..." className="bg-background" />
+                <Input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Detalles técnicos..." className="bg-background border-border" />
               </div>
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="ghost" onClick={() => setIsAdding(false)}>Cancelar</Button>
-              <Button onClick={handleCreate} disabled={loading === "new"}>
+              <Button onClick={handleCreate} disabled={loading === "new"} className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
                 {loading === "new" ? <Loader2 className="animate-spin w-4 h-4" /> : "Guardar en Catálogo"}
               </Button>
             </div>
@@ -164,23 +164,23 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceI
           const IconComp = ICON_OPTIONS.find(o => o.name === service.icon)?.icon || Check
           
           return (
-            <Card key={service.id} className={`bg-card/50 border-border/40 transition-all ${editingId === service.id ? 'ring-2 ring-primary' : ''}`}>
+            <Card key={service.id} className={`bg-card border-border/40 transition-all ${editingId === service.id ? 'ring-2 ring-blue-600 bg-card' : ''}`}>
               <CardContent className="pt-6 space-y-3">
                 <div className="flex justify-between items-start">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <IconComp className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center">
+                    <IconComp className="w-5 h-5 text-blue-600" />
                   </div>
                   <div className="flex gap-1">
                     {editingId === service.id ? (
-                      <Button size="icon" variant="ghost" onClick={() => handleUpdate(service.id)} className="h-7 w-7 text-green-500">
+                      <Button size="icon" variant="ghost" onClick={() => handleUpdate(service.id)} className="h-7 w-7 text-green-500 hover:text-green-600 hover:bg-green-50">
                         <Check className="w-4 h-4" />
                       </Button>
                     ) : (
-                      <Button size="icon" variant="ghost" onClick={() => setEditingId(service.id)} className="h-7 w-7 text-primary/60">
+                      <Button size="icon" variant="ghost" onClick={() => setEditingId(service.id)} className="h-7 w-7 text-blue-600/60 hover:text-blue-600 hover:bg-blue-600/10">
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
                     )}
-                    <Button size="icon" variant="ghost" onClick={() => handleDelete(service.id)} className="h-7 w-7 text-destructive/60">
+                    <Button size="icon" variant="ghost" onClick={() => handleDelete(service.id)} className="h-7 w-7 text-destructive/60 hover:text-destructive hover:bg-destructive/10">
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -191,24 +191,24 @@ export function ServicesManager({ initialServices }: { initialServices: ServiceI
                     <Input 
                       value={service.name} 
                       onChange={e => setServices(prev => prev.map(s => s.id === service.id ? {...s, name: e.target.value} : s))}
-                      className="h-8 font-bold text-sm bg-background"
+                      className="h-8 font-bold text-sm bg-background border-border focus:border-blue-600"
                     />
                   ) : (
                     <div className="font-bold text-sm text-foreground">{service.name}</div>
                   )}
-                  <div className="text-[10px] text-primary font-black uppercase tracking-widest">{service.category}</div>
+                  <div className="text-[10px] text-blue-600 font-black uppercase tracking-widest">{service.category}</div>
                 </div>
 
                 {editingId === service.id ? (
                   <div className="space-y-2">
                     <Label className="text-[10px] uppercase">Cambiar Icono</Label>
-                    <div className="grid grid-cols-5 gap-1 p-1 border border-border/40 rounded-md bg-background">
+                    <div className="grid grid-cols-5 gap-1 p-1 border border-border rounded-md bg-background">
                       {ICON_OPTIONS.map(opt => (
                         <button 
                           key={opt.name}
                           type="button"
                           onClick={() => setServices(prev => prev.map(s => s.id === service.id ? {...s, icon: opt.name} : s))}
-                          className={`p-1.5 rounded flex items-center justify-center hover:bg-blue-600/10 ${service.icon === opt.name ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
+                          className={`p-1.5 rounded flex items-center justify-center hover:bg-blue-600/10 ${service.icon === opt.name ? 'bg-blue-600/20 ring-1 ring-blue-600' : ''}`}
                         >
                           <opt.icon className="w-3 h-3 text-foreground" />
                         </button>

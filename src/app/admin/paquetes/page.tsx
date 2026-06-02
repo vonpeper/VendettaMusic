@@ -27,8 +27,8 @@ export default async function AdminPaquetesPage() {
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-10 animate-in fade-in duration-500">
       <div>
-        <div className="flex items-center gap-3 text-primary mb-2">
-          <Box className="w-6 h-6 text-primary" />
+        <div className="flex items-center gap-3 text-blue-600 mb-2">
+          <Box className="w-6 h-6 text-blue-600" />
           <span className="text-sm font-bold uppercase tracking-widest">Catálogo de Servicios</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-heading font-bold text-foreground tracking-tight">
