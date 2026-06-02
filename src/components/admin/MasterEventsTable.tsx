@@ -73,17 +73,17 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-          <TabsList className="flex w-full bg-card border border-border/40 p-2 rounded-2xl justify-start md:justify-center gap-2 overflow-x-auto overflow-y-hidden no-scrollbar">
-            <TabsTrigger value="todos" className="shrink-0 h-10 px-4 rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white font-bold text-xs whitespace-nowrap">
+          <TabsList className="flex w-full bg-card border border-border/40 !h-auto p-1.5 rounded-2xl gap-2 justify-start overflow-x-auto overflow-y-hidden no-scrollbar">
+            <TabsTrigger value="todos" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 font-bold transition-all">
               Todos
             </TabsTrigger>
-            <TabsTrigger value="agendado" className="shrink-0 h-10 px-4 rounded-xl data-[state=active]:bg-green-600 data-[state=active]:text-white font-bold text-xs whitespace-nowrap">
+            <TabsTrigger value="agendado" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 font-bold transition-all">
               Agendados
             </TabsTrigger>
-            <TabsTrigger value="completado" className="shrink-0 h-10 px-4 rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white font-bold text-xs whitespace-nowrap">
+            <TabsTrigger value="completado" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 font-bold transition-all">
               Completados
             </TabsTrigger>
-            <TabsTrigger value="cancelado" className="shrink-0 h-10 px-4 rounded-xl data-[state=active]:bg-red-600 data-[state=active]:text-white font-bold text-xs whitespace-nowrap">
+            <TabsTrigger value="cancelado" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400 font-bold transition-all">
               Cancelados
             </TabsTrigger>
           </TabsList>

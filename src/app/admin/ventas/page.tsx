@@ -184,18 +184,18 @@ export default async function AdminVentasPage() {
       </div>
 
       <Tabs defaultValue="bookings" className="space-y-6">
-        <TabsList className="flex flex-row flex-wrap bg-card border border-border/40 p-1 h-auto min-h-12 rounded-xl justify-start w-full">
-          <TabsTrigger value="bookings" className="shrink-0  snap-center gap-2 px-6 py-2 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-800 data-[state=active]:text-white data-[state=active]:shadow-lg">
-            <ShoppingBag className="w-4 h-4" /> Pedidos Web
+        <TabsList className="flex w-full bg-card border border-border/40 !h-auto p-1.5 mb-8 rounded-2xl gap-2 justify-start overflow-x-auto overflow-y-hidden no-scrollbar">
+          <TabsTrigger value="bookings" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold transition-all">
+            <ShoppingBag className="w-4 h-4 mr-2" /> Pedidos Web
           </TabsTrigger>
-          <TabsTrigger value="cotizaciones" className="shrink-0  snap-center gap-2 px-6 py-2 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-800 data-[state=active]:text-white data-[state=active]:shadow-lg">
-            <FileText className="w-4 h-4" /> Ventas Manuales
+          <TabsTrigger value="cotizaciones" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold transition-all">
+            <FileText className="w-4 h-4 mr-2" /> Ventas Manuales
           </TabsTrigger>
-          <TabsTrigger value="contratos" className="shrink-0  snap-center gap-2 px-6 py-2 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
-            <CheckCircle2 className="w-4 h-4" /> Contratos
+          <TabsTrigger value="contratos" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 font-bold transition-all">
+            <CheckCircle2 className="w-4 h-4 mr-2" /> Contratos
           </TabsTrigger>
-          <TabsTrigger value="completados" className="shrink-0  snap-center gap-2 px-6 py-2 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
-            <CheckCircle2 className="w-4 h-4" /> Completados
+          <TabsTrigger value="completados" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 font-bold transition-all">
+            <CheckCircle2 className="w-4 h-4 mr-2" /> Completados
           </TabsTrigger>
         </TabsList>
 
