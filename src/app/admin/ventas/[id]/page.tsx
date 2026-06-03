@@ -34,6 +34,7 @@ import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
 import { MusicianStatusList } from "@/components/admin/MusicianStatusList"
 import { EditEventoButton } from "@/components/admin/EventActions"
+import { EditDepositInline } from "@/components/admin/EditDepositInline"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 
@@ -372,10 +373,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                         <div className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 truncate">Total</div>
                         <div className="text-base md:text-xl font-black text-foreground">{MXN(total)}</div>
                       </div>
-                      <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-blue-600/15 border border-blue-600/30">
-                        <div className="text-[9px] md:text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 truncate">Anticipo</div>
-                        <div className="text-base md:text-xl font-black text-blue-600">{MXN(deposit)}</div>
-                      </div>
+                      <EditDepositInline bookingId={booking.id} initialDeposit={deposit} />
                       <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
                         <div className="text-[9px] md:text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 truncate">Pagado</div>
                         <div className="text-base md:text-xl font-black text-emerald-600">{MXN(paid)}</div>

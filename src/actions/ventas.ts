@@ -546,3 +546,72 @@ export async function deleteContractAction(bookingId: string) {
     return { success: false, error: "Error al eliminar el contrato." }
   }
 }
+
+export async function updateDepositAmountAction(bookingId: string, amount: number) {
+  try {
+    const booking = await db.bookingRequest.findUnique({
+      where: { id: bookingId }
+    })
+    if (!booking) return { success: false, error: "Reserva no encontrada" }
+
+    // 1. Actualizar BookingRequest
+    await db.bookingRequest.update({
+      where: { id: bookingId },
+      data: { 
+        depositAmount: amount,
+        paymentStatus: amount > 0 ? "paid" : "pendiente"
+      }
+    })
+
+    // 2. Si tiene evento sincronizado, actualizarlo también
+    if (booking.eventId) {
+      await db.event.update({
+        where: { id: booking.eventId },
+        data: {
+          deposit: amount,
+          balance: booking.baseAmount - amount
+        }
+      })
+
+      // 3. Sincronizar tabla de pagos (Payment)
+      const existingPayment = await db.payment.findFirst({
+        where: { bookingRequestId: bookingId }
+      })
+
+      if (existingPayment) {
+        if (amount > 0) {
+          await db.payment.update({
+            where: { id: existingPayment.id },
+            data: { amount }
+          })
+        } else {
+          // Si el anticipo se edita a 0, borramos el registro de pago
+          await db.payment.delete({
+            where: { id: existingPayment.id }
+          })
+        }
+      } else if (amount > 0) {
+        // Crear nuevo registro de pago
+        await db.payment.create({
+          data: {
+            eventId: booking.eventId,
+            bookingRequestId: bookingId,
+            amount,
+            method: "TRANSFER",
+            status: "completed",
+            reference: "Anticipo Manual"
+          }
+        })
+      }
+    }
+
+    revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    revalidatePath("/admin/eventualidades")
+    revalidatePath("/admin")
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating deposit amount:", error)
+    return { success: false, error: "Error al actualizar el anticipo." }
+  }
+}

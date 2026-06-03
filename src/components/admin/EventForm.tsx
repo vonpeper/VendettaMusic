@@ -529,7 +529,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                   className="bg-background border-border/40 text-foreground" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="deposit">Anticipo recibido (MXN)</Label>
+                <Label htmlFor="deposit">Anticipo Pactado / Requerido (MXN)</Label>
                 <Input id="deposit" name="deposit" type="number" step="0.01" min="0"
                   defaultValue={initialData?.deposit}
                   className="bg-background border-border/40 text-foreground" />
