@@ -170,17 +170,19 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     const dbTemplate = config?.msgTemplateGig
     const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG")
     const template = isOldTemplate
-      ? `🎸 *NUEVA CONVOCATORIA: {{eventName}}*
-  
-👤 *Cliente / Evento:* {{clientName}}
+      ? `🎸 *NUEVA CONVOCATORIA — VENDETTA* 🎸
+
 📅 *Fecha:* {{date}}
-🎤 *Hora de Show:* {{performanceStart}}
-📍 *Ubicación:* {{location}}
+👤 *Cliente:* {{fullName}}
+🎉 *Tipo:* {{ceremony}}
 🏠 *Dirección:* {{address}}
-🗺️ *Maps:* {{mapsLink}}
-🚗 *Llegada músicos:* {{arrivalTime}}
+📍 *Lugar:* {{location}} ({{mapsLink}})
+🚗 *Hora de Llegada:* {{arrivalTime}}
 ⚙️ *Hora de Montaje:* {{setupTime}}
+🎤 *Hora de Inicio:* {{performanceStart}}
+🎵 *Hora de Finalización:* {{performanceEnd}}
 👔 *Vestimenta:* {{dressCode}}
+
 📝 *Notas:* {{notes}}
 
 🔗 *Confirma tu asistencia aquí:*
@@ -194,10 +196,11 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
       ceremony: ceremonyLabel[gigDetails.ceremonyType || gigDetails.venueType || ""] || gigDetails.ceremonyType || "Show",
       location: gigDetails.locationName || gigDetails.address || "Por confirmar",
       address: gigDetails.address || "No especificada",
-      mapsLink: gigDetails.mapsLink ? gigDetails.mapsLink : "(no registrado)",
+      mapsLink: gigDetails.mapsLink || "No registrado",
       setupTime: gigDetails.setupTime || "Por definir",
       arrivalTime: gigDetails.arrivalTime || "Por definir",
       performanceStart: gigDetails.performanceStart || "Por definir",
+      performanceEnd: gigDetails.performanceEnd || "Por definir",
       dressCode: finalDressCode,
       notes: gigDetails.musicianNotes || "Ninguna",
       clientName: gigDetails.clientName || "Vendetta",

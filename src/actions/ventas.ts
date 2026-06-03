@@ -203,10 +203,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
             bookingId: br.id
           })
         }
-        
-        if (!br.event.notificationSent) {
-          await notifyMusicians(br.eventId, br.event, db)
-        }
+        // No notificar automáticamente al staff al agendar. El admin lo hará manualmente.
       }
 
       if (newStatus === "cancelado") {
@@ -323,10 +320,7 @@ export async function markContractAsSignedAction(bookingId: string) {
           bookingId: booking.id
         })
       }
-
-      if (!booking.event.notificationSent) {
-        await notifyMusicians(booking.eventId, booking.event, db)
-      }
+      // No notificar automáticamente al staff al firmar. El admin lo hará manualmente.
     }
 
     revalidatePath("/admin/ventas")

@@ -583,31 +583,6 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
     if (newStatus === "agendado") {
       // 1. Asignar automáticamente los músicos titulares si es necesario
       await assignDefaultMusicians(id, db).catch(e => console.error("Error auto-assigning musicians:", e))
-
-      const fullEvent = await db.event.findUnique({
-        where: { id },
-        include: { location: true, package: true, client: { include: { user: true } } }
-      })
-      if (fullEvent && !fullEvent.notificationSent) {
-        const gigDetails = {
-          clientName: fullEvent.customName || fullEvent.client?.user?.name || "Sin Nombre",
-          date: fullEvent.date,
-          ceremonyType: fullEvent.ceremonyType,
-          guestCount: fullEvent.guestCount || 0,
-          locationName: fullEvent.location?.name || "",
-          mapsLink: fullEvent.location?.mapsLink || fullEvent.mapsLink || "",
-          locationAddress: fullEvent.location?.address || "",
-          performanceStart: fullEvent.performanceStart,
-          performanceEnd: fullEvent.performanceEnd,
-          arrivalTime: fullEvent.arrivalTime,
-          setupTime: fullEvent.setupTime,
-          dressCode: fullEvent.dressCode,
-          musicianNotes: fullEvent.musicianNotes,
-          isPublic: fullEvent.isPublic,
-          packageName: fullEvent.package?.name || "Paquete Personalizado"
-        }
-        await notifyMusicians(id, gigDetails, db)
-      }
     }
 
     if (newStatus === "cancelado") {
