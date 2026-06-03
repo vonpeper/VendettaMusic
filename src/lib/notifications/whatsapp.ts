@@ -9,6 +9,30 @@ export async function sendWhatsApp(
   const { db } = await import("../db")
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
+  // Failsafe de Seguridad: No enviar a músicos inactivos
+  if (to) {
+    const normalizedTarget = toWhatsAppNumber(to)
+    if (normalizedTarget) {
+      const cleanTarget = normalizedTarget.replace(/\D+/g, "")
+      const inactiveMusicians = await db.musicianProfile.findMany({
+        where: {
+          status: { not: "active" },
+          whatsapp: { not: null }
+        }
+      })
+      const isInactive = inactiveMusicians.some((m: any) => {
+        if (!m.whatsapp) return false
+        const cleanM = m.whatsapp.replace(/\D+/g, "")
+        return cleanM.slice(-10) === cleanTarget.slice(-10)
+      })
+
+      if (isInactive) {
+        console.warn(`🛑 [FAILSAFE SENDWHATSAPP] Bloqueado envío a ${to} porque pertenece a un músico INACTIVO / ELIMINADO.`)
+        return { messageId: null, error: "Blocked: Recipient is an inactive musician." }
+      }
+    }
+  }
+
   let baseUrl = config?.evolutionUrl || process.env.EVOLUTION_BASE_URL || ""
   if (baseUrl && !baseUrl.startsWith("http")) {
     baseUrl = `https://${baseUrl}`

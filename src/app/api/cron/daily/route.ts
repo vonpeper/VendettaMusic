@@ -177,6 +177,32 @@ export async function GET(request: Request) {
     for (const notif of failedNotifications) {
       if (!notif.recipient) continue
       try {
+        // Failsafe para reintentos de músicos: si es de tipo músico y ya no está activo, descartar reintento
+        const isMusicianType = ["musician_gig", "musician_rehearsal", "event_cancelled"].includes(notif.type.toLowerCase())
+        if (isMusicianType) {
+          const { toWhatsAppNumber } = await import("@/lib/phone")
+          const normalizedTarget = toWhatsAppNumber(notif.recipient)
+          if (normalizedTarget) {
+            const cleanTarget = normalizedTarget.replace(/\D+/g, "")
+            const allActive = await db.musicianProfile.findMany({
+              where: { status: "active", whatsapp: { not: null } }
+            })
+            const hasActiveProfile = allActive.some((m: any) => {
+              const cleanM = m.whatsapp.replace(/\D+/g, "")
+              return cleanM.slice(-10) === cleanTarget.slice(-10)
+            })
+
+            if (!hasActiveProfile) {
+              console.warn(`🛑 [CRON FAILSAFE] Cancelado reintento para ${notif.recipient} (músico inactivo o eliminado).`)
+              await db.notification.update({
+                where: { id: notif.id },
+                data: { status: "blocked", retries: 3, errorDetails: "Blocked: Recipient is no longer an active musician." }
+              })
+              continue
+            }
+          }
+        }
+
         const { messageId, error } = await sendWhatsApp(notif.recipient, notif.message)
         if (messageId) {
           await db.notification.update({
