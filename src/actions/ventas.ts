@@ -214,6 +214,12 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
 
     revalidatePath("/admin/ventas")
     revalidatePath("/admin/eventos")
+
+    if (br?.eventId) {
+      const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
+      syncEventToGoogleCalendar(br.eventId).catch(e => console.error("Error syncing to Google Calendar:", e))
+    }
+
     return { success: true }
   } catch (error) {
     console.error("Error updating booking status:", error)
@@ -609,6 +615,12 @@ export async function updateDepositAmountAction(bookingId: string, amount: numbe
     revalidatePath(`/admin/ventas/${bookingId}`)
     revalidatePath("/admin/eventualidades")
     revalidatePath("/admin")
+
+    if (booking.eventId) {
+      const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
+      syncEventToGoogleCalendar(booking.eventId).catch(e => console.error("Error syncing to Google Calendar:", e))
+    }
+
     return { success: true }
   } catch (error) {
     console.error("Error updating deposit amount:", error)

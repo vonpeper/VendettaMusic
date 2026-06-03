@@ -233,9 +233,11 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                     )}
                   </div>
                   
-                  <Button variant="outline" className="w-full border-blue-500/30 hover:bg-blue-500/10 text-blue-400 group h-12" disabled={!config?.googleClientId}>
-                    Vincular Cuenta de Google
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  <Button variant="outline" className="w-full border-blue-500/30 hover:bg-blue-500/10 text-blue-400 group h-12" disabled={!config?.googleClientId} asChild>
+                    <a href="/api/auth/google">
+                      Vincular Cuenta de Google
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </a>
                   </Button>
                   
                   {!config?.googleClientId && (

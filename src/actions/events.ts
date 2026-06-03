@@ -251,6 +251,10 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
       await notifyEventCancellation(id, db).catch(e => console.error("Error sending cancellation notifications:", e))
     }
 
+    // Sincronizar con Google Calendar de forma asíncrona
+    const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
+    syncEventToGoogleCalendar(id).catch(e => console.error("Error syncing to Google Calendar:", e))
+
     return { 
       success: true, 
       message: "Evento actualizado correctamente",
@@ -264,6 +268,11 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
 
 export async function deleteEventAction(id: string) {
   try {
+    const event = await db.event.findUnique({ where: { id } })
+    if (event?.googleCalendarId) {
+      const { deleteFromGoogleCalendar } = await import("@/lib/google-calendar")
+      await deleteFromGoogleCalendar(event.googleCalendarId).catch(e => console.error("Error deleting from Google Calendar:", e))
+    }
     await db.event.delete({
       where: { id }
     })
@@ -491,6 +500,10 @@ export async function createEventAction(_prev: any, formData: FormData) {
       await notifyMusicians(event.id, gigDetails, db, targetIds.length ? targetIds : undefined)
     }
 
+    // Sincronizar con Google Calendar de forma asíncrona
+    const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
+    syncEventToGoogleCalendar(event.id).catch(e => console.error("Error syncing to Google Calendar:", e))
+
     return { 
       success: true, 
       message: "Evento creado exitosamente", 
@@ -627,6 +640,9 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
     revalidatePath("/admin/eventualidades")
     revalidatePath("/admin/eventos")
     revalidatePath("/")
+    // Sincronizar con Google Calendar de forma asíncrona
+    const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
+    syncEventToGoogleCalendar(id).catch(e => console.error("Error syncing to Google Calendar:", e))
     
     return { success: true }
   } catch (error) {
