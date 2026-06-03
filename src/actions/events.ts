@@ -95,6 +95,28 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
     const existingBooking = await db.bookingRequest.findUnique({ where: { eventId: id } })
     
     if (existingBooking) {
+      const addressVal = updatedEvent?.location?.address || updatedEvent?.location?.name || (data.locationFree as string) || "Dirección manual"
+      
+      // Parsear dirección para mantener en sincronía calle, número y colonia
+      let calle = ""
+      let numero = ""
+      let colonia = ""
+      const parts = addressVal.split(",").map((p: string) => p.trim())
+      if (parts.length > 0) {
+        const firstPart = parts[0]
+        const match = firstPart.match(/^(.*?)\s+(\d+[-a-zA-Z0-9]*)$/)
+        if (match) {
+          calle = match[1]
+          numero = match[2]
+        } else {
+          calle = firstPart
+          numero = ""
+        }
+      }
+      if (parts.length > 1) {
+        colonia = parts[1]
+      }
+
       await db.bookingRequest.update({
         where: { eventId: id },
         data: {
@@ -108,7 +130,11 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
           clientName: (data.customName as string) || undefined,
           isPublic: data.isPublic === "on" || data.isPublic === "true",
           adminNote: (data.musicianNotes as string) || undefined,
-          address: updatedEvent?.location?.address || updatedEvent?.location?.name || (data.locationFree as string) || "Dirección manual",
+          address: addressVal,
+          calle,
+          numero,
+          colonia,
+          municipio: updatedEvent?.location?.city || "CDMX",
           city: updatedEvent?.location?.city || "CDMX",
           state: updatedEvent?.location?.state || "México",
           mapsLink: updatedEvent?.location?.mapsLink || (data.mapsLink as string) || null,

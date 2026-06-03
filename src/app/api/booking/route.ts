@@ -346,8 +346,34 @@ export async function PUT(req: NextRequest) {
     if (updates.packageName)   dataToUpdate.packageName   = updates.packageName
     if (updates.guestCount)    dataToUpdate.guestCount    = parseInt(updates.guestCount)
     if (updates.venueType)     dataToUpdate.venueType     = updates.venueType
-    if (updates.address)       dataToUpdate.address       = updates.address
-    if (updates.city)          dataToUpdate.city          = updates.city
+    if (updates.address) {
+      dataToUpdate.address = updates.address
+      // Parsear dirección para mantener en sincronía calle, número y colonia
+      const parts = updates.address.split(",").map((p: string) => p.trim())
+      if (parts.length > 0) {
+        const firstPart = parts[0]
+        const match = firstPart.match(/^(.*?)\s+(\d+[-a-zA-Z0-9]*)$/)
+        if (match) {
+          dataToUpdate.calle = match[1]
+          dataToUpdate.numero = match[2]
+        } else {
+          dataToUpdate.calle = firstPart
+          dataToUpdate.numero = ""
+        }
+      }
+      if (parts.length > 1) {
+        dataToUpdate.colonia = parts[1]
+      } else {
+        dataToUpdate.colonia = ""
+      }
+      if (parts.length > 2 && !updates.city) {
+        dataToUpdate.municipio = parts[2]
+      }
+    }
+    if (updates.city) {
+      dataToUpdate.city = updates.city
+      dataToUpdate.municipio = updates.city
+    }
     if (updates.mapsLink)      dataToUpdate.mapsLink      = updates.mapsLink
     if (updates.requestedDate) dataToUpdate.requestedDate = new Date(`${updates.requestedDate}T12:00:00`)
     if (updates.isPublic !== undefined) dataToUpdate.isPublic = Boolean(updates.isPublic)
