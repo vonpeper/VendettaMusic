@@ -389,6 +389,11 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                   className="bg-background border-border/40" />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="locationFreeCity">Ciudad / Municipio (para dirección libre)</Label>
+                <Input id="locationFreeCity" name="locationFreeCity" placeholder="Ej. Querétaro, Toluca, CDMX..."
+                  className="bg-background border-border/40 text-foreground" />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="performanceStart">Inicio de Ejecución</Label>
                 <Input id="performanceStart" name="performanceStart" type="time"
                   defaultValue={initialData?.performanceStart || ""}

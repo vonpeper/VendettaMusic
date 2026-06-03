@@ -26,11 +26,13 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
 
     // Si hay texto libre, usamos la nueva utilidad de consolidación
     const locationFree = data.locationFree as string
+    const locationFreeCity = data.locationFreeCity as string
     if (locationFree) {
       const { findOrCreateLocation } = await import("@/lib/locations")
       const locId = await findOrCreateLocation({
         name: locationFree,
         address: locationFree,
+        city: locationFreeCity || null,
         mapsLink: data.mapsLink as string || null
       })
       if (locId) finalLocationId = locId
@@ -285,11 +287,13 @@ export async function createEventAction(_prev: any, formData: FormData) {
 
     // Automación de catálogo de ubicaciones con nueva utilidad
     const locationFree = data.locationFree as string
+    const locationFreeCity = data.locationFreeCity as string
     if (locationFree) {
       const { findOrCreateLocation } = await import("@/lib/locations")
       const locId = await findOrCreateLocation({
         name: locationFree,
         address: locationFree,
+        city: locationFreeCity || null,
         mapsLink: data.mapsLink as string || null
       })
       if (locId) finalLocationId = locId
