@@ -391,6 +391,39 @@ export async function PUT(req: NextRequest) {
 
     // 2. Si tiene evento sincronizado, actualizarlo también
     if (booking.eventId) {
+      const existingEvent = await db.event.findUnique({
+        where: { id: booking.eventId },
+        select: { locationId: true }
+      })
+
+      let locationId = existingEvent?.locationId
+
+      if (locationId) {
+        // Actualizar la ubicación existente
+        await db.location.update({
+          where: { id: locationId },
+          data: {
+            name:    booking.address || "Ubicación del Evento",
+            address: booking.address || "",
+            city:    booking.city || null,
+            state:   booking.state || "México",
+            mapsLink: booking.mapsLink || null
+          }
+        })
+      } else if (booking.address) {
+        // Crear una nueva ubicación
+        const newLocation = await db.location.create({
+          data: {
+            name:    booking.address,
+            address: booking.address,
+            city:    booking.city || null,
+            state:   booking.state || "México",
+            mapsLink: booking.mapsLink || null
+          }
+        })
+        locationId = newLocation.id
+      }
+
       await db.event.update({
         where: { id: booking.eventId },
         data: {
@@ -406,6 +439,7 @@ export async function PUT(req: NextRequest) {
           isPublic:         booking.isPublic,
           clientProvidesAudio: booking.clientProvidesAudio,
           musicianNotes:    booking.adminNote || null,
+          ...(locationId ? { location: { connect: { id: locationId } } } : {})
         }
       })
     }

@@ -164,6 +164,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                 }
                 eventDate={mainBooking.requestedDate}
                 eventTime={mainBooking.startTime}
+                eventEndTime={mainBooking.endTime}
                 eventAmount={totalAmount}
                 packageName={mainBooking.packageName}
                 eventAddress={mainBooking.address}

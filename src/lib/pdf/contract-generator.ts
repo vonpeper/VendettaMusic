@@ -341,8 +341,38 @@ export async function generateContractPdf(
     let clausesToDraw: { n: string, t: string }[] = []
 
     if (options.contractLegalText) {
-      // Si el usuario proporcionó un texto legal personalizado, lo dividimos por párrafos
-      const paragraphs = options.contractLegalText.split("\n")
+      // Si el usuario proporcionó un texto legal personalizado, realizamos los reemplazos de variables
+      let rawText = options.contractLegalText
+
+      const readableDate = data.requestedDate ? formatDateSpanish(data.requestedDate) : "Por confirmar"
+      const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat("es-MX", {
+          style: "currency",
+          currency: "MXN",
+          maximumFractionDigits: 0
+        }).format(amount)
+      }
+      const fullLegalAddress = data.address || [data.street, data.houseNumber, data.colonia, data.municipio, data.city, data.state].filter(Boolean).join(", ") || "Ubicación por confirmar"
+      
+      const horarioDisplay = data.startTime && data.endTime 
+        ? `${data.startTime} A ${data.endTime}`
+        : (data.startTime || "Por confirmar")
+
+      const replacements: Record<string, string> = {
+        "{{cliente}}": data.clientName || "Cliente",
+        "{{horario}}": horarioDisplay,
+        "{{monto}}": total ? formatCurrency(total) : "Por confirmar",
+        "{{paquete}}": data.packageName || "Por confirmar",
+        "{{dirección}}": fullLegalAddress,
+        "{{ubicación}}": fullLegalAddress,
+        "{{fecha}}": readableDate
+      }
+
+      Object.entries(replacements).forEach(([key, value]) => {
+        rawText = rawText.split(key).join(value)
+      })
+
+      const paragraphs = rawText.split("\n")
       clausesToDraw = paragraphs
         .filter(p => p.trim().length > 0)
         .map(p => ({ n: "", t: p }))

@@ -108,6 +108,10 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
           clientName: (data.customName as string) || undefined,
           isPublic: data.isPublic === "on" || data.isPublic === "true",
           adminNote: (data.musicianNotes as string) || undefined,
+          address: updatedEvent?.location?.address || updatedEvent?.location?.name || (data.locationFree as string) || "Dirección manual",
+          city: updatedEvent?.location?.city || "CDMX",
+          state: updatedEvent?.location?.state || "México",
+          mapsLink: updatedEvent?.location?.mapsLink || (data.mapsLink as string) || null,
           ...(data.status === "completado" ? { paymentStatus: "paid" } : {})
         }
       })

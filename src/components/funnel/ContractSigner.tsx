@@ -21,6 +21,7 @@ interface ContractSignerProps {
   // New props for variables
   eventDate?: Date | string
   eventTime?: string
+  eventEndTime?: string
   eventAmount?: number
   packageName?: string
   eventAddress?: string
@@ -37,6 +38,7 @@ export function ContractSigner({
   contractLegalText,
   eventDate,
   eventTime,
+  eventEndTime,
   eventAmount,
   packageName,
   eventAddress
@@ -92,7 +94,7 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
     let text = rawText
     const replacements: Record<string, string> = {
       "{{cliente}}": clientName,
-      "{{horario}}": eventTime || "Por confirmar",
+      "{{horario}}": eventTime && eventEndTime ? `${eventTime} A ${eventEndTime}` : (eventTime || "Por confirmar"),
       "{{monto}}": eventAmount ? formatCurrency(eventAmount) : "Por confirmar",
       "{{paquete}}": packageName || "Por confirmar",
       "{{dirección}}": eventAddress || "Por confirmar",
@@ -105,7 +107,7 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
     })
 
     return text
-  }, [contractLegalText, clientName, eventTime, eventAmount, packageName, eventAddress, eventDate])
+  }, [contractLegalText, clientName, eventTime, eventEndTime, eventAmount, packageName, eventAddress, eventDate])
 
   const handleSign = async (base64: string) => {
     setLoading(true)
