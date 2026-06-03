@@ -373,7 +373,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                         <div className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 truncate">Total</div>
                         <div className="text-base md:text-xl font-black text-foreground">{MXN(total)}</div>
                       </div>
-                      <EditDepositInline bookingId={booking.id} initialDeposit={deposit} />
+                      <EditDepositInline key={`${booking.id}-${deposit}`} bookingId={booking.id} initialDeposit={deposit} />
                       <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
                         <div className="text-[9px] md:text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 truncate">Pagado</div>
                         <div className="text-base md:text-xl font-black text-emerald-600">{MXN(paid)}</div>
