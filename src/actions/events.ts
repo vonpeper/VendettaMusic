@@ -211,7 +211,7 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
       // Añadir ingeniero de audio si está seleccionado en el formulario
       const engineerId = data.audioEngineer as string
       if (engineerId) notifyMusicianIds.push(engineerId)
-      await notifyMusicians(id, gigDetails, db, notifyMusicianIds.length ? notifyMusicianIds : undefined)
+      await notifyMusicians(id, gigDetails, db, notifyMusicianIds)
     }
 
     if ((data.status as string) === "cancelado") {

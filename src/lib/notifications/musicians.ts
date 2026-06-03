@@ -26,8 +26,10 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
   // 1. Resolver qué músicos notificar:
   //    - Si se pasan IDs específicos, usarlos.
   //    - Si no, tomar todos los asignados al evento en EventMusician.
-  let resolvedIds: string[] = targetMusicianIds || []
-  if (resolvedIds.length === 0) {
+  let resolvedIds: string[]
+  if (targetMusicianIds !== undefined) {
+    resolvedIds = targetMusicianIds
+  } else {
     const assigned = await db.eventMusician.findMany({
       where: { eventId },
       select: { musicianId: true }
@@ -58,6 +60,7 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
   // O a los que explícitamente se pasaron por targetMusicianIds
   const allRecipients = profiles.map((p: any) => ({ 
     id: p.id, 
+    userId: p.userId,
     name: p.user?.name || "Músico", 
     phone: p.whatsapp,
     instrument: p.instrument || "",
@@ -104,6 +107,22 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     "formal_casual": "👔 Formal Casual",
     "rock": "🎸 Rock / Casual",
     "nocturno": "🌙 Concierto Nocturno"
+  }
+
+  // Enviar Notificación Push Batch a la App Móvil
+  try {
+    const userIds = allRecipients.map((r: any) => r.userId).filter(Boolean)
+    if (userIds.length > 0) {
+      const eventName = gigDetails.clientName || gigDetails.eventName || "Evento Vendetta"
+      const { sendPushNotificationToUsers } = await import("../push-notifications")
+      await sendPushNotificationToUsers(userIds, {
+        title: "Nueva Convocatoria 🎸",
+        body: `Has sido convocado para el show "${eventName}" el ${eventDate}. ¡Ingresa a la app para ver la logística!`,
+        data: { eventId }
+      })
+    }
+  } catch (pushErr) {
+    console.error("⚠️ Error enviando push notifications en batch:", pushErr)
   }
 
   for (const r of allRecipients) {
@@ -274,11 +293,21 @@ export async function notifyEventCancellation(eventId: string, prisma?: any) {
   const dateStr = formatDateMX(event.date, "d 'de' MMMM")
   const eventName = event.customName || "Evento Vendetta"
 
+  const userIdsToNotify: string[] = []
+
   for (const em of event.musicians) {
     // Notificar solo a los que están confirmados o pendientes (que están esperando el show)
     if (em.status !== "confirmed" && em.status !== "pending") continue
 
     const musician = em.musician
+    if (musician.status !== "active") {
+      console.log(`⏭️ Saltando notificación de cancelación para ${musician.user?.name || "Músico"} porque está inactivo.`)
+      continue
+    }
+
+    if (musician.userId) {
+      userIdsToNotify.push(musician.userId)
+    }
     const phone = musician.whatsapp
     
     if (phone) {
@@ -290,6 +319,20 @@ export async function notifyEventCancellation(eventId: string, prisma?: any) {
           eventName: eventName
         }
       }).catch(e => console.error(`Error enviando cancelación a ${musician.user?.name}:`, e))
+    }
+  }
+
+  // Enviar notificaciones push por cancelación
+  if (userIdsToNotify.length > 0) {
+    try {
+      const { sendPushNotificationToUsers } = await import("../push-notifications")
+      await sendPushNotificationToUsers(userIdsToNotify, {
+        title: "Show Cancelado ⚠️",
+        body: `El show "${eventName}" del ${dateStr} ha sido cancelado.`,
+        data: { eventId }
+      })
+    } catch (pushErr) {
+      console.error("⚠️ Error enviando push notifications de cancelación:", pushErr)
     }
   }
 

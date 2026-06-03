@@ -1,0 +1,86 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+/* Platform-specific font families */
+@media android {
+  :root {
+    --font-mono: monospace;
+    --font-rounded: normal;
+    --font-serif: serif;
+    --font-sans: normal;
+  }
+}
+
+@media ios {
+  :root {
+    --font-mono: ui-monospace;
+    --font-serif: ui-serif;
+    --font-sans: system-ui;
+    --font-rounded: ui-rounded;
+  }
+}
+
+/* Base custom theme variables */
+:root {
+  /* Vendetta Premium Colors: Dark Mode by default for a sleek stage look */
+  --color-primary: #2563eb; /* blue-600 */
+  --color-primary-dark: #1d4ed8; /* blue-700 */
+  --color-background: #09090b; /* zinc-950 */
+  --color-card: #18181b; /* zinc-900 */
+  --color-card-border: rgba(255, 255, 255, 0.08);
+  --color-text: #f4f4f5; /* zinc-100 */
+  --color-text-muted: #a1a1aa; /* zinc-400 */
+  
+  --sf-blue: rgb(10, 132, 255);
+  --sf-green: rgb(48, 209, 89);
+  --sf-red: rgb(255, 69, 58);
+  --sf-yellow: rgb(255, 214, 10);
+  --sf-gray: rgb(142, 142, 147);
+  --sf-bg: rgb(9, 9, 11);
+  --sf-card: rgb(24, 24, 27);
+  --sf-text: rgb(244, 244, 245);
+  --sf-text-muted: rgb(161, 161, 170);
+}
+
+@media ios {
+  :root {
+    --sf-blue: platformColor(systemBlue);
+    --sf-green: platformColor(systemGreen);
+    --sf-red: platformColor(systemRed);
+    --sf-yellow: platformColor(systemYellow);
+    --sf-gray: platformColor(systemGray);
+    --sf-text: platformColor(label);
+    --sf-text-muted: platformColor(secondaryLabel);
+    --sf-bg: platformColor(systemBackground);
+    --sf-bg-2: platformColor(secondarySystemBackground);
+  }
+}
+
+@layer theme {
+  @theme {
+    /* Custom fonts */
+    --font-rounded: "SF Pro Rounded", sans-serif;
+
+    /* Custom line heights */
+    --text-xs--line-height: calc(1em / 0.75);
+    --text-sm--line-height: calc(1.25em / 0.875);
+    --text-base--line-height: calc(1.5em / 1);
+
+    /* Custom leading scales */
+    --leading-tight: 1.25em;
+    --leading-snug: 1.375em;
+    --leading-normal: 1.5em;
+
+    /* Color scheme mappings */
+    --color-sf-blue: var(--sf-blue);
+    --color-sf-green: var(--sf-green);
+    --color-sf-red: var(--sf-red);
+    --color-sf-yellow: var(--sf-yellow);
+    --color-sf-gray: var(--sf-gray);
+    --color-sf-bg: var(--sf-bg);
+    --color-sf-card: var(--sf-card);
+    --color-sf-text: var(--sf-text);
+    --color-sf-text-muted: var(--sf-text-muted);
+  }
+}

@@ -3,6 +3,7 @@ import { sendWhatsApp } from "./whatsapp"
 import { getTemplateForType, parseTemplate } from "./templates"
 import { formatDateMX } from "../utils"
 import { getAppUrl } from "../url"
+import { toWhatsAppNumber } from "../phone"
 
 /**
  * Función Maestra: El único punto de entrada para notificaciones
@@ -120,6 +121,43 @@ export async function dispatchNotification({
     console.log(`🧪 [SANDBOX GLOBAL] Desviando [${type}] de ${recipient} -> ADMIN (${sandboxRecipient})`)
     originalRecipient = recipient
     recipient = sandboxRecipient
+  }
+
+  // Failsafe Global para Músicos Inactivos
+  const targetPhone = originalRecipient || recipient
+  if (targetPhone) {
+    const normalizedTarget = toWhatsAppNumber(targetPhone)
+    if (normalizedTarget) {
+      const cleanTarget = normalizedTarget.replace(/\D+/g, "")
+      const inactiveMusicians = await db.musicianProfile.findMany({
+        where: {
+          status: { not: "active" },
+          whatsapp: { not: null }
+        }
+      })
+      const isInactive = inactiveMusicians.some((m: any) => {
+        if (!m.whatsapp) return false
+        const cleanM = m.whatsapp.replace(/\D+/g, "")
+        return cleanM.slice(-10) === cleanTarget.slice(-10)
+      })
+
+      if (isInactive) {
+        console.warn(`🛑 [FAILSAFE BLOQUEO] Se abortó el envío de [${type}] a ${targetPhone} porque pertenece a un músico INACTIVO / ELIMINADO.`)
+        await db.notification.create({
+          data: {
+            bookingRequestId: bookingId || null,
+            eventId: eventId || null,
+            type: type.toLowerCase(),
+            channel: "whatsapp",
+            recipient: targetPhone,
+            message: `[BLOQUEADO FAILSAFE] Notificación bloqueada por estatus inactivo del músico.`,
+            status: "blocked",
+            category: "push_notification"
+          }
+        }).catch(() => {})
+        return null
+      }
+    }
   }
 
   if (!recipient || !template) {

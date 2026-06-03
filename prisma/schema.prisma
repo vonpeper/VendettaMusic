@@ -19,6 +19,7 @@ model User {
   updatedAt       DateTime         @updatedAt
   clientProfile   ClientProfile?
   musicianProfile MusicianProfile?
+  pushTokens      PushToken[]
 }
 
 model ClientProfile {
@@ -57,6 +58,7 @@ model MusicianProfile {
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   rehearsalMusicians RehearsalMusician[]
   substitutes        Substitute[]
+  songSuggestions    SongSuggestion[]
 
   @@index([status])
 }
@@ -610,4 +612,32 @@ model InboxItem {
   @@index([clientId])
   @@index([bookingRequestId])
   @@index([createdAt])
+}
+
+model PushToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model SongSuggestion {
+  id            String          @id @default(uuid())
+  title         String
+  artist        String
+  youtubeLink   String?
+  spotifyLink   String?
+  notes         String?
+  suggestedById String
+  suggestedBy   MusicianProfile @relation(fields: [suggestedById], references: [id], onDelete: Cascade)
+  status        String          @default("pending") // pending, approved, rejected
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([suggestedById])
+  @@index([status])
 }
