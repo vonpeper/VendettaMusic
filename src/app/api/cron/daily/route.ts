@@ -177,6 +177,34 @@ export async function GET(request: Request) {
     for (const notif of failedNotifications) {
       if (!notif.recipient) continue
       try {
+        // Failsafe para registros eliminados: si la reserva o el evento vinculados ya no existen, abortar reintento
+        if (notif.bookingRequestId) {
+          const bookingExists = await db.bookingRequest.findUnique({
+            where: { id: notif.bookingRequestId }
+          })
+          if (!bookingExists) {
+            console.warn(`🛑 [CRON FAILSAFE] Cancelado reintento para ${notif.recipient} porque la reserva ${notif.bookingRequestId} fue eliminada.`)
+            await db.notification.update({
+              where: { id: notif.id },
+              data: { status: "blocked", retries: 3, errorDetails: "Blocked: Linked BookingRequest was deleted." }
+            })
+            continue
+          }
+        }
+        if (notif.eventId) {
+          const eventExists = await db.event.findUnique({
+            where: { id: notif.eventId }
+          })
+          if (!eventExists) {
+            console.warn(`🛑 [CRON FAILSAFE] Cancelado reintento para ${notif.recipient} porque el evento ${notif.eventId} fue eliminado.`)
+            await db.notification.update({
+              where: { id: notif.id },
+              data: { status: "blocked", retries: 3, errorDetails: "Blocked: Linked Event was deleted." }
+            })
+            continue
+          }
+        }
+
         // Failsafe para reintentos de músicos: si es de tipo músico y ya no está activo, descartar reintento
         const isMusicianType = ["musician_gig", "musician_rehearsal", "event_cancelled"].includes(notif.type.toLowerCase())
         if (isMusicianType) {

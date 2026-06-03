@@ -24,6 +24,22 @@ export async function dispatchNotification({
   forceResend?: boolean
 }) {
   const { db } = await import("../db")
+
+  // Failsafe de registros eliminados: abortar si la reserva o evento vinculados no existen en la BD
+  if (bookingId) {
+    const bookingExists = await db.bookingRequest.findUnique({ where: { id: bookingId } })
+    if (!bookingExists) {
+      console.warn(`🛑 Notificación ${type} abortada porque la reserva ${bookingId} fue eliminada.`)
+      return null
+    }
+  }
+  if (eventId) {
+    const eventExists = await db.event.findUnique({ where: { id: eventId } })
+    if (!eventExists) {
+      console.warn(`🛑 Notificación ${type} abortada porque el evento ${eventId} fue eliminado.`)
+      return null
+    }
+  }
   
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   
