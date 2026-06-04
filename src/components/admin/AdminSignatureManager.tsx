@@ -19,8 +19,10 @@ import {
 export function AdminSignatureManager({ initialSignature }: { initialSignature: string | null }) {
   const [signature, setSignature] = useState<string | null>(initialSignature)
   const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const handleSave = async (base64: string) => {
+    setLoading(true)
     try {
       const res = await saveAdminSignatureAction(base64)
       if (res.success) {
@@ -32,6 +34,8 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
       }
     } catch (e) {
       toast.error("Error de red")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -105,7 +109,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
           
           <div className="p-1 sm:p-2">
             <div className="rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden" style={{ touchAction: "none" }}>
-              <SignaturePad onSave={handleSave} placeholder="Firma con trazo blanco" />
+              <SignaturePad onSave={handleSave} placeholder="Firma con trazo blanco" disabled={loading} />
             </div>
           </div>
         </DialogContent>

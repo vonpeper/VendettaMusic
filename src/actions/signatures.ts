@@ -54,7 +54,8 @@ export async function signContractAction(bookingId: string, signatureBase64: str
 
     // Alerta al Admin
     const { dispatchAdminAlert } = await import("@/lib/notifications")
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://vendettamusic.com"
+    const { getAppUrl } = await import("@/lib/url")
+    const appUrl = getAppUrl()
     await dispatchAdminAlert(`✅ *CONTRATO FIRMADO*\nEl cliente *${updatedBooking.clientName}* ha firmado el contrato para el evento del *${updatedBooking.requestedDate.toLocaleDateString("es-MX", { day: 'numeric', month: 'long' })}*.\n\nEl evento ya puede pasar a Confirmado. Revisa y cambia el estatus aquí:\n${appUrl}/admin/ventas/${updatedBooking.id}\n\nFolio: ${updatedBooking.shortId}`)
 
     revalidatePath(`/status/${updatedBooking.shortId}`)

@@ -7,9 +7,10 @@ import { Eraser, Check, Maximize2, Minimize2, MousePointer2 } from "lucide-react
 interface SignaturePadProps {
   onSave: (signature: string) => void
   placeholder?: string
+  disabled?: boolean
 }
 
-export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignaturePadProps) {
+export function SignaturePad({ onSave, placeholder = "Firma aquí", disabled = false }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [hasSignature, setHasSignature] = useState(false)
   const [isFullScreen, setIsFullScreen] = useState(false)
@@ -235,6 +236,7 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
             size="lg" 
             type="button"
             onClick={clear}
+            disabled={disabled}
             className="w-full border-border bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted rounded-[1.25rem] px-4 h-14 text-xs font-black uppercase tracking-widest transition-all"
           >
             Limpiar
@@ -245,10 +247,10 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí" }: SignatureP
             onClick={() => {
               save();
             }}
-            disabled={!hasSignature}
+            disabled={disabled || !hasSignature}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-[0.20em] rounded-[1.25rem] px-4 h-14 shadow-md active:scale-95 transition-all disabled:opacity-20"
           >
-            Guardar Firma
+            {disabled ? "Guardando..." : "Guardar Firma"}
           </Button>
         </div>
       </div>

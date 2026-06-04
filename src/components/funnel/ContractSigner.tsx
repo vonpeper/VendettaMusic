@@ -229,7 +229,7 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
                
                <div className="space-y-2">
                   <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Traza tu firma aquí</Label>
-                  <SignaturePad onSave={handleSign} placeholder="Firma del cliente" />
+                  <SignaturePad onSave={handleSign} placeholder="Firma del cliente" disabled={loading} />
                </div>
 
                <Button 
