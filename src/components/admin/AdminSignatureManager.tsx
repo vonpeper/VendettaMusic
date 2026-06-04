@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 import { SignaturePad } from "./SignaturePad"
 import { saveAdminSignatureAction } from "@/actions/signatures"
 import { toast } from "sonner"
@@ -20,8 +20,11 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
   const [signature, setSignature] = useState<string | null>(initialSignature)
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const isSubmitting = useRef(false)
 
   const handleSave = async (base64: string) => {
+    if (isSubmitting.current) return
+    isSubmitting.current = true
     setLoading(true)
     try {
       const res = await saveAdminSignatureAction(base64)
@@ -35,6 +38,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
     } catch (e) {
       toast.error("Error de red")
     } finally {
+      isSubmitting.current = false
       setLoading(false)
     }
   }

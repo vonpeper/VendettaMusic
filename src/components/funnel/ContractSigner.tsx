@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 import { SignaturePad } from "@/components/admin/SignaturePad"
 import { signContractAction } from "@/actions/signatures"
 import { Button } from "@/components/ui/button"
@@ -45,6 +45,7 @@ export function ContractSigner({
 }: ContractSignerProps) {
   const [loading, setLoading] = useState(false)
   const [showPad, setShowPad] = useState(false)
+  const isSubmitting = useRef(false)
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-MX", {
@@ -110,6 +111,8 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
   }, [contractLegalText, clientName, eventTime, eventEndTime, eventAmount, packageName, eventAddress, eventDate])
 
   const handleSign = async (base64: string) => {
+    if (isSubmitting.current) return
+    isSubmitting.current = true
     setLoading(true)
     try {
       const res = await signContractAction(bookingId, base64)
@@ -118,10 +121,12 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
         window.location.reload()
       } else {
         toast.error(res.error || "Error al firmar")
+        isSubmitting.current = false
+        setLoading(false)
       }
     } catch (e) {
       toast.error("Error de conexión")
-    } finally {
+      isSubmitting.current = false
       setLoading(false)
     }
   }

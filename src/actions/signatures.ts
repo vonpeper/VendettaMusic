@@ -7,6 +7,17 @@ import { headers } from "next/headers"
 
 export async function signContractAction(bookingId: string, signatureBase64: string) {
   try {
+    // 0. Verificar si ya fue firmado para evitar duplicados y múltiples alertas
+    const existingBooking = await db.bookingRequest.findUnique({
+      where: { id: bookingId },
+      select: { clientSignature: true }
+    })
+
+    if (existingBooking?.clientSignature) {
+      console.log(`[signContractAction] Booking ${bookingId} already signed. Skipping to prevent duplicate alerts.`)
+      return { success: true, message: "Contrato firmado digitalmente con éxito." }
+    }
+
     const headersList = await headers()
     const ip = headersList.get("x-forwarded-for") || "unknown"
 
