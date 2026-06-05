@@ -108,7 +108,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
       // 3. Crear o actualizar Location
       let locationId = brCheck.event?.locationId
       if (brCheck.address || brCheck.venueType) {
-        const locationName = brCheck.venueType || "Locación del Cliente"
+        const locationName = `Show - ${brCheck.clientName} (${brCheck.shortId || 'Web'})`
         const locationAddress = [brCheck.calle, brCheck.numero, brCheck.colonia, brCheck.municipio, brCheck.state, brCheck.zipCode].filter(Boolean).join(", ") || brCheck.address
 
         if (locationId) {
@@ -136,10 +136,84 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
         }
       }
 
-      // 4. Actualizar el Evento con los IDs sincronizados
-      if (brCheck.eventId) {
+      // 4. Crear o actualizar Evento
+      let eventId = brCheck.eventId
+      if (!eventId) {
+        const crypto = await import("crypto")
+        const quoteId = crypto.randomUUID()
+        
+        // Crear Cotización para compatibilidad legacy
+        if (clientId) {
+          await db.quote.create({
+            data: {
+              id: quoteId,
+              clientId: clientId,
+              status: "agendado",
+              totalEstimated: brCheck.baseAmount,
+              guestCount: brCheck.guestCount,
+              ceremonyType: brCheck.venueType,
+              notes: brCheck.adminNote || "",
+              eventDate: brCheck.requestedDate,
+              items: {
+                create: [
+                  {
+                    description: `Confirmación Web: ${brCheck.packageName}`,
+                    quantity: 1,
+                    unitCost: brCheck.baseAmount
+                  }
+                ]
+              }
+            }
+          })
+        }
+
+        // Crear Evento
+        const event = await db.event.create({
+          data: {
+            quoteId:          clientId ? quoteId : null,
+            clientId:         clientId || null,
+            date:             brCheck.requestedDate,
+            guestCount:       brCheck.guestCount,
+            performanceStart: brCheck.startTime,
+            performanceEnd:   brCheck.endTime,
+            amount:           brCheck.baseAmount,
+            deposit:          brCheck.depositAmount,
+            balance:          brCheck.baseAmount - brCheck.depositAmount,
+            totalIncome:      brCheck.baseAmount,
+            depositMethod:    brCheck.paymentMethod,
+            status:           "agendado",
+            venueType:        brCheck.venueType,
+            mapsLink:         brCheck.mapsLink,
+            ceremonyType:     brCheck.venueType,
+            locationId:       locationId || null,
+            isPublic:         brCheck.isPublic,
+            clientProvidesAudio: brCheck.clientProvidesAudio,
+            musicianNotes:    brCheck.adminNote || null,
+            source:           "funnel"
+          }
+        })
+        eventId = event.id
+
+        // Vincular booking con el eventId
+        await db.bookingRequest.update({
+          where: { id: bookingId },
+          data:  { eventId: eventId }
+        })
+
+        // Asignar automáticamente los músicos titulares al evento
+        const { assignDefaultMusicians } = await import("@/lib/musicians")
+        await assignDefaultMusicians(eventId, db)
+
+        // Sincronizar con Google Calendar si la integración está activa
+        try {
+          const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
+          await syncEventToGoogleCalendar(eventId)
+        } catch (calErr) {
+          console.error("⚠️ Error syncing confirmed funnel event to Google Calendar:", calErr)
+        }
+      } else {
         await db.event.update({
-          where: { id: brCheck.eventId },
+          where: { id: eventId },
           data: {
             clientId: clientId,
             locationId: locationId,

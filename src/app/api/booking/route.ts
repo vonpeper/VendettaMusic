@@ -154,7 +154,7 @@ export async function PATCH(req: NextRequest) {
         // 1. Crear o Vincular Lugar (Location)
         const { findOrCreateLocation } = await import("@/lib/locations")
         const locationId = await findOrCreateLocation({
-          name:     booking.packageName || "Lugar del Evento",
+          name:     `Show - ${booking.clientName} (${booking.shortId || 'Web'})`,
           address:  `${booking.calle || ""} ${booking.numero || ""}`.trim() || booking.address,
           colonia:  booking.colonia,
           municipio: booking.municipio || booking.city,
@@ -429,7 +429,7 @@ export async function PUT(req: NextRequest) {
         await db.location.update({
           where: { id: locationId },
           data: {
-            name:    booking.address || "Ubicación del Evento",
+            name:    `Show - ${booking.clientName} (${booking.shortId || 'Web'})`,
             address: booking.address || "",
             city:    booking.city || null,
             state:   booking.state || "México",
@@ -440,7 +440,7 @@ export async function PUT(req: NextRequest) {
         // Crear una nueva ubicación
         const newLocation = await db.location.create({
           data: {
-            name:    booking.address,
+            name:    `Show - ${booking.clientName} (${booking.shortId || 'Web'})`,
             address: booking.address,
             city:    booking.city || null,
             state:   booking.state || "México",
