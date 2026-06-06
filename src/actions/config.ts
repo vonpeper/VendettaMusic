@@ -59,17 +59,23 @@ export async function saveGoogleCredentialsAction(arg1: any, arg2?: any) {
     const clientSecret = formData.get("clientSecret") as string
     const calendarId = formData.get("calendarId") as string
 
+    const existing = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+    let finalClientSecret = clientSecret?.trim() || ""
+    if (finalClientSecret === "********") {
+      finalClientSecret = existing?.googleClientSecret || ""
+    }
+
     await db.globalConfig.upsert({
       where: { id: "vendetta_config" },
       update: {
         googleClientId: clientId,
-        googleClientSecret: clientSecret,
+        googleClientSecret: finalClientSecret,
         googleCalendarId: calendarId,
       },
       create: {
         id: "vendetta_config",
         googleClientId: clientId,
-        googleClientSecret: clientSecret,
+        googleClientSecret: finalClientSecret,
         googleCalendarId: calendarId,
       }
     })
