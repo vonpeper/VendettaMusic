@@ -16,6 +16,7 @@ import { AdminSignatureManager } from "@/components/admin/AdminSignatureManager"
 import { OGPreview } from "@/components/admin/OGPreview"
 import { EvolutionTestButton } from "@/components/admin/EvolutionTestButton"
 import { LogInboundToggle } from "@/components/admin/LogInboundToggle"
+import { GoogleSyncAllButton } from "@/components/admin/GoogleSyncAllButton"
 
 interface Props {
   searchParams: Promise<{ tab?: string }>
@@ -239,6 +240,12 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </a>
                   </Button>
+
+                  {config?.googleRefreshToken && (
+                    <div className="pt-2">
+                      <GoogleSyncAllButton />
+                    </div>
+                  )}
                   
                   {!config?.googleClientId && (
                     <p className="text-[10px] text-center text-muted-foreground italic">

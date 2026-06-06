@@ -475,3 +475,39 @@ export async function savePaymentConfigAction(arg1: any, arg2?: any) {
     return { success: false, message: `Error: ${error.message}` }
   }
 }
+
+export async function syncAllEventsAction() {
+  const u = await requireAdmin(); if (u) return u
+  try {
+    const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
+    const events = await db.event.findMany({
+      where: {
+        status: {
+          in: ["agendado", "confirmed", "completado"]
+        }
+      }
+    })
+
+    let successCount = 0
+    let failCount = 0
+
+    for (const event of events) {
+      try {
+        await syncEventToGoogleCalendar(event.id)
+        successCount++
+      } catch (err) {
+        console.error(`Error syncing event ${event.id}:`, err)
+        failCount++
+      }
+    }
+
+    return { 
+      success: true, 
+      message: `Sincronización masiva completada: ${successCount} eventos sincronizados con éxito, ${failCount} fallidos.` 
+    }
+  } catch (error: any) {
+    console.error("Error in syncAllEventsAction:", error)
+    return { success: false, message: `Error al sincronizar: ${error.message || "Desconocido"}` }
+  }
+}
+
