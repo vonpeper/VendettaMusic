@@ -466,6 +466,7 @@ model BookingRequest {
   signedIp              String?
   discountAmount        Float?         @default(0)
   originalPrice         Float?         @default(0)
+  invoice               Boolean        @default(false)
   event                 Event?         @relation(fields: [eventId], references: [id])
   client                ClientProfile? @relation(fields: [clientId], references: [id])
   inboxItems            InboxItem[]

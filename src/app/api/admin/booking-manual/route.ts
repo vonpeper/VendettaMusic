@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       depositConfirmed, clientProvidesAudio,
       locationId, venueName, venuePhone,
       bandHours, djHours, isDjWithTvs, hasTemplete, hasPista, hasRobot,
-      originalPrice, discountAmount, viaticosAmount
+      originalPrice, discountAmount, viaticosAmount, invoice
     } = data
     
     // Safeguards for numeric fields
@@ -168,6 +168,7 @@ export async function POST(req: NextRequest) {
           originalPrice: parseFloat(originalPrice) || 0,
           discountAmount: parseFloat(discountAmount) || 0,
           viaticosAmount: parseFloat(viaticosAmount) || 0,
+          invoice: Boolean(invoice),
         }
       })
 
@@ -195,6 +196,8 @@ export async function POST(req: NextRequest) {
             isPublic:         Boolean(isPublic),
             clientProvidesAudio: Boolean(clientProvidesAudio),
             musicianNotes:    adminNote || null,
+            invoice:          Boolean(invoice),
+            ivaAmount:        Boolean(invoice) ? Math.round((normalizedBaseAmount + (parseFloat(viaticosAmount) || 0)) * 0.16 * 100) / 100 : 0,
           }
         })
 

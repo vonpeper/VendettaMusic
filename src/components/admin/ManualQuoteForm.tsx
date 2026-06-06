@@ -111,7 +111,8 @@ export function ManualQuoteForm({
               hasRobot: data.hasRobot || false,
               originalPrice: data.originalPrice || 0,
               discountAmount: data.discountAmount || 0,
-              viaticosAmount: data.viaticosAmount || 0
+              viaticosAmount: data.viaticosAmount || 0,
+              invoice: data.invoice || false
             })
           }
         })
@@ -154,7 +155,8 @@ export function ManualQuoteForm({
     hasRobot: false,
     originalPrice: 0,
     discountAmount: 0,
-    viaticosAmount: 0
+    viaticosAmount: 0,
+    invoice: false
   })
 
   const handlePackageChange = (id: string | null) => {
@@ -666,6 +668,17 @@ export function ManualQuoteForm({
                     className="w-4 h-4 accent-primary rounded"
                   />
                   <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">Cliente provee audio</span>
+                </label>
+              </div>
+              <div className="space-y-4 flex flex-col justify-end pb-1.5">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.invoice} 
+                    onChange={e => setFormData({...formData, invoice: e.target.checked})}
+                    className="w-4 h-4 accent-primary rounded"
+                  />
+                  <span className="text-sm font-bold text-red-500 group-hover:text-red-400 transition-colors">¿Requiere Factura? (+16% IVA)</span>
                 </label>
               </div>
               <div className="space-y-2">
