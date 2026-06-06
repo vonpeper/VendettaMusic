@@ -49,9 +49,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 # Ensure Prisma client is available and has all necessary files
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/client ./node_modules/@prisma/client
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/adapter-libsql ./node_modules/@prisma/adapter-libsql
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@libsql ./node_modules/@libsql
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/libsql ./node_modules/libsql
 
 USER nextjs
 
