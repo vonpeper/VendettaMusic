@@ -59,6 +59,7 @@ export interface FunnelData {
   shortId:     string
   isPublic?:   boolean
   clientProvidesAudio?: boolean
+  invoice?:             boolean
 }
 
 const STEPS = [

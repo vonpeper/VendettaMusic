@@ -222,8 +222,8 @@ export async function syncEventToGoogleCalendar(eventId: string): Promise<void> 
     const locationGps = event.location?.mapsLink || event.mapsLink || event.bookingRequest?.mapsLink || ""
 
     const summary = `Vendetta: ${clientName} - ${event.ceremonyType || "Show"}`
-    const startTime = event.startTime || "00:00"
-    const endTime = event.performanceEnd || event.performanceStart || "00:00"
+    const startTime = event.performanceStart || event.startTime || "21:00"
+    const endTime = event.performanceEnd || event.performanceStart || "23:00"
 
     const descriptionParts = [
       `🎸 EVENTO VENDETTA`,

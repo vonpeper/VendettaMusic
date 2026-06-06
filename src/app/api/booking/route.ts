@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       requestedDate, startTime, endTime,
       baseAmount, depositAmount, paymentMethod,
       clientName, clientPhone, clientEmail,
-      isPublic, clientProvidesAudio
+      isPublic, clientProvidesAudio, invoice
     } = body
 
     // 1. Generar Short ID amigable
@@ -103,6 +103,7 @@ export async function POST(req: NextRequest) {
         clientId:      null,
         isPublic:      Boolean(isPublic),
         clientProvidesAudio: Boolean(clientProvidesAudio),
+        invoice:       Boolean(invoice),
         status:        "pendiente", // Nuevo estándar: pendiente
         // Campos de Personalización
         bandHours:     body.bandHours || 2,
@@ -235,6 +236,8 @@ export async function PATCH(req: NextRequest) {
             isPublic:         booking.isPublic,
             clientProvidesAudio: booking.clientProvidesAudio,
             musicianNotes:    adminNote || booking.adminNote || null,
+            invoice:          booking.invoice,
+            ivaAmount:        booking.invoice ? Math.round((booking.baseAmount + (booking.viaticosAmount || 0)) * 0.16 * 100) / 100 : 0,
             source:           "funnel"
           }
         })

@@ -78,8 +78,12 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
     if (!paymentConfig) return pm.id !== "mercado-pago" && pm.id !== "stripe" // Default behavior if no config
     return (paymentConfig as any)[pm.configKey]
   })
-  const base          = (data.packagePrice ?? 0) + (data.viaticosAmount ?? 0)
-  const minDeposit    = Math.ceil(base * DEPOSIT_PCT / 100) * 100  // redondear a centenas
+  const [invoice, setInvoice] = useState<boolean>(data.invoice ?? false)
+  const subtotal       = (data.packagePrice ?? 0) + (data.viaticosAmount ?? 0)
+  const iva            = invoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
+  const totalVal       = subtotal + iva
+  const minDeposit     = Math.ceil(totalVal * DEPOSIT_PCT / 100) * 100  // redondear a centenas
+
   const [method,  setMethod]  = useState<string>(data.paymentMethod ?? "")
   const [deposit, setDeposit] = useState<number>(data.depositAmount ?? minDeposit)
   const [error,   setError]   = useState("")
@@ -93,12 +97,17 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
       .catch(() => null)
   }, [method, bankInfo])
 
-  const balance = base - deposit
+  // Ajustar el anticipo si el total cambia por marcar/desmarcar factura y queda por debajo del mínimo
+  useEffect(() => {
+    setDeposit(prev => Math.max(prev, minDeposit))
+  }, [minDeposit])
+
+  const balance = totalVal - deposit
 
   function handleNext() {
     if (!method) { setError("Selecciona un método de pago."); return }
     if (deposit < minDeposit) { setError(`El anticipo mínimo es ${MXN(minDeposit)} (30%).`); return }
-    onNext({ paymentMethod: method, depositAmount: deposit })
+    onNext({ paymentMethod: method, depositAmount: deposit, invoice })
   }
 
   return (
@@ -113,7 +122,7 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
       </div>
 
       {/* Resumen de precios */}
-      <div className="bg-card/40 border border-white/10 rounded-2xl p-5 mb-6 space-y-2">
+      <div className="bg-card/40 border border-white/10 rounded-2xl p-5 mb-6 space-y-3">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Paquete: {data.packageName}</span>
           <span className="font-bold text-white">{MXN(data.packagePrice ?? 0)}</span>
@@ -124,9 +133,35 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
             <span className="text-yellow-300 font-bold">{MXN(data.viaticosAmount ?? 0)}</span>
           </div>
         )}
+
+        <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer group select-none">
+            <input 
+              type="checkbox" 
+              checked={invoice} 
+              onChange={e => setInvoice(e.target.checked)}
+              className="w-4 h-4 accent-primary rounded cursor-pointer"
+            />
+            <span className="text-xs font-bold text-muted-foreground group-hover:text-white transition-colors">¿Requiere Factura? (+16% IVA)</span>
+          </label>
+        </div>
+
+        {invoice && (
+          <>
+            <div className="flex justify-between text-sm border-t border-white/5 pt-2">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="text-white font-bold">{MXN(subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">IVA (16%)</span>
+              <span className="text-primary font-bold">{MXN(iva)}</span>
+            </div>
+          </>
+        )}
+
         <div className="flex justify-between text-base border-t border-white/10 pt-2">
-          <span className="font-bold text-white">Total del evento</span>
-          <span className="font-black text-white text-lg">{MXN(base)}</span>
+          <span className="font-bold text-white">{invoice ? "Total con IVA" : "Total del evento"}</span>
+          <span className="font-black text-white text-lg">{MXN(totalVal)}</span>
         </div>
       </div>
 
@@ -150,9 +185,9 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
             <input
               type="range"
               min={minDeposit}
-              max={base}
+              max={totalVal}
               step={100}
-              value={deposit > base ? base : (deposit < minDeposit ? minDeposit : deposit)}
+              value={deposit > totalVal ? totalVal : (deposit < minDeposit ? minDeposit : deposit)}
               onChange={e => setDeposit(parseInt(e.target.value))}
               className="w-full accent-red-600 h-2"
             />
@@ -163,7 +198,7 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
           <div className="text-center bg-primary/10 border border-primary/30 rounded-xl p-3">
             <div className="text-xs text-muted-foreground mb-1">Anticipo</div>
             <div className="text-base font-black text-primary">{MXN(deposit)}</div>
-            <div className="text-[10px] text-primary/70">{Math.round(deposit/base*100)}%</div>
+            <div className="text-[10px] text-primary/70">{Math.round(deposit/totalVal*100)}%</div>
           </div>
           <div className="text-center bg-white/5 border border-white/10 rounded-xl p-3">
             <div className="text-xs text-muted-foreground mb-1">Resta</div>
@@ -172,7 +207,7 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
           </div>
           <div className="text-center bg-white/5 border border-white/10 rounded-xl p-3">
             <div className="text-xs text-muted-foreground mb-1">Total</div>
-            <div className="text-base font-black text-white">{MXN(base)}</div>
+            <div className="text-base font-black text-white">{MXN(totalVal)}</div>
             <div className="text-[10px] text-muted-foreground">evento completo</div>
           </div>
         </div>
