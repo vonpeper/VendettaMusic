@@ -6,9 +6,15 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 export default async function ManualBookingPage() {
-  const packages = await db.package.findMany({
-    orderBy: { baseCostPerHour: "asc" }
-  })
+  const [packages, clients] = await Promise.all([
+    db.package.findMany({
+      orderBy: { baseCostPerHour: "asc" }
+    }),
+    db.clientProfile.findMany({
+      include: { user: true },
+      orderBy: { user: { name: "asc" } }
+    })
+  ])
 
   // Mapeamos para que el componente reciba lo que espera
   const formattedPackages = packages.map(p => ({
@@ -17,6 +23,15 @@ export default async function ManualBookingPage() {
     baseCostPerHour: p.baseCostPerHour,
     minDuration: p.minDuration
   }))
+
+  const formattedClients = clients
+    .filter(c => c.user)
+    .map(c => ({
+      id: c.id,
+      name: c.user.name || "Sin Nombre",
+      phone: c.whatsapp || "",
+      email: c.user.email || ""
+    }))
 
   return (
     <div className="p-8 bg-background min-h-screen">
@@ -39,7 +54,7 @@ export default async function ManualBookingPage() {
         </div>
 
         {/* Formulario */}
-        <ManualQuoteForm packages={formattedPackages} />
+        <ManualQuoteForm packages={formattedPackages} clients={formattedClients} />
       </div>
     </div>
   )

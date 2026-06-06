@@ -27,10 +27,24 @@ interface Pkg {
   minDuration: number
 }
 
-export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
+interface ClientOption {
+  id: string
+  name: string
+  phone: string
+  email: string
+}
+
+export function ManualQuoteForm({ 
+  packages,
+  clients = []
+}: { 
+  packages: Pkg[]
+  clients?: ClientOption[]
+}) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [locations, setLocations] = useState<Location[]>([])
+  const [requestedDates, setRequestedDates] = useState<string[]>([""])
 
   useEffect(() => {
     fetch("/api/admin/locations")
@@ -59,12 +73,15 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
         .then(r => r.json())
         .then(data => {
           if (data && !data.error) {
+            if (data.requestedDate) {
+              setRequestedDates([data.requestedDate.split("T")[0]])
+            }
             // Pre-llenar el formulario con los datos de la reserva expirada
             setFormData({
               clientName: data.clientName || "",
               clientPhone: data.clientPhone || "",
               clientEmail: data.clientEmail || "",
-              requestedDate: data.requestedDate ? data.requestedDate.split("T")[0] : "",
+              requestedDate: "",
               startTime: data.startTime || "21:00",
               endTime: data.endTime || "23:00",
               packageId: data.packageId || "manual-arma",
@@ -181,8 +198,14 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
     e.preventDefault()
     
     // Basic validation
-    if (!formData.clientName || !formData.clientPhone || !formData.requestedDate || !formData.municipio || !formData.calle) {
-      toast.error("Por favor completa los campos obligatorios (Nombre, Teléfono, Fecha, Municipio, Calle)")
+    const validDates = requestedDates.filter(Boolean)
+    if (validDates.length === 0) {
+      toast.error("Por favor ingresa al menos una fecha para el evento")
+      return
+    }
+
+    if (!formData.clientName || !formData.clientPhone || !formData.municipio || !formData.calle) {
+      toast.error("Por favor completa los campos obligatorios (Nombre, Teléfono, Municipio, Calle)")
       return
     }
 
@@ -203,11 +226,16 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
       const res = await fetch("/api/admin/booking-manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          requestedDates: validDates
+        })
       })
       const json = await res.json()
       if (json.success) {
-        toast.success(formData.depositConfirmed ? "Evento confirmado y publicado" : "Cotización guardada como pendiente")
+        const verb = validDates.length > 1 ? "Eventos confirmados" : "Evento confirmado"
+        const pendingVerb = validDates.length > 1 ? "Cotizaciones guardadas" : "Cotización guardada"
+        toast.success(formData.depositConfirmed ? `${verb} y publicados` : `${pendingVerb} como pendientes`)
         router.push("/admin/ventas")
         router.refresh()
       } else {
@@ -235,6 +263,45 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
             <h3 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2 mb-4">
               <User className="w-4 h-4" /> Información del Cliente
             </h3>
+            
+            {clients && clients.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-muted-foreground uppercase">Seleccionar Cliente Existente (Opcional)</Label>
+                <Select onValueChange={(val) => {
+                  if (val === "new") {
+                    setFormData(prev => ({
+                      ...prev,
+                      clientName: "",
+                      clientPhone: "",
+                      clientEmail: ""
+                    }))
+                  } else {
+                    const selected = clients.find(c => c.id === val)
+                    if (selected) {
+                      setFormData(prev => ({
+                        ...prev,
+                        clientName: selected.name,
+                        clientPhone: selected.phone,
+                        clientEmail: selected.email
+                      }))
+                    }
+                  }
+                }}>
+                  <SelectTrigger className="bg-primary/5 border-primary/20">
+                    <SelectValue placeholder="Busca un cliente registrado..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">-- Nuevo Cliente / Limpiar --</SelectItem>
+                    {clients.map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name} ({c.phone || "Sin Teléfono"})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Nombre Completo</Label>
               <Input 
@@ -273,14 +340,45 @@ export function ManualQuoteForm({ packages }: { packages: Pkg[] }) {
             <h3 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2 mb-4">
               <CalendarIcon className="w-4 h-4" /> Fecha y Horario
             </h3>
-            <div className="space-y-2">
-              <Label>Fecha del Evento</Label>
-              <Input 
-                required 
-                type="date"
-                value={formData.requestedDate} 
-                onChange={e => setFormData({...formData, requestedDate: e.target.value})}
-              />
+             <div className="space-y-3">
+              <Label>Fechas del Evento</Label>
+              {requestedDates.map((date, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <Input 
+                    required 
+                    type="date"
+                    value={date} 
+                    onChange={e => {
+                      const newDates = [...requestedDates]
+                      newDates[idx] = e.target.value
+                      setRequestedDates(newDates)
+                    }}
+                    className="flex-1"
+                  />
+                  {requestedDates.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:bg-destructive/10 shrink-0"
+                      onClick={() => {
+                        setRequestedDates(requestedDates.filter((_, i) => i !== idx))
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full text-xs font-bold border-dashed border-primary/30 text-primary hover:bg-primary/5"
+                onClick={() => setRequestedDates([...requestedDates, ""])}
+              >
+                + Agregar otra fecha
+              </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
