@@ -28,7 +28,7 @@ export async function uploadMedia(formData: FormData) {
 
     // Guardar en el filesystem local
     await writeFile(filepath, buffer)
-    const url = `/images/uploads/${uniqueSuffix}`
+    const url = `/api/uploads/${uniqueSuffix}`
 
     // Guardar en SQLite V12 (puente)
     // Si la seccion es "hero", "mentiras" o "arma_tu_show", debemos limpiar los anteriores para que sea el principal
@@ -63,8 +63,12 @@ export async function deleteMedia(id: string) {
     await db.siteMedia.delete({ where: { id } })
 
     // Eliminar archivo
-    if (media.url.startsWith("/images/uploads/")) {
-       const filepath = path.join(process.cwd(), "public", media.url)
+    let relPath = media.url
+    if (relPath.startsWith("/api/uploads/")) {
+      relPath = relPath.replace("/api/uploads/", "/images/uploads/")
+    }
+    if (relPath.startsWith("/images/uploads/")) {
+       const filepath = path.join(process.cwd(), "public", relPath)
        await unlink(filepath).catch(e => console.error("No se pudo borrar archivo físico:", e))
     }
 
@@ -106,7 +110,7 @@ export async function uploadMusicianPhoto(formData: FormData) {
     const filepath = path.join(process.cwd(), "public", "images", "uploads", uniqueSuffix)
 
     await writeFile(filepath, buffer)
-    const url = `/images/uploads/${uniqueSuffix}`
+    const url = `/api/uploads/${uniqueSuffix}`
 
     return { success: true, url }
   } catch (error: any) {
