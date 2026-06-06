@@ -412,9 +412,9 @@ function ContratosGrid({
                       <div className="pt-2 border-t border-border/40 flex flex-col gap-3">
                         <div className="flex items-center justify-between">
                           <div className="text-sm font-black text-foreground">
-                            {(() => {
+                             {(() => {
                               const base = c.baseAmount + (c.viaticosAmount || 0)
-                              const ivaAmt = c.event?.invoice ? (c.event.ivaAmount || base * 0.16) : 0
+                              const ivaAmt = (c.event?.invoice || c.invoice) ? (c.event?.ivaAmount || base * 0.16) : 0
                               return MXN(base + ivaAmt)
                              })()}
                           </div>

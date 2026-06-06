@@ -340,17 +340,25 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                         {booking.hasRobot && <Badge variant="outline" className="text-[9px] font-black border-blue-600/20 bg-blue-600/10 text-blue-600">ROBOT LED</Badge>}
                         {!booking.hasTemplete && !booking.hasPista && !booking.hasRobot && <span className="text-xs text-muted-foreground italic font-medium">Sin extras</span>}
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
             {/* Desglose Financiero */}
             {(() => {
-              const total = Number((booking as any).baseAmount) + Number((booking as any).viaticosAmount || 0) + Number((booking as any).ivaAmount || 0) - Number((booking as any).discountAmount || 0);
-              const deposit = Number((booking as any).depositAmount || 0);
-              const paid = ((booking as any).payments || []).filter((p: any) => p.status === 'completed' || p.status === 'paid').reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+              const base = Number(booking.baseAmount || 0);
+              const viaticos = Number(booking.viaticosAmount || 0);
+              const subtotal = base + viaticos;
+
+              // Si requiere factura, calculamos el IVA si no está guardado en el evento
+              const hasInvoice = booking.invoice || booking.event?.invoice || false;
+              const iva = hasInvoice ? (booking.event?.ivaAmount || Math.round(subtotal * 0.16 * 100) / 100) : 0;
+
+              const total = subtotal + iva;
+              const deposit = Number(booking.depositAmount || 0);
+              const paid = (booking.payments || []).filter((p: any) => p.status === 'completed' || p.status === 'paid').reduce((sum: number, p: any) => sum + Number(p.amount), 0);
               const balance = total - paid;
               
               let badgeLabel = "PAGO PENDIENTE";
@@ -384,7 +392,43 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                       </div>
                     </div>
                     
-                    <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    {/* Desglose Detallado */}
+                    <div className="mt-6 pt-4 border-t border-border/40 space-y-2 text-xs font-semibold text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>Monto Pactado:</span>
+                        <span className="text-foreground font-bold">{MXN(base)}</span>
+                      </div>
+                      {viaticos > 0 && (
+                        <div className="flex justify-between">
+                          <span>Viáticos:</span>
+                          <span className="text-foreground font-bold">{MXN(viaticos)}</span>
+                        </div>
+                      )}
+                      {hasInvoice && (
+                        <>
+                          <div className="flex justify-between pt-1 border-t border-border/20">
+                            <span>Subtotal:</span>
+                            <span className="text-foreground font-bold">{MXN(subtotal)}</span>
+                          </div>
+                          <div className="flex justify-between text-amber-600 dark:text-amber-500 font-bold">
+                            <span>IVA (16% - Factura):</span>
+                            <span>{MXN(iva)}</span>
+                          </div>
+                        </>
+                      )}
+                      {booking.discountAmount && Number(booking.discountAmount) !== 0 ? (
+                        <div className="flex justify-between text-blue-600 dark:text-blue-400">
+                          <span>Descuento aplicado:</span>
+                          <span>{MXN(Number(booking.discountAmount))} (Precio Lista: {MXN(Number(booking.originalPrice || 0))})</span>
+                        </div>
+                      ) : null}
+                      <div className="flex justify-between text-sm font-black text-foreground pt-2 border-t border-border/40">
+                        <span>Total Final:</span>
+                        <span className="text-blue-600 dark:text-blue-400 font-black">{MXN(total)}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div className="flex items-center gap-2">
                         <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Estado Actual:</div>
                         <div className={`text-sm font-black uppercase ${badgeColor}`}>{badgeLabel}</div>
