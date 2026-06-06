@@ -382,7 +382,12 @@ export async function generateContractPdf(
         { n: "PRIMERA", t: "DECLARA Y ACEPTA “EL CLIENTE.” Conocer el trabajo que desempeña “VENDETTA” y estar de acuerdo en su modalidad de “BANDA DE ROCK DE COVERS EN INGLES Y ESPAÑOL”" },
         { n: "SEGUNDA", t: "DECLARA “VENDETTA” tener la capacidad y experiencia necesaria en términos musicales para cumplir con el compromiso motivo de este contrato de forma profesional." },
         { n: "TERCERA", t: `“VENDETTA” se compromete a tocar en el evento que se efectuará el día ${formatDateSpanish(data.requestedDate)} en ${fullLegalAddress}.` },
-        { n: "CUARTA", t: `La actuación de “VENDETTA” será efectuada en el siguiente programa: ${safeValue(data.startTime)} HRS A ${safeValue(data.endTime)} HRS.` },
+        { 
+          n: "CUARTA", 
+          t: isBarPackage 
+            ? `La actuación de “VENDETTA” será efectuada dentro del siguiente programa: ${safeValue(data.startTime)} HRS A ${safeValue(data.endTime)} HRS, comprendiendo un total de 2 turnos de 45 minutos de música en vivo.`
+            : `La actuación de “VENDETTA” será efectuada en el siguiente programa: ${safeValue(data.startTime)} HRS A ${safeValue(data.endTime)} HRS.` 
+        },
         { 
           n: "QUINTA", 
           t: (data.viaticosAmount || 0) > 0 
