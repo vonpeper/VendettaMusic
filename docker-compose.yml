@@ -33,9 +33,9 @@ services:
       - dokploy-network
     volumes:
       - /opt/vendetta/prisma:/app/prisma
-      - ./public/assets:/app/public/assets
-      - ./public/images/uploads:/app/public/images/uploads
-      - ./public/images/musicians:/app/public/images/musicians
+      - /opt/vendetta/public/assets:/app/public/assets
+      - /opt/vendetta/public/images/uploads:/app/public/images/uploads
+      - /opt/vendetta/public/images/musicians:/app/public/images/musicians
 
 networks:
   dokploy-network:
