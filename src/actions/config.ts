@@ -153,6 +153,9 @@ export async function saveViaticosConfigAction(arg1: any, arg2?: any) {
     const zona3Rate = parseFloat(formData.get("zona3Rate") as string) || 3000
     const zona2Cities = (formData.get("zona2Cities") as string || "").trim()
     const zona3Cities = (formData.get("zona3Cities") as string || "").trim()
+    const radiusInput = formData.get("viaticosLocalRadius") as string
+    const parsedRadius = radiusInput ? parseFloat(radiusInput) : 50.0
+    const viaticosLocalRadius = isNaN(parsedRadius) ? 50.0 : parsedRadius
 
     await db.globalConfig.upsert({
       where: { id: "vendetta_config" },
@@ -161,6 +164,7 @@ export async function saveViaticosConfigAction(arg1: any, arg2?: any) {
         zona3Rate,
         zona2Cities,
         zona3Cities,
+        viaticosLocalRadius,
       },
       create: {
         id: "vendetta_config",
@@ -168,6 +172,7 @@ export async function saveViaticosConfigAction(arg1: any, arg2?: any) {
         zona3Rate,
         zona2Cities,
         zona3Cities,
+        viaticosLocalRadius,
       }
     })
 

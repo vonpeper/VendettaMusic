@@ -33,11 +33,15 @@ export async function calculateViaticos(
   vehicleKey: string
 ): Promise<ViaticosResult> {
   let apiKey = "";
+  let viaticosLocalRadius = 50.0;
   try {
     const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } });
     apiKey = config?.googleMapsApiKey || "";
+    if (config && config.viaticosLocalRadius !== null && config.viaticosLocalRadius !== undefined) {
+      viaticosLocalRadius = config.viaticosLocalRadius;
+    }
   } catch (dbErr) {
-    console.warn("⚠️ Error al leer googleMapsApiKey de la base de datos:", dbErr);
+    console.warn("⚠️ Error al leer configuraciones de la base de datos:", dbErr);
   }
 
   if (!apiKey) {
@@ -126,10 +130,17 @@ export async function calculateViaticos(
   const fuelCostTotal = litersNeeded * getFuelPrice();
 
   // 4️⃣ Cálculo de casetas (redondo ida y vuelta, para ambas camionetas)
-  const tollCostTotal = tollCostSingle * 2 * 2; // 2 trayectos * 2 vehículos
+  let tollCostTotal = tollCostSingle * 2 * 2; // 2 trayectos * 2 vehículos
 
   // Viáticos totales sumados
-  const viaticosAmount = Math.round(fuelCostTotal + tollCostTotal);
+  let viaticosAmount = Math.round(fuelCostTotal + tollCostTotal);
+
+  // Regla de radio de cobertura local gratuito
+  if (distanceKm <= viaticosLocalRadius) {
+    console.log(`📍 Distancia (${distanceKm.toFixed(1)} km) es menor o igual al radio de cobertura local gratuito (${viaticosLocalRadius} km). Viáticos asignados a 0.`);
+    tollCostTotal = 0;
+    viaticosAmount = 0;
+  }
 
   const result: ViaticosResult = {
     distanceKm,

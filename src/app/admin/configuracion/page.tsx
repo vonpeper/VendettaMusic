@@ -549,6 +549,29 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                       </p>
                     </div>
                   </div>
+
+                  {/* CARD RADIO DE COBERTURA LOCAL */}
+                  <div className="bg-slate-900/40 border border-border/30 rounded-2xl p-6 space-y-5 backdrop-blur-sm hover:border-amber-500/20 transition-all duration-300 md:col-span-2">
+                    <div className="flex items-center gap-3 pb-3 border-b border-border/30">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold text-sm">
+                        RL
+                      </div>
+                      <div>
+                        <h3 className="font-heading font-bold text-foreground text-lg">Radio de Cobertura Local (Límite Gratuito)</h3>
+                        <p className="text-xs text-muted-foreground">Distancia por carretera en kilómetros (partiendo de Metepec) hasta la cual los viáticos son gratuitos ($0 MXN).</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="viaticosLocalRadius" className="text-foreground text-sm font-bold">Límite de Kilómetros Sin Viáticos (KM)</Label>
+                      <Input id="viaticosLocalRadius" name="viaticosLocalRadius" type="number" step="0.1" 
+                        defaultValue={(config as any)?.viaticosLocalRadius || 50} 
+                        className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
+                      <p className="text-[10px] text-muted-foreground leading-tight">
+                        Los eventos en locaciones a una distancia menor o igual a este límite se considerarán dentro de la Zona Local (sin costo de peaje ni gasolina). A partir de este límite, se aplicará el cobro dinámico de viáticos completos de ida y vuelta para dos camionetas.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="w-full">

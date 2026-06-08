@@ -591,6 +591,7 @@ model GlobalConfig {
   mercadoPagoAccessToken String?
   mercadoPagoPublicKey   String?
   googleMapsApiKey       String?
+  viaticosLocalRadius    Float?    @default(50.0)
 }
 
 model InboxItem {
