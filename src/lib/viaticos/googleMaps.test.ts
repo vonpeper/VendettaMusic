@@ -13,9 +13,31 @@ const originalFetch = global.fetch;
 async function runTests() {
   console.log("🧪 Running googleMaps viaticos tests...");
 
-  // Mock distance matrix and directions responses
-  (global as any).fetch = async (url: string) => {
-    if (url.includes("distancematrix")) {
+  // Mock distance matrix, directions, and routes API responses
+  (global as any).fetch = async (url: string, options?: any) => {
+    if (url.includes("computeRoutes")) {
+      return {
+        ok: true,
+        json: async () => ({
+          routes: [
+            {
+              distanceMeters: 65000, // 65 km
+              duration: "3600s",
+              travelAdvisory: {
+                tollInfo: {
+                  estimatedPrice: [
+                    {
+                      currencyCode: "MXN",
+                      units: "120", // 120 MXN toll cost single way
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        }),
+      } as any;
+    } else if (url.includes("distancematrix")) {
       return {
         ok: true,
         json: async () => ({
@@ -25,22 +47,10 @@ async function runTests() {
               elements: [
                 {
                   status: "OK",
-                  distance: { value: 65000 }, // 65 km
-                  duration: { value: 3600 },  // 1 hour
+                  distance: { value: 65000 },
+                  duration: { value: 3600 },
                 },
               ],
-            },
-          ],
-        }),
-      } as any;
-    } else if (url.includes("directions")) {
-      return {
-        ok: true,
-        json: async () => ({
-          status: "OK",
-          routes: [
-            {
-              fare: { value: 120 }, // 120 MXN toll cost
             },
           ],
         }),
@@ -50,16 +60,16 @@ async function runTests() {
   };
 
   try {
-    // Test 1: Calculate viaticos for a mock destination with Escape 2014 (10L/100km)
-    // 65 km * 10L/100km = 6.5 Liters
-    // 6.5 Liters * 24 MXN/Liter = 156 MXN fuel
-    // 156 MXN fuel + 120 MXN tolls = 276 MXN total
+    // Test 1: Calculate viaticos for a mock destination.
+    // Fuel: (65 km * 2 [round trip] * 18 L/100km [both vehicles]) / 100 * 24 MXN/Liter = 561.6 MXN
+    // Tolls: 120 MXN * 2 [round trip] * 2 [both vehicles] = 480 MXN
+    // Total viaticos: 561.6 fuel + 480 tolls = 1041.6 => 1042 MXN (rounded)
     const result = await calculateViaticos("CDMX", "escape_2014");
-    console.log("📍 Test 1 - CDMX (Escape 2014) Result:", result);
+    console.log("📍 Test 1 - CDMX Result:", result);
     assert.strictEqual(result.distanceKm, 65);
     assert.strictEqual(result.durationSec, 3600);
-    assert.strictEqual(result.tollCost, 120);
-    assert.strictEqual(result.viaticosAmount, 276);
+    assert.strictEqual(result.tollCost, 480);
+    assert.strictEqual(result.viaticosAmount, 1042);
     console.log("✅ Test 1 Passed!");
 
     // Test 2: Cache check (should return immediately)
@@ -72,7 +82,6 @@ async function runTests() {
 
     // Test 3: Cache clearing
     clearViaticosCache();
-    // (mock fetch should be called again, which it will be, same result)
     const result3 = await calculateViaticos("CDMX", "escape_2014");
     assert.deepStrictEqual(result3, result);
     console.log("✅ Test 3 (Cache Clear) Passed!");

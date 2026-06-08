@@ -43,59 +43,86 @@ export async function calculateViaticos(
     return cached.result;
   }
 
-  const profile = VEHICLE_PROFILES[vehicleKey];
-  if (!profile) {
-    throw new Error(`🔧 Vehículo desconocido: ${vehicleKey}`);
-  }
-
   const defaultOrigin = getDefaultOrigin();
+  let distanceKm = 0;
+  let durationSec = 0;
+  let tollCostSingle = 0;
+  let usedRoutesApi = false;
 
-  // 1️⃣ Distance Matrix
-  const dmUrl = new URL("https://maps.googleapis.com/maps/api/distancematrix/json");
-  dmUrl.searchParams.set("origins", defaultOrigin);
-  dmUrl.searchParams.set("destinations", destination);
-  dmUrl.searchParams.set("mode", "driving");
-  dmUrl.searchParams.set("units", "metric");
-  dmUrl.searchParams.set("key", apiKey);
+  // 1️⃣ Intentar usar Google Maps Routes API (v2) para calcular peajes reales en México
+  try {
+    const routesUrl = "https://routes.googleapis.com/directions/v2:computeRoutes";
+    const routesResp = await fetch(routesUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.travelAdvisory.tollInfo"
+      },
+      body: JSON.stringify({
+        origin: { address: defaultOrigin },
+        destination: { address: destination },
+        travelMode: "DRIVE",
+        routingPreference: "TRAFFIC_AWARE",
+        extraComputations: ["TOLLS"]
+      })
+    });
 
-  const dmResp = await fetch(dmUrl.toString());
-  const dmData = (await dmResp.json()) as any;
-  if (dmData.status !== "OK") {
-    throw new Error(`❌ Distance Matrix error: ${dmData.status}`);
+    const routesData = (await routesResp.json()) as any;
+    if (routesResp.ok && !routesData.error && routesData.routes?.[0]) {
+      const route = routesData.routes[0];
+      distanceKm = route.distanceMeters / 1000;
+      durationSec = parseInt(route.duration?.replace("s", "") || "0");
+      const tollPriceObj = route.travelAdvisory?.tollInfo?.estimatedPrice?.[0];
+      tollCostSingle = tollPriceObj ? Number(tollPriceObj.units || "0") : 0;
+      usedRoutesApi = true;
+      console.log(`🛣️ Routes API v2 success. Distancia: ${distanceKm}km, Peaje un trayecto: ${tollCostSingle} MXN`);
+    } else {
+      console.warn("⚠️ Routes API v2 failed or returned empty, trying fallback Distance Matrix:", routesData.error || "No route found");
+    }
+  } catch (routesErr) {
+    console.warn("⚠️ Routes API v2 query failed, fallback to classical Distance Matrix:", routesErr);
   }
-  const element = dmData.rows[0].elements[0];
-  if (element.status !== "OK") {
-    throw new Error(`❌ Ruta no encontrada: ${element.status}`);
+
+  // 2️⃣ Fallback a Distance Matrix API clásica si Routes API v2 no funcionó
+  if (!usedRoutesApi) {
+    const dmUrl = new URL("https://maps.googleapis.com/maps/api/distancematrix/json");
+    dmUrl.searchParams.set("origins", defaultOrigin);
+    dmUrl.searchParams.set("destinations", destination);
+    dmUrl.searchParams.set("mode", "driving");
+    dmUrl.searchParams.set("units", "metric");
+    dmUrl.searchParams.set("key", apiKey);
+
+    const dmResp = await fetch(dmUrl.toString());
+    const dmData = (await dmResp.json()) as any;
+    if (dmData.status !== "OK") {
+      throw new Error(`❌ Distance Matrix error: ${dmData.status}`);
+    }
+    const element = dmData.rows[0].elements[0];
+    if (element.status !== "OK") {
+      throw new Error(`❌ Ruta no encontrada: ${element.status}`);
+    }
+    distanceKm = element.distance.value / 1000;
+    durationSec = element.duration.value;
   }
-  const distanceKm = element.distance.value / 1000;
-  const durationSec = element.duration.value;
 
-  // 2️⃣ Directions (peaje real)
-  const dirUrl = new URL("https://maps.googleapis.com/maps/api/directions/json");
-  dirUrl.searchParams.set("origin", defaultOrigin);
-  dirUrl.searchParams.set("destination", destination);
-  dirUrl.searchParams.set("mode", "driving");
-  dirUrl.searchParams.set("key", apiKey);
+  // 3️⃣ Cálculo de combustible (viaje redondo ida y vuelta, para ambas camionetas)
+  // Rendimiento de la flota: Escape 2014 (10L/100km) + Suzuki 2018 (8L/100km) = 18L/100km
+  const litersPer100kmCombined = 18; 
+  const distanceKmRedondo = distanceKm * 2;
+  const litersNeeded = (distanceKmRedondo * litersPer100kmCombined) / 100;
+  const fuelCostTotal = litersNeeded * getFuelPrice();
 
-  const dirResp = await fetch(dirUrl.toString());
-  const dirData = (await dirResp.json()) as any;
-  if (dirData.status !== "OK") {
-    throw new Error(`❌ Directions error: ${dirData.status}`);
-  }
-  const fareObj = dirData.routes?.[0]?.fare;
-  const tollCost = fareObj?.value ?? 0;
+  // 4️⃣ Cálculo de casetas (redondo ida y vuelta, para ambas camionetas)
+  const tollCostTotal = tollCostSingle * 2 * 2; // 2 trayectos * 2 vehículos
 
-  // 3️⃣ Cálculo combustible
-  const litersNeeded = (distanceKm * profile.litersPer100km) / 100;
-  const fuelCost = litersNeeded * getFuelPrice();
-
-  // 4️⃣ Viáticos total
-  const viaticosAmount = Math.round(fuelCost + tollCost);
+  // Viáticos totales sumados
+  const viaticosAmount = Math.round(fuelCostTotal + tollCostTotal);
 
   const result: ViaticosResult = {
     distanceKm,
     durationSec,
-    tollCost,
+    tollCost: tollCostTotal,
     viaticosAmount,
   };
 
