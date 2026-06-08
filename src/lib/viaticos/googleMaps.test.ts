@@ -9,11 +9,11 @@ process.env.DEFAULT_ORIGIN_ADDRESS = "Metepec, Estado de México, México";
 process.env.FUEL_PRICE_MXN = "24";
 
 // Mock global Prisma client queries
-db.globalConfig.findUnique = async () => {
+db.globalConfig.findUnique = (async () => {
   return {
     googleMapsApiKey: "mock_api_key_test_12345",
   } as any;
-};
+}) as any;
 
 // Mock global fetch to return distance matrix and directions data
 const originalFetch = global.fetch;

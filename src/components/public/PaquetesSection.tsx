@@ -155,11 +155,31 @@ function LocationModal({
   async function handleCheck() {
     if (!city.trim()) return
     setLoading(true)
-    await new Promise(r => setTimeout(r, 600))
-    const result = calcularViatcos(city, state, viaticosConfig)
-    setViaticos(result)
-    setLoading(false)
-    setChecked(true)
+    try {
+      const destination = `${city}, ${state}`
+      const resp = await fetch(`/api/viaticos?destination=${encodeURIComponent(destination)}`)
+      const data = await resp.json()
+      if (!resp.ok || data.error) {
+        console.error('Error viáticos API', data)
+        const result = calcularViatcos(city, state, viaticosConfig)
+        setViaticos(result)
+      } else {
+        const { viaticosAmount, tollCost, distanceKm, label, description } = data
+        setViaticos({
+          isOutsideZone: viaticosAmount > 0,
+          amount: viaticosAmount,
+          label: label || (viaticosAmount > 0 ? 'Viáticos' : 'Zona 1 (Local)'),
+          description: description || `Distancia ${distanceKm?.toFixed(1) ?? '-'} km, Peaje ${tollCost ?? 0} MXN`
+        })
+      }
+    } catch (e) {
+      console.error('Fetch viáticos failed', e)
+      const result = calcularViatcos(city, state, viaticosConfig)
+      setViaticos(result)
+    } finally {
+      setLoading(false)
+      setChecked(true)
+    }
   }
 
   const price = calcPrice()
