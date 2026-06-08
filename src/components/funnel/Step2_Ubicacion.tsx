@@ -136,7 +136,7 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
           <div className="flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
             <MapPin className="w-3 h-3" /> 1. Verificación de Zona
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="state" className="text-white font-bold text-xs uppercase tracking-wider">Estado</Label>
               <div className="relative">
@@ -167,18 +167,6 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
                   </svg>
                 </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="vehicle" className="text-white font-bold text-xs uppercase tracking-wider">Vehículo</Label>
-              <select
-                id="vehicle"
-                value={vehicleKey}
-                onChange={e => setVehicleKey(e.target.value)}
-                className="w-full bg-[#161616]/80 border border-white/15 h-12 px-3 text-base focus:border-primary focus:outline-none rounded-xl text-white cursor-pointer appearance-none pr-10"
-              >
-                <option value="escape_2014" className="bg-[#161616] text-white">Escape 2014</option>
-                <option value="suzuki_2018" className="bg-[#161616] text-white">Suzuki 2018</option>
-              </select>
             </div>
           </div>
           <div className="space-y-2">

@@ -8,13 +8,10 @@ import { db } from "@/lib/db";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const destination = searchParams.get("destination");
-  const vehicle = searchParams.get("vehicle");
+  const vehicle = searchParams.get("vehicle") || "escape_2014";
 
   if (!destination) {
     return NextResponse.json({ error: "Falta el parámetro destination" }, { status: 400 });
-  }
-  if (!vehicle) {
-    return NextResponse.json({ error: "Falta el parámetro vehicle" }, { status: 400 });
   }
 
   try {
