@@ -46,10 +46,10 @@ function normalize(str: string): string {
 }
 
 export interface ViaticosConfig {
-  zona2Rate?: number
-  zona3Rate?: number
-  zona2Cities?: string
-  zona3Cities?: string
+  zona2Rate?: number | null
+  zona3Rate?: number | null
+  zona2Cities?: string | null
+  zona3Cities?: string | null
 }
 
 export function calcularViatcos(city: string, state?: string, config?: ViaticosConfig): ViaticosResult {
