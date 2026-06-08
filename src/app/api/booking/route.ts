@@ -2,7 +2,7 @@ import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 import { dispatchNotification, notifyMusicians } from "@/lib/notifications"
 import { assignDefaultMusicians } from "@/lib/musicians"
-import { calcularViatcos } from "@/lib/viaticos"
+import { calculateViaticos } from "@/lib/viaticos/googleMaps";
 import { findOrCreateClient } from "@/lib/clients"
 import { formatDateMX } from "@/lib/utils"
 import crypto from "crypto"
@@ -39,26 +39,22 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
 
-    const {
-      packageId, packageName, guestCount, venueType,
+    const { packageId, packageName, guestCount, venueType,
       address, city, state, zipCode, mapsLink,
       requestedDate, startTime, endTime,
       baseAmount, depositAmount, paymentMethod,
       clientName, clientPhone, clientEmail,
-      isPublic, clientProvidesAudio, invoice
-    } = body
+      isPublic, clientProvidesAudio, invoice,
+      vehicleType } = body
 
     // 1. Generar Short ID amigable
     const shortId = `VND-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
 
-    // Calcular viáticos
-    const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
-    const viaticos = calcularViatcos(city, state, {
-      zona2Rate: config?.zona2Rate || 1500,
-      zona3Rate: config?.zona3Rate || 3000,
-      zona2Cities: (config as any)?.zona2Cities || undefined,
-      zona3Cities: (config as any)?.zona3Cities || undefined
-    })
+    // Calcular viáticos usando Google Maps y vehículo seleccionado
+    const vehicleKey = vehicleType || "escape_2014";
+    const destination = `${city}, ${state}`;
+    const viaticosResult = await calculateViaticos(destination, vehicleKey);
+    // viaticosResult contiene distanceKm, durationSec, tollCost y viaticosAmount
 
     console.log("📝 Intentando crear booking con data:", {
       packageName, clientName, shortId, city
@@ -87,8 +83,8 @@ export async function POST(req: NextRequest) {
         address:       address || "No especificada",
         city:          city || "No especificada",
         state:         state || "México",
-        isOutsideZone: Boolean(viaticos.isOutsideZone),
-        viaticosAmount: viaticos.amount || 0,
+        isOutsideZone: viaticosResult.viaticosAmount > 0,
+        viaticosAmount: viaticosResult.viaticosAmount || 0,
         mapsLink:      mapsLink || null,
         requestedDate: cleanDate,
         startTime:     startTime || "21:00",

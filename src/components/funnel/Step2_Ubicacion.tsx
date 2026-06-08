@@ -6,7 +6,7 @@ import { Button }      from "@/components/ui/button"
 import { Input }       from "@/components/ui/input"
 import { Label }       from "@/components/ui/label"
 import { MapPin, AlertTriangle, CheckCircle2, Car, ExternalLink } from "lucide-react"
-import { calcularViatcos } from "@/lib/viaticos"
+// Deprecated legacy calculation, using new API
 import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 
 interface Props {
@@ -33,20 +33,42 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
   const [mapsLink,    setMapsLink]    = useState(data.mapsLink    ?? "")
   const [isPublic,    setIsPublic]    = useState(data.isPublic    ?? (data.venueType === "bar" || data.venueType === "festival"))
   const [isManualCity, setIsManualCity] = useState(data.state === "Otro")
+  // New vehicle selection state
+  const [vehicleKey, setVehicleKey] = useState(data.vehicleType ?? "escape_2014")
   
-  const [viaticos, setViaticos] = useState(() =>
-    city ? calcularViatcos(city, state, viaticosConfig) : null
-  )
+  const [viaticos, setViaticos] = useState(null as any)
   const [error, setError] = useState("")
 
-  // Auto-verificar si cambia la ciudad
+  // Auto‑verificar si cambian ciudad o vehículo y obtener viáticos vía API
   useEffect(() => {
-    if (city.length > 2) {
-      setViaticos(calcularViatcos(city, state, viaticosConfig))
-    } else {
-      setViaticos(null)
+    const fetchViaticos = async () => {
+      if (city.length <= 2) {
+        setViaticos(null)
+        return
+      }
+      try {
+        const destination = `${city}, ${state}`
+        const resp = await fetch(`/api/viaticos?destination=${encodeURIComponent(destination)}&vehicle=${vehicleKey}`)
+        const data = await resp.json()
+        if (!resp.ok || data.error) {
+          console.error('Error viáticos API', data)
+          setViaticos(null)
+          return
+        }
+        const { viaticosAmount, tollCost, distanceKm, label, description } = data
+        setViaticos({
+          isOutsideZone: viaticosAmount > 0,
+          amount: viaticosAmount,
+          label: label || (viaticosAmount > 0 ? 'Viáticos' : 'Zona 1 (Local)'),
+          description: description || `Distancia ${distanceKm?.toFixed(1) ?? '-'} km, Peaje ${tollCost ?? 0} MXN`
+        })
+      } catch (e) {
+        console.error('Fetch viáticos failed', e)
+        setViaticos(null)
+      }
     }
-  }, [city, state, viaticosConfig])
+    fetchViaticos()
+  }, [city, state, vehicleKey, viaticosConfig])
 
   function handleNext() {
     if (!city.trim())    { setError("Ingresa el municipio para calcular viáticos."); return }
@@ -60,12 +82,13 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
       city,
       municipio: city, // Sincronizar campo nuevo
       state,
-      address: `${street} ${houseNumber}, Col. ${colonia}, CP ${zipCode}, ${city}, ${state}`, // Full address legacy
+      address: `${street} ${houseNumber}, Col. ${colonia}, CP ${zipCode}, ${city}, ${state}`,
       isOutsideZone:  viaticos.isOutsideZone,
       viaticosAmount: viaticos.amount,
       viaticosLabel:  viaticos.label,
       mapsLink:       mapsLink.trim() || undefined,
       isPublic,
+      vehicleType:    vehicleKey,
     })
   }
 
@@ -110,10 +133,10 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
       <div className="space-y-5 mb-6">
         {/* Zona Check (Municipio/Estado) */}
         <div className="bg-card/30 p-5 rounded-2xl border border-white/5 space-y-4">
-             <div className="flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
-               <MapPin className="w-3 h-3" /> 1. Verificación de Zona
-             </div>
-           <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
+            <MapPin className="w-3 h-3" /> 1. Verificación de Zona
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="state" className="text-white font-bold text-xs uppercase tracking-wider">Estado</Label>
               <div className="relative">
@@ -123,7 +146,6 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
                   onChange={e => { 
                     const val = e.target.value
                     setState(val)
-                    // Reset city if not valid for new state
                     if (val !== "Otro") {
                       const options = ESTADOS_MUNICIPIOS[val] || []
                       if (!options.includes(city)) setCity("")
@@ -141,62 +163,66 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
               </div>
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="city" className="text-white font-bold text-xs uppercase tracking-wider">Municipio / Delegación</Label>
-              {isManualCity ? (
-                <Input
+              <Label htmlFor="vehicle" className="text-white font-bold text-xs uppercase tracking-wider">Vehículo</Label>
+              <select
+                id="vehicle"
+                value={vehicleKey}
+                onChange={e => setVehicleKey(e.target.value)}
+                className="w-full bg-[#161616]/80 border border-white/15 h-12 px-3 text-base focus:border-primary focus:outline-none rounded-xl text-white cursor-pointer appearance-none pr-10"
+              >
+                <option value="escape_2014" className="bg-[#161616] text-white">Escape 2014</option>
+                <option value="suzuki_2018" className="bg-[#161616] text-white">Suzuki 2018</option>
+              </select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="city" className="text-white font-bold text-xs uppercase tracking-wider">Municipio / Delegación</Label>
+            {isManualCity ? (
+              <Input
+                id="city"
+                value={city === "Otro Municipio (Escribir manualmente)" ? "" : city}
+                onChange={e => { 
+                  setCity(e.target.value)
+                  setError("")
+                }}
+                placeholder="Ej. Metepec"
+                className="bg-card/50 border-white/15 h-12 text-base focus:border-primary rounded-xl"
+              />
+            ) : (
+              <div className="relative">
+                <select
                   id="city"
-                  value={city === "Otro Municipio (Escribir manualmente)" ? "" : city}
+                  value={city}
                   onChange={e => { 
-                    setCity(e.target.value)
+                    const val = e.target.value
+                    if (val === "Otro Municipio (Escribir manualmente)") {
+                      setIsManualCity(true)
+                      setCity("")
+                    } else {
+                      setCity(val)
+                    }
                     setError("")
                   }}
-                  onBlur={() => {
-                    if (city.length > 2) setViaticos(calcularViatcos(city, state, viaticosConfig))
-                  }}
-                  placeholder="Ej. Metepec"
-                  className="bg-card/50 border-white/15 h-12 text-base focus:border-primary rounded-xl"
-                  autoFocus
-                />
-              ) : (
-                <div className="relative">
-                  <select
-                    id="city"
-                    value={city}
-                    onChange={e => { 
-                      const val = e.target.value
-                      if (val === "Otro Municipio (Escribir manualmente)") {
-                        setIsManualCity(true)
-                        setCity("")
-                      } else {
-                        setCity(val)
-                        if (val.length > 2) {
-                          setViaticos(calcularViatcos(val, state, viaticosConfig))
-                        }
-                      }
-                      setError("")
-                    }}
-                    className="w-full bg-[#161616]/80 border border-white/15 h-12 px-3 text-base focus:border-primary focus:outline-none rounded-xl text-white cursor-pointer appearance-none pr-10"
-                  >
-                    <option value="" disabled className="bg-[#161616] text-white">Selecciona...</option>
-                    {(ESTADOS_MUNICIPIOS[state] || []).map(m => (
-                      <option key={m} value={m} className="bg-[#161616] text-white">{m}</option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </div>
+                  className="w-full bg-[#161616]/80 border border-white/15 h-12 px-3 text-base focus:border-primary focus:outline-none rounded-xl text-white cursor-pointer appearance-none pr-10"
+                >
+                  <option value="" disabled className="bg-[#161616] text-white">Selecciona...</option>
+                  {(ESTADOS_MUNICIPIOS[state] || []).map(m => (
+                    <option key={m} value={m} className="bg-[#161616] text-white">{m}</option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 

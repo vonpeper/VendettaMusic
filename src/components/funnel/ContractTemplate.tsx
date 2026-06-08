@@ -77,7 +77,7 @@ export function ContractTemplate({ data, shortId }: Props) {
           {data.viaticosAmount > 0 && (
             <tr>
               <td className="border-2 border-black p-2 text-center">3</td>
-              <td className="border-2 border-black p-2">Viáticos, casetas y suministros logísticos</td>
+              <td className="border-2 border-black p-2">{data.viaticosLabel ?? 'Viáticos, casetas y suministros logísticos'}</td>
               <td className="border-2 border-black p-2 text-right">{MXN(data.viaticosAmount)}</td>
             </tr>
           )}

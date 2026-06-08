@@ -68,11 +68,11 @@ export function calcularViatcos(city: string, state?: string, config?: ViaticosC
   }
 
   // Parse dynamic zones if configured in DB, with clean normalized entries
-  const activeZona2 = config?.zona2Cities 
+  const activeZona2 = config?.zona2Cities && config.zona2Cities.trim() !== "" && config.zona2Cities !== "[]"
     ? config.zona2Cities.split(",").map(c => c.trim()).filter(Boolean)
     : ZONA_2;
 
-  const activeZona3 = config?.zona3Cities 
+  const activeZona3 = config?.zona3Cities && config.zona3Cities.trim() !== "" && config.zona3Cities !== "[]"
     ? config.zona3Cities.split(",").map(c => c.trim()).filter(Boolean)
     : ZONA_3;
 

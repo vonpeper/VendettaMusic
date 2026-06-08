@@ -235,6 +235,9 @@ export async function syncEventToGoogleCalendar(eventId: string): Promise<void> 
       `📍 Dirección: ${locationAddress}`,
       locationGps ? `🗺️ Google Maps: ${locationGps}` : "",
       `---------------------------------------`,
+      `⏰ Hora de llegada: ${event.arrivalTime || "No especificada"}`,
+      `🏗️ Montaje: ${event.setupTime || "No especificado"}`,
+      `👔 Vestimenta: ${event.dressCode || "No especificada"}`,
       event.musicianNotes ? `📝 Notas: ${event.musicianNotes}` : ""
     ].filter(Boolean)
 
