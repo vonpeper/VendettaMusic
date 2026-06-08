@@ -1,11 +1,19 @@
 // src/lib/viaticos/googleMaps.test.ts
 import assert from "assert";
 import { calculateViaticos, clearViaticosCache } from "./googleMaps";
+import { db } from "../db";
 
 // Set environment variables for testing
 process.env.GOOGLE_MAPS_API_KEY = "mock_api_key_test_12345";
 process.env.DEFAULT_ORIGIN_ADDRESS = "Metepec, Estado de México, México";
 process.env.FUEL_PRICE_MXN = "24";
+
+// Mock global Prisma client queries
+db.globalConfig.findUnique = async () => {
+  return {
+    googleMapsApiKey: "mock_api_key_test_12345",
+  } as any;
+};
 
 // Mock global fetch to return distance matrix and directions data
 const originalFetch = global.fetch;

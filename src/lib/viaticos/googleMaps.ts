@@ -1,6 +1,7 @@
 // src/lib/viaticos/googleMaps.ts
 import { VEHICLE_PROFILES } from "@/lib/vehicles";
 import { config as dotenvConfig } from "dotenv";
+import { db } from "@/lib/db";
 
 dotenvConfig();
 
@@ -31,9 +32,20 @@ export async function calculateViaticos(
   destination: string,
   vehicleKey: string
 ): Promise<ViaticosResult> {
-  const apiKey = getApiKey();
+  let apiKey = "";
+  try {
+    const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } });
+    apiKey = config?.googleMapsApiKey || "";
+  } catch (dbErr) {
+    console.warn("⚠️ Error al leer googleMapsApiKey de la base de datos:", dbErr);
+  }
+
   if (!apiKey) {
-    throw new Error("⚠️ GOOGLE_MAPS_API_KEY no está definida en .env");
+    apiKey = getApiKey() || "";
+  }
+
+  if (!apiKey) {
+    throw new Error("⚠️ GOOGLE_MAPS_API_KEY no está definida en la base de datos ni en .env");
   }
 
   const cacheKey = `${destination}|${vehicleKey}`;

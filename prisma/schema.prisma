@@ -590,6 +590,7 @@ model GlobalConfig {
   stripeWebhookSecret    String?
   mercadoPagoAccessToken String?
   mercadoPagoPublicKey   String?
+  googleMapsApiKey       String?
 }
 
 model InboxItem {

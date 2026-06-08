@@ -511,3 +511,37 @@ export async function syncAllEventsAction() {
   }
 }
 
+export async function saveGoogleMapsApiKeyAction(arg1: any, arg2?: any) {
+  const u = await requireAdmin(); if (u) return u
+  try {
+    const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null)
+    if (!formData) return { success: false, message: "Error: No se recibieron datos" }
+
+    const googleMapsApiKey = formData.get("googleMapsApiKey") as string
+
+    const existing = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+    let finalKey = googleMapsApiKey?.trim() || ""
+    if (finalKey === "********") {
+      finalKey = existing?.googleMapsApiKey || ""
+    }
+
+    await db.globalConfig.upsert({
+      where: { id: "vendetta_config" },
+      update: {
+        googleMapsApiKey: finalKey || null,
+      },
+      create: {
+        id: "vendetta_config",
+        googleMapsApiKey: finalKey || null,
+      }
+    })
+
+    revalidatePath("/admin/configuracion")
+    return { success: true, message: "API Key de Google Maps guardada correctamente" }
+  } catch (error: any) {
+    console.error("Error saving Google Maps API Key:", error)
+    return { success: false, message: `Error: ${error.message}` }
+  }
+}
+
+

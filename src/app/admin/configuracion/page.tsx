@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { db } from "@/lib/db"
-import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction, saveBankConfigAction, saveEvolutionWebhookSecretAction, saveOGConfigAction, saveContractConfigAction, savePaymentConfigAction } from "@/actions/config"
+import { saveEvolutionConfigAction, saveGoogleCredentialsAction, saveViaticosConfigAction, saveSocialConfigAction, saveMessageTemplatesAction, saveBankConfigAction, saveEvolutionWebhookSecretAction, saveOGConfigAction, saveContractConfigAction, savePaymentConfigAction, saveGoogleMapsApiKeyAction } from "@/actions/config"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -301,6 +301,46 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                   </div>
                   <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold mt-2 text-white">
                     Guardar Webhook Secret
+                  </Button>
+                </ConfigFormWrapper>
+              </div>
+            </section>
+
+            {/* Google Maps / Directions API */}
+            <section className="space-y-6 mt-8">
+              <div className="bg-card border border-border/40 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center">
+                    <Map className="w-6 h-6 text-amber-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">Google Maps / Directions API</h2>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className={`w-2 h-2 rounded-full ${(config as any)?.googleMapsApiKey ? 'bg-green-400' : 'bg-red-500 animate-pulse'}`} />
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                        {(config as any)?.googleMapsApiKey ? 'Activa (Dinámica)' : 'Usando .env (Fallback)'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <ConfigFormWrapper action={saveGoogleMapsApiKeyAction} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="googleMapsApiKey">API Key de Google Maps</Label>
+                    <Input
+                      id="googleMapsApiKey"
+                      name="googleMapsApiKey"
+                      type="password"
+                      defaultValue={(config as any)?.googleMapsApiKey ? "********" : ""}
+                      placeholder="AIzaSy..."
+                      className="bg-card border-border/40 font-mono text-xs"
+                    />
+                    <p className="text-[10px] text-muted-foreground leading-normal">
+                      Clave de API usada para cotizar viáticos (distancias y peajes) en tiempo real. Debe tener permisos para <strong>Distance Matrix API</strong>, <strong>Directions API</strong> y <strong>Routes API</strong>.
+                    </p>
+                  </div>
+                  <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-500 font-bold mt-2 text-white">
+                    Guardar API Key de Google Maps
                   </Button>
                 </ConfigFormWrapper>
               </div>
