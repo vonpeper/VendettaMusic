@@ -21,6 +21,9 @@ services:
       - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
       - ADMIN_WHATSAPP_NUMBER=${ADMIN_WHATSAPP_NUMBER}
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+      - DEFAULT_ORIGIN_ADDRESS=${DEFAULT_ORIGIN_ADDRESS}
+      - FUEL_PRICE_MXN=${FUEL_PRICE_MXN}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.vendetta.rule=Host(`vendetta.mx`) || Host(`www.vendetta.mx`)"
