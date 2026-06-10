@@ -267,31 +267,42 @@ export async function PATCH(req: NextRequest) {
         })
       }
 
-      // 5. Asignar automáticamente los músicos titulares al evento
-      await assignDefaultMusicians(eventId as string, db)
-
-      // Obtener IDs de los asignados para notificar
-      const targetMusicianIds: string[] = Array.isArray(musicianIds) && musicianIds.length > 0
-        ? musicianIds
-        : (await db.eventMusician.findMany({
-            where: { eventId: eventId as string },
-            select: { musicianId: true }
-          })).map((em: any) => em.musicianId)
-
-      // 5.5 Asegurar que todos los targetMusicianIds tengan un registro en EventMusician
-      // Especialmente útil para reemplazos que no son titulares
-      for (const mId of targetMusicianIds) {
-        await db.eventMusician.upsert({
-          where: { id: `${eventId}-${mId}` },
-          create: {
-            id: `${eventId}-${mId}`,
-            eventId: eventId as string,
-            musicianId: mId,
-            status: "pending"
-          },
-          update: {} // No sobrescribir si ya existe y tiene status confirmed/rejected
-        });
+      // 5. Asignar automáticamente los músicos titulares al evento solo si es un show nuevo y no se pasaron músicos manuales
+      const isNewEvent = !booking.eventId
+      if (isNewEvent && (!musicianIds || !Array.isArray(musicianIds))) {
+        await assignDefaultMusicians(eventId as string, db)
       }
+
+      // Procesar la lista si es una selección manual explícita
+      if (Array.isArray(musicianIds)) {
+        // Eliminar de EventMusician los músicos que ya no están en la selección
+        await db.eventMusician.deleteMany({
+          where: {
+            eventId: eventId as string,
+            musicianId: { notIn: musicianIds }
+          }
+        })
+
+        // Asegurar que todos los musicianIds seleccionados tengan un registro en EventMusician
+        for (const mId of musicianIds) {
+          await db.eventMusician.upsert({
+            where: { id: `${eventId}-${mId}` },
+            create: {
+              id: `${eventId}-${mId}`,
+              eventId: eventId as string,
+              musicianId: mId,
+              status: "pending"
+            },
+            update: {} // No sobrescribir si ya existe y tiene status confirmed/rejected
+          });
+        }
+      }
+
+      // Obtener IDs finales de los asignados para notificar
+      const targetMusicianIds: string[] = (await db.eventMusician.findMany({
+        where: { eventId: eventId as string },
+        select: { musicianId: true }
+      })).map((em: any) => em.musicianId)
 
       // 6. Notificar a los músicos (template + confirmLink por músico) — único lugar central
       const gig = {

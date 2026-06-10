@@ -41,6 +41,7 @@ export function AdminManagementTools({ booking, config }: { booking: any, config
           bookingId={booking.id}
           shortId={booking.shortId}
           hasEvent={!!booking.event}
+          redirectOnSuccess={true}
         />
       </div>
       {hasContract && (

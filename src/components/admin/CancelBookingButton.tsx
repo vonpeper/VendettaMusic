@@ -23,6 +23,7 @@ interface CancelBookingButtonProps {
   className?: string;
   variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost";
   label?: string;
+  redirectOnSuccess?: boolean;
 }
 
 export function CancelBookingButton({ 
@@ -31,7 +32,8 @@ export function CancelBookingButton({
   hasEvent = false,
   className,
   variant = "outline",
-  label = "Eliminar"
+  label = "Eliminar",
+  redirectOnSuccess = false
 }: CancelBookingButtonProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -47,7 +49,7 @@ export function CancelBookingButton({
     console.log(`[DELETE BOOKING RESULT]`, json);
     if (json.success) {
       toast.success("Solicitud/Evento cancelado con éxito");
-      if (hasEvent) {
+      if (redirectOnSuccess || hasEvent) {
         router.push("/admin/ventas");
       } else {
         // En caso de borrar desde modal, refresh

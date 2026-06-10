@@ -3,6 +3,50 @@ import { confirmAttendanceAction } from "@/actions/confirmations"
 import { Button } from "@/components/ui/button"
 import { CheckCircle2, Calendar, MapPin, Clock } from "lucide-react"
 import Link from "next/link"
+import { Metadata } from "next"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ musicianId: string; eventId: string }>;
+}): Promise<Metadata> {
+  const { musicianId, eventId } = await params
+
+  const [musician, event] = await Promise.all([
+    db.musicianProfile.findUnique({
+      where: { id: musicianId },
+      include: { user: true },
+    }),
+    db.event.findUnique({
+      where: { id: eventId },
+    }),
+  ])
+
+  const musicianName = musician?.user?.name || "Músico"
+  const eventName = event?.customName || "Show Vendetta"
+
+  return {
+    title: `Convocatoria: ${musicianName} - ${eventName} | Vendetta Music`,
+    description: `Confirma tu asistencia al show con Vendetta Music.`,
+    openGraph: {
+      title: `Convocatoria: ${musicianName} - ${eventName} | Vendetta Music`,
+      description: `Confirma tu asistencia al show con Vendetta Music.`,
+      url: `https://vendetta.mx/confirmar/${musicianId}/${eventId}`,
+      siteName: "Vendetta Music Operations",
+      images: [
+        {
+          url: "https://vendetta.mx/images/logo-vendetta-horizontal.png",
+          width: 800,
+          height: 600,
+          alt: "Vendetta Music",
+        },
+      ],
+      locale: "es_MX",
+      type: "website",
+    },
+  }
+}
+
 
 export default async function ConfirmationPage({
   params,
