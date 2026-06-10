@@ -55,7 +55,7 @@ export function DeleteContractButton({ bookingId, shortId }: DeleteContractButto
           <FileX2 className="w-4 h-4 shrink-0" /> Eliminar Contrato
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-card border-border/40 backdrop-blur-xl">
+      <DialogContent className="bg-card border-border/40 backdrop-blur-xl admin-theme text-foreground">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-orange-500">
             <AlertTriangle className="w-5 h-5" /> ¿Eliminar contrato?
