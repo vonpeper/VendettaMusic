@@ -214,7 +214,6 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-heading font-black text-foreground tracking-tight">Solicitud {booking.shortId}</h1>
-              <span className="text-[10px] bg-red-600/10 text-red-600 px-2 py-0.5 rounded-full font-black border border-red-600/20">TEST-HOTFIX-V1</span>
               <BookingStatusSwitcher bookingId={booking.id} currentStatus={booking.status} missingFields={missingFields} />
             </div>
             <p className="text-muted-foreground mt-1">Registrado el {formatDateMX(booking.createdAt, "PPPP")}</p>
