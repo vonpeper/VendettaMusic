@@ -7,6 +7,7 @@ services:
       - "3005:3000"
     environment:
       - DATABASE_URL=file:/app/prisma/prod.db
+      - UPDATE_TRIGGER=2026-06-10-v1
       - AUTH_SECRET=${AUTH_SECRET}
       - AUTH_TRUST_HOST=true
       - EVOLUTION_BASE_URL=${EVOLUTION_BASE_URL}
