@@ -1,0 +1,31 @@
+name: Debug VPS Dokploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  debug-dokploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Dokploy compose details
+        env:
+          DOKPLOY_URL: ${{ vars.DOKPLOY_URL }}
+          DOKPLOY_TOKEN: ${{ secrets.DOKPLOY_TOKEN }}
+          COMPOSE_ID: ${{ vars.DOKPLOY_COMPOSE_ID }}
+        run: |
+          if [ -z "$DOKPLOY_URL" ] || [ -z "$DOKPLOY_TOKEN" ] || [ -z "$COMPOSE_ID" ]; then
+            echo "::error::Missing DOKPLOY_URL / DOKPLOY_TOKEN / DOKPLOY_COMPOSE_ID"
+            exit 1
+          fi
+          
+          echo "1. Querying compose.one details..."
+          response_one=$(curl -s -H "x-api-key: $DOKPLOY_TOKEN" \
+            "$DOKPLOY_URL/api/trpc/compose.one?input=%7B%22json%22%3A%7B%22composeId%22%3A%22$COMPOSE_ID%22%7D%7D")
+          echo "Response compose.one:"
+          echo "$response_one" | jq '.' || echo "$response_one"
+
+          echo "2. Querying project details (checking if we can get deploy logs)..."
+          # Dokploy TRPC has endpoints for logs. Let's see if we can discover the structure.
+          # We can also trigger a redeploy directly with clear cache if supported, or just print status.
