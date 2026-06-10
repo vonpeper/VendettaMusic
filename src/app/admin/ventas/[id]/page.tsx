@@ -28,13 +28,15 @@ import {
   Sparkles,
   Users,
   ChevronRight,
-  LayoutList
+  LayoutList,
+  FileText
 } from "lucide-react"
 import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
 import { MusicianStatusList } from "@/components/admin/MusicianStatusList"
 import { EditEventoButton } from "@/components/admin/EventActions"
 import { EditDepositInline } from "@/components/admin/EditDepositInline"
+import { CancelBookingButton } from "@/components/admin/CancelBookingButton"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 
@@ -191,7 +193,19 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           </nav>
 
           <div className="flex items-center gap-3">
-            {/* Acceso rápido a Editar Evento */}
+            {/* Acceso rápido a Eventos */}
+            <Link
+              href="/admin/eventualidades"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all cursor-pointer"
+            >
+              <LayoutList className="w-3.5 h-3.5" />
+              Ver Eventos
+            </Link>
+
+            {/* Separador visual */}
+            <span className="h-6 w-px bg-border/60 mx-1" />
+
+            {/* Acceso rápido a Editar Evento (Pencil Icon) */}
             <EditEventoButton 
               eventId={booking.event?.id || ""}
               initialData={booking.event || {
@@ -213,20 +227,34 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               packages={packages}
               staff={staffMapped}
               allMusicians={allMusiciansMapped}
-              showText={true}
-              variant="ghost"
-              label="Ver/Editar Show"
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all cursor-pointer"
+              showText={false}
+              variant="outline"
+              label=""
+              className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 hover:bg-blue-600/20 transition-all cursor-pointer p-0"
             />
 
-            {/* Acceso rápido a Eventos */}
-            <Link
-              href="/admin/eventualidades"
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all cursor-pointer"
+            {/* Descargar PDF (Red PDF Icon) */}
+            <Button 
+              variant="outline"
+              asChild
+              className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-red-600/10 border border-red-600/20 text-red-600 hover:bg-red-600/20 transition-all cursor-pointer p-0"
+              title={booking.status === "pendiente" ? "Descargar Cotización PDF" : "Descargar Contrato PDF"}
             >
-              <LayoutList className="w-3.5 h-3.5" />
-              Ver Eventos
-            </Link>
+              <a href={`/api/admin/contract/${booking.id}`}>
+                <FileText className="w-4 h-4" />
+              </a>
+            </Button>
+
+            {/* Cancelar/Eliminar Solicitud (Trash Icon) */}
+            <CancelBookingButton
+              bookingId={booking.id}
+              shortId={booking.shortId || ""}
+              hasEvent={!!booking.event}
+              redirectOnSuccess={true}
+              variant="outline"
+              label=""
+              className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-red-600/10 border border-red-600/20 text-red-600 hover:bg-red-600/20 transition-all cursor-pointer p-0"
+            />
           </div>
         </div>
 
@@ -246,15 +274,6 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 bookingId={booking.id} 
                 status={booking.event?.contracts?.[0]?.status || "pending"} 
               />
-              <Button 
-                variant="outline"
-                asChild
-                className={`${booking.status === "pendiente" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-600 hover:bg-yellow-500/20" : "bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20"} gap-2 h-8 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all`} 
-              >
-                <a href={`/api/admin/contract/${booking.id}`}>
-                  <Download className="w-3.5 h-3.5" /> {booking.status === "pendiente" ? "Cotización PDF" : "Contrato PDF"}
-                </a>
-              </Button>
             </div>
           )}
         </div>
@@ -593,15 +612,17 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               </Card>
             )}
 
-            {/* Gestión del Registro (Editar/Eliminar) */}
-            <Card className="bg-card border-border/20">
-              <CardHeader>
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Gestión de Registro</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <AdminManagementTools booking={booking} config={config} />
-              </CardContent>
-            </Card>
+            {/* Gestión del Registro (Editar/Eliminar) - Solo visible si hay un contrato registrado para poder borrarlo */}
+            {!!(booking.event?.contracts?.length || booking.signedAt || booking.clientSignature) && (
+              <Card className="bg-card border-border/20">
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Gestión de Registro</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <AdminManagementTools booking={booking} />
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

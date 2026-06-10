@@ -3,24 +3,6 @@
 import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 
-const CancelBookingButton = dynamic(
-  () => import("@/components/admin/CancelBookingButton").then(mod => mod.CancelBookingButton),
-  { ssr: false, loading: () => (
-    <Button variant="outline" className="w-full opacity-50 h-11 rounded-xl" disabled>
-      Cargando cancelación...
-    </Button>
-  )}
-)
-
-const EditBookingDialog = dynamic(
-  () => import("@/components/admin/EditBookingDialog").then(mod => mod.EditBookingDialog),
-  { ssr: false, loading: () => (
-    <Button variant="outline" className="w-full opacity-50 h-11 rounded-xl" disabled>
-      Cargando edición...
-    </Button>
-  )}
-)
-
 const DeleteContractButton = dynamic(
   () => import("@/components/admin/DeleteContractButton").then(mod => mod.DeleteContractButton),
   { ssr: false, loading: () => (
@@ -30,20 +12,11 @@ const DeleteContractButton = dynamic(
   )}
 )
 
-export function AdminManagementTools({ booking, config }: { booking: any, config?: any }) {
+export function AdminManagementTools({ booking }: { booking: any }) {
   const hasContract = !!(booking.event?.contracts?.length || booking.signedAt || booking.clientSignature)
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-4">
-        <EditBookingDialog booking={booking} config={config} />
-        <CancelBookingButton
-          bookingId={booking.id}
-          shortId={booking.shortId}
-          hasEvent={!!booking.event}
-          redirectOnSuccess={true}
-        />
-      </div>
       {hasContract && (
         <DeleteContractButton bookingId={booking.id} shortId={booking.shortId} />
       )}
