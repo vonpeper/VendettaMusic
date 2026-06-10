@@ -304,20 +304,22 @@ export async function PATCH(req: NextRequest) {
         select: { musicianId: true }
       })).map((em: any) => em.musicianId)
 
-      // 6. Notificar a los músicos (template + confirmLink por músico) — único lugar central
-      const gig = {
-        clientName:       booking.clientName,
-        date:             booking.requestedDate,
-        guestCount:       booking.guestCount,
-        locationName:     booking.municipio || booking.city,
-        locationAddress:  booking.address,
-        performanceStart: booking.startTime,
-        performanceEnd:   booking.endTime,
-        packageName:      booking.packageName,
-        isPublic:         booking.isPublic,
+      // 6. Notificar a los músicos (template + confirmLink por músico) — solo si es la primera vez que se agenda
+      if (isNewEvent) {
+        const gig = {
+          clientName:       booking.clientName,
+          date:             booking.requestedDate,
+          guestCount:       booking.guestCount,
+          locationName:     booking.municipio || booking.city,
+          locationAddress:  booking.address,
+          performanceStart: booking.startTime,
+          performanceEnd:   booking.endTime,
+          packageName:      booking.packageName,
+          isPublic:         booking.isPublic,
+        }
+        await notifyMusicians(eventId as string, gig, db, targetMusicianIds)
+          .catch(e => console.error("notifyMusicians:", e))
       }
-      await notifyMusicians(eventId as string, gig, db, targetMusicianIds)
-        .catch(e => console.error("notifyMusicians:", e))
       
       // 7. Notificar al CLIENTE (Push Confirmation) — Solo si es la primera vez que se agenda
       if (!booking.eventId) {
