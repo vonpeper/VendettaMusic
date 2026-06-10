@@ -64,7 +64,7 @@ function SelectField({ id, name, label, options, defaultValue, required }: {
 }
 
 export function EventForm({ onClose, clients, locations, packages, staff = [], allMusicians = [], initialData }: EventFormProps) {
-  const action = initialData ? updateEventAction.bind(null, initialData.id) : createEventAction
+  const action = initialData?.id ? updateEventAction.bind(null, initialData.id) : createEventAction
   const [state, formAction, isPending] = useActionState(action, null) as [any, any, boolean]
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -391,6 +391,9 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
         )}
 
         <form action={formAction} onSubmit={() => setIsSubmitting(true)} className="p-6 space-y-6">
+          {initialData?.bookingRequest?.id && (
+            <input type="hidden" name="bookingRequestId" value={initialData.bookingRequest.id} />
+          )}
 
           <fieldset>
             <legend className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Identidad del Evento</legend>
@@ -928,8 +931,8 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-slate-200 text-slate-700 hover:bg-slate-100">Cancelar</Button>
             <Button type="submit" disabled={isPending || isSubmitting} className="flex-1 font-bold text-white">
               {isPending || isSubmitting
-                ? (initialData ? "Actualizando..." : "Creando y sincronizando...") 
-                : (initialData ? "Guardar Cambios" : "Crear Evento")}
+                ? (initialData?.id ? "Actualizando..." : "Creando y sincronizando...") 
+                : (initialData?.id ? "Guardar Cambios" : "Crear Evento")}
             </Button>
           </div>
         </form>

@@ -164,7 +164,17 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     missingFields.push("Teléfono del cliente")
   }
 
-  const finalClientName = booking.client?.user?.name || booking.clientName;
+  // Resolve the client's full name by picking the one (profile name vs funnel name) that is more complete (has more words).
+  const profileName = booking.client?.user?.name?.trim();
+  const bookingName = booking.clientName?.trim();
+  let finalClientName = "Sin nombre";
+  if (profileName && bookingName) {
+    const profileWords = profileName.split(/\s+/).filter(Boolean).length;
+    const bookingWords = bookingName.split(/\s+/).filter(Boolean).length;
+    finalClientName = profileWords >= bookingWords ? profileName : bookingName;
+  } else {
+    finalClientName = bookingName || profileName || "Sin nombre";
+  }
 
   return (
     <div className="p-8 bg-background min-h-screen">
@@ -182,21 +192,32 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
 
           <div className="flex items-center gap-3">
             {/* Acceso rápido a Editar Evento */}
-            {booking.event && (
-              <EditEventoButton 
-                eventId={booking.event.id}
-                initialData={booking.event}
-                clients={clientsMapped}
-                locations={locations}
-                packages={packages}
-                staff={staffMapped}
-                allMusicians={allMusiciansMapped}
-                showText={true}
-                variant="ghost"
-                label="Ver/Editar Show"
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all cursor-pointer"
-              />
-            )}
+            <EditEventoButton 
+              eventId={booking.event?.id || ""}
+              initialData={booking.event || {
+                bookingRequest: booking,
+                clientId: booking.clientId,
+                amount: booking.baseAmount,
+                deposit: booking.depositAmount,
+                paymentMethod: booking.paymentMethod,
+                ceremonyType: booking.venueType || "otro",
+                guestCount: booking.guestCount || 0,
+                performanceStart: booking.startTime,
+                performanceEnd: booking.endTime,
+                status: booking.status === "pendiente" ? "pendiente" : "agendado",
+                invoice: booking.invoice || false,
+                customName: booking.clientName ? `Evento de ${booking.clientName}` : "",
+              }}
+              clients={clientsMapped}
+              locations={locations}
+              packages={packages}
+              staff={staffMapped}
+              allMusicians={allMusiciansMapped}
+              showText={true}
+              variant="ghost"
+              label="Ver/Editar Show"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all cursor-pointer"
+            />
 
             {/* Acceso rápido a Eventos */}
             <Link
@@ -228,10 +249,10 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               <Button 
                 variant="outline"
                 asChild
-                className={`${booking.status === "pendiente" ? "border-primary/50 text-primary hover:bg-primary" : "border-green-600/50 text-green-400 hover:bg-green-600"} gap-2 h-11 px-6 font-bold rounded-xl  hover:text-white transition-all`} 
+                className={`${booking.status === "pendiente" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-600 hover:bg-yellow-500/20" : "bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20"} gap-2 h-8 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all`} 
               >
                 <a href={`/api/admin/contract/${booking.id}`}>
-                  <Download className="w-5 h-5" /> {booking.status === "pendiente" ? "Cotización PDF" : "Contrato PDF"}
+                  <Download className="w-3.5 h-3.5" /> {booking.status === "pendiente" ? "Cotización PDF" : "Contrato PDF"}
                 </a>
               </Button>
             </div>

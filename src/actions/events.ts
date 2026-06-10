@@ -421,46 +421,122 @@ export async function createEventAction(_prev: any, formData: FormData) {
       }
     }
 
-    await db.bookingRequest.create({
-      data: {
-        shortId,
-        eventId: event.id,
-        clientId: targetClientId || null,
-        clientName,
-        clientPhone,
-        clientEmail,
-        requestedDate: event.date,
-        startTime: event.performanceStart || "21:00",
-        endTime: event.performanceEnd || "23:00",
-        packageName,
-        packageId: (data.packageId as string) || null,
-        baseAmount: amount,
-        depositAmount: deposit,
-        paymentMethod: (data.paymentMethod as string) || "transfer",
-        status: event.status === "scheduled" ? "agendado" : event.status,
-        source: "manual",
-        adminNote: (data.musicianNotes as string) || "",
-        venueType: (data.ceremonyType as string) || "salon",
-        address: (data.locationFree as string) || event.location?.address || "Dirección manual",
-        city: event.location?.city || "CDMX",
-        isPublic: event.isPublic,
-        viaticosAmount: parseFloat(data.viaticosAmount as string || "0"),
-        distanceKm: parseFloat(data.distanceKm as string || "0") || null,
-        durationSec: parseInt(data.durationSec as string || "0") || null,
-        tollCost: parseFloat(data.tollCost as string || "0") || null,
-        fuelCost: parseFloat(data.fuelCost as string || "0") || null,
-        requiresManualQuote: data.requiresManualQuote === "true",
-        bandHours: data.bandHours ? parseInt(data.bandHours as string) : 0,
-        djHours: data.djHours ? parseInt(data.djHours as string) : 0,
-        isDjWithTvs: data.isDjWithTvs === "on" || data.isDjWithTvs === "true",
-        hasTemplete: data.hasTemplete === "on" || data.hasTemplete === "true",
-        hasPista: data.hasPista === "on" || data.hasPista === "true",
-        hasRobot: data.hasRobot === "on" || data.hasRobot === "true",
-        clientProvidesAudio: data.clientProvidesAudio === "on" || data.clientProvidesAudio === "true",
-        originalPrice: data.originalPrice ? parseFloat(data.originalPrice as string) : 0,
-        discountAmount: data.discountAmount ? parseFloat(data.discountAmount as string) : 0,
+    const bookingRequestId = data.bookingRequestId as string
+    const addressVal = (data.locationFree as string) || event.location?.address || "Dirección manual"
+    
+    // Parsear dirección para mantener en sincronía calle, número y colonia
+    let calle = ""
+    let numero = ""
+    let colonia = ""
+    const parts = addressVal.split(",").map((p: string) => p.trim())
+    if (parts.length > 0) {
+      const firstPart = parts[0]
+      const match = firstPart.match(/^(.*?)\s+(\d+[-a-zA-Z0-9]*)$/)
+      if (match) {
+        calle = match[1]
+        numero = match[2]
+      } else {
+        calle = firstPart
+        numero = ""
       }
-    })
+    }
+    if (parts.length > 1) {
+      colonia = parts[1]
+    }
+
+    if (bookingRequestId) {
+      await db.bookingRequest.update({
+        where: { id: bookingRequestId },
+        data: {
+          eventId: event.id,
+          clientId: targetClientId || null,
+          clientName,
+          clientPhone,
+          clientEmail,
+          requestedDate: event.date,
+          startTime: event.performanceStart || "21:00",
+          endTime: event.performanceEnd || "23:00",
+          packageName,
+          packageId: (data.packageId as string) || null,
+          baseAmount: amount,
+          depositAmount: deposit,
+          paymentMethod: (data.paymentMethod as string) || "transfer",
+          status: event.status === "scheduled" ? "agendado" : event.status,
+          adminNote: (data.musicianNotes as string) || "",
+          venueType: (data.ceremonyType as string) || "salon",
+          address: addressVal,
+          calle,
+          numero,
+          colonia,
+          municipio: event.location?.city || "CDMX",
+          city: event.location?.city || "CDMX",
+          state: event.location?.state || "México",
+          mapsLink: event.location?.mapsLink || (data.mapsLink as string) || null,
+          isPublic: event.isPublic,
+          viaticosAmount: parseFloat(data.viaticosAmount as string || "0"),
+          distanceKm: parseFloat(data.distanceKm as string || "0") || null,
+          durationSec: parseInt(data.durationSec as string || "0") || null,
+          tollCost: parseFloat(data.tollCost as string || "0") || null,
+          fuelCost: parseFloat(data.fuelCost as string || "0") || null,
+          requiresManualQuote: data.requiresManualQuote === "true",
+          bandHours: data.bandHours ? parseInt(data.bandHours as string) : 0,
+          djHours: data.djHours ? parseInt(data.djHours as string) : 0,
+          isDjWithTvs: data.isDjWithTvs === "on" || data.isDjWithTvs === "true",
+          hasTemplete: data.hasTemplete === "on" || data.hasTemplete === "true",
+          hasPista: data.hasPista === "on" || data.hasPista === "true",
+          hasRobot: data.hasRobot === "on" || data.hasRobot === "true",
+          clientProvidesAudio: data.clientProvidesAudio === "on" || data.clientProvidesAudio === "true",
+          originalPrice: data.originalPrice ? parseFloat(data.originalPrice as string) : 0,
+          discountAmount: data.discountAmount ? parseFloat(data.discountAmount as string) : 0,
+        }
+      })
+    } else {
+      await db.bookingRequest.create({
+        data: {
+          shortId,
+          eventId: event.id,
+          clientId: targetClientId || null,
+          clientName,
+          clientPhone,
+          clientEmail,
+          requestedDate: event.date,
+          startTime: event.performanceStart || "21:00",
+          endTime: event.performanceEnd || "23:00",
+          packageName,
+          packageId: (data.packageId as string) || null,
+          baseAmount: amount,
+          depositAmount: deposit,
+          paymentMethod: (data.paymentMethod as string) || "transfer",
+          status: event.status === "scheduled" ? "agendado" : event.status,
+          source: "manual",
+          adminNote: (data.musicianNotes as string) || "",
+          venueType: (data.ceremonyType as string) || "salon",
+          address: addressVal,
+          calle,
+          numero,
+          colonia,
+          municipio: event.location?.city || "CDMX",
+          city: event.location?.city || "CDMX",
+          state: event.location?.state || "México",
+          isPublic: event.isPublic,
+          viaticosAmount: parseFloat(data.viaticosAmount as string || "0"),
+          distanceKm: parseFloat(data.distanceKm as string || "0") || null,
+          durationSec: parseInt(data.durationSec as string || "0") || null,
+          tollCost: parseFloat(data.tollCost as string || "0") || null,
+          fuelCost: parseFloat(data.fuelCost as string || "0") || null,
+          requiresManualQuote: data.requiresManualQuote === "true",
+          bandHours: data.bandHours ? parseInt(data.bandHours as string) : 0,
+          djHours: data.djHours ? parseInt(data.djHours as string) : 0,
+          isDjWithTvs: data.isDjWithTvs === "on" || data.isDjWithTvs === "true",
+          hasTemplete: data.hasTemplete === "on" || data.hasTemplete === "true",
+          hasPista: data.hasPista === "on" || data.hasPista === "true",
+          hasRobot: data.hasRobot === "on" || data.hasRobot === "true",
+          clientProvidesAudio: data.clientProvidesAudio === "on" || data.clientProvidesAudio === "true",
+          originalPrice: data.originalPrice ? parseFloat(data.originalPrice as string) : 0,
+          discountAmount: data.discountAmount ? parseFloat(data.discountAmount as string) : 0,
+        }
+      })
+    }
 
     // Gestionar Músicos (Si se proporcionan IDs)
     const musicianIds = formData.getAll("musicianIds") as string[]
@@ -502,6 +578,9 @@ export async function createEventAction(_prev: any, formData: FormData) {
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/eventualidades")
     revalidatePath("/")
+    if (bookingRequestId) {
+      revalidatePath(`/admin/ventas/${bookingRequestId}`)
+    }
 
     // Notificación automática
     const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true")
