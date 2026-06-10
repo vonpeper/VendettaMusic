@@ -315,11 +315,11 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
   if (state?.success) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 admin-theme">
-        <div className="bg-card border border-green-500/30 rounded-2xl shadow-2xl w-full max-w-lg text-foreground animate-in fade-in zoom-in-95 duration-200">
-          <div className="p-6 text-center border-b border-border/40">
-            <CheckCircle2 className="w-14 h-14 text-green-700 mx-auto mb-3" />
-            <h3 className="text-xl font-bold text-foreground">{initialData ? "¡Evento actualizado!" : "¡Evento creado!"}</h3>
-            <p className="text-muted-foreground text-sm mt-1">{state.message}</p>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-lg text-slate-900 animate-in fade-in zoom-in-95 duration-200">
+          <div className="p-6 text-center border-b border-slate-200/60">
+            <CheckCircle2 className="w-14 h-14 text-green-600 mx-auto mb-3" />
+            <h3 className="text-xl font-bold text-slate-900">{initialData ? "¡Evento actualizado!" : "¡Evento creado!"}</h3>
+            <p className="text-slate-500 text-sm mt-1">{state.message}</p>
           </div>
 
           {state.gigMessage && (
@@ -330,15 +330,15 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                   Mensaje de WhatsApp para los músicos
                 </div>
                 <button onClick={copyGigMessage}
-                  className="flex items-center gap-1.5 text-xs bg-primary/10 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors">
-                  {copied ? <Check className="w-3 h-3 text-green-700" /> : <Copy className="w-3 h-3" />}
+                  className="flex items-center gap-1.5 text-xs bg-primary/10 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors text-primary font-bold">
+                  {copied ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
                   {copied ? "¡Copiado!" : "Copiar"}
                 </button>
               </div>
-              <pre className="text-xs text-muted-foreground bg-card rounded-xl p-4 whitespace-pre-wrap font-mono border border-border/40 max-h-64 overflow-y-auto">
+              <pre className="text-xs text-slate-600 bg-slate-50 rounded-xl p-4 whitespace-pre-wrap font-mono border border-slate-200/80 max-h-64 overflow-y-auto">
                 {state.gigMessage}
               </pre>
-              <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1">
+              <p className="text-[10px] text-slate-500 mt-2 flex items-center gap-1">
                 <Bell className="w-3 h-3" />
                 {sendNotif
                   ? "El mensaje fue enviado automáticamente por WhatsApp a los músicos."
@@ -348,7 +348,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
           )}
 
           <div className="p-6 pt-0">
-            <Button onClick={onClose} className="w-full font-bold text-white">Cerrar</Button>
+            <Button onClick={onClose} className="w-full font-bold text-white bg-primary hover:bg-primary/95">Cerrar</Button>
           </div>
         </div>
       </div>

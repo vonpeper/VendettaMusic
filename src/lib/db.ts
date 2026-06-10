@@ -56,8 +56,81 @@ async function ensureSchemaUpToDate(prisma: PrismaClient) {
       await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN requiresManualQuote BOOLEAN DEFAULT 0`)
       console.log("🤖 [Self-Healing] Added column requiresManualQuote to BookingRequest")
     }
+    if (!bookingColNames.includes("bandhours")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN bandHours INTEGER DEFAULT 0`)
+      console.log("🤖 [Self-Healing] Added column bandHours to BookingRequest")
+    }
+    if (!bookingColNames.includes("djhours")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN djHours INTEGER DEFAULT 0`)
+      console.log("🤖 [Self-Healing] Added column djHours to BookingRequest")
+    }
+    if (!bookingColNames.includes("isdjwithtvs")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN isDjWithTvs BOOLEAN DEFAULT 0`)
+      console.log("🤖 [Self-Healing] Added column isDjWithTvs to BookingRequest")
+    }
+    if (!bookingColNames.includes("hastemplete")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN hasTemplete BOOLEAN DEFAULT 0`)
+      console.log("🤖 [Self-Healing] Added column hasTemplete to BookingRequest")
+    }
+    if (!bookingColNames.includes("haspista")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN hasPista BOOLEAN DEFAULT 0`)
+      console.log("🤖 [Self-Healing] Added column hasPista to BookingRequest")
+    }
+    if (!bookingColNames.includes("hasrobot")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN hasRobot BOOLEAN DEFAULT 0`)
+      console.log("🤖 [Self-Healing] Added column hasRobot to BookingRequest")
+    }
+    if (!bookingColNames.includes("discountamount")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN discountAmount REAL DEFAULT 0.0`)
+      console.log("🤖 [Self-Healing] Added column discountAmount to BookingRequest")
+    }
+    if (!bookingColNames.includes("originalprice")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN originalPrice REAL DEFAULT 0.0`)
+      console.log("🤖 [Self-Healing] Added column originalPrice to BookingRequest")
+    }
+    if (!bookingColNames.includes("invoice")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN invoice BOOLEAN DEFAULT 0`)
+      console.log("🤖 [Self-Healing] Added column invoice to BookingRequest")
+    }
 
-    // 2. Columnas de GlobalConfig
+    // 2. Columnas de Event
+    const eventColumns = await prisma.$queryRaw<any[]>`PRAGMA table_info(Event)`
+    const eventColNames = eventColumns.map(c => c.name.toLowerCase())
+
+    if (!eventColNames.includes("bitacora")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE Event ADD COLUMN bitacora TEXT`)
+      console.log("🤖 [Self-Healing] Added column bitacora to Event")
+    }
+    if (!eventColNames.includes("audioengineer")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE Event ADD COLUMN audioEngineer TEXT`)
+      console.log("🤖 [Self-Healing] Added column audioEngineer to Event")
+    }
+    if (!eventColNames.includes("customname")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE Event ADD COLUMN customName TEXT`)
+      console.log("🤖 [Self-Healing] Added column customName to Event")
+    }
+    if (!eventColNames.includes("mapslink")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE Event ADD COLUMN mapsLink TEXT`)
+      console.log("🤖 [Self-Healing] Added column mapsLink to Event")
+    }
+    if (!eventColNames.includes("venuetype")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE Event ADD COLUMN venueType TEXT`)
+      console.log("🤖 [Self-Healing] Added column venueType to Event")
+    }
+    if (!eventColNames.includes("ispublic")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE Event ADD COLUMN isPublic BOOLEAN DEFAULT 0`)
+      console.log("🤖 [Self-Healing] Added column isPublic to Event")
+    }
+    if (!eventColNames.includes("clientprovidesaudio")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE Event ADD COLUMN clientProvidesAudio BOOLEAN DEFAULT 0`)
+      console.log("🤖 [Self-Healing] Added column clientProvidesAudio to Event")
+    }
+    if (!eventColNames.includes("source")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE Event ADD COLUMN source TEXT DEFAULT 'manual'`)
+      console.log("🤖 [Self-Healing] Added column source to Event")
+    }
+
+    // 3. Columnas de GlobalConfig
     const configColumns = await prisma.$queryRaw<any[]>`PRAGMA table_info(GlobalConfig)`
     const configColNames = configColumns.map(c => c.name.toLowerCase())
 
