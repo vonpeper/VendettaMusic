@@ -5,27 +5,33 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   debug-dokploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Query Dokploy compose details
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run Dokploy VPS Diagnostics
         env:
           DOKPLOY_URL: ${{ vars.DOKPLOY_URL }}
           DOKPLOY_TOKEN: ${{ secrets.DOKPLOY_TOKEN }}
           COMPOSE_ID: ${{ vars.DOKPLOY_COMPOSE_ID }}
         run: |
-          if [ -z "$DOKPLOY_URL" ] || [ -z "$DOKPLOY_TOKEN" ] || [ -z "$COMPOSE_ID" ]; then
-            echo "::error::Missing DOKPLOY_URL / DOKPLOY_TOKEN / DOKPLOY_COMPOSE_ID"
-            exit 1
-          fi
-          
-          echo "1. Querying compose.one details..."
-          response_one=$(curl -s -H "x-api-key: $DOKPLOY_TOKEN" \
-            "$DOKPLOY_URL/api/trpc/compose.one?input=%7B%22json%22%3A%7B%22composeId%22%3A%22$COMPOSE_ID%22%7D%7D")
-          echo "Response compose.one:"
-          echo "$response_one" | jq '.' || echo "$response_one"
+          python scripts/diagnose_dokploy.py
 
-          echo "2. Querying project details (checking if we can get deploy logs)..."
-          # Dokploy TRPC has endpoints for logs. Let's see if we can discover the structure.
-          # We can also trigger a redeploy directly with clear cache if supported, or just print status.
+      - name: Commit and Push Status Report
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add debug-vps-status.json
+          git commit -m "chore: update VPS debug status [skip ci]" || echo "No changes to commit"
+          git push
