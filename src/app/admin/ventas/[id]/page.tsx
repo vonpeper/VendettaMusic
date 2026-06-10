@@ -53,6 +53,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
       payments: { orderBy: { createdAt: "desc" } },
       event: { 
         include: { 
+          bookingRequest: true,
+          location: true,
           contracts: true,
           musicians: { 
             include: { 

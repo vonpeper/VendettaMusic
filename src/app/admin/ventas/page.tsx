@@ -78,6 +78,8 @@ export default async function AdminVentasPage() {
         payments: true,
         event: {
           include: {
+            bookingRequest: true,
+            location: true,
             musicians: true,
             contracts: true
           }

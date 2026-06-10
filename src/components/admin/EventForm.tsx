@@ -101,7 +101,11 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
   const [creatingClient, setCreatingClient] = useState(false)
 
   // Estados para dirección y viáticos
-  const [viaticosAmount, setViaticosAmount] = useState<number>(parseFloat(initialData?.bookingRequest?.viaticosAmount) || 0)
+  const [viaticosAmount, setViaticosAmount] = useState<number>(
+    typeof initialData?.bookingRequest?.viaticosAmount === "number"
+      ? initialData.bookingRequest.viaticosAmount
+      : parseFloat(initialData?.bookingRequest?.viaticosAmount) || 0
+  )
   const [viaticosDetails, setViaticosDetails] = useState<{
     distanceKm: number;
     durationSec: number;
@@ -111,8 +115,12 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
   } | null>(null)
   const [calculatingViaticos, setCalculatingViaticos] = useState(false)
 
-  const [locationFree, setLocationFree] = useState("")
-  const [locationFreeCity, setLocationFreeCity] = useState("")
+  const [locationFree, setLocationFree] = useState(
+    initialData?.locationId ? "" : (initialData?.bookingRequest?.address || "")
+  )
+  const [locationFreeCity, setLocationFreeCity] = useState(
+    initialData?.locationId ? "" : (initialData?.bookingRequest?.city || "")
+  )
   const [selectedLocationId, setSelectedLocationId] = useState(initialData?.locationId || "")
 
   useEffect(() => {
@@ -280,8 +288,8 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
   // Success screen
   if (state?.success) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-card backdrop-blur-sm p-4">
-        <div className="bg-card border border-green-500/30 rounded-2xl shadow-2xl w-full max-w-lg">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 admin-theme">
+        <div className="bg-card border border-green-500/30 rounded-2xl shadow-2xl w-full max-w-lg text-foreground animate-in fade-in zoom-in-95 duration-200">
           <div className="p-6 text-center border-b border-border/40">
             <CheckCircle2 className="w-14 h-14 text-green-700 mx-auto mb-3" />
             <h3 className="text-xl font-bold text-foreground">{initialData ? "¡Evento actualizado!" : "¡Evento creado!"}</h3>
@@ -322,8 +330,8 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-card backdrop-blur-sm p-4">
-      <div className="bg-card border border-border/40 rounded-2xl shadow-2xl w-[95vw] sm:w-full max-w-3xl max-h-[85vh] overflow-y-auto relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 admin-theme">
+      <div className="bg-card border border-border/40 rounded-2xl shadow-2xl w-[95vw] sm:w-full max-w-3xl max-h-[85vh] overflow-y-auto relative text-foreground animate-in fade-in zoom-in-95 duration-200">
 
         {/* Header */}
         <div className="border-b border-border/40 sticky top-0 bg-card z-10">
@@ -431,10 +439,14 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                 <select id="locationId" name="locationId" value={selectedLocationId}
                   onChange={(e) => {
                      setSelectedLocationId(e.target.value)
+                     if (e.target.value) {
+                       setLocationFree("")
+                       setLocationFreeCity("")
+                     }
                      const selectedLoc = locations.find(l => l.id === e.target.value)
                      if (selectedLoc?.mapsLink) {
                         const mapsInput = document.getElementById("mapsLink") as HTMLInputElement
-                        if (mapsInput && !mapsInput.value) mapsInput.value = selectedLoc.mapsLink
+                        if (mapsInput) mapsInput.value = selectedLoc.mapsLink
                      }
                   }}
                   className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -446,14 +458,24 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                 <Label htmlFor="locationFree">Dirección libre (si no está en catálogo)</Label>
                 <Input id="locationFree" name="locationFree" placeholder="Ej. Hacienda San José, Querétaro"
                   value={locationFree}
-                  onChange={(e) => setLocationFree(e.target.value)}
+                  onChange={(e) => {
+                    setLocationFree(e.target.value)
+                    if (e.target.value) {
+                      setSelectedLocationId("")
+                    }
+                  }}
                   className="bg-background border-border/40" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="locationFreeCity">Ciudad / Municipio (para dirección libre)</Label>
                 <Input id="locationFreeCity" name="locationFreeCity" placeholder="Ej. Querétaro, Toluca, CDMX..."
                   value={locationFreeCity}
-                  onChange={(e) => setLocationFreeCity(e.target.value)}
+                  onChange={(e) => {
+                    setLocationFreeCity(e.target.value)
+                    if (e.target.value) {
+                      setSelectedLocationId("")
+                    }
+                  }}
                   className="bg-background border-border/40 text-foreground" />
               </div>
               <div className="space-y-2">
@@ -743,8 +765,8 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
 
       {/* Pop Up / Modal for creating a new client */}
       {showNewClientModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-          <div className="bg-card border border-border/60 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 admin-theme">
+          <div className="bg-card border border-border/60 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all text-foreground animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="bg-muted/40 p-5 border-b border-border/30 flex justify-between items-center">
               <div className="flex items-center gap-2.5">
