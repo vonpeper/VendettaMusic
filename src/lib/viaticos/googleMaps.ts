@@ -13,11 +13,13 @@ const getFuelPrice = () => Number(process.env.FUEL_PRICE_MXN ?? "25"); // MXN pe
 /**
  * Resultado del cálculo de viáticos.
  */
-interface ViaticosResult {
+export interface ViaticosResult {
   distanceKm: number;
   durationSec: number;
   tollCost: number; // MXN, 0 si no hay peaje
+  fuelCost: number; // MXN, costo estimado de combustible
   viaticosAmount: number; // MXN, redondeado
+  requiresManualQuote: boolean; // true si > 250km
 }
 
 /** In‑memory cache for viáticos calculations (TTL: 5 minutes). */
@@ -26,6 +28,7 @@ const viaticosCache = new Map<string, { result: ViaticosResult; timestamp: numbe
 
 export function clearViaticosCache() {
   viaticosCache.clear();
+  console.log("🧹 Viáticos cache cleared successfully");
 }
 
 export async function calculateViaticos(
@@ -34,14 +37,26 @@ export async function calculateViaticos(
 ): Promise<ViaticosResult> {
   let apiKey = "";
   let viaticosLocalRadius = 50.0;
+  let viaticosVehicleCount = 2;
   try {
     const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } });
     apiKey = config?.googleMapsApiKey || "";
     if (config && config.viaticosLocalRadius !== null && config.viaticosLocalRadius !== undefined) {
       viaticosLocalRadius = config.viaticosLocalRadius;
     }
+    if (config && config.viaticosVehicleCount !== null && config.viaticosVehicleCount !== undefined) {
+      viaticosVehicleCount = config.viaticosVehicleCount;
+    }
   } catch (dbErr) {
     console.warn("⚠️ Error al leer configuraciones de la base de datos:", dbErr);
+  }
+
+  // 1️⃣ Consultar caché usando la clave extendida que incluye el radio y el número de vehículos configurados
+  const cacheKey = `${destination}|${vehicleKey}|${viaticosLocalRadius}|${viaticosVehicleCount}`;
+  const cached = viaticosCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < VIATICOS_CACHE_TTL) {
+    console.log("⚡️ Viáticos cache hit for", cacheKey);
+    return cached.result;
   }
 
   if (!apiKey) {
@@ -52,20 +67,13 @@ export async function calculateViaticos(
     throw new Error("⚠️ GOOGLE_MAPS_API_KEY no está definida en la base de datos ni en .env");
   }
 
-  const cacheKey = `${destination}|${vehicleKey}`;
-  const cached = viaticosCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < VIATICOS_CACHE_TTL) {
-    console.log("⚡️ Viáticos cache hit for", cacheKey);
-    return cached.result;
-  }
-
   const defaultOrigin = getDefaultOrigin();
   let distanceKm = 0;
   let durationSec = 0;
   let tollCostSingle = 0;
   let usedRoutesApi = false;
 
-  // 1️⃣ Intentar usar Google Maps Routes API (v2) para calcular peajes reales en México
+  // 2️⃣ Intentar usar Google Maps Routes API (v2) para calcular peajes reales en México
   try {
     const routesUrl = "https://routes.googleapis.com/directions/v2:computeRoutes";
     const routesResp = await fetch(routesUrl, {
@@ -100,7 +108,7 @@ export async function calculateViaticos(
     console.warn("⚠️ Routes API v2 query failed, fallback to classical Distance Matrix:", routesErr);
   }
 
-  // 2️⃣ Fallback a Distance Matrix API clásica si Routes API v2 no funcionó
+  // 3️⃣ Fallback a Distance Matrix API clásica si Routes API v2 no funcionó
   if (!usedRoutesApi) {
     const dmUrl = new URL("https://maps.googleapis.com/maps/api/distancematrix/json");
     dmUrl.searchParams.set("origins", defaultOrigin);
@@ -122,15 +130,15 @@ export async function calculateViaticos(
     durationSec = element.duration.value;
   }
 
-  // 3️⃣ Cálculo de combustible (viaje redondo ida y vuelta, para ambas camionetas)
-  // Rendimiento de la flota: Escape 2014 (10L/100km) + Suzuki 2018 (8L/100km) = 18L/100km
-  const litersPer100kmCombined = 18; 
+  // 4️⃣ Cálculo de combustible (viaje redondo ida y vuelta, para N camionetas)
+  // Rendimiento de la flota: promedio de 9L/100km por camioneta/auto
+  const litersPer100kmCombined = 9 * viaticosVehicleCount; 
   const distanceKmRedondo = distanceKm * 2;
   const litersNeeded = (distanceKmRedondo * litersPer100kmCombined) / 100;
-  const fuelCostTotal = litersNeeded * getFuelPrice();
+  let fuelCostTotal = Math.round(litersNeeded * getFuelPrice());
 
-  // 4️⃣ Cálculo de casetas (redondo ida y vuelta, para ambas camionetas)
-  let tollCostTotal = tollCostSingle * 2 * 2; // 2 trayectos * 2 vehículos
+  // 5️⃣ Cálculo de casetas (redondo ida y vuelta, para N camionetas)
+  let tollCostTotal = tollCostSingle * 2 * viaticosVehicleCount; // 2 trayectos * N vehículos
 
   // Viáticos totales sumados
   let viaticosAmount = Math.round(fuelCostTotal + tollCostTotal);
@@ -139,14 +147,20 @@ export async function calculateViaticos(
   if (distanceKm <= viaticosLocalRadius) {
     console.log(`📍 Distancia (${distanceKm.toFixed(1)} km) es menor o igual al radio de cobertura local gratuito (${viaticosLocalRadius} km). Viáticos asignados a 0.`);
     tollCostTotal = 0;
+    fuelCostTotal = 0;
     viaticosAmount = 0;
   }
+
+  // Regla de logística extendida (> 250km)
+  const requiresManualQuote = distanceKm > 250.0;
 
   const result: ViaticosResult = {
     distanceKm,
     durationSec,
     tollCost: tollCostTotal,
+    fuelCost: fuelCostTotal,
     viaticosAmount,
+    requiresManualQuote,
   };
 
   viaticosCache.set(cacheKey, { result, timestamp: Date.now() });

@@ -237,7 +237,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-3 text-[10px] font-black tracking-widest uppercase transition-all rounded-xl group mb-1",
                     isAnyChildActive 
-                      ? "bg-[#E91E63] text-white shadow-lg shadow-pink-500/30" 
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30" 
                       : section.placeholder 
                         ? "text-white/20 cursor-not-allowed" 
                         : "text-white/60 hover:text-white hover:bg-white/5"
@@ -247,7 +247,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                   <div className="flex items-center gap-2">
                     <SectionIcon className={cn(
                       "w-4 h-4", 
-                      isAnyChildActive ? "text-white" : (isExpanded ? "text-[#E91E63]" : "text-[#E91E63]/70 group-hover:text-[#E91E63]")
+                      isAnyChildActive ? "text-white" : (isExpanded ? "text-blue-500" : "text-blue-500/70 group-hover:text-blue-500")
                     )} />
                     {section.title}
                   </div>
@@ -269,7 +269,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                     >
                       <div className={cn(
                         "space-y-1 mt-1 ml-1 pl-3 mb-2",
-                        isAnyChildActive ? "border-l-2 border-[#E91E63]/30" : "border-l border-white/10"
+                        isAnyChildActive ? "border-l-2 border-blue-500/30" : "border-l border-white/10"
                       )}>
                         {visibleItems.map((item) => {
                           const Icon = item.icon
@@ -296,11 +296,11 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
                               {isActive && (
                                 <motion.div 
                                   layoutId="activeSub"
-                                  className="absolute left-0 w-1 h-4 bg-[#E91E63] rounded-full"
+                                  className="absolute left-0 w-1 h-4 bg-blue-500 rounded-full"
                                 />
                               )}
                               {item.badgeCount ? (
-                                <span className="px-1.5 py-0.5 rounded-full bg-[#E91E63] text-[10px] font-bold text-white">
+                                <span className="px-1.5 py-0.5 rounded-full bg-blue-600 text-[10px] font-bold text-white">
                                   {item.badgeCount}
                                 </span>
                               ) : null}

@@ -568,7 +568,17 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                         defaultValue={(config as any)?.viaticosLocalRadius || 50} 
                         className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
                       <p className="text-[10px] text-muted-foreground leading-tight">
-                        Los eventos en locaciones a una distancia menor o igual a este límite se considerarán dentro de la Zona Local (sin costo de peaje ni gasolina). A partir de este límite, se aplicará el cobro dinámico de viáticos completos de ida y vuelta para dos camionetas.
+                        Los eventos en locaciones a una distancia menor o igual a este límite se considerarán dentro de la Zona Local (sin costo de peaje ni gasolina). A partir de este límite, se aplicará el cobro dinámico de viáticos completos de ida y vuelta.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="viaticosVehicleCount" className="text-foreground text-sm font-bold">Número de Vehículos a Cotizar (Camionetas/Autos)</Label>
+                      <Input id="viaticosVehicleCount" name="viaticosVehicleCount" type="number" step="1" min="1" max="10"
+                        defaultValue={(config as any)?.viaticosVehicleCount ?? 2} 
+                        className="bg-card border-border/40 text-foreground font-mono text-lg h-12" />
+                      <p className="text-[10px] text-muted-foreground leading-tight">
+                        Define para cuántos vehículos de la flota se debe estimar el costo de casetas y combustible. Por defecto se calcula para 2 camionetas.
                       </p>
                     </div>
                   </div>

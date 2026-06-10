@@ -19,8 +19,10 @@ export async function GET(request: Request) {
     return NextResponse.json({
       viaticosAmount: result.viaticosAmount,
       tollCost: result.tollCost,
+      fuelCost: result.fuelCost,
       distanceKm: result.distanceKm,
-      durationSec: result.durationSec
+      durationSec: result.durationSec,
+      requiresManualQuote: result.requiresManualQuote
     });
   } catch (err) {
     console.warn("⚠️ Google Maps API calculation failed or not configured, falling back to static tabulator:", err);
@@ -38,14 +40,20 @@ export async function GET(request: Request) {
       const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } });
       const fallback = calcularViatcos(parsedCity, parsedState, config || undefined);
 
+      const isManual = parsedCity.toLowerCase().includes("otro") || 
+                        parsedCity.toLowerCase().includes("manual") || 
+                        (fallback.amount === 0 && fallback.isOutsideZone);
+
       return NextResponse.json({
         viaticosAmount: fallback.amount,
         tollCost: 0,
+        fuelCost: 0,
         distanceKm: 0,
         durationSec: 0,
         isFallback: true,
         label: fallback.label,
-        description: fallback.description
+        description: fallback.description,
+        requiresManualQuote: isManual
       });
     } catch (fallbackErr) {
       console.error("❌ Fallback calculation failed:", fallbackErr);

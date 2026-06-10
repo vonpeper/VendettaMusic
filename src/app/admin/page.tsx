@@ -460,7 +460,7 @@ export default async function AdminDashboardPage() {
               <CardTitle className="font-heading font-black text-xl uppercase tracking-tight">Semáforo de Producción</CardTitle>
               <CardDescription>Auditoría de próximos shows confirmados y estatus de logística.</CardDescription>
             </div>
-            <Link href="/admin/eventos" className="px-4 py-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:shadow-lg hover:shadow-pink-500/30 transition-all shadow-sm">
+            <Link href="/admin/eventos" className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:shadow-lg hover:shadow-blue-500/30 transition-all shadow-sm">
               Ver Agenda Completa
             </Link>
           </CardHeader>
@@ -523,7 +523,7 @@ export default async function AdminDashboardPage() {
                           <div className="font-black text-foreground text-sm uppercase tracking-tight flex flex-wrap items-center gap-1.5">
                             {ev.client?.user?.name ?? ev.customName ?? "Cliente"}
                             {linkedBooking && (
-                              <span className="text-[10px] font-black bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white px-2 py-0.5 rounded-full shadow-sm">
+                              <span className="text-[10px] font-black bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 py-0.5 rounded-full shadow-sm">
                                 {linkedBooking.shortId}
                               </span>
                             )}

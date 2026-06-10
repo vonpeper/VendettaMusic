@@ -166,6 +166,70 @@ async function runTests() {
     assert.strictEqual(resultTolucaCustom.viaticosAmount, 130);
     console.log("✅ Test 5 Passed!");
 
+    // Test 6: Destino a larga distancia (> 250 km, ej. Guerrero a 280 km)
+    console.log("👉 Test 6: Guerrero (> 250 km)");
+    const tempFetch = global.fetch;
+    (global as any).fetch = async (url: string, options?: any) => {
+      return {
+        ok: true,
+        json: async () => ({
+          routes: [
+            {
+              distanceMeters: 280000,
+              duration: "12000s",
+              travelAdvisory: {
+                tollInfo: {
+                  estimatedPrice: [{ currencyCode: "MXN", units: "200" }]
+                }
+              }
+            }
+          ]
+        })
+      } as any;
+    };
+    clearViaticosCache();
+    const resultGuerrero = await calculateViaticos("Buenavista de Cuéllar", "escape_2014");
+    console.log("📍 Result:", resultGuerrero);
+    assert.strictEqual(resultGuerrero.distanceKm, 280);
+    assert.strictEqual(resultGuerrero.requiresManualQuote, true);
+    console.log("✅ Test 6 Passed!");
+    global.fetch = tempFetch;
+
+    // Test 7: CDMX con 1 solo vehículo configurado
+    // Fuel: (65 km * 2 * 9) / 100 * 24 = 280.8 MXN
+    // Tolls: 120 * 2 * 1 = 240 MXN
+    // Expected total: 521 MXN (rounded)
+    console.log("👉 Test 7: CDMX con 1 solo vehículo configurado");
+    mockConfig.viaticosLocalRadius = 50.0;
+    (mockConfig as any).viaticosVehicleCount = 1;
+    clearViaticosCache();
+    // Re-mocking global fetch for 65 km
+    const tempFetch2 = global.fetch;
+    (global as any).fetch = async (url: string, options?: any) => {
+      return {
+        ok: true,
+        json: async () => ({
+          routes: [
+            {
+              distanceMeters: 65000,
+              duration: "3600s",
+              travelAdvisory: {
+                tollInfo: {
+                  estimatedPrice: [{ currencyCode: "MXN", units: "120" }]
+                }
+              }
+            }
+          ]
+        })
+      } as any;
+    };
+    const resultOneVehicle = await calculateViaticos("CDMX", "escape_2014");
+    console.log("📍 Result:", resultOneVehicle);
+    assert.strictEqual(resultOneVehicle.tollCost, 240);
+    assert.strictEqual(resultOneVehicle.viaticosAmount, 521);
+    console.log("✅ Test 7 Passed!");
+    global.fetch = tempFetch2;
+
     console.log("🎉 All tests in googleMaps.test.ts PASSED successfully!");
   } catch (err) {
     console.error("❌ Test failed:", err);

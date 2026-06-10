@@ -10,7 +10,13 @@ import { toWhatsAppJid } from "../phone"
 export async function notifyMusicians(eventId: string, gigDetails: any, db: any, targetMusicianIds?: string[], forceResend = false) {
   const event = await db.event.findUnique({ 
     where: { id: eventId },
-    include: { bookingRequest: true, musicians: true }
+    include: { 
+      bookingRequest: true, 
+      musicians: true,
+      client: {
+        include: { user: true }
+      }
+    }
   })
 
   // Log de inicio
@@ -135,8 +141,9 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
       continue
     }
 
+    const realClientName = event?.client?.user?.name || event?.bookingRequest?.clientName || gigDetails.clientName || "Sin Nombre"
+    const eventName = event?.customName || gigDetails.eventName || "Evento Vendetta"
     const finalDressCode = dressCodeMap[gigDetails.dressCode] || gigDetails.dressCode || "Por definir"
-    const eventName = gigDetails.clientName || gigDetails.eventName || "Evento Vendetta"
     const confirmLink = `${baseUrl}/confirmar/${r.id}/${eventId}`
 
     // Determinar destinatario real (respetando sandbox)
@@ -168,12 +175,12 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
 
     // Obtener template de la DB o usar el default
     const dbTemplate = config?.msgTemplateGig
-    const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG")
+    const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG") || !dbTemplate.includes("Llegada") || !dbTemplate.includes("Vestimenta")
     const template = isOldTemplate
       ? `🎸 *NUEVA CONVOCATORIA — VENDETTA* 🎸
 
 📅 *Fecha:* {{date}}
-👤 *Cliente:* {{fullName}}
+👤 *Cliente:* {{clientName}}
 🎉 *Tipo:* {{ceremony}}
 🏠 *Dirección:* {{address}}
 📍 *Lugar:* {{location}} ({{mapsLink}})
@@ -203,10 +210,10 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
       performanceEnd: gigDetails.performanceEnd || "Por definir",
       dressCode: finalDressCode,
       notes: gigDetails.musicianNotes || "Ninguna",
-      clientName: gigDetails.clientName || "Vendetta",
+      clientName: realClientName,
       confirmLink,
       // Añadimos variables adicionales solicitadas por el usuario en plantillas personalizadas
-      fullName: eventName,
+      fullName: realClientName,
       time: gigDetails.performanceStart || gigDetails.setupTime || "Por definir"
     }
     

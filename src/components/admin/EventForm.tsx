@@ -39,7 +39,7 @@ const STATUS_OPTIONS = [
 interface EventFormProps {
   onClose: () => void
   clients: { id: string; name: string }[]
-  locations: { id: string; name: string; mapsLink?: string | null }[]
+  locations: { id: string; name: string; address?: string; city?: string | null; state?: string | null; mapsLink?: string | null }[]
   packages: { id: string; name: string; baseCostPerHour: number; minDuration: number }[]
   staff?: { id: string; name: string }[]
   allMusicians?: { id: string; name: string; instrument: string; isTitular: boolean }[]
@@ -99,6 +99,64 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
   const [newClientEmail, setNewClientEmail] = useState("")
   const [newClientPhone, setNewClientPhone] = useState("")
   const [creatingClient, setCreatingClient] = useState(false)
+
+  // Estados para dirección y viáticos
+  const [viaticosAmount, setViaticosAmount] = useState<number>(parseFloat(initialData?.bookingRequest?.viaticosAmount) || 0)
+  const [viaticosDetails, setViaticosDetails] = useState<{
+    distanceKm: number;
+    durationSec: number;
+    tollCost: number;
+    fuelCost: number;
+    requiresManualQuote: boolean;
+  } | null>(null)
+  const [calculatingViaticos, setCalculatingViaticos] = useState(false)
+
+  const [locationFree, setLocationFree] = useState("")
+  const [locationFreeCity, setLocationFreeCity] = useState("")
+  const [selectedLocationId, setSelectedLocationId] = useState(initialData?.locationId || "")
+
+  useEffect(() => {
+    let destination = ""
+
+    if (selectedLocationId) {
+      const loc = locations.find(l => l.id === selectedLocationId)
+      if (loc && (loc.address || loc.city)) {
+        destination = `${loc.address || ""}, ${loc.city || ""}, ${loc.state || ""}`.trim()
+      }
+    } else if (locationFree) {
+      destination = `${locationFree}, ${locationFreeCity}`.trim()
+    }
+
+    if (!destination) return
+
+    const delayDebounceFn = setTimeout(async () => {
+      setCalculatingViaticos(true)
+      try {
+        const resp = await fetch(`/api/viaticos?destination=${encodeURIComponent(destination)}`)
+        const data = await resp.json()
+        if (data && typeof data.viaticosAmount === "number") {
+          setViaticosAmount(data.viaticosAmount)
+          setViaticosDetails({
+            distanceKm: data.distanceKm || 0,
+            durationSec: data.durationSec || 0,
+            tollCost: data.tollCost || 0,
+            fuelCost: data.fuelCost || 0,
+            requiresManualQuote: !!data.requiresManualQuote
+          })
+          toast.success(`Viáticos calculados automáticamente: $${data.viaticosAmount.toLocaleString()}`)
+          if (data.requiresManualQuote) {
+            toast.warning("El destino seleccionado requiere cotización manual personalizada (distancia > 250km).")
+          }
+        }
+      } catch (err) {
+        console.error("Error al calcular viáticos:", err)
+      } finally {
+        setCalculatingViaticos(false)
+      }
+    }, 1000)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [selectedLocationId, locationFree, locationFreeCity, locations])
 
   const currentMusicianIds = initialData?.musicians?.map((m: any) => m.musicianId) || []
   const [selectedMusicians, setSelectedMusicians] = useState<string[]>(
@@ -370,8 +428,9 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="locationId">Ubicación (catálogo)</Label>
-                <select id="locationId" name="locationId" defaultValue={initialData?.locationId || ""}
+                <select id="locationId" name="locationId" value={selectedLocationId}
                   onChange={(e) => {
+                     setSelectedLocationId(e.target.value)
                      const selectedLoc = locations.find(l => l.id === e.target.value)
                      if (selectedLoc?.mapsLink) {
                         const mapsInput = document.getElementById("mapsLink") as HTMLInputElement
@@ -386,11 +445,15 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
               <div className="space-y-2">
                 <Label htmlFor="locationFree">Dirección libre (si no está en catálogo)</Label>
                 <Input id="locationFree" name="locationFree" placeholder="Ej. Hacienda San José, Querétaro"
+                  value={locationFree}
+                  onChange={(e) => setLocationFree(e.target.value)}
                   className="bg-background border-border/40" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="locationFreeCity">Ciudad / Municipio (para dirección libre)</Label>
                 <Input id="locationFreeCity" name="locationFreeCity" placeholder="Ej. Querétaro, Toluca, CDMX..."
+                  value={locationFreeCity}
+                  onChange={(e) => setLocationFreeCity(e.target.value)}
                   className="bg-background border-border/40 text-foreground" />
               </div>
               <div className="space-y-2">
@@ -533,6 +596,20 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                 <Input id="deposit" name="deposit" type="number" step="0.01" min="0"
                   defaultValue={initialData?.deposit}
                   className="bg-background border-border/40 text-foreground" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="viaticosAmount">
+                  Viáticos ($) {calculatingViaticos && <span className="text-[10px] text-blue-600 animate-pulse font-normal ml-1">(Calculando...)</span>}
+                </Label>
+                <Input id="viaticosAmount" name="viaticosAmount" type="number" step="0.01" min="0"
+                  value={viaticosAmount || ""}
+                  onChange={e => setViaticosAmount(parseFloat(e.target.value) || 0)}
+                  className={calculatingViaticos ? "border-blue-500/40 bg-blue-500/5 transition-all text-foreground bg-background" : "bg-background border-border/40 text-foreground transition-all"} />
+                <input type="hidden" name="distanceKm" value={viaticosDetails?.distanceKm ?? initialData?.bookingRequest?.distanceKm ?? 0} />
+                <input type="hidden" name="durationSec" value={viaticosDetails?.durationSec ?? initialData?.bookingRequest?.durationSec ?? 0} />
+                <input type="hidden" name="tollCost" value={viaticosDetails?.tollCost ?? initialData?.bookingRequest?.tollCost ?? 0} />
+                <input type="hidden" name="fuelCost" value={viaticosDetails?.fuelCost ?? initialData?.bookingRequest?.fuelCost ?? 0} />
+                <input type="hidden" name="requiresManualQuote" value={String(viaticosDetails?.requiresManualQuote ?? initialData?.bookingRequest?.requiresManualQuote ?? false)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="depositMethod">Método de pago anticipo / ingreso</Label>

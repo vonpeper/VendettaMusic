@@ -77,7 +77,7 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
     // Sincronizar con Quote (Legacy) si existe
     const updatedEvent = await db.event.findUnique({ 
       where: { id },
-      include: { location: true, package: true, client: { include: { user: true } } }
+      include: { location: true, package: true, bookingRequest: true, client: { include: { user: true } } }
     })
 
     // Sincronizar con ClientProfile si existe para mantener el dato maestro actualizado
@@ -140,6 +140,12 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
           city: updatedEvent?.location?.city || "CDMX",
           state: updatedEvent?.location?.state || "México",
           mapsLink: updatedEvent?.location?.mapsLink || (data.mapsLink as string) || null,
+          viaticosAmount: parseFloat(data.viaticosAmount as string || "0"),
+          distanceKm: parseFloat(data.distanceKm as string || "0") || null,
+          durationSec: parseInt(data.durationSec as string || "0") || null,
+          tollCost: parseFloat(data.tollCost as string || "0") || null,
+          fuelCost: parseFloat(data.fuelCost as string || "0") || null,
+          requiresManualQuote: data.requiresManualQuote === "true",
           ...(data.status === "completado" ? { paymentStatus: "paid" } : {})
         }
       })
@@ -213,7 +219,8 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
       }
 
       const gigDetails = {
-        clientName: data.customName as string || updatedEvent.client?.user?.name || "Sin Nombre",
+        clientName: updatedEvent.client?.user?.name || updatedEvent.bookingRequest?.clientName || "Sin Nombre",
+        eventName: updatedEvent.customName || "Evento Vendetta",
         date: dateValue || updatedEvent.date,
         ceremonyType: updatedEvent.ceremonyType,
         guestCount: updatedEvent.guestCount || 0,
@@ -423,6 +430,12 @@ export async function createEventAction(_prev: any, formData: FormData) {
         address: (data.locationFree as string) || event.location?.address || "Dirección manual",
         city: event.location?.city || "CDMX",
         isPublic: event.isPublic,
+        viaticosAmount: parseFloat(data.viaticosAmount as string || "0"),
+        distanceKm: parseFloat(data.distanceKm as string || "0") || null,
+        durationSec: parseInt(data.durationSec as string || "0") || null,
+        tollCost: parseFloat(data.tollCost as string || "0") || null,
+        fuelCost: parseFloat(data.fuelCost as string || "0") || null,
+        requiresManualQuote: data.requiresManualQuote === "true",
       }
     })
 
@@ -475,7 +488,8 @@ export async function createEventAction(_prev: any, formData: FormData) {
       await assignDefaultMusicians(event.id, db).catch(e => console.error("Error auto-assigning musicians in createEventAction:", e))
       
       const gigDetails = {
-        clientName: data.customName as string || event.client?.user?.name || "Sin Nombre",
+        clientName: event.client?.user?.name || clientName || "Sin Nombre",
+        eventName: event.customName || "Evento Vendetta",
         date: event.date,
         ceremonyType: event.ceremonyType,
         guestCount: event.guestCount || 0,
@@ -520,13 +534,14 @@ export async function notifyEventAction(id: string) {
   try {
     const event = await db.event.findUnique({
       where: { id },
-      include: { location: true, package: true, client: { include: { user: true } } }
+      include: { location: true, package: true, bookingRequest: true, client: { include: { user: true } } }
     })
 
     if (!event) return { success: false, error: "Evento no encontrado" }
 
     const gigDetails = {
-      clientName: event.customName || event.client?.user?.name || "Sin Nombre",
+      clientName: event.client?.user?.name || event.bookingRequest?.clientName || "Sin Nombre",
+      eventName: event.customName || "Evento Vendetta",
       date: event.date,
       ceremonyType: event.ceremonyType,
       guestCount: event.guestCount || 0,
@@ -654,13 +669,14 @@ export async function notifySingleMusicianAction(eventId: string, musicianId: st
   try {
     const event = await db.event.findUnique({
       where: { id: eventId },
-      include: { location: true, package: true, client: { include: { user: true } } }
+      include: { location: true, package: true, bookingRequest: true, client: { include: { user: true } } }
     })
 
     if (!event) return { success: false, error: "Evento no encontrado" }
 
     const gigDetails = {
-      clientName: event.customName || event.client?.user?.name || "Sin Nombre",
+      clientName: event.client?.user?.name || event.bookingRequest?.clientName || "Sin Nombre",
+      eventName: event.customName || "Evento Vendetta",
       date: event.date,
       ceremonyType: event.ceremonyType,
       guestCount: event.guestCount || 0,

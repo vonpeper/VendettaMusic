@@ -1,42 +1,43 @@
 export const ESTADOS_MUNICIPIOS: Record<string, string[]> = {
-  "Ciudad de México": [
-    "Álvaro Obregón", "Azcapotzalco", "Benito Juárez", "Coyoacán",
-    "Cuajimalpa", "Cuauhtémoc", "Gustavo A. Madero", "Iztacalco",
-    "Iztapalapa", "Magdalena Contreras", "Miguel Hidalgo", "Milpa Alta",
-    "Tláhuac", "Tlalpan", "Venustiano Carranza", "Xochimilco"
-  ],
   "Estado de México": [
-    "Toluca", "Metepec", "Zinacantepec", "Ocoyoacac", "San Mateo Atenco",
-    "Lerma", "Santiago Tianguistenco", "Capulhuac", "Xonacatlán",
-    "Almoloya de Juárez", "Temoaya", "Otzolotepec", "Mexicaltzingo",
-    "Calimaya", "Tenango del Valle", "San Antonio la Isla", "Rayón",
-    "Chapultepec", "Almoloya del Río", "Santa Cruz Atizapán",
-    "Texcalyacac", "Joquicingo", "Valle de Bravo", "Malinalco",
-    "Ixtapan de la Sal", "Tonatico", "Naucalpan", "Tlalnepantla",
-    "Huixquilucan", "Atizapán", "Cuautitlán Izcalli", "Tepotzotlán",
-    "Ecatepec", "Nezahualcóyotl", "Chalco", "Valle de Chalco",
-    "Ixtapaluca", "Chicoloapan", "Chimalhuacán", "Texcoco", "Coacalco",
-    "Otro Municipio (Escribir manualmente)"
+    "Metepec", "Toluca", "San Mateo Atenco", "Lerma", "Ocoyoacac", "Zinacantepec",
+    "Calimaya", "Mexicaltzingo", "Chapultepec", "Tenango del Valle", "Santiago Tianguistenco",
+    "Almoloya de Juárez", "Temoaya", "Xonacatlán", "Otzolotepec", "Ixtlahuaca", "Atlacomulco",
+    "Valle de Bravo", "Malinalco", "Ixtapan de la Sal", "Tenancingo", "Villa Victoria",
+    "Villa de Allende", "San José del Rincón", "Jilotepec", "Naucalpan", "Huixquilucan",
+    "Atizapán", "Tlalnepantla", "Cuautitlán Izcalli", "Ecatepec", "Texcoco",
+    "Otro municipio / cotización manual"
   ],
-  "Querétaro": [
-    "Querétaro", "San Juan del Río", "Corregidora", "El Marqués",
-    "Tequisquiapan", "Otro Municipio (Escribir manualmente)"
-  ],
-  "Morelos": [
-    "Cuernavaca", "Jiutepec", "Temixco", "Tepoztlán", "Yautepec",
-    "Cuautla", "Otro Municipio (Escribir manualmente)"
-  ],
-  "Puebla": [
-    "Puebla", "San Andrés Cholula", "San Pedro Cholula", "Atlixco",
-    "Otro Municipio (Escribir manualmente)"
+  "Ciudad de México": [
+    "Álvaro Obregón", "Azcapotzalco", "Benito Juárez", "Coyoacán", "Cuajimalpa",
+    "Cuauhtémoc", "Gustavo A. Madero", "Iztacalco", "Iztapalapa", "Magdalena Contreras",
+    "Miguel Hidalgo", "Milpa Alta", "Tláhuac", "Tlalpan", "Venustiano Carranza", "Xochimilco",
+    "Otro municipio / cotización manual"
   ],
   "Hidalgo": [
-    "Pachuca", "Tulancingo", "Tizayuca", "Mineral de la Reforma",
-    "Otro Municipio (Escribir manualmente)"
+    "Tula de Allende", "Tepeji del Río", "Pachuca", "Mineral de la Reforma",
+    "Actopan", "Ixmiquilpan",
+    "Otro municipio / cotización manual"
+  ],
+  "Morelos": [
+    "Cuernavaca", "Jiutepec", "Temixco", "Emiliano Zapata", "Xochitepec",
+    "Tepoztlán", "Yautepec", "Cuautla",
+    "Otro municipio / cotización manual"
+  ],
+  "Querétaro": [
+    "Querétaro", "El Marqués", "Corregidora", "San Juan del Río",
+    "Otro municipio / cotización manual"
   ],
   "Tlaxcala": [
-    "Tlaxcala", "Apizaco", "Huamantla", "Chiautempan",
-    "Otro Municipio (Escribir manualmente)"
+    "Tlaxcala", "Apizaco", "Chiautempan", "Huamantla",
+    "Otro municipio / cotización manual"
   ],
-  "Otro": []
+  "Michoacán": [
+    "Zitácuaro", "Tuxpan", "Jungapeo", "Maravatío",
+    "Otro municipio / cotización manual"
+  ],
+  "Guerrero": [
+    "Taxco", "Iguala", "Buenavista de Cuéllar",
+    "Otro municipio / cotización manual"
+  ]
 }

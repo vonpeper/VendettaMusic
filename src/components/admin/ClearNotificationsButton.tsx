@@ -32,7 +32,7 @@ export function ClearNotificationsButton() {
       size="sm" 
       onClick={handleClear}
       disabled={isPending}
-      className="gap-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] hover:shadow-lg hover:shadow-pink-500/30 transition-all text-white border-none rounded-xl font-bold"
+      className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/30 transition-all text-white border-none rounded-xl font-bold"
     >
       {isPending ? (
         <Loader2 className="w-4 h-4 animate-spin" />

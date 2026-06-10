@@ -19,7 +19,7 @@ export function MarkCompletedButton({ bookingId }: { bookingId: string }) {
     <Button 
       size="sm" 
       variant="default" 
-      className="h-9 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white hover:shadow-md transition-all rounded-lg font-bold border-none cursor-pointer" 
+      className="h-9 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-md transition-all rounded-lg font-bold border-none cursor-pointer" 
       onClick={handleComplete}
       disabled={loading}
     >

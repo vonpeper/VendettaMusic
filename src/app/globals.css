@@ -156,8 +156,8 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0 0 0);
   
-  /* Vibrant Magenta Primary (Matches Sidebar Selection) */
-  --primary: oklch(0.6 0.25 0); /* Approximate #E91E63 */
+  /* Vibrant Blue Primary (Matches Sidebar Selection) */
+  --primary: oklch(0.55 0.20 250); /* Elegant Blue */
   --primary-foreground: oklch(1 0 0);
   
   --secondary: oklch(0.98 0 0);
@@ -166,19 +166,19 @@
   --muted-foreground: oklch(0.4 0 0); 
   --accent: oklch(0.98 0 0);
   --accent-foreground: oklch(0 0 0);
-  --destructive: oklch(0.5 0.2 0); /* Darker Magenta for destructive */
+  --destructive: oklch(0.57 0.23 29); /* Traditional Red for destructive */
   --border: oklch(0.92 0 0); /* Subtle borders */
   --input: oklch(0.8 0 0);
-  --ring: oklch(0.6 0.25 0);
+  --ring: oklch(0.55 0.20 250);
   
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0 0 0);
-  --sidebar-primary: oklch(0.6 0.25 0);
+  --sidebar-primary: oklch(0.55 0.20 250);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.95 0 0);
   --sidebar-accent-foreground: oklch(0 0 0);
   --sidebar-border: oklch(0.85 0 0); /* Light gray borders */
-  --sidebar-ring: oklch(0.6 0.25 0);
+  --sidebar-ring: oklch(0.55 0.20 250);
 }
 
 @layer base {

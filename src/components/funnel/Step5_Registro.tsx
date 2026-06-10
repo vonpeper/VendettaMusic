@@ -31,7 +31,8 @@ export default function Step5_Registro({ data, onNext, onBack }: Props) {
     // pero guardamos en data para persistencia si el componente se desmonta
   }
 
-  const base    = (data.packagePrice ?? 0) + (data.viaticosAmount ?? 0)
+  const isManualQuote = !!data.requiresManualQuote
+  const base    = (data.packagePrice ?? 0) + (isManualQuote ? 0 : (data.viaticosAmount ?? 0))
   const deposit = data.depositAmount ?? 0
 
   const eventDate = data.requestedDate
@@ -75,6 +76,12 @@ export default function Step5_Registro({ data, onNext, onBack }: Props) {
           clientEmail:  email,
           isPublic:     data.isPublic,
           clientProvidesAudio: data.clientProvidesAudio,
+          // Campos de viáticos detallados
+          distanceKm:   data.distanceKm,
+          durationSec:  data.durationSec,
+          tollCost:     data.tollCost,
+          fuelCost:     data.fuelCost,
+          requiresManualQuote: data.requiresManualQuote,
         })
       })
       const json = await res.json()
@@ -232,8 +239,9 @@ export default function Step5_Registro({ data, onNext, onBack }: Props) {
           <span className="text-sm text-gray-300">
             Acepto los <a href="/terminos-condiciones" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">términos y condiciones</a> y el <a href="/aviso-privacidad" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">aviso de privacidad</a>.
             <span className="block mt-1 text-xs text-muted-foreground">
-              Entiendo que el anticipo es el {Math.round((deposit/base)*100)}% del total y que la reserva quedará confirmada
-              una vez verificado el pago por el equipo de Vendetta.
+              {isManualQuote
+                ? "Entiendo que mi fecha quedará pre-apartada y que un asesor me contactará para definir la cotización de viáticos definitiva antes de realizar cualquier pago."
+                : `Entiendo que el anticipo es el ${base > 0 ? Math.round((deposit/base)*100) : 0}% del total y que la reserva quedará confirmada una vez verificado el pago por el equipo de Vendetta.`}
             </span>
           </span>
         </label>

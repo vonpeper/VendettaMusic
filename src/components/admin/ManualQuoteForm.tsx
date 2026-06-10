@@ -159,6 +159,51 @@ export function ManualQuoteForm({
     invoice: false
   })
 
+  const [viaticosDetails, setViaticosDetails] = useState<{
+    distanceKm: number;
+    durationSec: number;
+    tollCost: number;
+    fuelCost: number;
+    requiresManualQuote: boolean;
+  } | null>(null)
+  const [calculatingViaticos, setCalculatingViaticos] = useState(false)
+
+  useEffect(() => {
+    if (!formData.municipio || !formData.state) return
+
+    const delayDebounceFn = setTimeout(async () => {
+      setCalculatingViaticos(true)
+      try {
+        const destination = `${formData.calle || ""}, ${formData.colonia || ""}, ${formData.municipio}, ${formData.state}`.trim()
+        const resp = await fetch(`/api/viaticos?destination=${encodeURIComponent(destination)}`)
+        const data = await resp.json()
+        if (data && typeof data.viaticosAmount === "number") {
+          setFormData(prev => ({
+            ...prev,
+            viaticosAmount: data.viaticosAmount
+          }))
+          setViaticosDetails({
+            distanceKm: data.distanceKm || 0,
+            durationSec: data.durationSec || 0,
+            tollCost: data.tollCost || 0,
+            fuelCost: data.fuelCost || 0,
+            requiresManualQuote: !!data.requiresManualQuote
+          })
+          toast.success(`Viáticos calculados automáticamente: $${data.viaticosAmount.toLocaleString()}`)
+          if (data.requiresManualQuote) {
+            toast.warning("El destino seleccionado requiere cotización manual personalizada (distancia > 250km).")
+          }
+        }
+      } catch (err) {
+        console.error("Error al calcular viáticos:", err)
+      } finally {
+        setCalculatingViaticos(false)
+      }
+    }, 1000)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [formData.municipio, formData.state, formData.calle, formData.colonia])
+
   const handlePackageChange = (id: string | null) => {
     if (!id) return
     const pkg = packages.find(p => p.id === id)
@@ -230,6 +275,11 @@ export function ManualQuoteForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          distanceKm: viaticosDetails?.distanceKm || 0,
+          durationSec: viaticosDetails?.durationSec || 0,
+          tollCost: viaticosDetails?.tollCost || 0,
+          fuelCost: viaticosDetails?.fuelCost || 0,
+          requiresManualQuote: viaticosDetails?.requiresManualQuote || false,
           requestedDates: validDates
         })
       })
@@ -698,13 +748,14 @@ export function ManualQuoteForm({
                   className="bg-primary/5 border-primary shadow-inner"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Viáticos ($)</Label>
+              <div className="space-y-2 relative">
+                <Label>Viáticos ($) {calculatingViaticos && <span className="text-[10px] text-blue-600 animate-pulse font-normal ml-1">(Calculando...)</span>}</Label>
                 <Input 
                   type="number"
                   value={formData.viaticosAmount} 
                   onFocus={(e) => e.target.select()}
                   onChange={e => setFormData({...formData, viaticosAmount: parseFloat(e.target.value) || 0})}
+                  className={calculatingViaticos ? "border-blue-500/40 bg-blue-500/5 transition-all" : "transition-all"}
                 />
               </div>
               <div className="space-y-2">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { FunnelData } from "./FunnelWizard"
 import { Button }     from "@/components/ui/button"
-import { CreditCard, Building2, Banknote, Info } from "lucide-react"
+import { CreditCard, Building2, Banknote, Info, PhoneCall } from "lucide-react"
 import { Input } from "@/components/ui/input"
 
 interface PaymentInfo {
@@ -26,7 +26,7 @@ interface Props {
 }
 
 const MXN = (v: number) =>
-  new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(v)
+  new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(v)
 
 const ALL_PAYMENT_METHODS = [
   {
@@ -74,20 +74,45 @@ const ALL_PAYMENT_METHODS = [
 const DEPOSIT_PCT = 0.30  // 30% de anticipo mínimo
 
 export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Props) {
-  const activeMethods = ALL_PAYMENT_METHODS.filter(pm => {
-    if (!paymentConfig) return pm.id !== "mercado-pago" && pm.id !== "stripe" // Default behavior if no config
-    return (paymentConfig as any)[pm.configKey]
-  })
-  const [invoice, setInvoice] = useState<boolean>(data.invoice ?? false)
-  const subtotal       = (data.packagePrice ?? 0) + (data.viaticosAmount ?? 0)
-  const iva            = invoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
-  const totalVal       = subtotal + iva
-  const minDeposit     = Math.ceil(totalVal * DEPOSIT_PCT / 100) * 100  // redondear a centenas
+  const isManualQuote = !!data.requiresManualQuote
 
-  const [method,  setMethod]  = useState<string>(data.paymentMethod ?? "")
-  const [deposit, setDeposit] = useState<number>(data.depositAmount ?? minDeposit)
+  // Filtrar métodos activos según config o forzar "manual-quote" si requiere cotización manual
+  const activeMethods = isManualQuote
+    ? [
+        {
+          id: "manual-quote",
+          value: "manual-quote",
+          label: "Pre-apartar y Cotizar Viáticos",
+          icon:  "📞",
+          desc:  "Tu fecha quedará pre-apartada sin costo inicial. Un asesor te contactará para cotizar la logística extendida (hoteles/comidas/traslado) antes de solicitar el anticipo.",
+          badge: "Por Teléfono / WhatsApp",
+          badgeColor: "text-amber-400 bg-amber-900/40 border-amber-700/50",
+          configKey: ""
+        }
+      ]
+    : ALL_PAYMENT_METHODS.filter(pm => {
+        if (!paymentConfig) return pm.id !== "mercado-pago" && pm.id !== "stripe"
+        return (paymentConfig as any)[pm.configKey]
+      })
+
+  const [invoice, setInvoice] = useState<boolean>(data.invoice ?? false)
+  
+  const subtotal   = (data.packagePrice ?? 0) + (isManualQuote ? 0 : (data.viaticosAmount ?? 0))
+  const iva        = invoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
+  const totalVal   = subtotal + iva
+  const minDeposit = isManualQuote ? 0 : Math.ceil(totalVal * DEPOSIT_PCT / 100) * 100
+
+  const [method,  setMethod]  = useState<string>(isManualQuote ? "manual-quote" : (data.paymentMethod ?? ""))
+  const [deposit, setDeposit] = useState<number>(isManualQuote ? 0 : (data.depositAmount ?? minDeposit))
   const [error,   setError]   = useState("")
   const [bankInfo, setBankInfo] = useState<PaymentInfo | null>(null)
+
+  useEffect(() => {
+    if (isManualQuote) {
+      setMethod("manual-quote")
+      setDeposit(0)
+    }
+  }, [isManualQuote])
 
   useEffect(() => {
     if (method !== "transfer" || bankInfo) return
@@ -97,16 +122,17 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
       .catch(() => null)
   }, [method, bankInfo])
 
-  // Ajustar el anticipo si el total cambia por marcar/desmarcar factura y queda por debajo del mínimo
   useEffect(() => {
-    setDeposit(prev => Math.max(prev, minDeposit))
-  }, [minDeposit])
+    if (!isManualQuote) {
+      setDeposit(prev => Math.max(prev, minDeposit))
+    }
+  }, [minDeposit, isManualQuote])
 
   const balance = totalVal - deposit
 
   function handleNext() {
     if (!method) { setError("Selecciona un método de pago."); return }
-    if (deposit < minDeposit) { setError(`El anticipo mínimo es ${MXN(minDeposit)} (30%).`); return }
+    if (!isManualQuote && deposit < minDeposit) { setError(`El anticipo mínimo es ${MXN(minDeposit)} (30%).`); return }
     onNext({ paymentMethod: method, depositAmount: deposit, invoice })
   }
 
@@ -114,10 +140,12 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
     <div>
       <div className="mb-8">
         <h2 className="text-3xl font-heading font-black text-white tracking-tight">
-          Anticipo y <span className="text-primary">método de pago</span>
+          {isManualQuote ? "Pre-apartado de fecha" : "Anticipo y método de pago"}
         </h2>
         <p className="text-muted-foreground mt-2">
-          El anticipo mínimo es el 30% del total. El resto se liquida el día del evento.
+          {isManualQuote 
+            ? "Completa tu registro para pre-apartar la fecha. No se requiere pago inmediato."
+            : "El anticipo mínimo es el 30% del total. El resto se liquida el día del evento."}
         </p>
       </div>
 
@@ -127,10 +155,21 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
           <span className="text-muted-foreground">Paquete: {data.packageName}</span>
           <span className="font-bold text-white">{MXN(data.packagePrice ?? 0)}</span>
         </div>
-        {(data.viaticosAmount ?? 0) > 0 && (
+        
+        {isManualQuote ? (
+          <div className="flex justify-between text-sm border-t border-white/5 pt-2">
+            <span className="text-amber-400 font-bold">Viáticos de Logística</span>
+            <span className="text-amber-300 font-bold">Por cotizar (Logística extendida)</span>
+          </div>
+        ) : (data.viaticosAmount ?? 0) > 0 ? (
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Viáticos ({data.city})</span>
             <span className="text-yellow-300 font-bold">{MXN(data.viaticosAmount ?? 0)}</span>
+          </div>
+        ) : (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Viáticos ({data.city})</span>
+            <span className="text-green-400 font-bold">¡Gratis! ($0)</span>
           </div>
         )}
 
@@ -160,75 +199,96 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
         )}
 
         <div className="flex justify-between text-base border-t border-white/10 pt-2">
-          <span className="font-bold text-white">{invoice ? "Total con IVA" : "Total del evento"}</span>
-          <span className="font-black text-white text-lg">{MXN(totalVal)}</span>
+          <span className="font-bold text-white">
+            {isManualQuote 
+              ? (invoice ? "Subtotal con IVA (Sin Viáticos)" : "Subtotal (Sin Viáticos)")
+              : (invoice ? "Total con IVA" : "Total del evento")}
+          </span>
+          <span className="font-black text-white text-lg">
+            {MXN(totalVal)}{isManualQuote && " + Viáticos"}
+          </span>
         </div>
       </div>
 
-      {/* Selector de anticipo */}
-      <div className="bg-card/40 border border-white/10 rounded-2xl p-5 mb-6">
-        <label className="text-sm font-bold text-white mb-4 block text-center">
-          ¿Cuánto anticipo quieres dejar hoy?
-        </label>
-        
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-            <Input 
-              type="number"
-              value={deposit}
-              onChange={e => setDeposit(Number(e.target.value))}
-              className="pl-7 bg-white/5 border-white/10 h-12 text-lg font-black"
-            />
+      {/* Selector de anticipo (Solo si NO es cotización manual) */}
+      {!isManualQuote ? (
+        <div className="bg-card/40 border border-white/10 rounded-2xl p-5 mb-6">
+          <label className="text-sm font-bold text-white mb-4 block text-center">
+            ¿Cuánto anticipo quieres dejar hoy?
+          </label>
+          
+          <div className="flex items-center gap-4 mb-6">
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <Input 
+                type="number"
+                value={deposit}
+                onChange={e => setDeposit(Number(e.target.value))}
+                className="pl-7 bg-white/5 border-white/10 h-12 text-lg font-black"
+              />
+            </div>
+            <div className="flex-1">
+              <input
+                type="range"
+                min={minDeposit}
+                max={totalVal}
+                step={100}
+                value={deposit > totalVal ? totalVal : (deposit < minDeposit ? minDeposit : deposit)}
+                onChange={e => setDeposit(parseInt(e.target.value))}
+                className="w-full accent-red-600 h-2"
+              />
+            </div>
           </div>
-          <div className="flex-1">
-            <input
-              type="range"
-              min={minDeposit}
-              max={totalVal}
-              step={100}
-              value={deposit > totalVal ? totalVal : (deposit < minDeposit ? minDeposit : deposit)}
-              onChange={e => setDeposit(parseInt(e.target.value))}
-              className="w-full accent-red-600 h-2"
-            />
-          </div>
-        </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center bg-primary/10 border border-primary/30 rounded-xl p-3">
-            <div className="text-xs text-muted-foreground mb-1">Anticipo</div>
-            <div className="text-base font-black text-primary">{MXN(deposit)}</div>
-            <div className="text-[10px] text-primary/70">{Math.round(deposit/totalVal*100)}%</div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center bg-primary/10 border border-primary/30 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">Anticipo</div>
+              <div className="text-base font-black text-primary">{MXN(deposit)}</div>
+              <div className="text-[10px] text-primary/70">{Math.round(deposit/totalVal*100)}%</div>
+            </div>
+            <div className="text-center bg-white/5 border border-white/10 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">Resta</div>
+              <div className="text-base font-black text-white">{MXN(balance)}</div>
+              <div className="text-[10px] text-muted-foreground">día del evento</div>
+            </div>
+            <div className="text-center bg-white/5 border border-white/10 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">Total</div>
+              <div className="text-base font-black text-white">{MXN(totalVal)}</div>
+              <div className="text-[10px] text-muted-foreground">evento completo</div>
+            </div>
           </div>
-          <div className="text-center bg-white/5 border border-white/10 rounded-xl p-3">
-            <div className="text-xs text-muted-foreground mb-1">Resta</div>
-            <div className="text-base font-black text-white">{MXN(balance)}</div>
-            <div className="text-[10px] text-muted-foreground">día del evento</div>
-          </div>
-          <div className="text-center bg-white/5 border border-white/10 rounded-xl p-3">
-            <div className="text-xs text-muted-foreground mb-1">Total</div>
-            <div className="text-base font-black text-white">{MXN(totalVal)}</div>
-            <div className="text-[10px] text-muted-foreground">evento completo</div>
-          </div>
+          <p className="text-[10px] text-muted-foreground mt-3 flex items-center gap-1.5 justify-center">
+            <Info className="w-3 h-3" />
+            Mínimo del 30% ({MXN(minDeposit)}). Puedes ingresar el monto exacto arriba.
+          </p>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-3 flex items-center gap-1.5 justify-center">
-          <Info className="w-3 h-3" />
-          Mínimo del 30% ({MXN(minDeposit)}). Puedes ingresar el monto exacto arriba.
-        </p>
-      </div>
+      ) : (
+        <div className="bg-amber-900/10 border border-amber-500/25 rounded-2xl p-5 mb-6 text-center space-y-2">
+          <div className="inline-flex p-3 rounded-full bg-amber-500/20 text-amber-400 mb-2">
+            <PhoneCall className="w-6 h-6 animate-pulse" />
+          </div>
+          <h4 className="font-black text-white text-sm uppercase tracking-wide">Requiere Cotización por Asesor</h4>
+          <p className="text-xs text-gray-400 leading-relaxed max-w-md mx-auto">
+            Dado que tu evento requiere logística extendida, el cobro del anticipo quedará suspendido temporalmente. Enviaremos tus datos para elaborar la cotización final y contactarte.
+          </p>
+        </div>
+      )}
 
       {/* Método de pago */}
       <div className="space-y-3 mb-6">
-        <label className="text-sm font-bold text-white">Método de pago del anticipo</label>
+        <label className="text-sm font-bold text-white">
+          {isManualQuote ? "Modalidad de Registro" : "Método de pago del anticipo"}
+        </label>
         {activeMethods.map(pm => (
           <button
             key={pm.value}
-            onClick={() => { setMethod(pm.value); setError("") }}
+            onClick={() => { if (!isManualQuote) { setMethod(pm.value); setError("") } }}
+            disabled={isManualQuote}
             className={`w-full text-left rounded-2xl border p-4 transition-all ${
               method === pm.value
                 ? "border-primary bg-primary/10"
                 : "border-white/10 bg-card/40 hover:border-white/25"
-            }`}
+            } ${isManualQuote ? "cursor-default border-amber-500/35 bg-amber-950/10" : ""}`}
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl leading-none">{pm.icon}</span>
@@ -242,7 +302,9 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
                 <p className="text-xs text-muted-foreground">{pm.desc}</p>
               </div>
               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                method === pm.value ? "border-primary bg-primary" : "border-white/30"
+                method === pm.value 
+                  ? (isManualQuote ? "border-amber-400 bg-amber-500" : "border-primary bg-primary") 
+                  : "border-white/30"
               }`}>
                 {method === pm.value && <div className="w-2 h-2 bg-white rounded-full" />}
               </div>
@@ -252,7 +314,7 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
       </div>
 
       {/* Info transferencia */}
-      {method === "transfer" && (
+      {method === "transfer" && !isManualQuote && (
         <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4 mb-4">
           <p className="text-sm font-bold text-blue-300 mb-2">Cuenta para transferencia:</p>
           {bankInfo ? (
@@ -280,7 +342,7 @@ export default function Step4_Pago({ data, onNext, onBack, paymentConfig }: Prop
       <div className="flex gap-3">
         <Button variant="outline" onClick={onBack} className="flex-1 border-white/15 h-12">← Atrás</Button>
         <Button onClick={handleNext} className="flex-1 font-black h-12">
-          Continuar → Mis Datos
+          {isManualQuote ? "Continuar → Mis Datos" : "Continuar → Mis Datos"}
         </Button>
       </div>
     </div>

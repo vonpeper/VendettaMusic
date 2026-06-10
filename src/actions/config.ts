@@ -3,6 +3,7 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { requireAdminMsg as requireAdmin } from "@/lib/auth-guards"
+import { clearViaticosCache } from "@/lib/viaticos/googleMaps"
 
 export async function saveBankConfigAction(arg1: any, arg2?: any) {
   const u = await requireAdmin(); if (u) return u
@@ -157,6 +158,10 @@ export async function saveViaticosConfigAction(arg1: any, arg2?: any) {
     const parsedRadius = radiusInput ? parseFloat(radiusInput) : 50.0
     const viaticosLocalRadius = isNaN(parsedRadius) ? 50.0 : parsedRadius
 
+    const vehicleCountInput = formData.get("viaticosVehicleCount") as string
+    const parsedVehicleCount = vehicleCountInput ? parseInt(vehicleCountInput, 10) : 2
+    const viaticosVehicleCount = isNaN(parsedVehicleCount) ? 2 : parsedVehicleCount
+
     await db.globalConfig.upsert({
       where: { id: "vendetta_config" },
       update: {
@@ -165,6 +170,7 @@ export async function saveViaticosConfigAction(arg1: any, arg2?: any) {
         zona2Cities,
         zona3Cities,
         viaticosLocalRadius,
+        viaticosVehicleCount,
       },
       create: {
         id: "vendetta_config",
@@ -173,10 +179,16 @@ export async function saveViaticosConfigAction(arg1: any, arg2?: any) {
         zona2Cities,
         zona3Cities,
         viaticosLocalRadius,
+        viaticosVehicleCount,
       }
     })
 
     revalidatePath("/admin/configuracion")
+    try {
+      clearViaticosCache()
+    } catch (e) {
+      console.error("Error clearing viaticos cache:", e)
+    }
     return { success: true, message: "Tarifas y zonas de viáticos actualizadas" }
   } catch (error) {
     console.error("Error saving viaticos config:", error)

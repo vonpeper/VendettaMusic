@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
       depositConfirmed, clientProvidesAudio,
       locationId, venueName, venuePhone,
       bandHours, djHours, isDjWithTvs, hasTemplete, hasPista, hasRobot,
-      originalPrice, discountAmount, viaticosAmount, invoice
+      originalPrice, discountAmount, viaticosAmount, invoice,
+      distanceKm, durationSec, tollCost, fuelCost, requiresManualQuote
     } = data
     
     // Safeguards for numeric fields
@@ -168,6 +169,11 @@ export async function POST(req: NextRequest) {
           originalPrice: parseFloat(originalPrice) || 0,
           discountAmount: parseFloat(discountAmount) || 0,
           viaticosAmount: parseFloat(viaticosAmount) || 0,
+          distanceKm: parseFloat(distanceKm) || null,
+          durationSec: parseInt(durationSec) || null,
+          tollCost: parseFloat(tollCost) || null,
+          fuelCost: parseFloat(fuelCost) || null,
+          requiresManualQuote: Boolean(requiresManualQuote),
           invoice: Boolean(invoice),
         }
       })

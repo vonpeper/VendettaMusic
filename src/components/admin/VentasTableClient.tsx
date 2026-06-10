@@ -266,7 +266,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="default" size="sm" className="gap-2 font-black h-9 px-4 rounded-xl bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white hover:shadow-lg hover:shadow-pink-500/30 border-none">
+              <Button variant="default" size="sm" className="gap-2 font-black h-9 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg hover:shadow-blue-500/30 border-none">
                 <Trash2 className="w-4 h-4" /> Eliminar Selección
               </Button>
             </DialogTrigger>

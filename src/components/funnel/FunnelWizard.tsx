@@ -39,6 +39,11 @@ export interface FunnelData {
   viaticosAmount: number
   viaticosLabel:  string
   mapsLink?:     string
+  distanceKm?:    number
+  durationSec?:   number
+  tollCost?:      number
+  fuelCost?:      number
+  requiresManualQuote?: boolean
   // Step 3
   requestedDate: string
   startTime:     string

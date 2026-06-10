@@ -23,8 +23,14 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
   const rawPhone = musician.whatsapp
   const waLink = rawPhone ? toWaLink(rawPhone) : null
 
+  const cardStyles = isAtRisk
+    ? 'border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:border-red-500/50'
+    : (musician.isTitular
+        ? 'border-blue-500/50 bg-gradient-to-br from-card via-card to-blue-500/10 shadow-[0_4px_20px_rgba(59,130,246,0.12)] hover:border-blue-500 hover:shadow-[0_4px_25px_rgba(59,130,246,0.2)]'
+        : 'border-border/40 bg-card/60 hover:border-muted hover:shadow-sm')
+
   return (
-    <div className={`bg-card border ${isAtRisk ? 'border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-border/40'} rounded-xl p-5 relative overflow-hidden transition-all hover:border-primary/50`}>
+    <div className={`${cardStyles} rounded-xl p-5 relative overflow-hidden transition-all duration-300`}>
       {/* Risk Alert */}
       {isAtRisk && (
         <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-black px-3 py-1 uppercase tracking-wider rounded-bl-lg flex items-center gap-1 shadow-md z-10">
@@ -33,7 +39,7 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
       )}
 
       <div className="flex items-start gap-4 mb-4">
-        <div className="w-12 h-12 rounded-full bg-card flex items-center justify-center border border-primary/30 shrink-0 overflow-hidden shadow-inner">
+        <div className={`w-12 h-12 rounded-full bg-card flex items-center justify-center border-2 ${musician.isTitular ? 'border-blue-500 shadow-md shadow-blue-500/20' : 'border-border/60'} shrink-0 overflow-hidden shadow-inner`}>
           <img 
             src={musician.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(musician.user?.name ?? "M")}&background=random`}
             alt={musician.user?.name ?? "Músico"} 
@@ -42,8 +48,19 @@ export function MusicianCard({ musician, onViewDetails }: { musician: any, onVie
         </div>
 
         <div className="flex-1 pr-12">
-          <h3 className="font-bold text-lg text-foreground leading-tight">{musician.user?.name ?? "Sin nombre"}</h3>
-          <p className="text-sm font-black text-primary uppercase tracking-wider mt-0.5">{musician.instrument || "Músico"}</p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <h3 className={`font-black text-base leading-tight tracking-tight ${musician.isTitular ? 'text-blue-500' : 'text-foreground'}`}>{musician.user?.name ?? "Sin nombre"}</h3>
+            {musician.isTitular ? (
+              <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 text-white shadow-sm shadow-blue-500/30 select-none">
+                Titular
+              </span>
+            ) : (
+              <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/20 select-none">
+                Suplente
+              </span>
+            )}
+          </div>
+          <p className={`text-xs font-black uppercase tracking-wider mt-1 ${musician.isTitular ? 'text-indigo-600/90 dark:text-cyan-400' : 'text-primary'}`}>{musician.instrument || "Músico"}</p>
           
           <div className="flex flex-wrap gap-2 mt-2">
             {isInactive ? (

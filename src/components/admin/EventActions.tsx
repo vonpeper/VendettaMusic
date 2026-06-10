@@ -31,7 +31,7 @@ export function NuevoEventoButton({ clients, locations, packages, staff, allMusi
       {variant === "big" ? (
         <Button 
           onClick={() => setShowForm(true)} 
-          className="w-full h-14 justify-center gap-4 bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-white font-black rounded-xl shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 transition-all active:scale-[0.98]"
+          className="w-full h-14 justify-center gap-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all active:scale-[0.98]"
         >
           <Plus className="w-5 h-5" />
           <div className="text-left">
@@ -42,7 +42,7 @@ export function NuevoEventoButton({ clients, locations, packages, staff, allMusi
       ) : (
         <Button 
           onClick={() => setShowForm(true)} 
-          className="bg-primary hover:bg-primary-focus text-white font-bold gap-2 px-6 rounded-full shadow-md shadow-pink-500/20 hover:shadow-lg hover:shadow-pink-500/30 transition-all active:scale-[0.98]"
+          className="bg-primary hover:bg-primary/90 text-white font-bold gap-2 px-6 rounded-full shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-[0.98]"
         >
           <Plus className="w-4 h-4" />
           Nuevo Evento

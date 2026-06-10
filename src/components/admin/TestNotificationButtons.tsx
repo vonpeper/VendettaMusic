@@ -38,7 +38,7 @@ export function TestNotificationButtons() {
           size="sm" 
           onClick={() => handleSendTest("admin")}
           disabled={isPending}
-          className="gap-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] hover:shadow-lg hover:shadow-pink-500/30 transition-all rounded-xl h-10 px-4 font-bold text-white border-none"
+          className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/30 transition-all rounded-xl h-10 px-4 font-bold text-white border-none"
         >
           <ShieldCheck className="w-4 h-4" /> A Administrador
         </Button>
@@ -48,7 +48,7 @@ export function TestNotificationButtons() {
           size="sm" 
           onClick={() => handleSendTest("musician")}
           disabled={isPending}
-          className="gap-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] hover:shadow-lg hover:shadow-pink-500/30 transition-all rounded-xl h-10 px-4 font-bold text-white border-none"
+          className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/30 transition-all rounded-xl h-10 px-4 font-bold text-white border-none"
         >
           <Users className="w-4 h-4" /> A Músicos
         </Button>
@@ -58,7 +58,7 @@ export function TestNotificationButtons() {
           size="sm" 
           onClick={() => handleSendTest("client")}
           disabled={isPending}
-          className="gap-2 bg-gradient-to-r from-[#E91E63] to-[#D81B60] hover:shadow-lg hover:shadow-pink-500/30 transition-all rounded-xl h-10 px-4 font-bold text-white border-none"
+          className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/30 transition-all rounded-xl h-10 px-4 font-bold text-white border-none"
         >
           <User className="w-4 h-4" /> A Clientes
         </Button>

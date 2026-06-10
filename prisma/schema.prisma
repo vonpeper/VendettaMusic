@@ -427,6 +427,11 @@ model BookingRequest {
   state                 String         @default("México")
   isOutsideZone         Boolean        @default(false)
   viaticosAmount        Float          @default(0)
+  distanceKm            Float?
+  durationSec           Int?
+  tollCost              Float?
+  fuelCost              Float?
+  requiresManualQuote   Boolean        @default(false)
   mapsLink              String?
   requestedDate         DateTime
   startTime             String
@@ -592,6 +597,7 @@ model GlobalConfig {
   mercadoPagoPublicKey   String?
   googleMapsApiKey       String?
   viaticosLocalRadius    Float?    @default(50.0)
+  viaticosVehicleCount   Int?      @default(2)
 }
 
 model InboxItem {
