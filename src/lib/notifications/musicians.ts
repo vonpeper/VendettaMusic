@@ -71,12 +71,16 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     phone: p.whatsapp,
     instrument: p.instrument || "",
     currentStatus: p.eventMusicians[0]?.status || "pending"
-  })).filter((r: any) => 
-    r.currentStatus === "pending" || 
-    r.currentStatus === "confirmed" || 
-    r.currentStatus === "rejected" || 
-    (targetMusicianIds && targetMusicianIds.includes(r.id))
-  ) 
+  })).filter((r: any) => {
+    // Si ya aceptó o rechazó la convocatoria, no le volvemos a enviar mensaje en envíos automáticos o en lote
+    if ((r.currentStatus === "confirmed" || r.currentStatus === "rejected") && !forceResend) {
+      return false
+    }
+    return (
+      r.currentStatus === "pending" || 
+      (targetMusicianIds && targetMusicianIds.includes(r.id))
+    )
+  }) 
 
   console.log(`📣 notifyMusicians: Iniciando convocatoria para Evento ${eventId}. Destinatarios filtrados: ${allRecipients.length}`)
 
