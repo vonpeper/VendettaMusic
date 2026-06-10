@@ -130,7 +130,18 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
           baseAmount: amount,
           depositAmount: deposit,
           venueType: (data.ceremonyType as string) || "salon",
-          clientName: (data.customName as string) || undefined,
+          clientName: (data.clientName as string) || (data.customName as string) || undefined,
+          clientPhone: (data.clientPhone as string) || undefined,
+          clientEmail: (data.clientEmail as string) || undefined,
+          bandHours: data.bandHours ? parseInt(data.bandHours as string) : undefined,
+          djHours: data.djHours ? parseInt(data.djHours as string) : undefined,
+          isDjWithTvs: data.isDjWithTvs === "on" || data.isDjWithTvs === "true",
+          hasTemplete: data.hasTemplete === "on" || data.hasTemplete === "true",
+          hasPista: data.hasPista === "on" || data.hasPista === "true",
+          hasRobot: data.hasRobot === "on" || data.hasRobot === "true",
+          clientProvidesAudio: data.clientProvidesAudio === "on" || data.clientProvidesAudio === "true",
+          originalPrice: data.originalPrice ? parseFloat(data.originalPrice as string) : undefined,
+          discountAmount: data.discountAmount ? parseFloat(data.discountAmount as string) : undefined,
           isPublic: data.isPublic === "on" || data.isPublic === "true",
           adminNote: (data.musicianNotes as string) || undefined,
           address: addressVal,
@@ -394,11 +405,11 @@ export async function createEventAction(_prev: any, formData: FormData) {
     }
 
     // Obtener info del cliente para el booking
-    let clientName = (data.customName as string) || "Sin Nombre"
-    let clientPhone = ""
-    let clientEmail = ""
+    let clientName = (data.clientName as string) || (data.customName as string) || "Sin Nombre"
+    let clientPhone = (data.clientPhone as string) || ""
+    let clientEmail = (data.clientEmail as string) || ""
     
-    if (targetClientId) {
+    if (targetClientId && !data.clientName) {
       const fullClient = await db.clientProfile.findUnique({ 
         where: { id: targetClientId },
         include: { user: true }
@@ -439,6 +450,15 @@ export async function createEventAction(_prev: any, formData: FormData) {
         tollCost: parseFloat(data.tollCost as string || "0") || null,
         fuelCost: parseFloat(data.fuelCost as string || "0") || null,
         requiresManualQuote: data.requiresManualQuote === "true",
+        bandHours: data.bandHours ? parseInt(data.bandHours as string) : 0,
+        djHours: data.djHours ? parseInt(data.djHours as string) : 0,
+        isDjWithTvs: data.isDjWithTvs === "on" || data.isDjWithTvs === "true",
+        hasTemplete: data.hasTemplete === "on" || data.hasTemplete === "true",
+        hasPista: data.hasPista === "on" || data.hasPista === "true",
+        hasRobot: data.hasRobot === "on" || data.hasRobot === "true",
+        clientProvidesAudio: data.clientProvidesAudio === "on" || data.clientProvidesAudio === "true",
+        originalPrice: data.originalPrice ? parseFloat(data.originalPrice as string) : 0,
+        discountAmount: data.discountAmount ? parseFloat(data.discountAmount as string) : 0,
       }
     })
 

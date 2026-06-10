@@ -88,6 +88,29 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
   const ivaAmount = requiresInvoice ? Math.round(amount * 0.16 * 100) / 100 : 0
   const totalWithTax = amount + ivaAmount
 
+  // Price & Discount auto-calculation
+  const [originalPrice, setOriginalPrice] = useState<number>(
+    typeof initialData?.bookingRequest?.originalPrice === "number"
+      ? initialData.bookingRequest.originalPrice
+      : parseFloat(initialData?.bookingRequest?.originalPrice) || parseFloat(initialData?.amount) || 0
+  )
+  const [discountAmount, setDiscountAmount] = useState<number>(
+    typeof initialData?.bookingRequest?.discountAmount === "number"
+      ? initialData.bookingRequest.discountAmount
+      : parseFloat(initialData?.bookingRequest?.discountAmount) || 0
+  )
+
+  // Client Contact Details
+  const [clientName, setClientName] = useState<string>(
+    initialData?.bookingRequest?.clientName || initialData?.client?.user?.name || ""
+  )
+  const [clientPhone, setClientPhone] = useState<string>(
+    initialData?.bookingRequest?.clientPhone || initialData?.client?.whatsapp || ""
+  )
+  const [clientEmail, setClientEmail] = useState<string>(
+    initialData?.bookingRequest?.clientEmail || initialData?.client?.user?.email || ""
+  )
+
   // Local clients list & selected state
   const [clientsList, setClientsList] = useState(clients)
   const [selectedClientId, setSelectedClientId] = useState(initialData?.clientId || "")
@@ -269,6 +292,9 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
         // Add to list and select it
         setClientsList(prev => [...prev, { id: res.id, name: newClientName }])
         setSelectedClientId(res.id)
+        setClientName(newClientName)
+        setClientPhone(newClientPhone)
+        setClientEmail(newClientEmail)
         
         // Reset states and close modal
         setNewClientName("")
@@ -404,6 +430,45 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                   </button>
                 </div>
               </div>
+              <div className="col-span-1 md:col-span-2 p-4 rounded-xl bg-muted/20 border border-border/30 space-y-4">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Datos de Contacto del Cliente (para Contrato/Logística)</div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="clientName" className="text-xs">Nombre del Cliente</Label>
+                    <Input 
+                      id="clientName" 
+                      name="clientName" 
+                      placeholder="Nombre de contacto"
+                      value={clientName}
+                      onChange={e => setClientName(e.target.value)}
+                      className="bg-background border-border/40 text-foreground h-9 text-xs" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="clientPhone" className="text-xs">Teléfono / WhatsApp</Label>
+                    <Input 
+                      id="clientPhone" 
+                      name="clientPhone" 
+                      placeholder="Ej. 521..."
+                      value={clientPhone}
+                      onChange={e => setClientPhone(e.target.value)}
+                      className="bg-background border-border/40 text-foreground h-9 text-xs" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="clientEmail" className="text-xs">Correo Electrónico</Label>
+                    <Input 
+                      id="clientEmail" 
+                      name="clientEmail" 
+                      type="email"
+                      placeholder="cliente@correo.com"
+                      value={clientEmail}
+                      onChange={e => setClientEmail(e.target.value)}
+                      className="bg-background border-border/40 text-foreground h-9 text-xs" 
+                    />
+                  </div>
+                </div>
+              </div>
               <div className="space-y-2 col-span-1 md:col-span-2">
                 <Label htmlFor="customName">Nombre del Show / Evento (Opcional)</Label>
                 <Input id="customName" name="customName" placeholder="Ej. Tributo Mentiras, Show Alquimia..."
@@ -507,6 +572,88 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                 options={DRESS_CODES} />
               <SelectField id="status" name="status" label="Estatus"
                 options={STATUS_OPTIONS} defaultValue={initialData?.status || "agendado"} />
+              <div className="col-span-1 md:col-span-2 mt-4 p-4 rounded-xl bg-muted/20 border border-border/30 space-y-4">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Configuración y Requerimientos de Show</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bandHours" className="text-xs">Horas de Banda en Vivo</Label>
+                    <Input 
+                      id="bandHours" 
+                      name="bandHours" 
+                      type="number" 
+                      min="0"
+                      placeholder="Ej. 2"
+                      defaultValue={initialData?.bookingRequest?.bandHours ?? 0}
+                      className="bg-background border-border/40 text-foreground h-9 text-xs" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="djHours" className="text-xs">Horas de DJ / Cabina</Label>
+                    <Input 
+                      id="djHours" 
+                      name="djHours" 
+                      type="number" 
+                      min="0"
+                      placeholder="Ej. 3"
+                      defaultValue={initialData?.bookingRequest?.djHours ?? 0}
+                      className="bg-background border-border/40 text-foreground h-9 text-xs" 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+                  <label className="flex items-center gap-2.5 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      name="isDjWithTvs"
+                      id="isDjWithTvs"
+                      defaultChecked={initialData?.bookingRequest?.isDjWithTvs}
+                      className="rounded border-border/40 text-primary h-3.5 w-3.5 bg-background"
+                    />
+                    <span className="text-muted-foreground">DJ con Pantallas / TVs</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      name="hasTemplete"
+                      id="hasTemplete"
+                      defaultChecked={initialData?.bookingRequest?.hasTemplete}
+                      className="rounded border-border/40 text-primary h-3.5 w-3.5 bg-background"
+                    />
+                    <span className="text-muted-foreground">Requiere Templete</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      name="hasPista"
+                      id="hasPista"
+                      defaultChecked={initialData?.bookingRequest?.hasPista}
+                      className="rounded border-border/40 text-primary h-3.5 w-3.5 bg-background"
+                    />
+                    <span className="text-muted-foreground">Requiere Pista LED</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      name="hasRobot"
+                      id="hasRobot"
+                      defaultChecked={initialData?.bookingRequest?.hasRobot}
+                      className="rounded border-border/40 text-primary h-3.5 w-3.5 bg-background"
+                    />
+                    <span className="text-muted-foreground">Robot LED en Show</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      name="clientProvidesAudio"
+                      id="clientProvidesAudio"
+                      defaultChecked={initialData?.bookingRequest?.clientProvidesAudio}
+                      className="rounded border-border/40 text-primary h-3.5 w-3.5 bg-background"
+                    />
+                    <span className="text-muted-foreground">Audio provisto por Cliente</span>
+                  </label>
+                </div>
+              </div>
             </div>
             <div className="space-y-2 mt-4">
               <Label htmlFor="musicianNotes">Notas para los músicos</Label>
@@ -607,10 +754,36 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="amount">Total del Paquete (MXN)</Label>
+                <Label htmlFor="originalPrice">Precio de Lista Original (MXN)</Label>
+                <Input id="originalPrice" name="originalPrice" type="number" step="0.01" min="0"
+                  value={originalPrice || ""}
+                  onChange={e => {
+                    const val = parseFloat(e.target.value) || 0;
+                    setOriginalPrice(val);
+                    setDiscountAmount(Math.max(0, val - amount));
+                  }}
+                  className="bg-background border-border/40 text-foreground" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="discountAmount">Descuento Aplicado (MXN)</Label>
+                <Input id="discountAmount" name="discountAmount" type="number" step="0.01" min="0"
+                  value={discountAmount || ""}
+                  onChange={e => {
+                    const val = parseFloat(e.target.value) || 0;
+                    setDiscountAmount(val);
+                    setAmount(Math.max(0, originalPrice - val));
+                  }}
+                  className="bg-background border-border/40 text-foreground" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="amount">Total del Paquete (Precio Final MXN)</Label>
                 <Input id="amount" name="amount" type="number" step="0.01" min="0"
                   value={amount || ""}
-                  onChange={e => setAmount(parseFloat(e.target.value) || 0)}
+                  onChange={e => {
+                    const val = parseFloat(e.target.value) || 0;
+                    setAmount(val);
+                    setDiscountAmount(Math.max(0, originalPrice - val));
+                  }}
                   className="bg-background border-border/40 text-foreground" />
               </div>
               <div className="space-y-2">

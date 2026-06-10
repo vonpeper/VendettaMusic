@@ -192,16 +192,16 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 staff={staffMapped}
                 allMusicians={allMusiciansMapped}
                 showText={true}
-                variant="outline"
+                variant="ghost"
                 label="Ver/Editar Show"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-blue-600/30 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all cursor-pointer bg-blue-600/10"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all cursor-pointer"
               />
             )}
 
             {/* Acceso rápido a Eventos */}
             <Link
               href="/admin/eventualidades"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-black uppercase tracking-wider hover:bg-blue-600/20 transition-all cursor-pointer"
             >
               <LayoutList className="w-3.5 h-3.5" />
               Ver Eventos
