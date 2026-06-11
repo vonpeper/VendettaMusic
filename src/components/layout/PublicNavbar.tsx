@@ -28,9 +28,12 @@ export function PublicNavbar() {
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="h-12 flex items-center">
-            <img 
-              src="/images/logo-vendetta-horizontal.png?v=4" 
+            <Image 
+              src="/images/logo-vendetta-horizontal.png" 
               alt="Vendetta Logo" 
+              width={199}
+              height={48}
+              priority
               className="h-full w-auto object-contain"
             />
           </div>
@@ -57,7 +60,7 @@ export function PublicNavbar() {
             <Lock className="w-4 h-4" />
           </Link>
         </nav>
-
+ 
         {/* Mobile Nav Button */}
         <div className="lg:hidden">
           <Sheet>
@@ -73,9 +76,11 @@ export function PublicNavbar() {
                 <div className="p-6 border-b border-white/5">
                   <SheetHeader className="text-left mb-6">
                     <div className="h-12 flex items-center self-start">
-                      <img 
-                        src="/images/logo-vendetta-horizontal.png?v=4" 
+                      <Image 
+                        src="/images/logo-vendetta-horizontal.png" 
                         alt="Vendetta Logo" 
+                        width={199}
+                        height={48}
                         className="h-full w-auto object-contain"
                       />
                     </div>

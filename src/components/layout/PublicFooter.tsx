@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { MapPin, Phone, Mail, Mic, Music, Sparkles, ChevronRight } from "lucide-react"
 import { db } from "@/lib/db"
 
@@ -30,9 +31,11 @@ export async function PublicFooter() {
           {/* Column 1: Brand Identity */}
           <div className="space-y-8">
             <Link href="/" className="inline-block group transition-transform hover:scale-105 duration-500">
-              <img 
-                src="/images/logo-vendetta-horizontal.png?v=4" 
+              <Image 
+                src="/images/logo-vendetta-horizontal.png" 
                 alt="Vendetta Live Music" 
+                width={200}
+                height={56}
                 className="h-14 w-auto object-contain"
               />
             </Link>

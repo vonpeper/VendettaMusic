@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { ChevronRight, X, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -36,7 +37,13 @@ export function MusiciansSection({ musicians }: { musicians: Musician[] }) {
             </button>
             <div className="flex flex-col md:flex-row">
               <div className="md:w-1/2 h-64 md:h-auto">
-                <img src={activeMuso.img} alt={activeMuso.name} className="w-full h-full object-cover object-top" />
+                <Image 
+                  src={activeMuso.img} 
+                  alt={activeMuso.name} 
+                  width={360}
+                  height={640}
+                  className="w-full h-full object-cover object-top" 
+                />
               </div>
               <div className="p-8 md:w-1/2">
                 <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-4">
@@ -57,10 +64,12 @@ export function MusiciansSection({ musicians }: { musicians: Musician[] }) {
 
       <section id="nosotros" className="py-24 relative overflow-hidden bg-background">
         <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=1600&auto=format&fit=crop"
+          <Image
+            src="https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=1000&auto=format&fit=crop&q=40"
             alt=""
-            className="w-full h-full object-cover opacity-[0.04]"
+            fill
+            sizes="100vw"
+            className="object-cover opacity-[0.04]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
         </div>
@@ -87,9 +96,11 @@ export function MusiciansSection({ musicians }: { musicians: Musician[] }) {
                 className="group text-left rounded-2xl overflow-hidden border border-white/8 bg-card/40 hover:border-primary/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10"
               >
                 <div className="relative h-80 overflow-hidden">
-                  <img
+                  <Image
                     src={m.img}
                     alt={m.name}
+                    width={360}
+                    height={640}
                     className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
