@@ -36,6 +36,7 @@ export async function PublicFooter() {
                 alt="Vendetta Live Music" 
                 width={200}
                 height={56}
+                sizes="200px"
                 className="h-14 w-auto object-contain"
               />
             </Link>

@@ -34,6 +34,7 @@ export function PublicNavbar() {
               width={199}
               height={48}
               priority
+              sizes="199px"
               className="h-full w-auto object-contain"
             />
           </div>
@@ -81,6 +82,7 @@ export function PublicNavbar() {
                         alt="Vendetta Logo" 
                         width={199}
                         height={48}
+                        sizes="199px"
                         className="h-full w-auto object-contain"
                       />
                     </div>

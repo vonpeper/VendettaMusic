@@ -42,6 +42,7 @@ export function MusiciansSection({ musicians }: { musicians: Musician[] }) {
                   alt={activeMuso.name} 
                   width={360}
                   height={640}
+                  sizes="(max-width: 768px) 100vw, 360px"
                   className="w-full h-full object-cover object-top" 
                 />
               </div>
@@ -101,6 +102,7 @@ export function MusiciansSection({ musicians }: { musicians: Musician[] }) {
                     alt={m.name}
                     width={360}
                     height={640}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 220px"
                     className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
