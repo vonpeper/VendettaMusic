@@ -33,6 +33,44 @@ export async function GET(request: Request) {
     const autoFollowUpEnabled = config?.autoFollowUpEnabled ?? true
 
     if (autoFollowUpEnabled) {
+      // Helper function to identify bar events
+      const isBarEvent = (booking: any) => {
+        return [
+          booking.venueType,
+          booking.packageName,
+        ].some((str: string | null | undefined) => str && str.toLowerCase().includes("bar"))
+      }
+
+      // Helper function to get clean 10-digit phone number suffix
+      const getCleanPhoneSuffix = (phone: string | null | undefined) => {
+        if (!phone) return ""
+        return phone.replace(/\D+/g, "").slice(-10)
+      }
+
+      // Fetch followups already sent today to avoid duplicates
+      const startOfToday = startOfDay(now)
+      const endOfToday = endOfDay(now)
+
+      const sentFollowUpsToday = await db.notification.findMany({
+        where: {
+          type: "client_followup",
+          status: "sent",
+          createdAt: {
+            gte: startOfToday,
+            lte: endOfToday
+          }
+        },
+        select: {
+          recipient: true
+        }
+      })
+
+      const sentPhoneSuffixes = new Set(
+        sentFollowUpsToday
+          .map(n => getCleanPhoneSuffix(n.recipient))
+          .filter(Boolean)
+      )
+
       // 1. Follow-ups (5 días)
       const fiveDaysAgo = startOfDay(subDays(now, 5))
       const fiveDaysAgoEnd = endOfDay(subDays(now, 5))
@@ -50,11 +88,35 @@ export async function GET(request: Request) {
 
       for (const booking of pending5Days) {
         try {
+          // Skip if it is a bar event
+          if (isBarEvent(booking)) {
+            console.log(`ℹ️ Skipping 5-day follow-up for booking ${booking.id} (${booking.shortId}) because it is a bar event.`)
+            await db.bookingRequest.update({
+              where: { id: booking.id },
+              data: { followUpCount: 1 }
+            })
+            continue
+          }
+
+          // Skip if we already sent a follow-up to this client today
+          const cleanPhone = getCleanPhoneSuffix(booking.clientPhone)
+          if (cleanPhone && sentPhoneSuffixes.has(cleanPhone)) {
+            console.log(`ℹ️ Skipping 5-day follow-up for booking ${booking.id} (${booking.shortId}) to avoid duplicate message to ${booking.clientPhone} today.`)
+            await db.bookingRequest.update({
+              where: { id: booking.id },
+              data: { followUpCount: 1 }
+            })
+            continue
+          }
+
           await dispatchNotification({ type: "CLIENT_FOLLOWUP", bookingId: booking.id })
           await db.bookingRequest.update({
             where: { id: booking.id },
             data: { followUpCount: 1 }
           })
+          if (cleanPhone) {
+            sentPhoneSuffixes.add(cleanPhone)
+          }
           results.followups5Days++
         } catch (err: any) {
           results.errors.push(`Error in 5-day followup for ${booking.id}: ${err.message}`)
@@ -78,11 +140,35 @@ export async function GET(request: Request) {
 
       for (const booking of pending10Days) {
         try {
+          // Skip if it is a bar event
+          if (isBarEvent(booking)) {
+            console.log(`ℹ️ Skipping 10-day follow-up for booking ${booking.id} (${booking.shortId}) because it is a bar event.`)
+            await db.bookingRequest.update({
+              where: { id: booking.id },
+              data: { followUpCount: 2 }
+            })
+            continue
+          }
+
+          // Skip if we already sent a follow-up to this client today
+          const cleanPhone = getCleanPhoneSuffix(booking.clientPhone)
+          if (cleanPhone && sentPhoneSuffixes.has(cleanPhone)) {
+            console.log(`ℹ️ Skipping 10-day follow-up for booking ${booking.id} (${booking.shortId}) to avoid duplicate message to ${booking.clientPhone} today.`)
+            await db.bookingRequest.update({
+              where: { id: booking.id },
+              data: { followUpCount: 2 }
+            })
+            continue
+          }
+
           await dispatchNotification({ type: "CLIENT_FOLLOWUP", bookingId: booking.id })
           await db.bookingRequest.update({
             where: { id: booking.id },
             data: { followUpCount: 2 }
           })
+          if (cleanPhone) {
+            sentPhoneSuffixes.add(cleanPhone)
+          }
           results.followups10Days++
         } catch (err: any) {
           results.errors.push(`Error in 10-day followup for ${booking.id}: ${err.message}`)
