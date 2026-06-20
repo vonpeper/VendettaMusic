@@ -502,7 +502,17 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
             <legend className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Logística y Ejecución</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="locationId" className="text-slate-700 font-semibold">Ubicación (catálogo)</Label>
+                <div className="flex justify-between items-center mb-1">
+                  <Label htmlFor="locationId" className="text-slate-700 font-semibold">Ubicación (catálogo)</Label>
+                  <a 
+                    href="/admin/clientes?tab=lugares" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-xs text-primary font-bold hover:underline flex items-center gap-1"
+                  >
+                    ✏️ Gestionar Catálogo
+                  </a>
+                </div>
                 <select id="locationId" name="locationId" value={selectedLocationId}
                   onChange={(e) => {
                      setSelectedLocationId(e.target.value)
@@ -518,8 +528,28 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                   }}
                   className="flex h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus:bg-white">
                   <option value="" className="text-slate-500">Sin ubicación en catálogo</option>
-                  {locations.map(l => <option key={l.id} value={l.id} className="text-slate-900">{l.name}</option>)}
+                  {locations
+                    .filter(l => !l.name.startsWith("Show -") || l.id === selectedLocationId)
+                    .map(l => <option key={l.id} value={l.id} className="text-slate-900">{l.name}</option>)}
                 </select>
+                {selectedLocationId && (
+                  (() => {
+                    const loc = locations.find(l => l.id === selectedLocationId);
+                    if (!loc) return null;
+                    return (
+                      <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl mt-2 text-xs space-y-1">
+                        <p className="text-slate-500 font-medium">Detalles de la Ubicación Seleccionada:</p>
+                        <p className="text-slate-700"><span className="font-semibold text-slate-600">Dirección:</span> {loc.address || "No especificada"}</p>
+                        <p className="text-slate-700"><span className="font-semibold text-slate-600">Ciudad/Municipio:</span> {loc.city || "No especificado"} - {loc.state || ""}</p>
+                        {loc.mapsLink && (
+                          <a href={loc.mapsLink} target="_blank" rel="noopener noreferrer" className="text-primary font-bold hover:underline flex items-center gap-1 mt-1">
+                            🗺️ Abrir en Google Maps
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })()
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="locationFree" className="text-slate-700 font-semibold">Dirección libre (si no está en catálogo)</Label>

@@ -371,21 +371,24 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                         <span className="text-[10px] text-muted-foreground italic">Staff</span>
                       </div>
                       <Textarea id="msgTemplateGig" name="msgTemplateGig" rows={12}
-                        defaultValue={config?.msgTemplateGig || `🎸 *NUEVA CONVOCATORIA: {{eventName}}*
-  
-👤 *Cliente / Evento:* {{clientName}}
+                        defaultValue={config?.msgTemplateGig || `¡Hola {{musicianName}}! 🎸 Te escribimos de *Vendetta Live Music* para convocarte al siguiente show:
+
 📅 *Fecha:* {{date}}
-🎤 *Hora de Show:* {{performanceStart}}
-📍 *Ubicación:* {{location}}
+👤 *Cliente / Evento:* {{clientName}}
+🎉 *Tipo:* {{ceremony}}
 🏠 *Dirección:* {{address}}
-🗺️ *Maps:* {{mapsLink}}
-🚗 *Llegada músicos:* {{arrivalTime}}
+📍 *Lugar:* {{location}} ({{mapsLink}})
+🚗 *Hora de Llegada:* {{arrivalTime}}
 ⚙️ *Hora de Montaje:* {{setupTime}}
+🎤 *Hora de Show:* {{performanceStart}}
+🎵 *Hora de Finalización:* {{performanceEnd}}
 👔 *Vestimenta:* {{dressCode}}
 📝 *Notas:* {{notes}}
 
-🔗 *Confirma tu asistencia aquí:*
-{{confirmLink}}`} 
+🔗 *Por favor confirma tu asistencia aquí:*
+{{confirmLink}}
+
+¡Gracias! 🤘`} 
                         className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
                     </div>
                   </div>
@@ -410,7 +413,8 @@ Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña
                       { v: "{{folio}}", d: "ID Reserva" },
                       { v: "{{package}}", d: "Nombre paquete" },
                       { v: "{{bookingLink}}", d: "Link contrato" },
-                      { v: "{{location}}", d: "Lugar (Staff)" }
+                      { v: "{{location}}", d: "Lugar (Staff)" },
+                      { v: "{{musicianName}}", d: "Nombre del músico" }
                     ].map(item => (
                       <div key={item.v} className="flex flex-col gap-1">
                         <code className="text-[11px] font-bold text-blue-600">{item.v}</code>
@@ -612,6 +616,7 @@ function getTypeLabel(type: string) {
     'CLIENT_FOLLOWUP': '🔄 Seguimiento',
     'CLIENT_CONFIRMED': '✅ Confirmación',
     'MUSICIAN_GIG': '🎸 Convocatoria',
+    'CALENDAR_SYNC': '📅 Sincronización Calendario',
     'inbound': '📩 Entrante',
   }
   return map[type] || type

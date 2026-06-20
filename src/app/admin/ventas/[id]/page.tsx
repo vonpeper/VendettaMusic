@@ -292,11 +292,18 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Paquete Solicitado</div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Paquete Solicitado / Show</div>
                     <div className="flex items-center gap-2">
-                      <div className="text-lg font-black text-foreground">{booking.packageName}</div>
+                      <div className="text-lg font-black text-foreground">
+                        {booking.customName ? `${booking.customName} (${booking.packageName})` : booking.packageName}
+                      </div>
                       <VenueTypeSwitcher bookingId={booking.id} currentType={booking.venueType || ''} />
                     </div>
+                    {booking.ceremonyType && (
+                      <div className="text-xs text-muted-foreground font-bold mt-1 uppercase tracking-wider">
+                        Tipo: <span className="text-blue-600 font-black">{booking.ceremonyType}</span>
+                      </div>
+                    )}
                     <div className="text-sm text-blue-600 font-bold mt-1 tracking-tight">{booking.guestCount} invitados aproximados</div>
                   </div>
                   <div className="pt-4 border-t border-border/40">
@@ -312,6 +319,30 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                     <div className="text-sm text-muted-foreground font-mono mt-1 font-bold">
                       {booking.startTime} hrs — {booking.endTime} hrs
                     </div>
+                    {(booking.setupTime || booking.arrivalTime || booking.dressCode) && (
+                      <div className="mt-4 pt-3 border-t border-border/20 text-xs space-y-1.5 font-semibold text-muted-foreground">
+                        {booking.setupTime && (
+                          <div className="flex justify-between">
+                            <span>Montaje:</span>
+                            <span className="text-foreground font-bold">{booking.setupTime} hrs</span>
+                          </div>
+                        )}
+                        {booking.arrivalTime && (
+                          <div className="flex justify-between">
+                            <span>Llegada Músicos:</span>
+                            <span className="text-foreground font-bold">{booking.arrivalTime} hrs</span>
+                          </div>
+                        )}
+                        {booking.dressCode && (
+                          <div className="flex justify-between">
+                            <span>Vestimenta:</span>
+                            <span className="text-foreground font-bold uppercase tracking-wider bg-blue-600/15 text-blue-600 px-1.5 py-0.5 rounded text-[9px]">
+                              {booking.dressCode}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {booking.eventId && (
                       <div className="text-[10px] text-muted-foreground font-mono mt-2 flex items-center gap-1.5 bg-muted/60 px-2 py-1 rounded w-fit select-all truncate max-w-full" title={booking.eventId}>
                         <span className="font-bold opacity-60">ID EVENTO:</span> {booking.eventId}
@@ -592,7 +623,16 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 <div className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shadow-sm shadow-blue-600/50" /> Bitácora Administrativa
                 </div>
-                <p className="text-sm text-foreground/80 italic font-medium leading-relaxed">"{booking.adminNote}"</p>
+                <p className="text-sm text-foreground/80 italic font-medium leading-relaxed">&ldquo;{booking.adminNote}&rdquo;</p>
+              </div>
+            )}
+
+            {booking.musicianNotes && (
+              <div className="p-5 bg-orange-600/10 border border-orange-600/20 rounded-2xl shadow-sm">
+                <div className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-600 shadow-sm shadow-orange-600/50" /> Notas para los Músicos
+                </div>
+                <p className="text-sm text-foreground/80 italic font-medium leading-relaxed">&ldquo;{booking.musicianNotes}&rdquo;</p>
               </div>
             )}
 

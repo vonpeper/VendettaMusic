@@ -113,12 +113,12 @@ Queríamos agradecerte por confiar en *Vendetta* para tu evento. ¡Esperamos que
 ¡Gracias totales! 🤘🎸`
 
     case "MUSICIAN_GIG":
-      // Forzamos la nueva plantilla si la de la DB es la antigua
+      // Forzamos la nueva plantilla si la de la DB es la antigua o no tiene saludo
       const dbTemplate = config?.msgTemplateGig
-      const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG")
+      const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG") || !dbTemplate.includes("Hola")
       
-      return isOldTemplate ? `🎸 *NUEVA CONVOCATORIA: {{eventName}}*
-  
+      return isOldTemplate ? `¡Hola {{musicianName}}! 🎸 Te escribimos de *Vendetta Live Music* para convocarte al siguiente show:
+
 📅 *Fecha:* {{date}}
 🎉 *Tipo:* {{ceremony}}
 📍 *Lugar:* {{location}}
@@ -128,7 +128,7 @@ Queríamos agradecerte por confiar en *Vendetta* para tu evento. ¡Esperamos que
 👔 *Vestimenta:* {{dressCode}}
 📝 *Notas:* {{notes}}
 
-🔗 *Confirma tu asistencia aquí:*
+🔗 *Por favor confirma tu asistencia aquí:*
 {{confirmLink}}` : dbTemplate
 
     case "MUSICIAN_REHEARSAL":
@@ -157,6 +157,26 @@ Lamentamos informarte que el evento del próximo *{{date}}* ha sido cancelado po
 Por favor, toma tus precauciones y libera la fecha en tu agenda. 
 
 — Administración Vendetta`
+
+    case "MUSICIAN_TODAY_REMINDER":
+      return `🎸 *RECORDATORIO DE SHOW HOY — VENDETTA* 🎸
+¡Hola {{musicianName}}! Hoy tenemos show. Aquí tienes la información y horarios de la convocatoria:
+
+📅 *Fecha:* {{date}}
+👤 *Cliente:* {{clientName}}
+🎉 *Tipo:* {{ceremony}}
+🏠 *Dirección:* {{address}}
+📍 *Lugar:* {{location}}
+🗺️ *Google Maps:* {{mapsLink}}
+⚙️ *Hora de Montaje:* {{setupTime}}
+🚗 *Hora de Llegada Músicos:* {{arrivalTime}}
+🎤 *Show Inicio:* {{performanceStart}}
+🎵 *Show Fin:* {{performanceEnd}}
+👔 *Vestimenta:* {{dressCode}}
+
+📝 *Notas:* {{notes}}
+
+¡Nos vemos al rato! 🤘`
 
     default:
       return ""

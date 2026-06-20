@@ -10,6 +10,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Save, X, Calendar as CalendarIcon, Clock, User, Phone, MapPin, CreditCard } from "lucide-react"
 import { toast } from "sonner"
 
+const CEREMONY_TYPES = [
+  { value: "boda",       label: "💒 Boda" },
+  { value: "xv_anos",    label: "👸 XV Años" },
+  { value: "cumpleanos", label: "🎂 Cumpleaños" },
+  { value: "corporativo",label: "🏢 Corporativo" },
+  { value: "festival",   label: "🎪 Festival" },
+  { value: "happening",  label: "🎵 Happening" },
+  { value: "bar",        label: "🍸 Bar" },
+  { value: "otro",       label: "📋 Otro" },
+]
+
+const DRESS_CODES = [
+  { value: "formal",        label: "🎩 Formal" },
+  { value: "formal_casual", label: "👔 Formal Casual" },
+  { value: "rock",          label: "🎸 Rock / Casual" },
+  { value: "nocturno",      label: "🌙 Concierto Nocturno" },
+]
+
 interface Location {
   id: string
   name: string
@@ -112,7 +130,13 @@ export function ManualQuoteForm({
               originalPrice: data.originalPrice || 0,
               discountAmount: data.discountAmount || 0,
               viaticosAmount: data.viaticosAmount || 0,
-              invoice: data.invoice || false
+              invoice: data.invoice || false,
+              customName: data.customName || "",
+              ceremonyType: data.ceremonyType || "",
+              arrivalTime: data.arrivalTime || "",
+              setupTime: data.setupTime || "",
+              dressCode: data.dressCode || "",
+              musicianNotes: data.musicianNotes || ""
             })
           }
         })
@@ -156,7 +180,13 @@ export function ManualQuoteForm({
     originalPrice: 0,
     discountAmount: 0,
     viaticosAmount: 0,
-    invoice: false
+    invoice: false,
+    customName: "",
+    ceremonyType: "",
+    arrivalTime: "",
+    setupTime: "",
+    dressCode: "",
+    musicianNotes: ""
   })
 
   const [viaticosDetails, setViaticosDetails] = useState<{
@@ -390,9 +420,33 @@ export function ManualQuoteForm({
         <Card className="bg-card border-border/40">
           <CardContent className="pt-6 space-y-4">
             <h3 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2 mb-4">
-              <CalendarIcon className="w-4 h-4" /> Fecha y Horario
+              <CalendarIcon className="w-4 h-4" /> Identidad y Horario del Show
             </h3>
-             <div className="space-y-3">
+            
+            <div className="space-y-2">
+              <Label>Nombre del Show / Evento (Opcional)</Label>
+              <Input 
+                value={formData.customName} 
+                onChange={e => setFormData({...formData, customName: e.target.value})}
+                placeholder="Ej. Tributo Mentiras, Show Alquimia..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Tipo de Evento</Label>
+              <Select value={formData.ceremonyType} onValueChange={v => setFormData({...formData, ceremonyType: v ?? ""})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona el tipo de evento..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {CEREMONY_TYPES.map(type => (
+                    <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-3 pt-2 border-t border-border/20">
               <Label>Fechas del Evento</Label>
               {requestedDates.map((date, idx) => (
                 <div key={idx} className="flex items-center gap-2">
@@ -432,23 +486,56 @@ export function ManualQuoteForm({
                 + Agregar otra fecha
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-border/20">
               <div className="space-y-2">
-                <Label>Inicio (HH:MM)</Label>
+                <Label>Inicio Ejecución (HH:MM)</Label>
                 <Input 
                   required 
+                  type="time"
                   value={formData.startTime} 
                   onChange={e => setFormData({...formData, startTime: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Fin (HH:MM)</Label>
+                <Label>Fin Ejecución (HH:MM)</Label>
                 <Input 
                   required 
+                  type="time"
                   value={formData.endTime} 
                   onChange={e => setFormData({...formData, endTime: e.target.value})}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Hora de Llegada Musicians (HH:MM)</Label>
+                <Input 
+                  type="time"
+                  value={formData.arrivalTime} 
+                  onChange={e => setFormData({...formData, arrivalTime: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Hora de Montaje (HH:MM)</Label>
+                <Input 
+                  type="time"
+                  value={formData.setupTime} 
+                  onChange={e => setFormData({...formData, setupTime: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2 border-t border-border/20">
+              <Label>Vestimenta</Label>
+              <Select value={formData.dressCode} onValueChange={v => setFormData({...formData, dressCode: v ?? ""})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona el código de vestimenta..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {DRESS_CODES.map(code => (
+                    <SelectItem key={code.value} value={code.value}>{code.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -466,17 +553,18 @@ export function ManualQuoteForm({
                   <SelectValue placeholder="Busca un lugar registrado..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {locations.map(loc => (
-                    <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
-                  ))}
+                  {locations
+                    .filter(loc => !loc.name.startsWith("Show -") || loc.id === formData.locationId)
+                    .map(loc => (
+                      <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-4 space-y-2">
-                <Label>Nombre del Lugar (Salón, Jardín, etc)</Label>
+                <Label>Nombre del Lugar (Salón, Jardín, etc) (Opcional)</Label>
                 <Input 
-                  required 
                   value={formData.venueName} 
                   onChange={e => setFormData({...formData, venueName: e.target.value})}
                   placeholder="Ej. Hacienda del Sol"
@@ -799,6 +887,16 @@ export function ManualQuoteForm({
                 <Input 
                   value={formData.adminNote} 
                   onChange={e => setFormData({...formData, adminNote: e.target.value})}
+                />
+              </div>
+              <div className="md:col-span-3 space-y-2">
+                <Label>Notas para los Músicos</Label>
+                <textarea 
+                  value={formData.musicianNotes} 
+                  onChange={e => setFormData({...formData, musicianNotes: e.target.value})}
+                  placeholder="Instrucciones específicas del show para los músicos..."
+                  rows={2}
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
             </div>

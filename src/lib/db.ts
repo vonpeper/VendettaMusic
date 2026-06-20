@@ -92,6 +92,30 @@ async function ensureSchemaUpToDate(prisma: PrismaClient) {
       await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN invoice BOOLEAN DEFAULT 0`)
       console.log("🤖 [Self-Healing] Added column invoice to BookingRequest")
     }
+    if (!bookingColNames.includes("customname")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN customName TEXT`)
+      console.log("🤖 [Self-Healing] Added column customName to BookingRequest")
+    }
+    if (!bookingColNames.includes("ceremonytype")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN ceremonyType TEXT`)
+      console.log("🤖 [Self-Healing] Added column ceremonyType to BookingRequest")
+    }
+    if (!bookingColNames.includes("arrivaltime")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN arrivalTime TEXT`)
+      console.log("🤖 [Self-Healing] Added column arrivalTime to BookingRequest")
+    }
+    if (!bookingColNames.includes("setuptime")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN setupTime TEXT`)
+      console.log("🤖 [Self-Healing] Added column setupTime to BookingRequest")
+    }
+    if (!bookingColNames.includes("dresscode")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN dressCode TEXT`)
+      console.log("🤖 [Self-Healing] Added column dressCode to BookingRequest")
+    }
+    if (!bookingColNames.includes("musiciannotes")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN musicianNotes TEXT`)
+      console.log("🤖 [Self-Healing] Added column musicianNotes to BookingRequest")
+    }
 
     // 2. Columnas de Event
     const eventColumns = await prisma.$queryRaw<any[]>`PRAGMA table_info(Event)`
@@ -151,5 +175,8 @@ async function ensureSchemaUpToDate(prisma: PrismaClient) {
   }
 }
 
-// Fire and forget: self-heal database columns in background
-ensureSchemaUpToDate(db).catch(e => console.error("Error running ensureSchemaUpToDate:", e))
+// Fire and forget: self-heal database columns in background (evitar en fase de build)
+const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build" || process.env.NEXT_PHASE === "phase-export"
+if (!isBuildPhase) {
+  ensureSchemaUpToDate(db).catch(e => console.error("Error running ensureSchemaUpToDate:", e))
+}

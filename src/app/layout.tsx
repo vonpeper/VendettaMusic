@@ -81,6 +81,9 @@ export default function RootLayout({
       lang="es"
       className={`${inter.variable} ${montserrat.variable} ${advent.variable} dark antialiased scroll-smooth`}
     >
+      <head>
+        <meta name="google-site-verification" content="xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY" />
+      </head>
       <body className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden max-w-[100vw]">
         <Toaster theme="dark" position="bottom-right" richColors />
         <SchemaMarkup />

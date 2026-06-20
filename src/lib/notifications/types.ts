@@ -8,3 +8,4 @@ export type NotificationType =
   | "MUSICIAN_GIG"       // Convocatoria a músicos
   | "MUSICIAN_REHEARSAL" // Aviso de ensayo
   | "EVENT_CANCELLED"    // Aviso de cancelación de evento
+  | "MUSICIAN_TODAY_REMINDER" // Recordatorio del día del evento para músicos
