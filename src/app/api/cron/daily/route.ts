@@ -24,6 +24,7 @@ export async function GET(request: Request) {
       followups5Days: 0,
       followups10Days: 0,
       vipReminders: 0,
+      musicianReminders: 0,
       postEventThanks: 0,
       errors: [] as string[]
     }
@@ -210,6 +211,59 @@ export async function GET(request: Request) {
       }
     }
 
+    // 3.4. Reminders for musicians on the day of the event (Hoy)
+    try {
+      const startOfToday = startOfDay(now)
+      const endOfToday = endOfDay(now)
+
+      const todayEvents = await db.event.findMany({
+        where: {
+          status: { in: ["agendado", "confirmed"] },
+          date: {
+            gte: startOfToday,
+            lte: endOfToday
+          }
+        },
+        include: {
+          musicians: {
+            include: {
+              musician: {
+                include: { user: true }
+              }
+            }
+          }
+        }
+      })
+
+      for (const event of todayEvents) {
+        for (const em of event.musicians) {
+          if (em.status === "REJECTED") continue
+          
+          const musician = em.musician
+          if (musician.status !== "active" || !musician.whatsapp) continue
+
+          try {
+            const recipientPhone = musician.whatsapp
+            
+            await dispatchNotification({
+              type: "MUSICIAN_TODAY_REMINDER",
+              to: recipientPhone,
+              eventId: event.id,
+              customData: {
+                musicianName: musician.user?.name || "Músico"
+              }
+            })
+            
+            results.musicianReminders++
+          } catch (err: any) {
+            results.errors.push(`Error in today reminder for event ${event.id} musician ${musician.id}: ${err.message}`)
+          }
+        }
+      }
+    } catch (cronMusErr: any) {
+      results.errors.push(`Error querying today's events for musicians: ${cronMusErr.message}`)
+    }
+
     // 3.5. Post-Event Thanks (El día después del evento)
     const yesterday = startOfDay(subDays(now, 1))
     const yesterdayEnd = endOfDay(subDays(now, 1))
@@ -344,7 +398,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       results,
-      message: `Procesados: ${results.followups5Days} seguimientos (5d), ${results.followups10Days} seguimientos (10d), ${results.vipReminders} recordatorios VIP, ${results.postEventThanks} agradecimientos post-evento, ${retriesCount} reintentos exitosos.`
+      message: `Procesados: ${results.followups5Days} seguimientos (5d), ${results.followups10Days} seguimientos (10d), ${results.vipReminders} recordatorios VIP, ${results.musicianReminders} recordatorios de músicos hoy, ${results.postEventThanks} agradecimientos post-evento, ${retriesCount} reintentos exitosos.`
     })
     
   } catch (error: any) {

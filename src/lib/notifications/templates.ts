@@ -158,6 +158,26 @@ Por favor, toma tus precauciones y libera la fecha en tu agenda.
 
 — Administración Vendetta`
 
+    case "MUSICIAN_TODAY_REMINDER":
+      return `🎸 *RECORDATORIO DE SHOW HOY — VENDETTA* 🎸
+¡Hola {{musicianName}}! Hoy tenemos show. Aquí tienes la información y horarios de la convocatoria:
+
+📅 *Fecha:* {{date}}
+👤 *Cliente:* {{clientName}}
+🎉 *Tipo:* {{ceremony}}
+🏠 *Dirección:* {{address}}
+📍 *Lugar:* {{location}}
+🗺️ *Google Maps:* {{mapsLink}}
+⚙️ *Hora de Montaje:* {{setupTime}}
+🚗 *Hora de Llegada Músicos:* {{arrivalTime}}
+🎤 *Show Inicio:* {{performanceStart}}
+🎵 *Show Fin:* {{performanceEnd}}
+👔 *Vestimenta:* {{dressCode}}
+
+📝 *Notas:* {{notes}}
+
+¡Nos vemos al rato! 🤘`
+
     default:
       return ""
   }

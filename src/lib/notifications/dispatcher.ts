@@ -119,6 +119,52 @@ export async function dispatchNotification({
     }
   }
 
+  // Si tenemos eventId y no bookingId, cargamos datos para las plantillas automáticamente
+  if (eventId && !bookingId && !payload.clientName) {
+    const event = await db.event.findUnique({
+      where: { id: eventId },
+      include: { bookingRequest: true, location: true, client: { include: { user: true } } }
+    })
+    if (event) {
+      payload = {
+        ...payload,
+        folio: event.bookingRequest?.shortId || event.quoteId?.slice(0, 8).toUpperCase() || "S/F",
+        shortId: event.bookingRequest?.shortId || event.quoteId?.slice(0, 8).toUpperCase() || "S/F",
+        clientName: event.customName || event.client?.user?.name || event.bookingRequest?.clientName || "Cliente",
+        fullName: event.customName || event.client?.user?.name || event.bookingRequest?.clientName || "Cliente",
+        eventName: event.customName || event.client?.user?.name || event.bookingRequest?.clientName || "Evento Vendetta",
+        date: formatDateMX(event.date, "d 'de' MMMM"),
+        fullDate: formatDateMX(event.date, "EEEE, d 'de' MMMM"),
+        time: event.performanceStart || event.startTime || "Por confirmar",
+        location: event.location?.name || event.bookingRequest?.city || "Por confirmar",
+        address: event.location?.address || event.bookingRequest?.address || "No especificada",
+        mapsLink: event.location?.mapsLink || event.bookingRequest?.mapsLink || "",
+        setupTime: event.setupTime || event.bookingRequest?.setupTime || "Por definir",
+        arrivalTime: event.arrivalTime || event.bookingRequest?.arrivalTime || "Por definir",
+        performanceStart: event.performanceStart || "Por definir",
+        performanceEnd: event.performanceEnd || "Por definir",
+        dressCode: (() => {
+          const map: Record<string, string> = {
+            "formal": "🎩 Formal",
+            "formal_casual": "👔 Formal Casual",
+            "rock": "🎸 Rock / Casual",
+            "nocturno": "🌙 Concierto Nocturno"
+          }
+          return map[event.dressCode || ""] || event.dressCode || "Por definir"
+        })(),
+        ceremony: (() => {
+          const map: Record<string, string> = {
+            boda: "💒 Boda", xv_anos: "👸 XV Años", cumpleanos: "🎂 Cumpleaños",
+            corporativo: "🏢 Evento Corp", festival: "🎪 Festival", happening: "🎵 Happening",
+            privado: "🏠 Privado", bar: "🍺 Bar / Venue", otro: "📋 Otro",
+          }
+          return map[event.ceremonyType || event.venueType || ""] || event.ceremonyType || event.venueType || "Show"
+        })(),
+        notes: event.musicianNotes || event.bookingRequest?.musicianNotes || "Ninguna"
+      }
+    }
+  }
+
   // 2. Definir Plantillas y Lógica por Tipo
   if (type === "ADMIN_NEW_BOOKING") {
     recipient = config?.adminWhatsapp || recipient
