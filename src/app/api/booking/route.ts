@@ -147,7 +147,100 @@ export async function PATCH(req: NextRequest) {
     const { bookingId, action, adminNote, musicianIds } = await req.json()
 
     const booking = await db.bookingRequest.findUnique({ where: { id: bookingId } })
-    if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 })
+    
+    if (!booking) {
+      // Intentar buscar en Quote (Legacy)
+      const quote = await db.quote.findUnique({ 
+        where: { id: bookingId },
+        include: { event: true }
+      })
+      if (!quote) return NextResponse.json({ error: "Not found" }, { status: 404 })
+
+      // Procesar acciones de Quote Legacy
+      if (action === "cancel" || action === "reject") {
+        await db.quote.update({
+          where: { id: bookingId },
+          data: { status: "cancelado", notes: adminNote || undefined }
+        })
+        if (quote.event) {
+          if (quote.event.googleCalendarId) {
+            try {
+              const { deleteFromGoogleCalendar } = await import("@/lib/google-calendar")
+              await deleteFromGoogleCalendar(quote.event.googleCalendarId)
+            } catch (calErr) {
+              console.error("⚠️ Error borrando calendario para quote legacy al rechazar:", calErr)
+            }
+          }
+          await db.event.update({
+            where: { id: quote.event.id },
+            data: { status: "cancelado", googleCalendarId: null, musicianNotes: adminNote || undefined }
+          })
+        }
+        return NextResponse.json({ success: true })
+      }
+
+      if (action === "confirm") {
+        await db.quote.update({
+          where: { id: bookingId },
+          data: { status: "agendado", notes: adminNote || undefined }
+        })
+
+        let eventId = quote.event?.id
+        if (!eventId) {
+          const event = await db.event.create({
+            data: {
+              quoteId:          quote.id,
+              date:             quote.eventDate || new Date(),
+              guestCount:       quote.guestCount,
+              amount:           quote.totalEstimated,
+              deposit:          0,
+              balance:          quote.totalEstimated,
+              status:           "agendado",
+              ceremonyType:     quote.ceremonyType || "otro",
+              clientId:         quote.clientId,
+              musicianNotes:    adminNote || quote.notes || null,
+              source:           "funnel"
+            }
+          })
+          eventId = event.id
+        } else {
+          await db.event.update({
+            where: { id: eventId },
+            data: { 
+              status: "agendado",
+              musicianNotes: adminNote || undefined
+            }
+          })
+        }
+
+        // Asignar músicos manuales si se pasaron
+        if (Array.isArray(musicianIds)) {
+          await db.eventMusician.deleteMany({
+            where: {
+              eventId: eventId as string,
+              musicianId: { notIn: musicianIds }
+            }
+          })
+
+          for (const mId of musicianIds) {
+            await db.eventMusician.upsert({
+              where: { id: `${eventId}-${mId}` },
+              create: {
+                id: `${eventId}-${mId}`,
+                eventId: eventId as string,
+                musicianId: mId,
+                status: "pending"
+              },
+              update: {}
+            })
+          }
+        }
+
+        return NextResponse.json({ success: true, eventId })
+      }
+
+      return NextResponse.json({ error: "Invalid action for legacy quote" }, { status: 400 })
+    }
 
     if (action === "confirm") {
       let eventId = booking.eventId
@@ -337,6 +430,25 @@ export async function PATCH(req: NextRequest) {
         where: { id: bookingId },
         data:  { status: "cancelado", adminNote: adminNote || null }
       })
+      
+      if (booking.eventId) {
+        const event = await db.event.findUnique({
+          where: { id: booking.eventId },
+          select: { googleCalendarId: true }
+        })
+        if (event?.googleCalendarId) {
+          try {
+            const { deleteFromGoogleCalendar } = await import("@/lib/google-calendar")
+            await deleteFromGoogleCalendar(event.googleCalendarId)
+          } catch (calErr) {
+            console.error("⚠️ Error borrando calendario al rechazar booking:", calErr)
+          }
+        }
+        await db.event.update({
+          where: { id: booking.eventId },
+          data: { status: "cancelado", googleCalendarId: null }
+        })
+      }
       return NextResponse.json({ success: true })
     }
 
