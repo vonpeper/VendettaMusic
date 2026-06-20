@@ -1,13 +1,23 @@
 "use client"
 
 import { useState } from "react"
-import { CheckCircle2, Clock, XCircle, User, Music, Send, Loader2 } from "lucide-react"
+import { CheckCircle2, Clock, XCircle, User, Music, Send, Loader2, Bell } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { resendIndividualMusicianNotificationAction } from "@/actions/notifications"
+import { resendIndividualMusicianNotificationAction, sendTodayReminderToMusicianAction } from "@/actions/notifications"
 
-export function MusicianStatusList({ musicians, eventId, bookingId }: { musicians: any[]; eventId: string; bookingId: string }) {
+export function MusicianStatusList({ 
+  musicians, 
+  eventId, 
+  bookingId,
+  isToday = false,
+}: { 
+  musicians: any[]; 
+  eventId: string; 
+  bookingId: string;
+  isToday?: boolean;
+}) {
   const [loading, setLoading] = useState<string | null>(null)
 
   if (!musicians || musicians.length === 0) {
@@ -57,10 +67,23 @@ export function MusicianStatusList({ musicians, eventId, bookingId }: { musician
       return
     }
 
-    setLoading(musicianId)
+    setLoading(`resend-${musicianId}`)
     try {
       const res = await resendIndividualMusicianNotificationAction(musicianId, eventId, bookingId)
       if (res.success) toast.success(res.message)
+      else toast.error(res.error)
+    } catch (err) {
+      toast.error("Error de conexión")
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const handleTodayReminder = async (musicianId: string, name: string) => {
+    setLoading(`today-${musicianId}`)
+    try {
+      const res = await sendTodayReminderToMusicianAction(musicianId, eventId)
+      if (res.success) toast.success(res.message || `Recordatorio enviado a ${name}`)
       else toast.error(res.error)
     } catch (err) {
       toast.error("Error de conexión")
@@ -99,16 +122,33 @@ export function MusicianStatusList({ musicians, eventId, bookingId }: { musician
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors"
-              disabled={loading === m.musicianId}
+              disabled={loading === `resend-${m.musicianId}`}
               onClick={() => handleResend(m.musicianId)}
               title="Re-notificar convocatoria por WhatsApp"
             >
-              {loading === m.musicianId ? (
+              {loading === `resend-${m.musicianId}` ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
                 <Send className="w-3 h-3" />
               )}
             </Button>
+
+            {isToday && m.status !== "rejected" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-amber-500 hover:text-amber-400 transition-colors"
+                disabled={loading === `today-${m.musicianId}`}
+                onClick={() => handleTodayReminder(m.musicianId, m.musician?.user?.name || "músico")}
+                title="Enviar recordatorio de show de HOY"
+              >
+                {loading === `today-${m.musicianId}` ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Bell className="w-3 h-3" />
+                )}
+              </Button>
+            )}
           </div>
         </div>
       ))}
