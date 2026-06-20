@@ -645,9 +645,22 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-              {booking.event?.id && booking.event.musicians && booking.event.musicians.length > 0 && (
-              <MusicianStatusList musicians={booking.event.musicians} eventId={booking.event?.id || booking.eventId || ""} bookingId={booking.id} />
-            )}
+              {booking.event?.id && booking.event.musicians && booking.event.musicians.length > 0 && (() => {
+                const eventDate = new Date(booking.event.date)
+                const now = new Date()
+                const eventIsToday =
+                  eventDate.getFullYear() === now.getFullYear() &&
+                  eventDate.getMonth() === now.getMonth() &&
+                  eventDate.getDate() === now.getDate()
+                return (
+                  <MusicianStatusList
+                    musicians={booking.event.musicians}
+                    eventId={booking.event?.id || booking.eventId || ""}
+                    bookingId={booking.id}
+                    isToday={eventIsToday}
+                  />
+                )
+              })()}
                 </CardContent>
               </Card>
             )}

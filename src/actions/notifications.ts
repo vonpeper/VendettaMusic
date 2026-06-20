@@ -379,3 +379,50 @@ export async function sendManualClientThanksAction(bookingId: string) {
     return { success: false, error: error.message }
   }
 }
+
+/**
+ * Envía el recordatorio del día del evento (MUSICIAN_TODAY_REMINDER) a un músico
+ * específico. Útil cuando el cron ya corrió y se saltó a algún músico.
+ */
+export async function sendTodayReminderToMusicianAction(musicianId: string, eventId: string) {
+  const session = await auth()
+  if (!session?.user || !["ADMIN"].includes(session.user.role as string)) {
+    return { success: false, error: "No autorizado" }
+  }
+
+  try {
+    const musician = await db.musicianProfile.findUnique({
+      where: { id: musicianId },
+      include: { user: true }
+    })
+
+    if (!musician) return { success: false, error: "Músico no encontrado" }
+    if (!musician.whatsapp) return { success: false, error: "El músico no tiene número de WhatsApp registrado" }
+    if (musician.status !== "active") return { success: false, error: "El músico no está activo" }
+
+    const event = await db.event.findUnique({ where: { id: eventId } })
+    if (!event) return { success: false, error: "Evento no encontrado" }
+
+    const { dispatchNotification } = await import("@/lib/notifications")
+
+    const messageId = await dispatchNotification({
+      type: "MUSICIAN_TODAY_REMINDER",
+      to: musician.whatsapp,
+      eventId: eventId,
+      forceResend: true,
+      customData: {
+        musicianName: musician.user?.name || "Músico"
+      }
+    })
+
+    if (!messageId) {
+      return { success: false, error: "No se pudo enviar el recordatorio. Revisa Evolution API." }
+    }
+
+    revalidatePath(`/admin/ventas`)
+    return { success: true, message: `✅ Recordatorio de show enviado a ${musician.user?.name || "músico"}.` }
+  } catch (error: any) {
+    console.error("Error sending today reminder to musician:", error)
+    return { success: false, error: error.message }
+  }
+}
