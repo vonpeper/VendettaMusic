@@ -117,7 +117,9 @@ function RehearsalForm({ onClose, locations, musicians, songs, initialData }: an
               <Label htmlFor="locationId">Lugar (Catálogo)</Label>
               <select id="locationId" name="locationId" defaultValue={initialData?.locationId || ""} className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground">
                 <option value="">Otro...</option>
-                {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                {locations
+                  .filter((l: any) => !l.name.startsWith("Show -") || l.id === initialData?.locationId)
+                  .map((l: any) => <option key={l.id} value={l.id}>{l.name}</option>)}
               </select>
             </div>
 

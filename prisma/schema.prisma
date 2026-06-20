@@ -472,6 +472,12 @@ model BookingRequest {
   discountAmount        Float?         @default(0)
   originalPrice         Float?         @default(0)
   invoice               Boolean        @default(false)
+  customName            String?
+  ceremonyType          String?
+  arrivalTime           String?
+  setupTime             String?
+  dressCode             String?
+  musicianNotes         String?
   event                 Event?         @relation(fields: [eventId], references: [id])
   client                ClientProfile? @relation(fields: [clientId], references: [id])
   inboxItems            InboxItem[]

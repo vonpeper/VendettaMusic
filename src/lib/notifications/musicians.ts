@@ -179,9 +179,9 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
 
     // Obtener template de la DB o usar el default
     const dbTemplate = config?.msgTemplateGig
-    const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG") || !dbTemplate.includes("Llegada") || !dbTemplate.includes("Vestimenta")
+    const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG") || !dbTemplate.includes("Hola")
     const template = isOldTemplate
-      ? `🎸 *NUEVA CONVOCATORIA — VENDETTA* 🎸
+      ? `¡Hola {{musicianName}}! 🎸 Te escribimos de *Vendetta Live Music* para convocarte al siguiente show:
 
 📅 *Fecha:* {{date}}
 👤 *Cliente:* {{clientName}}
@@ -196,8 +196,10 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
 
 📝 *Notas:* {{notes}}
 
-🔗 *Confirma tu asistencia aquí:*
-{{confirmLink}}`
+🔗 *Por favor confirma tu asistencia aquí:*
+{{confirmLink}}
+
+¡Gracias! 🤘`
       : dbTemplate
 
     // Sustituir variables usando el parser centralizado
@@ -218,7 +220,8 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
       confirmLink,
       // Añadimos variables adicionales solicitadas por el usuario en plantillas personalizadas
       fullName: realClientName,
-      time: gigDetails.performanceStart || gigDetails.setupTime || "Por definir"
+      time: gigDetails.performanceStart || gigDetails.setupTime || "Por definir",
+      musicianName: r.name
     }
     
     const message = parseTemplate(template, templateData)

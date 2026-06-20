@@ -26,7 +26,8 @@ export async function POST(req: NextRequest) {
       locationId, venueName, venuePhone,
       bandHours, djHours, isDjWithTvs, hasTemplete, hasPista, hasRobot,
       originalPrice, discountAmount, viaticosAmount, invoice,
-      distanceKm, durationSec, tollCost, fuelCost, requiresManualQuote
+      distanceKm, durationSec, tollCost, fuelCost, requiresManualQuote,
+      customName, ceremonyType, arrivalTime, setupTime, dressCode, musicianNotes
     } = data
     
     // Safeguards for numeric fields
@@ -66,9 +67,16 @@ export async function POST(req: NextRequest) {
 
     // --- Asegurar que el Lugar (Location) esté en el catálogo --- Se hace una sola vez
     let finalLocationId = locationId
-    if (!finalLocationId && venueName && calle) {
+    if (!finalLocationId && calle) {
+      const cleanVenueName = (venueName && venueName.trim() !== "") ? venueName.trim() : ""
+      const isPlaceholderName = ["essential", "festival premium", "experience", "premium", "show", "sin nombre", "por definir", "no especificada", "no especificado"].includes(cleanVenueName.toLowerCase())
+      
+      const locName = (cleanVenueName !== "" && !isPlaceholderName) 
+        ? cleanVenueName 
+        : `Show - ${clientName} (Manual)`
+
       finalLocationId = await findOrCreateLocation({
-        name: venueName,
+        name: locName,
         address: `${calle} ${numero || ""}, ${colonia || ""}`.trim(),
         city: municipio,
         state: state,
@@ -175,6 +183,12 @@ export async function POST(req: NextRequest) {
           fuelCost: parseFloat(fuelCost) || null,
           requiresManualQuote: Boolean(requiresManualQuote),
           invoice: Boolean(invoice),
+          customName: customName || null,
+          ceremonyType: ceremonyType || null,
+          arrivalTime: arrivalTime || null,
+          setupTime: setupTime || null,
+          dressCode: dressCode || null,
+          musicianNotes: musicianNotes || null,
         }
       })
 
@@ -186,6 +200,7 @@ export async function POST(req: NextRequest) {
             quoteId:          quoteId,
             date:             dateObj,
             guestCount:       Number(data.guestCount) || 0,
+            startTime:        startTime || "21:00",
             performanceStart: startTime || "21:00",
             performanceEnd:   endTime || "23:00",
             amount:           normalizedBaseAmount,
@@ -195,13 +210,17 @@ export async function POST(req: NextRequest) {
             status:           "agendado",
             venueType:        venueType || "salon",
             mapsLink:         mapsLink || null,
-            ceremonyType:     venueType || "salon",
+            ceremonyType:     ceremonyType || venueType || "show",
             totalIncome:      normalizedBaseAmount,
             clientId:         clientId,
             locationId:       finalLocationId || null,
             isPublic:         Boolean(isPublic),
             clientProvidesAudio: Boolean(clientProvidesAudio),
-            musicianNotes:    adminNote || null,
+            setupTime:        setupTime || null,
+            arrivalTime:      arrivalTime || null,
+            dressCode:        dressCode || null,
+            customName:       customName || null,
+            musicianNotes:    musicianNotes || adminNote || null,
             invoice:          Boolean(invoice),
             ivaAmount:        Boolean(invoice) ? Math.round((normalizedBaseAmount + (parseFloat(viaticosAmount) || 0)) * 0.16 * 100) / 100 : 0,
           }

@@ -113,7 +113,9 @@ export function BandEventForm({ onClose, editing }: any) {
                     }}
                   >
                     <option value="">(Catálogo)</option>
-                    {locations.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
+                    {locations
+                      .filter(l => !l.name.startsWith("Show -") || l.name === editing?.location)
+                      .map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
                   </select>
                 </div>
               </div>

@@ -175,6 +175,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
             date:             brCheck.requestedDate,
             guestCount:       brCheck.guestCount,
             performanceStart: brCheck.startTime,
+            startTime:        brCheck.startTime,
             performanceEnd:   brCheck.endTime,
             amount:           brCheck.baseAmount,
             deposit:          brCheck.depositAmount,
@@ -184,11 +185,15 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
             status:           "agendado",
             venueType:        brCheck.venueType,
             mapsLink:         brCheck.mapsLink,
-            ceremonyType:     brCheck.venueType,
+            ceremonyType:     brCheck.ceremonyType || brCheck.venueType || "show",
             locationId:       locationId || null,
             isPublic:         brCheck.isPublic,
             clientProvidesAudio: brCheck.clientProvidesAudio,
-            musicianNotes:    brCheck.adminNote || null,
+            setupTime:        brCheck.setupTime || null,
+            arrivalTime:      brCheck.arrivalTime || null,
+            dressCode:        brCheck.dressCode || null,
+            customName:       brCheck.customName || null,
+            musicianNotes:    brCheck.musicianNotes || brCheck.adminNote || null,
             source:           "funnel"
           }
         })

@@ -186,6 +186,19 @@ export async function deleteFromGoogleCalendar(calendarEventId: string): Promise
   }
 }
 
+async function deleteFailedSyncNotifications(eventId: string): Promise<void> {
+  try {
+    await db.notification.deleteMany({
+      where: {
+        eventId,
+        type: "CALENDAR_SYNC"
+      }
+    })
+  } catch (error) {
+    console.error("Failed to delete failed calendar sync notifications:", error)
+  }
+}
+
 /**
  * Sincroniza un evento de la base de datos local hacia Google Calendar.
  */
@@ -265,7 +278,12 @@ export async function syncEventToGoogleCalendar(eventId: string): Promise<void> 
               where: { id: eventId },
               data: { googleCalendarId: newCalId }
             })
+            await deleteFailedSyncNotifications(eventId)
+          } else {
+            throw new Error("No se pudo actualizar ni recrear el evento en Google Calendar")
           }
+        } else {
+          await deleteFailedSyncNotifications(eventId)
         }
       } else {
         // Crear nuevo evento
@@ -275,22 +293,45 @@ export async function syncEventToGoogleCalendar(eventId: string): Promise<void> 
             where: { id: eventId },
             data: { googleCalendarId: newCalId }
           })
+          await deleteFailedSyncNotifications(eventId)
+        } else {
+          throw new Error("No se pudo crear el evento en Google Calendar")
         }
       }
     } else {
       // Si el evento no está confirmado y tiene ID en Google Calendar, lo removemos
       if (event.googleCalendarId) {
-        await deleteFromGoogleCalendar(event.googleCalendarId)
+        const ok = await deleteFromGoogleCalendar(event.googleCalendarId)
+        if (!ok) {
+          throw new Error("No se pudo eliminar el evento de Google Calendar")
+        }
         await db.event.update({
           where: { id: eventId },
           data: { googleCalendarId: null }
         })
+        await deleteFailedSyncNotifications(eventId)
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in syncEventToGoogleCalendar:", error)
+    try {
+      await db.notification.create({
+        data: {
+          eventId,
+          type: "CALENDAR_SYNC",
+          channel: "google_calendar",
+          message: `Error al sincronizar evento a Google Calendar: ${error instanceof Error ? error.message : String(error)}`,
+          status: "failed",
+          errorDetails: error instanceof Error ? error.stack || error.message : String(error)
+        }
+      })
+    } catch (e) {
+      console.error("Failed to save calendar sync error notification:", e)
+    }
+    throw error
   }
 }
+
 
 export async function exchangeCodeForTokens(code: string, redirectUri: string) {
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })

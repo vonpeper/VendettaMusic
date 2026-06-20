@@ -94,18 +94,25 @@ export default async function AdminDashboardPage() {
     db.package.findMany({ orderBy: { name: 'asc' } }),
     db.musicianProfile.findMany({ 
       where: { 
-        OR: [
-          { instrument: { contains: "Ingeniero" } },
-          { instrument: { contains: "Staff" } }
-        ]
+        status: "active"
       },
-      include: { user: true } 
+      include: { user: true },
+      orderBy: { user: { name: "asc" } }
     }),
   ])
 
-  const staffMapped = musicianProfiles.map(m => ({
-    id: m.id,
-    name: m.user?.name || "Staff"
+  const staffMapped = musicianProfiles
+    .filter(p => 
+      p.instrument?.toLowerCase().includes("ingeniero") || 
+      p.instrument?.toLowerCase().includes("staff")
+    )
+    .map(p => ({ id: p.id, name: p.user?.name || "Sin nombre" }))
+
+  const allMusiciansMapped = musicianProfiles.map(p => ({ 
+    id: p.id, 
+    name: p.user?.name ?? "Sin nombre",
+    instrument: p.instrument || "Músico",
+    isTitular: p.isTitular
   }))
 
   const clientsMapped = allClients.map(c => ({
@@ -220,6 +227,7 @@ export default async function AdminDashboardPage() {
           locations={allLocations}
           packages={allPackages as any}
           staff={staffMapped}
+          allMusicians={allMusiciansMapped}
         />
         
         <Link href="/admin/ventas?new=quote" className="no-underline">
