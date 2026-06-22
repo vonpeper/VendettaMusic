@@ -355,12 +355,25 @@ En *Vendetta* ya estamos preparando todo para que la música sea perfecta. ¿Hay
                         <span className="text-[10px] text-muted-foreground italic">Cliente</span>
                       </div>
                       <Textarea id="msgTemplateThanks" name="msgTemplateThanks" rows={6}
-                        defaultValue={config?.msgTemplateThanks || `¡Hola {{clientName}}! 🎉 Todavía seguimos emocionados por lo de ayer.
+                        defaultValue={config?.msgTemplateThanks || `¡Hola {{clientName}}! 🎉 Todavía seguimos emocionados por lo de ayer.\n\nFue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña aquí para que más gente conozca la experiencia Vendetta:\n👉 *vendetta.mx/#testimoniales*\n\n¡Tu feedback es el motor de Vendetta! 🎸🤘`} 
+                        className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
+                    </div>
 
-Fue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña aquí para que más gente conozca la experiencia Vendetta:
-👉 *vendetta.mx/#testimoniales*
-
-¡Tu feedback es el motor de Vendetta! 🎸🤘`} 
+                    {/* Recordatorio del Día del Show (Músicos) */}
+                    <div className="space-y-4 border border-amber-500/20 rounded-xl p-4 bg-amber-500/5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <Label htmlFor="msgTemplateTodayReminder" className="text-foreground font-black uppercase tracking-widest text-xs">🎸 Recordatorio Día del Show</Label>
+                          <Toggle name="msgTodayReminderActive" defaultChecked={config?.msgTodayReminderActive ?? true} />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground italic">Staff (músicos)</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Se envía automáticamente a las <strong>9:00 AM hora México</strong> el día del evento a todos los músicos activos asignados al show.
+                        Variables: <code className="bg-muted/50 px-1 rounded">{"{{musicianName}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{date}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{clientName}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{ceremony}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{address}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{location}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{mapsLink}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{setupTime}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{arrivalTime}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{performanceStart}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{performanceEnd}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{dressCode}}"}</code> <code className="bg-muted/50 px-1 rounded">{"{{notes}}"}</code>
+                      </p>
+                      <Textarea id="msgTemplateTodayReminder" name="msgTemplateTodayReminder" rows={14}
+                        defaultValue={config?.msgTemplateTodayReminder || `🎸 *RECORDATORIO DE SHOW HOY — VENDETTA* 🎸\n¡Hola {{musicianName}}! Hoy tenemos show. Aquí tienes la información y horarios de la convocatoria:\n\n📅 *Fecha:* {{date}}\n👤 *Cliente:* {{clientName}}\n🎉 *Tipo:* {{ceremony}}\n🏠 *Dirección:* {{address}}\n📍 *Lugar:* {{location}}\n🗺️ *Google Maps:* {{mapsLink}}\n⚙️ *Hora de Montaje:* {{setupTime}}\n🚗 *Hora de Llegada Músicos:* {{arrivalTime}}\n🎤 *Show Inicio:* {{performanceStart}}\n🎵 *Show Fin:* {{performanceEnd}}\n👔 *Vestimenta:* {{dressCode}}\n\n📝 *Notas:* {{notes}}\n\n¡Nos vemos al rato! 🤘`} 
                         className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
                     </div>
 

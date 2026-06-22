@@ -339,7 +339,16 @@ export async function markBookingAsPaidAction(bookingId: string) {
 
       await db.event.update({
         where: { id: booking.eventId },
-        data: { balance: 0 }
+        data: { 
+          balance: 0,
+          status: "completado"  // Excluye el anticipo del cálculo de "anticipos en banco" en eventualidades
+        }
+      })
+
+      // También completar la BookingRequest
+      await db.bookingRequest.update({
+        where: { id: bookingId },
+        data: { status: "completado" }
       })
     }
 
@@ -349,6 +358,8 @@ export async function markBookingAsPaidAction(bookingId: string) {
 
     revalidatePath("/admin/ventas")
     revalidatePath(`/admin/ventas/${bookingId}`)
+    revalidatePath("/admin/eventualidades")
+    revalidatePath("/admin/eventos")
     return { success: true }
   } catch (error) {
     console.error("Error marking booking as paid:", error)

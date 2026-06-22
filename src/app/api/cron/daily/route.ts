@@ -212,57 +212,63 @@ export async function GET(request: Request) {
     }
 
     // 3.4. Reminders for musicians on the day of the event (Hoy)
-    try {
-      const startOfToday = startOfDay(now)
-      const endOfToday = endOfDay(now)
+    // Respeta el toggle msgTodayReminderActive del panel de notificaciones
+    const msgTodayReminderActive = config?.msgTodayReminderActive ?? true
 
-      const todayEvents = await db.event.findMany({
-        where: {
-          status: { in: ["agendado", "confirmed"] },
-          date: {
-            gte: startOfToday,
-            lte: endOfToday
-          }
-        },
-        include: {
-          musicians: {
-            include: {
-              musician: {
-                include: { user: true }
+    if (msgTodayReminderActive) {
+      try {
+        const startOfToday = startOfDay(now)
+        const endOfToday = endOfDay(now)
+
+        const todayEvents = await db.event.findMany({
+          where: {
+            status: { in: ["agendado", "confirmed"] },
+            date: {
+              gte: startOfToday,
+              lte: endOfToday
+            }
+          },
+          include: {
+            musicians: {
+              include: {
+                musician: {
+                  include: { user: true }
+                }
               }
             }
           }
-        }
-      })
+        })
 
-      for (const event of todayEvents) {
-        for (const em of event.musicians) {
-          if (em.status === "REJECTED") continue
-          
-          const musician = em.musician
-          if (musician.status !== "active" || !musician.whatsapp) continue
+        for (const event of todayEvents) {
+          for (const em of event.musicians) {
+            if (em.status === "REJECTED" || em.status === "rejected") continue
+            
+            const musician = em.musician
+            if (musician.status !== "active" || !musician.whatsapp) continue
 
-          try {
-            const recipientPhone = musician.whatsapp
-            
-            await dispatchNotification({
-              type: "MUSICIAN_TODAY_REMINDER",
-              to: recipientPhone,
-              eventId: event.id,
-              customData: {
-                musicianName: musician.user?.name || "Músico"
-              }
-            })
-            
-            results.musicianReminders++
-          } catch (err: any) {
-            results.errors.push(`Error in today reminder for event ${event.id} musician ${musician.id}: ${err.message}`)
+            try {
+              const recipientPhone = musician.whatsapp
+              
+              await dispatchNotification({
+                type: "MUSICIAN_TODAY_REMINDER",
+                to: recipientPhone,
+                eventId: event.id,
+                customData: {
+                  musicianName: musician.user?.name || "Músico"
+                }
+              })
+              
+              results.musicianReminders++
+            } catch (err: any) {
+              results.errors.push(`Error in today reminder for event ${event.id} musician ${musician.id}: ${err.message}`)
+            }
           }
         }
+      } catch (cronMusErr: any) {
+        results.errors.push(`Error querying today's events for musicians: ${cronMusErr.message}`)
       }
-    } catch (cronMusErr: any) {
-      results.errors.push(`Error querying today's events for musicians: ${cronMusErr.message}`)
     }
+
 
     // 3.5. Post-Event Thanks (El día después del evento)
     const yesterday = startOfDay(subDays(now, 1))

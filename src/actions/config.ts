@@ -248,11 +248,14 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
     const msgTemplateReminder = formData.get("msgTemplateReminder") as string
     const msgTemplateThanks = formData.get("msgTemplateThanks") as string
 
+    const msgTemplateTodayReminder = formData.get("msgTemplateTodayReminder") as string
+
     const msgExpiringActive = formData.get("msgExpiringActive") === "on"
     const msgReminderActive = formData.get("msgReminderActive") === "on"
     const msgThanksActive = formData.get("msgThanksActive") === "on"
     const autoFollowUpEnabled = formData.get("autoFollowUpEnabled") === "on"
     const autoThanksEnabled = formData.get("autoThanksEnabled") === "on"
+    const msgTodayReminderActive = formData.get("msgTodayReminderActive") === "on"
 
     console.log("💾 Guardando plantillas...", {
       msgExpiringActive,
@@ -278,6 +281,8 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
         msgThanksActive,
         autoFollowUpEnabled,
         autoThanksEnabled,
+        msgTemplateTodayReminder,
+        msgTodayReminderActive,
       },
       create: {
         id: "vendetta_config",
@@ -294,6 +299,8 @@ export async function saveMessageTemplatesAction(arg1: any, arg2?: any) {
         msgThanksActive,
         autoFollowUpEnabled,
         autoThanksEnabled,
+        msgTemplateTodayReminder,
+        msgTodayReminderActive,
       }
     })
 

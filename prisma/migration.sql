@@ -36,3 +36,8 @@ CREATE INDEX IF NOT EXISTS "InboxItem_status_idx" ON "InboxItem"("status");
 CREATE INDEX IF NOT EXISTS "InboxItem_clientId_idx" ON "InboxItem"("clientId");
 CREATE INDEX IF NOT EXISTS "InboxItem_bookingRequestId_idx" ON "InboxItem"("bookingRequestId");
 CREATE INDEX IF NOT EXISTS "InboxItem_createdAt_idx" ON "InboxItem"("createdAt");
+
+-- Add today reminder fields to GlobalConfig
+ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "msgTodayReminderActive" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "msgTemplateTodayReminder" TEXT;
+

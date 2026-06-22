@@ -46,17 +46,19 @@ export async function dispatchNotification({
   // Deduplication check (skip in sandbox mode)
   const isSandbox = config?.isSandbox ?? false;
   if (!forceResend && !isSandbox) {
+    const isMusicianType = type.startsWith("MUSICIAN") || type === "EVENT_CANCELLED"
     const existing = await db.notification.findFirst({
       where: {
         type: type.toLowerCase(),
         status: "sent",
         ...(bookingId ? { bookingRequestId: bookingId } : {}),
         ...(eventId ? { eventId: eventId } : {}),
+        ...(isMusicianType && to ? { recipient: to } : {})
       }
     })
     
     if (existing) {
-      console.log(`⚠️ Prevented duplicate notification of type ${type} for booking ${bookingId} / event ${eventId}`)
+      console.log(`⚠️ Prevented duplicate notification of type ${type} for booking ${bookingId} / event ${eventId} (Recipient: ${to})`)
       return existing.messageId || "already_sent"
     }
   }

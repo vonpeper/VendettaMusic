@@ -602,8 +602,10 @@ model GlobalConfig {
   mercadoPagoAccessToken String?
   mercadoPagoPublicKey   String?
   googleMapsApiKey       String?
-  viaticosLocalRadius    Float?    @default(50.0)
-  viaticosVehicleCount   Int?      @default(2)
+  viaticosLocalRadius       Float?    @default(50.0)
+  viaticosVehicleCount      Int?      @default(2)
+  msgTodayReminderActive    Boolean   @default(true)
+  msgTemplateTodayReminder  String?
 }
 
 model InboxItem {
