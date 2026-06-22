@@ -26,12 +26,14 @@ jobs:
           DOKPLOY_TOKEN: ${{ secrets.DOKPLOY_TOKEN }}
           COMPOSE_ID: ${{ vars.DOKPLOY_COMPOSE_ID }}
         run: |
+          pip install paramiko
           python scripts/diagnose_dokploy.py
+          python scripts/get_vps_logs.py
 
       - name: Commit and Push Status Report
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add debug-vps-status.json
+          git add debug-vps-status.json vps-container-logs.json || true
           git commit -m "chore: update VPS debug status [skip ci]" || echo "No changes to commit"
           git push
