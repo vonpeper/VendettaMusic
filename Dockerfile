@@ -45,6 +45,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy standalone build and prisma schema
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma-schema
 
 # Ensure Prisma client and CLI are available for database migrations/push
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
@@ -59,4 +60,4 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["sh", "-c", "./node_modules/.bin/prisma db push --accept-data-loss && node server.js"]
+CMD ["sh", "-c", "./node_modules/.bin/prisma db push --accept-data-loss --schema ./prisma-schema/schema.prisma && node server.js"]
