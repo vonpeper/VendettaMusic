@@ -170,6 +170,14 @@ async function ensureSchemaUpToDate(prisma: PrismaClient) {
       await prisma.$executeRawUnsafe(`ALTER TABLE GlobalConfig ADD COLUMN viaticosVehicleCount INTEGER DEFAULT 2`)
       console.log("🤖 [Self-Healing] Added column viaticosVehicleCount to GlobalConfig")
     }
+    if (!configColNames.includes("msgtodayreminderactive")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE GlobalConfig ADD COLUMN msgTodayReminderActive BOOLEAN DEFAULT 1`)
+      console.log("🤖 [Self-Healing] Added column msgTodayReminderActive to GlobalConfig")
+    }
+    if (!configColNames.includes("msgtemplatetodayreminder")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE GlobalConfig ADD COLUMN msgTemplateTodayReminder TEXT`)
+      console.log("🤖 [Self-Healing] Added column msgTemplateTodayReminder to GlobalConfig")
+    }
   } catch (err) {
     console.error("❌ [Self-Healing] Error auto-applying missing schema columns:", err)
   }

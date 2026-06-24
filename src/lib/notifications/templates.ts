@@ -56,7 +56,8 @@ export function getTemplateForType(type: NotificationType, config: any, payload:
     case "CLIENT_QUOTE":
       return config?.msgTemplateQuote || `Hola {{clientName}}, somos *Vendetta Live Music* 🎸.
 
-Es un gusto saludarte. Te compartimos adjunta la propuesta exclusiva para tu evento el próximo *{{date}}*.
+Es un gusto saludarte. Te compartimos el enlace para consultar la propuesta exclusiva para tu evento el próximo *{{date}}*:
+{{bookingLink}}
 
 Revisamos cada detalle para asegurar que la música sea inolvidable. Quedamos a tus órdenes para agendar una breve llamada y pulir los detalles.
 
