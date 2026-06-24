@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
+import { ThemeManager } from "@/components/admin/ThemeManager"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -20,7 +21,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const pendingInbox = await (db as any).inboxItem?.count?.({ where: { status: "pending" } }).catch(() => 0) || 0
 
   return (
-    <div className="admin-theme flex min-h-screen bg-background text-foreground p-4 gap-4">
+    <div className="admin-theme flex flex-col md:flex-row min-h-screen bg-background text-foreground p-4 pt-20 md:pt-4 gap-4">
+      <ThemeManager />
       <div className="fixed top-0 left-0 right-0 h-1 bg-red-600 z-[99999] pointer-events-none" />
       {/* Sidebar - Floating style */}
       <AdminSidebar 

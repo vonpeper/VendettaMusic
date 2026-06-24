@@ -197,27 +197,24 @@ export default async function AdminDashboardPage() {
   return (
     <div className="p-8 bg-background min-h-full">
       {/* Header */}
-      <div className="flex justify-between items-end mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-heading font-bold text-foreground tracking-tight">Dashboard General</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {formatDateMX(now, "PPPP")}
           </p>
         </div>
-        {soonEvents.length > 0 && (
-          <div className="flex items-center gap-3">
-            <RepairSyncButton />
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-start sm:justify-end">
+          {soonEvents.length > 0 && (
             <div className="flex items-center gap-2 bg-primary/15 border border-primary/40 rounded-lg px-4 py-2">
               <Bell className="w-4 h-4 text-primary animate-pulse" />
               <span className="text-sm text-primary font-bold">
                 {soonEvents.length} show{soonEvents.length > 1 ? "s" : ""} esta semana
               </span>
             </div>
-          </div>
-        )}
-        {!soonEvents.length && (
+          )}
           <RepairSyncButton />
-        )}
+        </div>
       </div>
 
       {/* Quick Actions Grid */}
@@ -342,9 +339,9 @@ export default async function AdminDashboardPage() {
                 {isAdmin ? "Historial de facturación — últimos 6 meses." : "Resumen de actividad reciente."}
               </CardDescription>
             </div>
-            <Link href="/admin/ventas"
+            <Link href={isAdmin ? "/admin/finanzas" : "/admin/eventos"}
               className="px-4 py-2 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
-               Ver detalle
+               {isAdmin ? "Ver Análisis" : "Ver detalle"}
             </Link>
           </CardHeader>
           <CardContent>
