@@ -717,3 +717,29 @@ export async function updateDepositAmountAction(bookingId: string, amount: numbe
     return { success: false, error: "Error al actualizar el anticipo." }
   }
 }
+
+export async function reportDepositAction(bookingId: string, paymentRef: string) {
+  try {
+    const booking = await db.bookingRequest.findUnique({
+      where: { id: bookingId }
+    })
+    if (!booking) return { success: false, error: "Reserva no encontrada" }
+
+    await db.bookingRequest.update({
+      where: { id: bookingId },
+      data: {
+        paymentStatus: "review",
+        paymentRef: paymentRef || "Reportado por Cliente"
+      }
+    })
+
+    revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    revalidatePath(`/status/${booking.shortId}`)
+    
+    return { success: true }
+  } catch (error) {
+    console.error("Error reporting deposit:", error)
+    return { success: false, error: "Error al reportar el depósito." }
+  }
+}
