@@ -254,7 +254,7 @@ export async function dispatchNotification({
   let media: string | undefined = undefined
   let fileName: string | undefined = undefined
 
-  if ((type === "CLIENT_QUOTE" || type === "CLIENT_CONFIRMED") && bookingId) {
+  if (type === "CLIENT_CONFIRMED" && bookingId) {
     try {
     console.log('[OFFICIAL WHATSAPP] Starting official WhatsApp notification flow')
       const { generateContractPdf } = await import("../pdf/contract-generator")
