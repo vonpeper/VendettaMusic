@@ -115,27 +115,31 @@ export async function POST(req: NextRequest) {
       const shortId = `VND-${randomHex}`
 
       // --- Crear Cotización (Quote) ---
-      await db.quote.create({
-        data: {
-          id: quoteId,
-          clientId,
-          status: computedStatus,
-          totalEstimated: normalizedBaseAmount,
-          guestCount: Number(data.guestCount) || 0,
-          ceremonyType: venueType || "show",
-          notes: adminNote || "",
-          eventDate: dateObj,
-          items: {
-            create: [
-              {
-                description: `Cotización Manual: ${packageName}`,
-                quantity: 1,
-                unitCost: normalizedBaseAmount
-              }
-            ]
+      let quoteCreated = false
+      if (depositConfirmed) {
+        await db.quote.create({
+          data: {
+            id: quoteId,
+            clientId,
+            status: computedStatus,
+            totalEstimated: normalizedBaseAmount,
+            guestCount: Number(data.guestCount) || 0,
+            ceremonyType: venueType || "show",
+            notes: adminNote || "",
+            eventDate: dateObj,
+            items: {
+              create: [
+                {
+                  description: `Cotización Manual: ${packageName}`,
+                  quantity: 1,
+                  unitCost: normalizedBaseAmount
+                }
+              ]
+            }
           }
-        }
-      })
+        })
+        quoteCreated = true
+      }
 
       // Crear BookingRequest
       await db.bookingRequest.create({
@@ -197,7 +201,7 @@ export async function POST(req: NextRequest) {
         await db.event.create({
           data: {
             id:               eventId,
-            quoteId:          quoteId,
+            quoteId:          quoteCreated ? quoteId : null,
             date:             dateObj,
             guestCount:       Number(data.guestCount) || 0,
             startTime:        startTime || "21:00",

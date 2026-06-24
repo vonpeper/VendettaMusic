@@ -181,7 +181,8 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     const dbTemplate = config?.msgTemplateGig
     const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG") || !dbTemplate.includes("Hola")
     const template = isOldTemplate
-      ? `¡Hola {{musicianName}}! 🎸 Te escribimos de *Vendetta Live Music* para convocarte al siguiente show:
+      ? `¡Hola {{musicianName}}! 🎸 Te escribimos de *Vendetta Live Music* para convocarte al show:
+🔗 *Confirma tu asistencia aquí:* {{confirmLink}}
 
 📅 *Fecha:* {{date}}
 👤 *Cliente:* {{clientName}}
@@ -195,9 +196,6 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
 👔 *Vestimenta:* {{dressCode}}
 
 📝 *Notas:* {{notes}}
-
-🔗 *Por favor confirma tu asistencia aquí:*
-{{confirmLink}}
 
 ¡Gracias! 🤘`
       : dbTemplate

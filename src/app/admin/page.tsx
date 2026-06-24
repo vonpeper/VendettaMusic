@@ -414,9 +414,10 @@ export default async function AdminDashboardPage() {
               <div className="space-y-4">
                 {[...pendingBookingRequests, ...pendingQuotes].slice(0, 4).map(q => {
                   const isWebFunnel = "clientName" in q;
-                  const clientName = q.client?.user?.name || (isWebFunnel ? q.clientName : "Sin nombre");
-                  const dateInfo = isWebFunnel ? q.requestedDate : q.eventDate;
-                  const amount = isWebFunnel ? q.baseAmount : q.totalEstimated;
+                  const isWeb = isWebFunnel && (q as any).source !== "manual" && (q as any).source !== "eventualidad";
+                  const clientName = q.client?.user?.name || (isWebFunnel ? (q as any).clientName : "Sin nombre");
+                  const dateInfo = isWebFunnel ? (q as any).requestedDate : (q as any).eventDate;
+                  const amount = isWebFunnel ? (q as any).baseAmount : (q as any).totalEstimated;
                   const createdAt = q.createdAt;
                   const daysAgo = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
 
@@ -435,7 +436,7 @@ export default async function AdminDashboardPage() {
                           {clientName}
                         </div>
                         <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
-                          {isWebFunnel ? "Lead Web" : "Manual"}
+                          {isWeb ? "Lead Web" : "Manual"}
                           {dateInfo ? ` · ${formatDateMX(dateInfo, "d MMM")}` : ""}
                         </div>
                       </div>
