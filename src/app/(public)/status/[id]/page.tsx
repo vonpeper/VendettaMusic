@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { RockBackground } from "@/components/funnel/RockBackground"
 import { ContractSigner } from "@/components/funnel/ContractSigner"
+import { QuoteApprovalForm } from "@/components/funnel/QuoteApprovalForm"
 import { formatDateMX } from "@/lib/utils"
 
 export const dynamic = 'force-dynamic'
@@ -138,8 +139,18 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                     </div>
                     <div className="pt-4 border-t border-border/40 flex justify-between items-center">
                       <span className="text-xs font-bold text-muted-foreground uppercase">Estatus Pago</span>
-                      <span className={`text-[10px] font-black uppercase tracking-widest ${mainBooking.paymentStatus === 'paid' ? 'text-green-500' : 'text-yellow-500'}`}>
-                        {mainBooking.paymentStatus === 'paid' ? '✅ Pagado' : '⏳ Pendiente'}
+                      <span className={`text-[10px] font-black uppercase tracking-widest ${
+                        mainBooking.paymentStatus === 'paid' 
+                          ? 'text-green-500' 
+                          : mainBooking.paymentStatus === 'review' || mainBooking.paymentStatus === 'revisar'
+                            ? 'text-blue-500 animate-pulse'
+                            : 'text-yellow-500'
+                      }`}>
+                        {mainBooking.paymentStatus === 'paid' 
+                          ? '✅ Pagado' 
+                          : mainBooking.paymentStatus === 'review' || mainBooking.paymentStatus === 'revisar'
+                            ? '⏳ En Revisión' 
+                            : '⏳ Pendiente'}
                       </span>
                     </div>
                   </div>
@@ -147,7 +158,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
               </div>
             </div>
 
-            {/* SECCIÓN DE CONTRATO LEGAL */}
+            {/* SECCIÓN DE CONTRATO LEGAL (CONFIRMADOS) */}
             {mainBooking.status === "agendado" && (
               <ContractSigner 
                 bookingId={mainBooking.id}
@@ -168,6 +179,20 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                 eventAmount={totalAmount}
                 packageName={mainBooking.packageName}
                 eventAddress={mainBooking.address}
+              />
+            )}
+
+            {/* SECCIÓN DE APROBACIÓN DE COTIZACIÓN (PENDIENTES Y NO PAGADAS) */}
+            {mainBooking.status === "pendiente" && mainBooking.paymentStatus !== "paid" && (
+              <QuoteApprovalForm
+                bookingId={mainBooking.id}
+                depositAmount={mainBooking.depositAmount}
+                paymentStatus={mainBooking.paymentStatus}
+                paymentRef={mainBooking.paymentRef}
+                bankName={globalConfig?.bankName || null}
+                bankAccount={globalConfig?.bankAccount || null}
+                bankClabe={globalConfig?.bankClabe || null}
+                bankBeneficiary={globalConfig?.bankBeneficiary || null}
               />
             )}
           </div>
