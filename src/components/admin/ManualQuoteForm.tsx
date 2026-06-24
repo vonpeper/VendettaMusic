@@ -236,6 +236,17 @@ export function ManualQuoteForm({
 
   const handlePackageChange = (id: string | null) => {
     if (!id) return
+    if (id === "manual-arma") {
+      setFormData(prev => ({
+        ...prev,
+        packageId: "manual-arma",
+        originalPrice: 0,
+        baseAmount: 0,
+        discountAmount: 0,
+        depositAmount: 0
+      }))
+      return
+    }
     const pkg = packages.find(p => p.id === id)
     if (pkg) {
       const price = pkg.baseCostPerHour * pkg.minDuration
@@ -674,10 +685,18 @@ export function ManualQuoteForm({
                   value={formData.originalPrice} 
                   onChange={e => {
                     const original = parseFloat(e.target.value) || 0
-                    setFormData({
-                      ...formData, 
-                      originalPrice: original,
-                      discountAmount: original - formData.baseAmount
+                    setFormData(prev => {
+                      const shouldSync = prev.baseAmount === 0 || prev.baseAmount === prev.originalPrice
+                      const newBase = shouldSync ? original : prev.baseAmount
+                      return {
+                        ...prev,
+                        originalPrice: original,
+                        baseAmount: newBase,
+                        discountAmount: original - newBase,
+                        depositAmount: prev.depositAmount === 0 || prev.depositAmount === Math.round(prev.baseAmount * 0.4)
+                          ? Math.round(newBase * 0.4)
+                          : prev.depositAmount
+                      }
                     })
                   }}
                   className="border-blue-500/30"
@@ -827,11 +846,14 @@ export function ManualQuoteForm({
                   onFocus={(e) => e.target.select()}
                   onChange={e => {
                     const val = parseFloat(e.target.value) || 0
-                    setFormData({
-                      ...formData, 
+                    setFormData(prev => ({
+                      ...prev,
                       baseAmount: val,
-                      discountAmount: formData.originalPrice - val
-                    })
+                      discountAmount: prev.originalPrice - val,
+                      depositAmount: prev.depositAmount === 0 || prev.depositAmount === Math.round(prev.baseAmount * 0.4)
+                        ? Math.round(val * 0.4)
+                        : prev.depositAmount
+                    }))
                   }}
                   className="bg-primary/5 border-primary shadow-inner"
                 />

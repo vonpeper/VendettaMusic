@@ -236,6 +236,20 @@ export async function POST(req: NextRequest) {
           data: { eventId: eventId }
         })
 
+        // Crear registro de pago (Payment) para el anticipo confirmado
+        if (normalizedDepositAmount > 0) {
+          await db.payment.create({
+            data: {
+              eventId: eventId,
+              bookingRequestId: bookingId,
+              amount: normalizedDepositAmount,
+              method: paymentMethod?.toUpperCase() === "CASH" ? "CASH" : "TRANSFER",
+              status: "completed",
+              reference: "Anticipo Confirmado al Crear"
+            }
+          })
+        }
+
         // Asignar automáticamente los músicos titulares
         await assignDefaultMusicians(eventId, db)
 
