@@ -206,6 +206,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
               <QuoteApprovalForm
                 bookingId={mainBooking.id}
                 depositAmount={mainBooking.depositAmount}
+                totalAmount={totalAmount}
                 paymentStatus={mainBooking.paymentStatus}
                 paymentRef={mainBooking.paymentRef}
                 bankName={globalConfig?.bankName || null}

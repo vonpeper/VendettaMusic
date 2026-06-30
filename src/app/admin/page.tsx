@@ -148,10 +148,9 @@ export default async function AdminDashboardPage() {
 
   // -- Pipeline y Conversion Rate -------------------------------------
   const totalPipelineValue = 
-    pendingBookingRequests.reduce((acc, req) => acc + (req.baseAmount || 0), 0) +
-    pendingQuotes.reduce((acc, q) => acc + (q.totalEstimated || 0), 0);
+    pendingBookingRequests.reduce((acc, req) => acc + (req.baseAmount || 0), 0);
 
-  const activeLeadsCount = pendingBookingRequests.length + pendingQuotes.length;
+  const activeLeadsCount = pendingBookingRequests.length;
 
   const confirmedBookingsCount = await db.bookingRequest.count({
     where: { status: "CONFIRMED" }
@@ -403,18 +402,17 @@ export default async function AdminDashboardPage() {
             </Link>
           </CardHeader>
           <CardContent>
-            {pendingBookingRequests.length === 0 && pendingQuotes.length === 0 ? (
+            {pendingBookingRequests.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-sm border border-dashed border-border/40 rounded-xl">
                 Sin negociaciones activas.
               </div>
             ) : (
               <div className="space-y-4">
-                {[...pendingBookingRequests, ...pendingQuotes].slice(0, 4).map(q => {
-                  const isWebFunnel = "clientName" in q;
-                  const isWeb = isWebFunnel && (q as any).source !== "manual" && (q as any).source !== "eventualidad";
-                  const clientName = q.client?.user?.name || (isWebFunnel ? (q as any).clientName : "Sin nombre");
-                  const dateInfo = isWebFunnel ? (q as any).requestedDate : (q as any).eventDate;
-                  const amount = isWebFunnel ? (q as any).baseAmount : (q as any).totalEstimated;
+                {pendingBookingRequests.slice(0, 4).map(q => {
+                  const isWeb = q.source !== "manual" && q.source !== "eventualidad";
+                  const clientName = q.client?.user?.name || q.clientName || "Sin nombre";
+                  const dateInfo = q.requestedDate;
+                  const amount = q.baseAmount;
                   const createdAt = q.createdAt;
                   const daysAgo = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
 
@@ -443,10 +441,10 @@ export default async function AdminDashboardPage() {
                         </div>
                         <FollowUpButton 
                           id={q.id}
-                          type={isWebFunnel ? "booking" : "quote"}
-                          phone={isWebFunnel ? (q as any).clientPhone : (q as any).client?.clientProfile?.whatsapp || (q as any).client?.clientProfile?.phone || ""}
+                          type="booking"
+                          phone={q.clientPhone}
                           clientName={clientName}
-                          currentCount={(q as any).followUpCount || 0}
+                          currentCount={q.followUpCount || 0}
                         />
                       </div>
                     </Link>
