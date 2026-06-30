@@ -692,7 +692,7 @@ export function ManualQuoteForm({
                         ...prev,
                         originalPrice: original,
                         baseAmount: newBase,
-                        discountAmount: original - newBase,
+                        discountAmount: Math.max(0, original - newBase),
                         depositAmount: prev.depositAmount === 0 || prev.depositAmount === Math.round(prev.baseAmount * 0.4)
                           ? Math.round(newBase * 0.4)
                           : prev.depositAmount
@@ -849,7 +849,7 @@ export function ManualQuoteForm({
                     setFormData(prev => ({
                       ...prev,
                       baseAmount: val,
-                      discountAmount: prev.originalPrice - val,
+                      discountAmount: Math.max(0, prev.originalPrice - val),
                       depositAmount: prev.depositAmount === 0 || prev.depositAmount === Math.round(prev.baseAmount * 0.4)
                         ? Math.round(val * 0.4)
                         : prev.depositAmount
