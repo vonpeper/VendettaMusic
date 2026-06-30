@@ -211,16 +211,22 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               initialData={booking.event || {
                 bookingRequest: booking,
                 clientId: booking.clientId,
+                packageId: booking.packageId,
+                date: booking.requestedDate,
                 amount: booking.baseAmount,
                 deposit: booking.depositAmount,
                 paymentMethod: booking.paymentMethod,
-                ceremonyType: booking.venueType || "otro",
+                ceremonyType: booking.ceremonyType || booking.venueType || "otro",
                 guestCount: booking.guestCount || 0,
                 performanceStart: booking.startTime,
                 performanceEnd: booking.endTime,
                 status: booking.status === "pendiente" ? "pendiente" : "agendado",
                 invoice: booking.invoice || false,
-                customName: booking.clientName ? `Evento de ${booking.clientName}` : "",
+                customName: booking.customName || (booking.clientName ? `Evento de ${booking.clientName}` : ""),
+                arrivalTime: booking.arrivalTime,
+                setupTime: booking.setupTime,
+                dressCode: booking.dressCode,
+                musicianNotes: booking.musicianNotes,
               }}
               clients={clientsMapped}
               locations={locations}
