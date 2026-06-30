@@ -13,7 +13,7 @@ export default async function AdminProveedoresPage() {
   return (
     <div className="p-8 bg-background min-h-full">
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-heading font-bold text-foreground tracking-tight">
             Proveedores

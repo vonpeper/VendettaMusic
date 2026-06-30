@@ -197,27 +197,24 @@ export default async function AdminDashboardPage() {
   return (
     <div className="p-8 bg-background min-h-full">
       {/* Header */}
-      <div className="flex justify-between items-end mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-heading font-bold text-foreground tracking-tight">Dashboard General</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {formatDateMX(now, "PPPP")}
           </p>
         </div>
-        {soonEvents.length > 0 && (
-          <div className="flex items-center gap-3">
-            <RepairSyncButton />
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-start sm:justify-end">
+          {soonEvents.length > 0 && (
             <div className="flex items-center gap-2 bg-primary/15 border border-primary/40 rounded-lg px-4 py-2">
               <Bell className="w-4 h-4 text-primary animate-pulse" />
               <span className="text-sm text-primary font-bold">
                 {soonEvents.length} show{soonEvents.length > 1 ? "s" : ""} esta semana
               </span>
             </div>
-          </div>
-        )}
-        {!soonEvents.length && (
+          )}
           <RepairSyncButton />
-        )}
+        </div>
       </div>
 
       {/* Quick Actions Grid */}
@@ -342,9 +339,9 @@ export default async function AdminDashboardPage() {
                 {isAdmin ? "Historial de facturación — últimos 6 meses." : "Resumen de actividad reciente."}
               </CardDescription>
             </div>
-            <Link href="/admin/ventas"
+            <Link href={isAdmin ? "/admin/finanzas" : "/admin/eventos"}
               className="px-4 py-2 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
-               Ver detalle
+               {isAdmin ? "Ver Análisis" : "Ver detalle"}
             </Link>
           </CardHeader>
           <CardContent>
@@ -414,9 +411,10 @@ export default async function AdminDashboardPage() {
               <div className="space-y-4">
                 {[...pendingBookingRequests, ...pendingQuotes].slice(0, 4).map(q => {
                   const isWebFunnel = "clientName" in q;
-                  const clientName = q.client?.user?.name || (isWebFunnel ? q.clientName : "Sin nombre");
-                  const dateInfo = isWebFunnel ? q.requestedDate : q.eventDate;
-                  const amount = isWebFunnel ? q.baseAmount : q.totalEstimated;
+                  const isWeb = isWebFunnel && (q as any).source !== "manual" && (q as any).source !== "eventualidad";
+                  const clientName = q.client?.user?.name || (isWebFunnel ? (q as any).clientName : "Sin nombre");
+                  const dateInfo = isWebFunnel ? (q as any).requestedDate : (q as any).eventDate;
+                  const amount = isWebFunnel ? (q as any).baseAmount : (q as any).totalEstimated;
                   const createdAt = q.createdAt;
                   const daysAgo = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
 
@@ -435,7 +433,7 @@ export default async function AdminDashboardPage() {
                           {clientName}
                         </div>
                         <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
-                          {isWebFunnel ? "Lead Web" : "Manual"}
+                          {isWeb ? "Lead Web" : "Manual"}
                           {dateInfo ? ` · ${formatDateMX(dateInfo, "d MMM")}` : ""}
                         </div>
                       </div>

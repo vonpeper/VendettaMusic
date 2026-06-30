@@ -178,6 +178,23 @@ async function ensureSchemaUpToDate(prisma: PrismaClient) {
       await prisma.$executeRawUnsafe(`ALTER TABLE GlobalConfig ADD COLUMN msgTemplateTodayReminder TEXT`)
       console.log("🤖 [Self-Healing] Added column msgTemplateTodayReminder to GlobalConfig")
     }
+
+    // 4. Renombrar marcadores de posición de ubicaciones históricos (ej. "Essential") a "Show - [Nombre]" para ocultarlos del catálogo
+    await prisma.$executeRawUnsafe(`
+      UPDATE Location 
+      SET name = 'Show - ' || name 
+      WHERE (
+        lower(name) = 'essential' OR 
+        lower(name) = 'festival premium' OR 
+        lower(name) = 'experience' OR 
+        lower(name) = 'premium' OR 
+        lower(name) = 'show' OR 
+        lower(name) = 'sin nombre' OR 
+        lower(name) = 'por definir' OR 
+        lower(name) = 'no especificada' OR 
+        lower(name) = 'no especificado'
+      ) AND name NOT LIKE 'Show - %'
+    `).catch(err => console.error("🤖 [Self-Healing] Error renaming location placeholders:", err))
   } catch (err) {
     console.error("❌ [Self-Healing] Error auto-applying missing schema columns:", err)
   }

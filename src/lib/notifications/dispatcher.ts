@@ -4,6 +4,7 @@ import { getTemplateForType, parseTemplate } from "./templates"
 import { formatDateMX } from "../utils"
 import { getAppUrl } from "../url"
 import { toWhatsAppNumber } from "../phone"
+import { getValidMapsLink } from "../locations"
 
 /**
  * Función Maestra: El único punto de entrada para notificaciones
@@ -115,6 +116,7 @@ export async function dispatchNotification({
         adminLink: `${baseUrl}/admin/ventas/${bookingId}`,
         statusLink: `${baseUrl}/status/${booking.shortId}`,
         bookingLink: `${baseUrl}/status/${booking.shortId}`,
+        mapsLink: getValidMapsLink(booking.event?.location?.mapsLink || booking.event?.mapsLink || booking.mapsLink, booking.event?.location?.address || booking.address),
         total: booking.baseAmount?.toLocaleString("es-MX") || "0"
       }
       if (!recipient && type.startsWith("CLIENT")) recipient = booking.clientPhone
@@ -140,7 +142,7 @@ export async function dispatchNotification({
         time: event.performanceStart || event.startTime || "Por confirmar",
         location: event.location?.name || event.bookingRequest?.city || "Por confirmar",
         address: event.location?.address || event.bookingRequest?.address || "No especificada",
-        mapsLink: event.location?.mapsLink || event.bookingRequest?.mapsLink || "",
+        mapsLink: getValidMapsLink(event.location?.mapsLink || event.bookingRequest?.mapsLink || event.mapsLink, event.location?.address || event.bookingRequest?.address),
         setupTime: event.setupTime || event.bookingRequest?.setupTime || "Por definir",
         arrivalTime: event.arrivalTime || event.bookingRequest?.arrivalTime || "Por definir",
         performanceStart: event.performanceStart || "Por definir",

@@ -8,7 +8,7 @@ import {
   Users, Calendar, Settings, LogOut, FileText, Music, 
   LayoutDashboard, TrendingUp, ShoppingBag, Image as LucideImage, 
   Truck, Mic, Shield, Bell, Inbox, ChevronDown, ChevronRight,
-  BarChart3, Wallet, XCircle, BookOpen, History, MessageSquare
+  BarChart3, Wallet, XCircle, BookOpen, History, MessageSquare, Menu
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
@@ -153,8 +153,9 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
       title: "FINANZAS",
       id: "finanzas",
       icon: Wallet,
-      placeholder: true,
-      items: []
+      items: [
+        { name: "Análisis Financiero", href: "/admin/finanzas", icon: Wallet, adminOnly: true }
+      ]
     },
     {
       title: "MÉTRICAS",
@@ -169,14 +170,24 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
 
   return (
     <>
-      {/* Mobile Toggle Button */}
-      <div className="md:hidden fixed top-4 left-4 z-[60]">
+      {/* Mobile Top Bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border/40 px-4 flex items-center justify-between z-[40] shadow-sm">
         <button
           onClick={() => setExpandedSections(prev => ({ ...prev, mobile: !prev.mobile }))}
-          className="p-3 rounded-xl bg-gradient-to-br from-[#3c3c3c] to-[#1a1a1a] text-white shadow-xl border border-white/10"
+          className="p-2.5 rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-all border border-border/40"
         >
-          {expandedSections.mobile ? <XCircle className="w-6 h-6" /> : <Inbox className="w-6 h-6" />}
+          {expandedSections.mobile ? <XCircle className="w-5 h-5 text-destructive" /> : <Menu className="w-5 h-5" />}
         </button>
+        <div className="h-8 flex items-center">
+          <img 
+            src="/images/logo-vendetta-horizontal.png?v=3" 
+            alt="Vendetta Logo" 
+            className="h-full w-auto object-contain"
+          />
+        </div>
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs border border-primary/20">
+          {user.name?.slice(0, 2).toUpperCase() || "AD"}
+        </div>
       </div>
 
       {/* Mobile Backdrop */}
@@ -195,7 +206,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
       {/* Sidebar Content */}
       <aside className={cn(
         "bg-gradient-to-br from-[#3c3c3c] to-[#1a1a1a] flex flex-col rounded-2xl shadow-2xl overflow-hidden border-none shrink-0 transition-all duration-300 z-[55]",
-        "fixed md:relative md:flex h-[calc(100vh-2rem)]",
+        "fixed md:relative md:flex top-4 bottom-4 md:top-auto md:bottom-auto h-[calc(100vh-2rem)] md:h-auto",
         "w-64",
         expandedSections.mobile ? "left-4 opacity-100" : "-left-72 opacity-0 md:left-0 md:opacity-100"
       )}>

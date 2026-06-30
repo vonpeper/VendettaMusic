@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
 import { sendWhatsApp } from "@/lib/notifications"
 import { getValidWhatsappPhone } from "@/lib/phone"
+import { getValidMapsLink } from "@/lib/locations"
 
 export async function clearAllNotificationsAction() {
   const session = await auth()
@@ -169,7 +170,7 @@ export async function resendNotificationAction(bookingId: string, type: "admin" 
         date: booking.event.date,
         ceremonyType: booking.event.ceremonyType || booking.venueType,
         locationName: booking.event.location?.name || booking.address || "Por confirmar",
-        mapsLink: booking.event.location?.mapsLink || booking.event.mapsLink || "",
+        mapsLink: getValidMapsLink(booking.event.location?.mapsLink || booking.event.mapsLink || (booking as any).mapsLink, booking.event.location?.address || booking.address),
         address: booking.event.location?.address || booking.address || "No especificada",
         locationAddress: booking.event.location?.address || booking.address || "No especificada",
         performanceStart: booking.event.performanceStart,
@@ -260,7 +261,7 @@ export async function resendIndividualMusicianNotificationAction(musicianId: str
       date: booking.event.date,
       ceremonyType: booking.event.ceremonyType || booking.venueType,
       locationName: booking.event.location?.name || booking.address || "Por confirmar",
-      mapsLink: booking.event.location?.mapsLink || booking.event.mapsLink || "",
+      mapsLink: getValidMapsLink(booking.event.location?.mapsLink || booking.event.mapsLink || (booking as any).mapsLink, booking.event.location?.address || booking.address),
       address: booking.event.location?.address || booking.address || "No especificada",
       locationAddress: booking.event.location?.address || booking.address || "No especificada",
       performanceStart: booking.event.performanceStart,

@@ -118,7 +118,8 @@ Queríamos agradecerte por confiar en *Vendetta* para tu evento. ¡Esperamos que
       const dbTemplate = config?.msgTemplateGig
       const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG") || !dbTemplate.includes("Hola")
       
-      return isOldTemplate ? `¡Hola {{musicianName}}! 🎸 Te escribimos de *Vendetta Live Music* para convocarte al siguiente show:
+      return isOldTemplate ? `¡Hola {{musicianName}}! 🎸 Te escribimos de *Vendetta Live Music* para convocarte al show:
+🔗 *Confirma tu asistencia aquí:* {{confirmLink}}
 
 📅 *Fecha:* {{date}}
 🎉 *Tipo:* {{ceremony}}
@@ -127,10 +128,7 @@ Queríamos agradecerte por confiar en *Vendetta* para tu evento. ¡Esperamos que
 ⏱️ *Montaje:* {{setupTime}}
 🚗 *Llegada músicos:* {{arrivalTime}}
 👔 *Vestimenta:* {{dressCode}}
-📝 *Notas:* {{notes}}
-
-🔗 *Por favor confirma tu asistencia aquí:*
-{{confirmLink}}` : dbTemplate
+📝 *Notas:* {{notes}}` : dbTemplate
 
     case "MUSICIAN_REHEARSAL":
       return `🥁 *NUEVO ENSAYO — VENDETTA* 🥁
@@ -161,7 +159,7 @@ Por favor, toma tus precauciones y libera la fecha en tu agenda.
 
     case "MUSICIAN_TODAY_REMINDER":
       return config?.msgTemplateTodayReminder || `🎸 *RECORDATORIO DE SHOW HOY — VENDETTA* 🎸
-¡Hola {{musicianName}}! Hoy tenemos show. Aquí tienes la información y horarios de la convocatoria:
+¡Hola {{musicianName}}! Hoy tenemos show (detalles en https://vendetta.mx). Aquí tienes la información y horarios de la convocatoria:
 
 📅 *Fecha:* {{date}}
 👤 *Cliente:* {{clientName}}

@@ -158,6 +158,10 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
           tollCost: parseFloat(data.tollCost as string || "0") || null,
           fuelCost: parseFloat(data.fuelCost as string || "0") || null,
           requiresManualQuote: data.requiresManualQuote === "true",
+          arrivalTime: (data.arrivalTime as string) || null,
+          setupTime: (data.setupTime as string) || null,
+          dressCode: (data.dressCode as string) || null,
+          musicianNotes: (data.musicianNotes as string) || null,
           ...(data.status === "completado" ? { paymentStatus: "paid" } : {})
         }
       })
@@ -193,6 +197,10 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
             venueType: evt.ceremonyType || "salon",
             address: evt.location?.name || "Dirección manual",
             city: evt.location?.city || "CDMX",
+            arrivalTime: evt.arrivalTime,
+            setupTime: evt.setupTime,
+            dressCode: evt.dressCode,
+            musicianNotes: evt.musicianNotes,
           }
         })
       }
@@ -488,6 +496,10 @@ export async function createEventAction(_prev: any, formData: FormData) {
           clientProvidesAudio: data.clientProvidesAudio === "on" || data.clientProvidesAudio === "true",
           originalPrice: data.originalPrice ? parseFloat(data.originalPrice as string) : 0,
           discountAmount: data.discountAmount ? parseFloat(data.discountAmount as string) : 0,
+          arrivalTime: (data.arrivalTime as string) || null,
+          setupTime: (data.setupTime as string) || null,
+          dressCode: (data.dressCode as string) || null,
+          musicianNotes: (data.musicianNotes as string) || null,
         }
       })
     } else {
@@ -534,6 +546,10 @@ export async function createEventAction(_prev: any, formData: FormData) {
           clientProvidesAudio: data.clientProvidesAudio === "on" || data.clientProvidesAudio === "true",
           originalPrice: data.originalPrice ? parseFloat(data.originalPrice as string) : 0,
           discountAmount: data.discountAmount ? parseFloat(data.discountAmount as string) : 0,
+          arrivalTime: (data.arrivalTime as string) || null,
+          setupTime: (data.setupTime as string) || null,
+          dressCode: (data.dressCode as string) || null,
+          musicianNotes: (data.musicianNotes as string) || null,
         }
       })
     }
