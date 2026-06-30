@@ -11,6 +11,7 @@ import { toast } from "sonner"
 interface QuoteApprovalFormProps {
   bookingId: string
   depositAmount: number
+  totalAmount: number
   paymentStatus: string
   paymentRef: string | null
   bankName: string | null
@@ -22,6 +23,7 @@ interface QuoteApprovalFormProps {
 export function QuoteApprovalForm({
   bookingId,
   depositAmount,
+  totalAmount,
   paymentStatus,
   paymentRef,
   bankName,
@@ -140,7 +142,7 @@ export function QuoteApprovalForm({
       <div className="p-8 space-y-6">
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Para aprobar formalmente esta propuesta y apartar la fecha de tu evento en nuestra agenda, es necesario realizar el pago del anticipo del 40% y reportarlo a continuación:
+            Para aprobar formalmente esta propuesta y apartar la fecha de tu evento en nuestra agenda, es necesario realizar el pago del anticipo del {totalAmount > 0 ? Math.round((depositAmount / totalAmount) * 100) : 40}% ({formatCurrency(depositAmount)}) y reportarlo a continuación:
           </p>
         </div>
 
