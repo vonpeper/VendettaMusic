@@ -495,10 +495,10 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                           </div>
                         </>
                       )}
-                      {booking.discountAmount && Number(booking.discountAmount) !== 0 ? (
+                      {booking.discountAmount && Number(booking.discountAmount) > 0 ? (
                         <div className="flex justify-between text-blue-600 dark:text-blue-400">
                           <span>Descuento aplicado:</span>
-                          <span>{MXN(Number(booking.discountAmount))} (Precio Lista: {MXN(Number(booking.originalPrice || 0))})</span>
+                          <span>-{MXN(Number(booking.discountAmount))} (Precio Lista: {MXN(Number(booking.originalPrice || 0))})</span>
                         </div>
                       ) : null}
                       <div className="flex justify-between text-sm font-black text-foreground pt-2 border-t border-border/40">

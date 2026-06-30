@@ -62,11 +62,14 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
 
   const currentStatus = statusMap[mainBooking.status] || statusMap.pendiente
 
-  const hasInvoice = mainBooking.event?.invoice || false;
-  const ivaAmount = mainBooking.event?.ivaAmount || (mainBooking.baseAmount * 0.16);
-  const totalAmount = hasInvoice 
-    ? mainBooking.baseAmount + ivaAmount
-    : mainBooking.baseAmount;
+  const hasInvoice = mainBooking.invoice || mainBooking.event?.invoice || false;
+  const base = Number(mainBooking.baseAmount || 0);
+  const viaticos = Number(mainBooking.viaticosAmount || 0);
+  const subtotal = base + viaticos;
+  const ivaAmount = hasInvoice 
+    ? (mainBooking.event?.ivaAmount || Math.round(subtotal * 0.16 * 100) / 100)
+    : 0;
+  const totalAmount = subtotal + ivaAmount;
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden py-20">
@@ -130,8 +133,24 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                       <span className="text-[10px] font-black text-foreground uppercase tracking-[0.2em]">Resumen Económico</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Inversión Total {hasInvoice ? '(IVA inc.)' : ''}</span>
-                      <span className="text-foreground font-bold">{MXN(totalAmount)}</span>
+                      <span className="text-muted-foreground">Inversión Show</span>
+                      <span className="text-foreground font-bold">{MXN(base)}</span>
+                    </div>
+                    {viaticos > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Viáticos y Traslado</span>
+                        <span className="text-foreground font-bold">{MXN(viaticos)}</span>
+                      </div>
+                    )}
+                    {hasInvoice && ivaAmount > 0 && (
+                      <div className="flex justify-between text-sm text-amber-600 dark:text-amber-500">
+                        <span>IVA (16%)</span>
+                        <span>{MXN(ivaAmount)}</span>
+                      </div>
+                    )}
+                    <div className="pt-3 border-t border-border/20 flex justify-between text-sm">
+                      <span className="text-muted-foreground font-bold">Inversión Total</span>
+                      <span className="text-foreground font-black">{MXN(totalAmount)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Anticipo Pago</span>
