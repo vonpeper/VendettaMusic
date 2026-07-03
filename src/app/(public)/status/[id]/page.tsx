@@ -7,8 +7,55 @@ import { RockBackground } from "@/components/funnel/RockBackground"
 import { ContractSigner } from "@/components/funnel/ContractSigner"
 import { QuoteApprovalForm } from "@/components/funnel/QuoteApprovalForm"
 import { formatDateMX } from "@/lib/utils"
+import type { Metadata } from "next"
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const { id } = await params
+  const booking = await db.bookingRequest.findUnique({
+    where: { shortId: id.toUpperCase() }
+  })
+
+  if (!booking) {
+    return {
+      title: "No encontrado | Vendetta Live Music"
+    }
+  }
+
+  const isConfirmed = booking.status === "agendado" || booking.status === "completado"
+  const title = isConfirmed 
+    ? `Contrato & Estatus de Evento ${booking.shortId} | Vendetta Live Music`
+    : `Propuesta de Evento ${booking.shortId} | Vendetta Live Music`
+  const description = `Estatus de reserva para el evento de ${booking.clientName}. Revisa tu cotización, pagos y firma tu contrato digital.`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `https://vendetta.mx/status/${booking.shortId}`,
+      siteName: 'Vendetta Live Music',
+      images: [
+        {
+          url: 'https://vendetta.mx/images/shows/arma-tu-show.jpg',
+          width: 1200,
+          height: 630,
+          alt: 'Vendetta Live Music Show',
+        },
+      ],
+      locale: 'es_MX',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['https://vendetta.mx/images/shows/arma-tu-show.jpg'],
+    },
+  }
+}
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(v)
 
