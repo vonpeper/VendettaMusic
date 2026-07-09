@@ -1,4 +1,13 @@
 import { Button } from "@/components/ui/button"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Servicios Musicales | Vendetta Live Music",
+  description: "Servicio de música en vivo y producción de audio/iluminación para bodas de lujo, eventos corporativos y fiestas privadas en México.",
+  alternates: {
+    canonical: '/servicios',
+  }
+}
 
 export default function ServiciosPage() {
   const servicios = [

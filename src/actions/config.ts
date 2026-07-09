@@ -370,14 +370,14 @@ export async function testEvolutionConnectionAction() {
     if (!baseUrl.startsWith("http")) baseUrl = `https://${baseUrl}`
     baseUrl = baseUrl.replace(/\/$/, "")
 
-    const url = `${baseUrl}/instance/connectionState/${config.evolutionInstance || "vendetta_admin"}`
+    const instanceName = config.evolutionInstance || "vendetta_admin"
+    const url = `${baseUrl}/instance/fetchInstances`
     
-    console.log(`📡 [TEST] Conectando a: ${url}`)
+    console.log(`📡 [TEST] Listando instancias en: ${url} para buscar '${instanceName}'`)
     
     const resp = await fetch(url, {
       method: "GET",
       headers: { "apikey": config.evolutionApiKey },
-      // Timeout corto para no colgar el servidor
       signal: AbortSignal.timeout(5000)
     })
 
@@ -386,13 +386,34 @@ export async function testEvolutionConnectionAction() {
       return { success: false, message: `Error de API (${resp.status}): ${err.substring(0, 50)}` }
     }
 
-    const data = await resp.json()
-    const state = data.instance?.state || "unknown"
+    const instances = await resp.json()
+    if (!Array.isArray(instances)) {
+      return { success: false, message: "La respuesta de la API no es un arreglo válido" }
+    }
+
+    const targetInstance = instances.find((inst: any) => inst.name === instanceName)
+    if (!targetInstance) {
+      return { success: false, message: `Instancia '${instanceName}' no encontrada en la API`, state: "close" }
+    }
+
+    const connectionStatus = targetInstance.connectionStatus || targetInstance.state || "close"
+    const hasDisconnectionError = !!targetInstance.disconnectionReasonCode
+
+    if (hasDisconnectionError || connectionStatus !== "open") {
+      const reason = targetInstance.disconnectionReasonCode 
+        ? `Código de desconexión ${targetInstance.disconnectionReasonCode} (${targetInstance.disconnectionReasonCode === 401 ? "Dispositivo Removido / Conflicto" : "Cerrado"})`
+        : "Sesión cerrada"
+      return {
+        success: false,
+        message: `Instancia desvinculada: ${reason}. Por favor abre el Evolution Manager y vuelve a escanear el QR.`,
+        state: "close"
+      }
+    }
 
     return { 
       success: true, 
-      message: `Conexión exitosa. Estado: ${state}`,
-      state 
+      message: `Conexión exitosa. WhatsApp conectado y en línea.`,
+      state: "open"
     }
   } catch (error: any) {
     console.error("❌ Error en testEvolutionConnectionAction:", error)

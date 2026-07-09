@@ -1,6 +1,15 @@
 import Link from "next/link"
 import { getNoticias } from "@/lib/noticias"
 import { Card, CardContent } from "@/components/ui/card"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Noticias y Novedades | Vendetta Live Music",
+  description: "Entérate de nuestros próximos shows públicos, reseñas, tips para organizar tu evento y lo último de la banda.",
+  alternates: {
+    canonical: '/noticias',
+  }
+}
 
 export default function NoticiasPage() {
   const noticias = getNoticias()

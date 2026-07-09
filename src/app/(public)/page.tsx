@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   title: "Música en Vivo para Bodas y Eventos | Vendetta Live Music",
   description: "Grupo musical versátil para eventos sociales, bodas y eventos corporativos en Toluca, CDMX y Valle de Bravo. Show en vivo de alto nivel.",
   keywords: ["música en vivo bodas", "grupo musical eventos", "banda versátil toluca", "show musical cdmx", "música para eventos valle de bravo"],
+  alternates: {
+    canonical: '/',
+  },
   verification: {
     google: 'xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY',
   },
