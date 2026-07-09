@@ -434,45 +434,96 @@ export async function getEvolutionQrCodeAction() {
     baseUrl = baseUrl.replace(/\/$/, "")
 
     const instanceName = config.evolutionInstance || "vendetta_admin"
+    const instanceToken = "5320D339-59B7-4D57-A4CF-8E2AE8B4AF0E"
+    const webhookSecret = config.evolutionWebhookSecret || "7wLNzmaKAxz5drNNx2coEmgFn4C3jbLbDenALrBv"
 
-    // 1. Intentamos desconectar la sesión previa en conflicto
+    console.log(`📡 [RESET] Forzando eliminación de la instancia stuck: ${instanceName}`)
+    
+    // 1. Eliminamos la instancia vieja
     try {
-      const logoutUrl = `${baseUrl}/instance/logout/${instanceName}`
-      console.log(`📡 [QR] Intentando logout en: ${logoutUrl}`)
-      await fetch(logoutUrl, {
+      const deleteUrl = `${baseUrl}/instance/delete/${instanceName}`
+      await fetch(deleteUrl, {
         method: "DELETE",
         headers: { "apikey": config.evolutionApiKey },
-        signal: AbortSignal.timeout(3000)
+        signal: AbortSignal.timeout(5000)
       })
+      console.log(`📡 [RESET] Instancia eliminada. Esperando 1s...`)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
     } catch (e) {
-      console.log("No se pudo desconectar la sesión previa o ya estaba desconectado")
+      console.log("Error o instancia no existía al intentar borrarla")
     }
 
-    // 2. Solicitamos el nuevo QR
-    const connectUrl = `${baseUrl}/instance/connect/${instanceName}`
-    console.log(`📡 [QR] Conectando para generar QR en: ${connectUrl}`)
-    const resp = await fetch(connectUrl, {
-      method: "GET",
-      headers: { "apikey": config.evolutionApiKey },
+    // 2. Creamos la instancia nuevamente
+    const createUrl = `${baseUrl}/instance/create`
+    console.log(`📡 [RESET] Recreando instancia: ${createUrl}`)
+    const createResp = await fetch(createUrl, {
+      method: "POST",
+      headers: { 
+        "apikey": config.evolutionApiKey,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        instanceName,
+        token: instanceToken,
+        qrcode: true
+      }),
       signal: AbortSignal.timeout(10000)
     })
 
-    if (!resp.ok) {
-      const err = await resp.text()
-      return { success: false, message: `Error de API (${resp.status}): ${err.substring(0, 50)}` }
+    if (!createResp.ok) {
+      const err = await createResp.text()
+      return { success: false, message: `Error al crear instancia (${createResp.status}): ${err.substring(0, 50)}` }
     }
 
-    const data = await resp.json()
-    
-    // Devolver el QR base64
-    if (data.base64) {
-      return { success: true, qr: data.base64 }
-    } else if (data.code?.base64) {
-      return { success: true, qr: data.code.base64 }
-    } else if (typeof data === "string" && data.startsWith("data:image")) {
-      return { success: true, qr: data }
+    const createData = await createResp.json()
+
+    // 3. Configuramos los Webhooks en la nueva instancia
+    try {
+      const webhookUrl = `${baseUrl}/webhook/set/${instanceName}`
+      console.log(`📡 [RESET] Configurando Webhook: ${webhookUrl}`)
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: { 
+          "apikey": config.evolutionApiKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          webhook: {
+            enabled: true,
+            url: "https://vendetta.mx/api/webhooks/evolution",
+            webhookByEvents: false,
+            events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "SEND_MESSAGE", "CONNECTION_UPDATE"],
+            headers: {
+              apikey: webhookSecret
+            }
+          }
+        }),
+        signal: AbortSignal.timeout(5000)
+      })
+    } catch (e: any) {
+      console.error("Error al re-configurar el webhook:", e.message)
+    }
+
+    // 4. Devolvemos el código QR obtenido en la creación
+    const qrCode = createData.qrcode?.base64 || createData.code?.base64 || createData.base64
+
+    if (qrCode) {
+      return { success: true, qr: qrCode }
     } else {
-      return { success: false, message: "La API no retornó una imagen QR base64 válida" }
+      // Intento alternativo por si no venía en la creación
+      console.log("QR no disponible en creación, intentando connect...")
+      const connectUrl = `${baseUrl}/instance/connect/${instanceName}`
+      const connectResp = await fetch(connectUrl, {
+        method: "GET",
+        headers: { "apikey": config.evolutionApiKey },
+        signal: AbortSignal.timeout(8000)
+      })
+      if (connectResp.ok) {
+        const connectData = await connectResp.json()
+        const qr = connectData.base64 || connectData.code?.base64 || connectData.qrcode?.base64
+        if (qr) return { success: true, qr }
+      }
+      return { success: false, message: "La API creó la instancia pero no retornó una imagen QR base64" }
     }
   } catch (error: any) {
     console.error("❌ Error en getEvolutionQrCodeAction:", error)
