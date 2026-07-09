@@ -465,7 +465,8 @@ export async function getEvolutionQrCodeAction() {
       body: JSON.stringify({
         instanceName,
         token: instanceToken,
-        qrcode: true
+        qrcode: true,
+        integration: "WHATSAPP-BAILEYS"
       }),
       signal: AbortSignal.timeout(10000)
     })
