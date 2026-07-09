@@ -18,6 +18,7 @@ import { EvolutionTestButton } from "@/components/admin/EvolutionTestButton"
 import { LogInboundToggle } from "@/components/admin/LogInboundToggle"
 import { GoogleSyncAllButton } from "@/components/admin/GoogleSyncAllButton"
 import { EvolutionStatusIndicator } from "@/components/admin/EvolutionStatusIndicator"
+import { EvolutionQrButton } from "@/components/admin/EvolutionQrButton"
 
 interface Props {
   searchParams: Promise<{ tab?: string }>
@@ -140,6 +141,9 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                 </ConfigFormWrapper>
                 
                 <div className="mt-6 pt-6 border-t border-border/40 space-y-3">
+                  {config?.evolutionApiKey && (
+                    <EvolutionQrButton />
+                  )}
                   <EvolutionTestButton />
                   <LogInboundToggle initialValue={config?.logInboundActive ?? true} />
                   <div className="bg-slate-900/80 border border-blue-500/30 p-5 rounded-2xl shadow-xl backdrop-blur-md">

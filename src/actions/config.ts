@@ -421,6 +421,65 @@ export async function testEvolutionConnectionAction() {
   }
 }
 
+export async function getEvolutionQrCodeAction() {
+  const u = await requireAdmin(); if (u) return u
+  try {
+    const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+    if (!config?.evolutionUrl || !config?.evolutionApiKey) {
+      return { success: false, message: "API no configurada en la base de datos" }
+    }
+
+    let baseUrl = config.evolutionUrl
+    if (!baseUrl.startsWith("http")) baseUrl = `https://${baseUrl}`
+    baseUrl = baseUrl.replace(/\/$/, "")
+
+    const instanceName = config.evolutionInstance || "vendetta_admin"
+
+    // 1. Intentamos desconectar la sesión previa en conflicto
+    try {
+      const logoutUrl = `${baseUrl}/instance/logout/${instanceName}`
+      console.log(`📡 [QR] Intentando logout en: ${logoutUrl}`)
+      await fetch(logoutUrl, {
+        method: "DELETE",
+        headers: { "apikey": config.evolutionApiKey },
+        signal: AbortSignal.timeout(3000)
+      })
+    } catch (e) {
+      console.log("No se pudo desconectar la sesión previa o ya estaba desconectado")
+    }
+
+    // 2. Solicitamos el nuevo QR
+    const connectUrl = `${baseUrl}/instance/connect/${instanceName}`
+    console.log(`📡 [QR] Conectando para generar QR en: ${connectUrl}`)
+    const resp = await fetch(connectUrl, {
+      method: "GET",
+      headers: { "apikey": config.evolutionApiKey },
+      signal: AbortSignal.timeout(10000)
+    })
+
+    if (!resp.ok) {
+      const err = await resp.text()
+      return { success: false, message: `Error de API (${resp.status}): ${err.substring(0, 50)}` }
+    }
+
+    const data = await resp.json()
+    
+    // Devolver el QR base64
+    if (data.base64) {
+      return { success: true, qr: data.base64 }
+    } else if (data.code?.base64) {
+      return { success: true, qr: data.code.base64 }
+    } else if (typeof data === "string" && data.startsWith("data:image")) {
+      return { success: true, qr: data }
+    } else {
+      return { success: false, message: "La API no retornó una imagen QR base64 válida" }
+    }
+  } catch (error: any) {
+    console.error("❌ Error en getEvolutionQrCodeAction:", error)
+    return { success: false, message: `Error de red: ${error.message}` }
+  }
+}
+
 export async function saveOGConfigAction(arg1: any, arg2?: any) {
   const u = await requireAdmin(); if (u) return u
   try {
