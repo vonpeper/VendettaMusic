@@ -17,6 +17,7 @@ import { OGPreview } from "@/components/admin/OGPreview"
 import { EvolutionTestButton } from "@/components/admin/EvolutionTestButton"
 import { LogInboundToggle } from "@/components/admin/LogInboundToggle"
 import { GoogleSyncAllButton } from "@/components/admin/GoogleSyncAllButton"
+import { EvolutionStatusIndicator } from "@/components/admin/EvolutionStatusIndicator"
 
 interface Props {
   searchParams: Promise<{ tab?: string }>
@@ -89,12 +90,16 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                   <div>
                     <h2 className="text-xl font-bold text-foreground">WhatsApp (Evolution API)</h2>
                     <div className="flex items-center gap-3 mt-1">
-                      <div className="flex items-center gap-1.5">
-                        <div className={`w-2 h-2 rounded-full ${config?.evolutionApiKey ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`} />
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-                          {config?.evolutionApiKey ? 'Conectado' : 'Sin Configurar'}
-                        </span>
-                      </div>
+                      {config?.evolutionApiKey ? (
+                        <EvolutionStatusIndicator />
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                            Sin Configurar
+                          </span>
+                        </div>
+                      )}
                       {config?.isSandbox && (
                         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
                           <ShieldCheck className="w-3 h-3 text-indigo-400" />

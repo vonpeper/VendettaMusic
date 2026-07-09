@@ -1,6 +1,15 @@
 import { Button } from "@/components/ui/button"
 import { Check } from "lucide-react"
 import Link from "next/link"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Paquetes y Precios | Vendetta Live Music",
+  description: "Conoce nuestros paquetes musicales (Essential, Premium y Acústico) para tu boda o evento. Tarifas transparentes sin cargos ocultos.",
+  alternates: {
+    canonical: '/paquetes',
+  }
+}
 
 export default function PaquetesPage() {
   const paquetes = [

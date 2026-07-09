@@ -39,9 +39,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title,
     description,
+    alternates: {
+      canonical: `/musica-para-eventos/${params.slug}`,
+    },
     openGraph: {
       title,
       description,
+      url: `https://vendetta.mx/musica-para-eventos/${params.slug}`,
       images: [{ url: image }],
     },
     twitter: {

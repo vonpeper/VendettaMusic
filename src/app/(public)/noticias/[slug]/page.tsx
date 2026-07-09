@@ -2,6 +2,44 @@ import { getNoticiaBySlug, getNoticias } from "@/lib/noticias"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import ReactMarkdown from "react-markdown"
+import { Metadata } from "next"
+
+export async function generateMetadata(props: { params: { slug: string } }): Promise<Metadata> {
+  const params = await props.params;
+  const post = getNoticiaBySlug(params.slug)
+  if (!post) return {}
+  const title = `${post.title} | Vendetta Live Music`
+  const description = post.description
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/noticias/${params.slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `https://vendetta.mx/noticias/${params.slug}`,
+      siteName: 'Vendetta Live Music',
+      images: [
+        {
+          url: 'https://vendetta.mx/images/shows/arma-tu-show.jpg',
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+      locale: 'es_MX',
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['https://vendetta.mx/images/shows/arma-tu-show.jpg'],
+    },
+  }
+}
 
 export function generateStaticParams() {
   const posts = getNoticias()

@@ -40,9 +40,6 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     metadataBase: new URL('https://vendetta.mx'),
-    alternates: {
-      canonical: '/',
-    },
     verification: {
       google: 'xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY',
     },

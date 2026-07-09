@@ -2,6 +2,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { MapPin, Phone, Mail } from "lucide-react"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Contacto | Vendetta Live Music",
+  description: "Contrata a Vendetta para tu boda o evento. Mándanos un mensaje, consulta disponibilidad y solicita una propuesta personalizada.",
+  alternates: {
+    canonical: '/contacto',
+  }
+}
 
 export default function ContactoPage() {
   return (
@@ -75,8 +84,8 @@ export default function ContactoPage() {
                     <Phone className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-lg">Teléfono / WhatsApp</h3>
-                    <p className="text-muted-foreground mt-1">+52 (55) 1234 - 5678</p>
+                    <h3 className="font-bold text-white text-lg">WhatsApp</h3>
+                    <p className="text-muted-foreground mt-1">+52 722 241 7045</p>
                   </div>
                 </div>
 
@@ -86,7 +95,7 @@ export default function ContactoPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-white text-lg">Correo Electrónico</h3>
-                    <p className="text-muted-foreground mt-1">contacto@vendetta.mx</p>
+                    <p className="text-muted-foreground mt-1">rock.vendettamx@gmail.com</p>
                   </div>
                 </div>
 
@@ -95,8 +104,8 @@ export default function ContactoPage() {
                     <MapPin className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-lg">Ubicación / Oficinas</h3>
-                    <p className="text-muted-foreground mt-1">Av. Principal 123, Ciudad de México.<br/>Atención previa cita.</p>
+                    <h3 className="font-bold text-white text-lg">Área de Cobertura</h3>
+                    <p className="text-muted-foreground mt-1">Metepec · Toluca · Valle de Bravo · CDMX.<br/>Servicio a todo México.</p>
                   </div>
                 </div>
               </div>
@@ -104,7 +113,9 @@ export default function ContactoPage() {
               <div className="bg-white/5 p-8 rounded-2xl border border-white/10">
                 <h3 className="font-bold text-white mb-2">¿Prefieres un trato más directo?</h3>
                 <p className="text-sm text-gray-400 mb-6">Mándanos un WhatsApp ahora mismo y te compartimos disponibilidad en tiempo real.</p>
-                <Button className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white">Chatear por WhatsApp</Button>
+                <a href="https://wa.me/527222417045?text=Hola!%20Me%20gustaria%20saber%20disponibilidad%20y%20precios%20para%20un%20evento" target="_blank" rel="noopener noreferrer">
+                  <Button className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white">Chatear por WhatsApp</Button>
+                </a>
               </div>
             </div>
 
