@@ -24,7 +24,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Falta destinatario" }, { status: 400 })
   }
 
-  const { messageId, error } = await sendWhatsApp(existing.recipient, existing.message)
+  let cleanMessage = existing.message
+  let extractedError = existing.errorDetails
+  if (cleanMessage.startsWith("ERROR: ") && cleanMessage.includes(" | MSG: ")) {
+    const parts = cleanMessage.split(" | MSG: ")
+    const errPart = parts[0].substring(7) // Strip "ERROR: "
+    cleanMessage = parts.slice(1).join(" | MSG: ")
+    extractedError = errPart
+    // Guardar los valores limpios en la base de datos para corregir el registro corrupto
+    await db.notification.update({
+      where: { id: notificationId },
+      data: {
+        message: cleanMessage,
+        errorDetails: extractedError
+      }
+    }).catch(() => {})
+  }
+
+  const { messageId, error } = await sendWhatsApp(existing.recipient, cleanMessage)
 
   if (!messageId) {
     await db.notification.update({
