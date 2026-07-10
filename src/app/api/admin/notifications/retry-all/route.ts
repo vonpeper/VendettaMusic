@@ -35,7 +35,24 @@ export async function POST(req: NextRequest) {
       continue
     }
 
-    const { messageId, error } = await sendWhatsApp(notif.recipient, notif.message)
+    let cleanMessage = notif.message
+    let extractedError = notif.errorDetails
+    if (cleanMessage.startsWith("ERROR: ") && cleanMessage.includes(" | MSG: ")) {
+      const parts = cleanMessage.split(" | MSG: ")
+      const errPart = parts[0].substring(7) // Strip "ERROR: "
+      cleanMessage = parts.slice(1).join(" | MSG: ")
+      extractedError = errPart
+      // Guardar los valores limpios en la base de datos para corregir el registro corrupto
+      await db.notification.update({
+        where: { id: notif.id },
+        data: {
+          message: cleanMessage,
+          errorDetails: extractedError
+        }
+      }).catch(() => {})
+    }
+
+    const { messageId, error } = await sendWhatsApp(notif.recipient, cleanMessage)
 
     if (!messageId) {
       await db.notification.update({

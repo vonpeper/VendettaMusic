@@ -271,7 +271,8 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
             channel: "whatsapp",
             recipient: realRecipient,
             status: "failed",
-            message: `ERROR: ${err.substring(0, 100)} | MSG: ${message.substring(0, 300)}`,
+            message: message,
+            errorDetails: err,
             eventId: eventId,
             bookingRequestId: event?.bookingRequest?.id || null,
           }
@@ -279,6 +280,19 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
       }
     } catch (err: any) {
       console.error(`❌ Fallo de red al notificar a ${r.name}:`, err?.message)
+      // Registrar fallo de red como notificación fallida
+      await db.notification.create({
+        data: {
+          type: "MUSICIAN_GIG",
+          channel: "whatsapp",
+          recipient: realRecipient,
+          status: "failed",
+          message: message,
+          errorDetails: `Fallo de red: ${err?.message}`,
+          eventId: eventId,
+          bookingRequestId: event?.bookingRequest?.id || null,
+        }
+      }).catch(() => {})
     }
   }
 
