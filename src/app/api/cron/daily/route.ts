@@ -377,6 +377,28 @@ export async function GET(request: Request) {
           }
         }
 
+        // Failsafe contra duplicados: si ya se envió con éxito una notificación del mismo tipo para este destino y evento/reserva
+        const alreadySent = await db.notification.findFirst({
+          where: {
+            recipient: notif.recipient,
+            type: notif.type,
+            status: "sent",
+            ...(notif.eventId ? { eventId: notif.eventId } : {}),
+            ...(notif.bookingRequestId ? { bookingRequestId: notif.bookingRequestId } : {})
+          }
+        })
+        if (alreadySent) {
+          console.warn(`🛑 [CRON FAILSAFE] Cancelando reintento para ${notif.recipient} porque ya existe un registro exitoso.`)
+          await db.notification.update({
+            where: { id: notif.id },
+            data: { 
+              status: "blocked", 
+              errorDetails: "Duplicate: A successful notification was already sent." 
+            }
+          }).catch(() => {})
+          continue
+        }
+
         let cleanMessage = notif.message
         let extractedError = notif.errorDetails
         if (cleanMessage.startsWith("ERROR: ") && cleanMessage.includes(" | MSG: ")) {
