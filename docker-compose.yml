@@ -41,6 +41,25 @@ services:
       - /opt/vendetta/public/images/uploads:/app/public/images/uploads
       - /opt/vendetta/public/images/musicians:/app/public/images/musicians
 
+  vendetta-secuencias:
+    image: ghcr.io/vonpeper/vendettasec:latest
+    container_name: vendetta-secuencias-app
+    pull_policy: always
+    restart: always
+    environment:
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vendetta-secuencias.rule=Host(`secuencias.vendetta.mx`)"
+      - "traefik.http.routers.vendetta-secuencias.entrypoints=websecure"
+      - "traefik.http.routers.vendetta-secuencias.tls.certresolver=letsencrypt"
+      - "traefik.http.services.vendetta-secuencias.loadbalancer.server.port=3000"
+      - "traefik.docker.network=dokploy-network"
+    networks:
+      - default
+      - dokploy-network
+
 networks:
   dokploy-network:
     external: true
