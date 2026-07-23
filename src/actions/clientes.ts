@@ -46,11 +46,14 @@ export async function createClienteAction(prevState: any, formData: FormData) {
             notes,
           }
         }
+      },
+      include: {
+        clientProfile: true
       }
     })
 
     revalidatePath("/admin/clientes")
-    return { success: true, message: "Cliente creado exitosamente.", id: user.id }
+    return { success: true, message: "Cliente creado exitosamente.", id: user.clientProfile?.id || user.id }
   } catch (error) {
     console.error("Error crear cliente:", error)
     return { success: false, message: "Error interno al crear el cliente." }
