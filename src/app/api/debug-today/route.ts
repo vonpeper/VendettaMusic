@@ -51,8 +51,12 @@ export async function GET() {
       take: 10
     })
 
+    const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+
     return NextResponse.json({
       success: true,
+      evolutionInstance: config?.evolutionInstance || "vendetta_admin",
+      evolutionUrl: config?.evolutionUrl || null,
       debugInfo,
       recentNotifications
     })
