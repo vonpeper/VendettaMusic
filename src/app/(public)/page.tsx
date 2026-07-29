@@ -94,24 +94,24 @@ export default async function HomePage() {
       <section id="inicio" className="relative min-h-[92vh] flex items-center justify-start overflow-hidden py-24 lg:py-32">
         <div className="absolute inset-0 z-0">
           {/* Gradients to ensure text contrast and premium lighting */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/45 to-background z-10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/55 to-transparent z-10 hidden lg:block" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/40 to-background z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent z-10" />
           <Image
             src="/images/vendetta-web-assets/vendetta-hero.webp"
             alt="Grupo musical Vendetta en vivo para eventos sociales y bodas"
             fill
             priority
             sizes="100vw"
-            className="object-cover opacity-90 object-[70%_center] md:object-center"
+            className="object-cover opacity-90 object-right"
           />
         </div>
 
         <div className="container relative z-20 px-4 md:px-8 lg:px-16 mx-auto flex items-center h-full w-full">
-          <div className="max-w-2xl lg:max-w-3xl text-left flex flex-col items-start pt-12 md:pt-16">
+          <div className="max-w-xl md:max-w-2xl lg:max-w-3xl text-left flex flex-col items-start pt-12 md:pt-16">
             <span className="text-primary font-heading font-black text-xs md:text-sm tracking-[0.3em] uppercase mb-4 block">
               VENDETTA LIVE MUSIC
             </span>
-            <h1 className="font-heading font-black italic text-4xl sm:text-5xl md:text-7xl lg:text-[5.2rem] xl:text-[6rem] tracking-tighter mb-6 leading-[0.95] uppercase text-left">
+            <h1 className="font-heading font-black italic text-3xl sm:text-4xl md:text-[2.6rem] lg:text-[3.5rem] xl:text-[4.2rem] tracking-tighter mb-6 leading-[1.05] uppercase text-left">
               <span className="text-white block">EL SOUNDTRACK DE</span>
               <span className="text-primary block mt-1">TU MEJOR NOCHE</span>
             </h1>

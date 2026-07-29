@@ -14,12 +14,10 @@ import {
 
 const NAV_LINKS = [
   { href: "/", label: "Inicio" },
-  { href: "/#nosotros", label: "Nosotros" },
-  { href: "/#servicios", label: "Servicios" },
+  { href: "/#nosotros", label: "La Banda" },
+  { href: "/#servicios", label: "Show" },
   { href: "/#paquetes", label: "Paquetes" },
   { href: "/#fechas", label: "Fechas" },
-  { href: "/#testimonios", label: "Testimoniales" },
-  { href: "/#estatus", label: "Estatus" },
 ]
 
 export function PublicNavbar() {
@@ -53,8 +51,8 @@ export function PublicNavbar() {
           ))}
           <div className="w-px h-4 bg-white/10 mx-2" />
           <Link href="/cotizar">
-            <Button variant="default" className="font-black text-[10px] uppercase tracking-widest px-6 h-10 rounded-xl shadow-lg shadow-primary/20">
-              Cotizar Evento
+            <Button className="bg-primary hover:bg-primary/90 text-white font-heading font-black text-[10px] uppercase tracking-widest px-6 h-10 rounded-lg shadow-lg shadow-primary/20 border-0 cursor-pointer">
+              Cotizar
             </Button>
           </Link>
           <Link href="/auth/login" className="text-white/30 hover:text-primary transition-colors p-2" title="Admin Login">
