@@ -437,9 +437,30 @@ export async function getEvolutionQrCodeAction() {
     const instanceToken = "5320D339-59B7-4D57-A4CF-8E2AE8B4AF0E"
     const webhookSecret = config.evolutionWebhookSecret || "7wLNzmaKAxz5drNNx2coEmgFn4C3jbLbDenALrBv"
 
+    // 1. Intentar obtener el QR de la instancia existente directamente (evita DELETE/CREATE si ya existe y ahorra permisos 403)
+    console.log(`📡 [QR] Intentando obtener QR de conexión directa para: ${instanceName}`)
+    try {
+      const connectUrl = `${baseUrl}/instance/connect/${instanceName}`
+      const connectResp = await fetch(connectUrl, {
+        method: "GET",
+        headers: { "apikey": config.evolutionApiKey },
+        signal: AbortSignal.timeout(8000)
+      })
+      if (connectResp.ok) {
+        const connectData = await connectResp.json()
+        const qr = connectData.base64 || connectData.code?.base64 || connectData.qrcode?.base64
+        if (qr) {
+          console.log(`✅ [QR] QR obtenido con éxito de la instancia existente (sin recrear).`)
+          return { success: true, qr }
+        }
+      }
+    } catch (e: any) {
+      console.log("No se pudo conectar directamente a la instancia, procediendo a recreación:", e.message)
+    }
+
     console.log(`📡 [RESET] Forzando eliminación de la instancia stuck: ${instanceName}`)
     
-    // 1. Eliminamos la instancia vieja
+    // 2. Eliminamos la instancia vieja (requiere API Key Global)
     try {
       const deleteUrl = `${baseUrl}/instance/delete/${instanceName}`
       await fetch(deleteUrl, {
