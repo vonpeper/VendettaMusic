@@ -100,18 +100,20 @@ export default async function HomePage() {
             fill
             priority
             sizes="(max-width: 1024px) 100vw, 65vw"
-            className="opacity-90 object-cover object-[75%_center] lg:object-contain lg:object-right"
+            className="opacity-90 object-cover object-[75%_center] lg:object-contain lg:object-bottom-right"
           />
           {/* Subtle horizontal gradient to blend image with black background on desktop without darkening Diego */}
           <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-black to-transparent z-10 hidden lg:block" />
           {/* Top-to-bottom gradient to blend image with black background on mobile */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/95 via-black/40 to-black z-10 lg:hidden" />
+          {/* Bottom-to-top gradient to smoothly fade the bottom of the photo into the black background */}
+          <div className="absolute inset-x-0 bottom-0 h-48 sm:h-64 lg:h-96 bg-gradient-to-t from-black via-black/90 via-black/30 to-transparent z-10" />
         </div>
 
         {/* Top gradient for header contrast on desktop */}
         <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/90 to-transparent z-10 hidden lg:block" />
-        {/* Bottom gradient for footer transition on desktop */}
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black to-transparent z-10 hidden lg:block" />
+        {/* Bottom gradient to smoothly fade out the bottom of the image and hide the cut-off */}
+        <div className="absolute inset-x-0 bottom-0 h-48 sm:h-64 lg:h-80 bg-gradient-to-t from-black via-black/70 to-transparent z-10" />
 
         <div className="container relative z-20 px-4 md:px-8 lg:px-16 mx-auto flex items-center w-full">
           <div className="w-full lg:max-w-[420px] xl:max-w-[480px] text-left flex flex-col items-start pt-20 lg:pt-0">
@@ -152,7 +154,7 @@ export default async function HomePage() {
               <span className="text-primary font-bold">•</span>
               <span>CDMX</span>
               <span className="text-primary font-bold">•</span>
-              <span>VALLE DE BRAVO</span>
+              <span>Y ALREDEDORES</span>
             </div>
           </div>
         </div>

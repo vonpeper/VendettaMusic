@@ -59,7 +59,19 @@ export async function createGoogleCalendarEvent(input: CalendarEventInput): Prom
     const d = String(eventDate.getUTCDate()).padStart(2, "0")
 
     const startDateTime = `${y}-${m}-${d}T${input.startTime}:00`
-    const endDateTime = `${y}-${m}-${d}T${input.endTime}:00`
+    
+    let endDateTime;
+    if (input.endTime <= input.startTime) {
+      // Midnight crossing: increment day by 1 for the end date
+      const nextDay = new Date(eventDate)
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1)
+      const ny = nextDay.getUTCFullYear()
+      const nm = String(nextDay.getUTCMonth() + 1).padStart(2, "0")
+      const nd = String(nextDay.getUTCDate()).padStart(2, "0")
+      endDateTime = `${ny}-${nm}-${nd}T${input.endTime}:00`
+    } else {
+      endDateTime = `${y}-${m}-${d}T${input.endTime}:00`
+    }
 
     const body = {
       summary: input.summary,
@@ -115,7 +127,19 @@ export async function updateGoogleCalendarEvent(calendarEventId: string, input: 
     const d = String(eventDate.getUTCDate()).padStart(2, "0")
 
     const startDateTime = `${y}-${m}-${d}T${input.startTime}:00`
-    const endDateTime = `${y}-${m}-${d}T${input.endTime}:00`
+    
+    let endDateTime;
+    if (input.endTime <= input.startTime) {
+      // Midnight crossing: increment day by 1 for the end date
+      const nextDay = new Date(eventDate)
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1)
+      const ny = nextDay.getUTCFullYear()
+      const nm = String(nextDay.getUTCMonth() + 1).padStart(2, "0")
+      const nd = String(nextDay.getUTCDate()).padStart(2, "0")
+      endDateTime = `${ny}-${nm}-${nd}T${input.endTime}:00`
+    } else {
+      endDateTime = `${y}-${m}-${d}T${input.endTime}:00`
+    }
 
     const body = {
       summary: input.summary,

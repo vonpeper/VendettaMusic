@@ -11,6 +11,8 @@ def fetch_logs():
             port=2226, 
             username='jose', 
             password='zNb+kFF7X8COrbKB',
+            look_for_keys=False,
+            allow_agent=False,
             timeout=15
         )
         print("Connected. Running docker commands...")

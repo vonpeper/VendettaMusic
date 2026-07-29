@@ -119,7 +119,6 @@ Queríamos agradecerte por confiar en *Vendetta* para tu evento. ¡Esperamos que
       const isOldTemplate = !dbTemplate || dbTemplate.includes("NUEVO GIG") || !dbTemplate.includes("Hola")
       
       return isOldTemplate ? `¡Hola {{musicianName}}! 🎸 Te escribimos de *Vendetta Live Music* para convocarte al show:
-🔗 *Confirma tu asistencia aquí:* {{confirmLink}}
 
 📅 *Fecha:* {{date}}
 🎉 *Tipo:* {{ceremony}}
@@ -128,7 +127,10 @@ Queríamos agradecerte por confiar en *Vendetta* para tu evento. ¡Esperamos que
 ⏱️ *Montaje:* {{setupTime}}
 🚗 *Llegada músicos:* {{arrivalTime}}
 👔 *Vestimenta:* {{dressCode}}
-📝 *Notas:* {{notes}}` : dbTemplate
+📝 *Notas:* {{notes}}
+
+🔗 *Por favor confirma tu asistencia aquí:*
+{{confirmLink}}` : dbTemplate
 
     case "MUSICIAN_REHEARSAL":
       return `🥁 *NUEVO ENSAYO — VENDETTA* 🥁

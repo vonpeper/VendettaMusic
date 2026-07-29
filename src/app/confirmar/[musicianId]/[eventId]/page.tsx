@@ -24,21 +24,26 @@ export async function generateMetadata({
 
   const musicianName = musician?.user?.name || "Músico"
   const eventName = event?.customName || "Show Vendetta"
+  
+  // Format event date
+  const eventDate = event?.date
+    ? new Date(event.date).toLocaleDateString("es-MX", { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
+    : ""
 
   return {
     title: `Convocatoria: ${musicianName} - ${eventName} | Vendetta Music`,
-    description: `Confirma tu asistencia al show con Vendetta Music.`,
+    description: `Hola ${musicianName}, confirma tu asistencia al show "${eventName}" del ${eventDate}.`,
     openGraph: {
-      title: `Convocatoria: ${musicianName} - ${eventName} | Vendetta Music`,
-      description: `Confirma tu asistencia al show con Vendetta Music.`,
+      title: `🎸 Convocatoria: ${musicianName}`,
+      description: `Show: ${eventName}\n📅 ${eventDate}\nPresiona aquí para confirmar tu asistencia.`,
       url: `https://vendetta.mx/confirmar/${musicianId}/${eventId}`,
       siteName: "Vendetta Music Operations",
       images: [
         {
-          url: "https://vendetta.mx/images/logo-vendetta-horizontal.png",
-          width: 800,
-          height: 600,
-          alt: "Vendetta Music",
+          url: "https://vendetta.mx/images/opengraph-confirmacion.png",
+          width: 1200,
+          height: 1200,
+          alt: "Convocatoria Vendetta Live Music",
         },
       ],
       locale: "es_MX",
