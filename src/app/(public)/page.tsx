@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { PaquetesSection } from "@/components/public/PaquetesSection"
 import {
-  Volume2, Cpu, Music2, Star, Clock, ChevronRight, ExternalLink, Quote, Zap, Loader2
+  Volume2, Cpu, Music2, Star, Clock, ChevronRight, ExternalLink, Quote, Zap, Loader2, MapPin
 } from "lucide-react"
 import { BuildShowHero } from "@/components/public/BuildShowHero"
 import { MusiciansSection } from "@/components/public/MusiciansSection"
@@ -91,45 +91,63 @@ export default async function HomePage() {
       <WhatsAppButton />
 
       {/* -- HERO ---------------------------------------------------------- */}
-      <section id="inicio" className="relative h-[92vh] flex items-center justify-center overflow-hidden">
+      <section id="inicio" className="relative min-h-[92vh] flex items-center justify-start overflow-hidden py-24 lg:py-32">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-background z-10" />
+          {/* Gradients to ensure text contrast and premium lighting */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/45 to-background z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/55 to-transparent z-10 hidden lg:block" />
           <Image
-            src={mediaMap.hero}
+            src="/images/vendetta-web-assets/vendetta-hero.webp"
             alt="Grupo musical Vendetta en vivo para eventos sociales y bodas"
             fill
             priority
             sizes="100vw"
-            className="object-cover opacity-90 blur-[2px]"
+            className="object-cover opacity-90 object-[70%_center] md:object-center"
           />
         </div>
 
-        <div className="container relative z-20 px-4 text-center mt-16 flex flex-col items-center">
-          <div className="inline-block relative mb-4 z-30 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-black text-[10px] uppercase tracking-[0.3em] backdrop-blur-md -translate-y-2">
-            ✦ Agendando fechas 2026
-          </div>
-          <h1 className="animated-title font-heading font-black text-4xl sm:text-5xl md:text-8xl lg:text-9xl tracking-tighter mb-6 uppercase drop-shadow-2xl leading-none relative py-2">
-            MÚSICA en Vivo<br />Inolvidable
-          </h1>
-          <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
-            Show de épocas de pop y rock en inglés desde los 80's de alto nivel para bodas, eventos corporativos y festivales.
-            Energía real en Toluca, CDMX y Valle de Bravo.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-             <a href="#paquetes">
-                <Button size="lg" className="font-black text-lg px-10 h-16 rounded-2xl shadow-xl shadow-primary/25 gap-2">
-                   Ver Paquetes <ChevronRight className="w-5 h-5" />
+        <div className="container relative z-20 px-4 md:px-8 lg:px-16 mx-auto flex items-center h-full w-full">
+          <div className="max-w-2xl lg:max-w-3xl text-left flex flex-col items-start pt-12 md:pt-16">
+            <span className="text-primary font-heading font-black text-xs md:text-sm tracking-[0.3em] uppercase mb-4 block">
+              VENDETTA LIVE MUSIC
+            </span>
+            <h1 className="font-heading font-black italic text-4xl sm:text-5xl md:text-7xl lg:text-[5.2rem] xl:text-[6rem] tracking-tighter mb-6 leading-[0.95] uppercase text-left">
+              <span className="text-white block">EL SOUNDTRACK DE</span>
+              <span className="text-primary block mt-1">TU MEJOR NOCHE</span>
+            </h1>
+            <p className="text-base md:text-lg text-gray-300/90 max-w-lg mb-8 md:mb-10 font-sans font-medium leading-relaxed text-left">
+              Pop y rock en vivo para bodas, eventos corporativos y celebraciones inolvidables.
+            </p>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+              <a href="#paquetes" className="w-full sm:w-auto">
+                <Button 
+                  size="lg" 
+                  className="w-full sm:w-auto font-heading font-black text-sm md:text-base px-8 h-14 rounded-xl uppercase tracking-wider bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all duration-300 cursor-pointer border-0"
+                >
+                  COTIZAR MI EVENTO
                 </Button>
               </a>
-              <a href="#nosotros" className="text-sm font-black text-white hover:text-primary transition-colors tracking-widest uppercase">
-                Acerca de la banda
+              <a href="#servicios" className="w-full sm:w-auto">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="w-full sm:w-auto font-heading font-black text-sm md:text-base px-8 h-14 rounded-xl uppercase tracking-wider border-primary/60 hover:border-primary hover:bg-white/5 text-white flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer"
+                >
+                  VER EL SHOW 
+                  <ChevronRight className="w-4 h-4 text-primary" />
+                </Button>
               </a>
+            </div>
+            
+            <div className="flex items-center gap-2.5 mt-12 md:mt-16 text-[10px] md:text-xs font-heading font-black uppercase tracking-[0.25em] text-white/90">
+              <MapPin className="w-4 h-4 text-primary fill-primary/10 shrink-0" />
+              <span>TOLUCA</span>
+              <span className="text-primary font-bold">•</span>
+              <span>CDMX</span>
+              <span className="text-primary font-bold">•</span>
+              <span>VALLE DE BRAVO</span>
+            </div>
           </div>
-        </div>
-
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 opacity-30">
-          <span className="text-[9px] font-black uppercase tracking-[0.5em]">Scroll</span>
-          <div className="w-px h-12 bg-gradient-to-b from-primary to-transparent" />
         </div>
       </section>
 
