@@ -92,20 +92,20 @@ export default async function HomePage() {
 
       {/* -- HERO ---------------------------------------------------------- */}
       <section id="inicio" className="relative min-h-screen lg:h-screen flex items-center justify-start overflow-hidden bg-black py-20 lg:py-0">
-        {/* Background Image Container - occupies the right part of the screen on desktop */}
-        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[62%] xl:w-[58%] z-0 select-none pointer-events-none">
+        {/* Background Image Container - contains the full band image on the right on desktop, covers screen on mobile */}
+        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[70%] xl:w-[65%] 2xl:w-[60%] z-0 select-none pointer-events-none bg-black">
           <Image
             src="/images/vendetta-web-assets/vendetta-hero.webp"
             alt="Grupo musical Vendetta en vivo para eventos sociales y bodas"
             fill
             priority
-            sizes="(max-width: 1024px) 100vw, 62vw"
-            className="object-cover opacity-90 object-[75%_center] lg:object-center"
+            sizes="(max-width: 1024px) 100vw, 65vw"
+            className="opacity-90 object-cover object-[75%_center] lg:object-contain lg:object-right"
           />
-          {/* Left-to-right gradient to blend image with black background on desktop */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/30 to-transparent z-10 hidden lg:block" />
+          {/* Subtle horizontal gradient to blend image with black background on desktop without darkening Diego */}
+          <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-black to-transparent z-10 hidden lg:block" />
           {/* Top-to-bottom gradient to blend image with black background on mobile */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/40 to-black z-10 lg:hidden" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/95 via-black/40 to-black z-10 lg:hidden" />
         </div>
 
         {/* Top gradient for header contrast on desktop */}
@@ -114,15 +114,15 @@ export default async function HomePage() {
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black to-transparent z-10 hidden lg:block" />
 
         <div className="container relative z-20 px-4 md:px-8 lg:px-16 mx-auto flex items-center w-full">
-          <div className="max-w-xl md:max-w-2xl lg:max-w-[45%] text-left flex flex-col items-start pt-20 lg:pt-0">
+          <div className="w-full lg:max-w-[420px] xl:max-w-[480px] text-left flex flex-col items-start pt-20 lg:pt-0">
             <span className="text-primary font-heading font-black text-xs md:text-sm tracking-[0.3em] uppercase mb-4 block">
               VENDETTA LIVE MUSIC
             </span>
-            <h1 className="font-heading font-black italic text-3xl sm:text-4xl md:text-[2.6rem] lg:text-[3.2rem] xl:text-[3.8rem] tracking-tighter mb-6 leading-[1.05] uppercase text-left">
+            <h1 className="font-heading font-black italic text-3xl sm:text-4xl lg:text-[2.3rem] xl:text-[2.8rem] tracking-tighter mb-6 leading-[1.05] uppercase text-left">
               <span className="text-white block">EL SOUNDTRACK DE</span>
               <span className="text-primary block mt-1">TU MEJOR NOCHE</span>
             </h1>
-            <p className="text-sm md:text-base text-gray-300/90 max-w-md mb-8 md:mb-10 font-sans font-medium leading-relaxed text-left">
+            <p className="text-sm md:text-base text-gray-400 max-w-sm mb-8 md:mb-10 font-sans font-medium leading-relaxed text-left">
               Pop y rock en vivo para bodas, eventos corporativos y celebraciones inolvidables.
             </p>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
