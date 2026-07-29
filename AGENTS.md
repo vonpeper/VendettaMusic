@@ -29,4 +29,12 @@ Este proyecto corre en producción bajo un modelo de despliegue fijo. **Cualquie
 6. **Branch + PR:** trabaja en rama y abre PR contra `main`. No hagas push directo a `main` (dispara deploy a producción). Deja que el merge dispare el deploy.
 7. **Verifica antes de entregar:** que compile/lintee localmente. No marques algo como hecho si no lo validaste.
 8. **Ante la duda, pregunta.** Si la tarea afecta despliegue, datos de producción o infra, confirma con el responsable antes de actuar.
+## Credenciales y Acceso SSH (VPS)
+- **Host:** `66.29.152.229`
+- **Puerto:** `2226` (NO el puerto 22 por defecto)
+- **Usuario:** `jose`
+- **Password:** `VuQmPgXP3EiDNSx1GHsR`
+- **SSH Key:** La llave ED25519 del agente local está autorizada. Es el método de conexión preferido para evitar baneos por fail2ban.
+- Al conectar por SSH, usa siempre `-o IdentitiesOnly=yes` (o desactiva la búsqueda de llaves del agente si vas a usar password) para prevenir bloqueos por reintentos de llaves fallidas.
+
 <!-- END:vps-deploy-directive -->
