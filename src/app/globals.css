@@ -71,6 +71,7 @@
   --font-sans: var(--font-sans);
   --font-heading: var(--font-heading);
   --font-advent: var(--font-advent);
+  --font-barlow: var(--font-barlow-condensed);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -193,5 +194,65 @@
   html {
     @apply font-sans;
     scroll-behavior: smooth;
+  }
+}
+
+/* Vendetta Flight Case Design System */
+:root {
+  --vendetta-case-black: #08090a;
+  --vendetta-case-charcoal: #151719;
+  --vendetta-metal: #74777b;
+  --vendetta-red: #e31b23;
+  --vendetta-red-deep: #8e0e15;
+  --vendetta-signal-blue: #2797ff;
+  --vendetta-warm-white: #f2efe8;
+  --vendetta-muted: #aaa8a2;
+}
+
+.vendetta-case-surface {
+  background-color: var(--vendetta-case-black);
+  background-image:
+    linear-gradient(90deg, rgba(255,255,255,.018), transparent 18%, transparent 82%, rgba(255,255,255,.018)),
+    url("/images/vendetta-highlights-kit/flightcase-texture.webp");
+  background-size: auto, 768px 768px;
+  background-repeat: repeat;
+}
+
+@supports (background-image: url("/images/vendetta-highlights-kit/flightcase-texture.avif")) {
+  .vendetta-case-surface {
+    background-image:
+      linear-gradient(90deg, rgba(255,255,255,.018), transparent 18%, transparent 82%, rgba(255,255,255,.018)),
+      url("/images/vendetta-highlights-kit/flightcase-texture.avif");
+  }
+}
+
+/* Stencil Wear / Scratch distress effect on numbers */
+.distress-effect {
+  mask-image: radial-gradient(circle, rgba(0,0,0,1) 92%, rgba(0,0,0,0.88) 95%, rgba(0,0,0,0) 100%),
+              url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' result='noise'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  mask-mode: alpha;
+  -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 92%, rgba(0,0,0,0.88) 95%, rgba(0,0,0,0) 100%),
+                      url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' result='noise'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Cable flowing signal animation */
+@keyframes signal-flow-animation {
+  0% {
+    stroke-dashoffset: 115;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-cable-signal {
+  animation: signal-flow-animation 2.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-cable-signal {
+    animation: none !important;
+    stroke-dasharray: none !important;
+    stroke-dashoffset: none !important;
   }
 }

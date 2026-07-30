@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360">
+  <defs>
+    <linearGradient id="al" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#D1D2CF"/><stop offset=".2" stop-color="#777B7F"/><stop offset=".52" stop-color="#292C2F"/><stop offset=".78" stop-color="#8D9194"/><stop offset="1" stop-color="#3C3F42"/></linearGradient>
+    <radialGradient id="rv"><stop stop-color="#D4D5D1"/><stop offset=".35" stop-color="#777B7E"/><stop offset="1" stop-color="#202326"/></radialGradient>
+  </defs>
+  <rect width="1200" height="22" fill="url(#al)"/>
+  <rect y="338" width="1200" height="22" fill="url(#al)"/>
+  <g fill="url(#rv)" stroke="#121416" stroke-width="2">
+    <circle cx="42" cy="42" r="12"/><circle cx="1158" cy="42" r="12"/>
+    <circle cx="42" cy="318" r="12"/><circle cx="1158" cy="318" r="12"/>
+    <circle cx="300" cy="13" r="7"/><circle cx="600" cy="13" r="7"/><circle cx="900" cy="13" r="7"/>
+    <circle cx="300" cy="347" r="7"/><circle cx="600" cy="347" r="7"/><circle cx="900" cy="347" r="7"/>
+  </g>
+  <path d="M0 0h108v22H22v86H0zM1200 0h-108v22h86v86h22zM0 360h108v-22H22v-86H0zM1200 360h-108v-22h86v-86h22z" fill="url(#al)"/>
+  <g transform="translate(920 108)">
+    <rect width="220" height="130" rx="8" fill="#191B1D" stroke="url(#al)" stroke-width="5"/>
+    <rect x="13" y="13" width="194" height="104" rx="3" fill="none" stroke="#676B6E"/>
+    <circle cx="22" cy="22" r="5" fill="url(#rv)"/><circle cx="198" cy="22" r="5" fill="url(#rv)"/>
+    <circle cx="22" cy="108" r="5" fill="url(#rv)"/><circle cx="198" cy="108" r="5" fill="url(#rv)"/>
+  </g>
+</svg>

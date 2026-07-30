@@ -1,16 +1,16 @@
 import { Button } from "@/components/ui/button"
 import { PaquetesSection } from "@/components/public/PaquetesSection"
 import {
-  Volume2, Cpu, Music2, Star, Clock, ChevronRight, ExternalLink, Quote, Zap, Loader2, MapPin
+  Volume2, Cpu, Music2, Star, Clock, ChevronRight, Quote, Zap, Loader2, MapPin
 } from "lucide-react"
 import { BuildShowHero } from "@/components/public/BuildShowHero"
 import { MusiciansSection } from "@/components/public/MusiciansSection"
 import { UpcomingGigs } from "@/components/public/UpcomingGigs"
 import { VideoSection } from "@/components/public/VideoSection"
 import { PhotoGallery } from "@/components/public/PhotoGallery"
-import { PartyBubbles } from "@/components/public/PartyBubbles"
 import { NeonBorder } from "@/components/public/NeonBorder"
 import { WhatsAppButton } from "@/components/public/WhatsAppButton"
+import { VendettaHighlights } from "@/components/public/VendettaHighlights"
 import { Suspense } from "react"
 import Image from "next/image"
 import { db } from "@/lib/db"
@@ -158,26 +158,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* -- STATS --------------------------------------------------------- */}
-      <section className="py-24 bg-background relative overflow-hidden text-center">
-        <PartyBubbles />
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-center max-w-5xl mx-auto">
-            {[
-              { value: "+500", label: "Eventos Exitosos", color: "from-primary to-rose-400" },
-              { value: "3",    label: "Años de Vendetta", color: "from-purple-400 to-indigo-400" },
-              { value: "+15", label: "Años de Experiencia", color: "from-blue-400 to-cyan-400" },
-            ].map(s => (
-              <div key={s.label} className="relative group flex flex-col items-center">
-                <div className={`absolute -inset-4 bg-gradient-to-br ${s.color} opacity-0 group-hover:opacity-10 blur-xl transition-opacity`} />
-                <span className="animated-title text-4xl md:text-5xl font-black mb-2 block tracking-tighter">{s.value}</span>
-                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em]">{s.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* -- VENDETTA HIGHLIGHTS ------------------------------------------- */}
+      <VendettaHighlights />
 
       {/* -- PAQUETES ------------------------------------------------------- */}
       <PaquetesSection 

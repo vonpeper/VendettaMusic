@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Montserrat, Advent_Pro } from "next/font/google";
+import { Inter, Montserrat, Advent_Pro, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import { SchemaMarkup } from "@/components/public/SchemaMarkup"
 import { Toaster } from "sonner"
@@ -20,6 +20,12 @@ const advent = Advent_Pro({
   variable: "--font-advent",
   subsets: ["latin"],
   weight: ["500"], // Medium
+});
+
+const barlowCondensed = Barlow_Condensed({
+  variable: "--font-barlow-condensed",
+  subsets: ["latin"],
+  weight: ["600", "700", "800", "900"],
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -76,7 +82,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${inter.variable} ${montserrat.variable} ${advent.variable} dark antialiased scroll-smooth`}
+      className={`${inter.variable} ${montserrat.variable} ${advent.variable} ${barlowCondensed.variable} dark antialiased scroll-smooth`}
     >
       <head>
         <meta name="google-site-verification" content="xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY" />
