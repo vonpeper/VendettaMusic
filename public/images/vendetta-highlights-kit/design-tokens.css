@@ -1,0 +1,20 @@
+:root {
+  --vendetta-case-black: #08090a;
+  --vendetta-case-charcoal: #151719;
+  --vendetta-metal: #74777b;
+  --vendetta-red: #e31b23;
+  --vendetta-red-deep: #8e0e15;
+  --vendetta-signal-blue: #2797ff;
+  --vendetta-warm-white: #f2efe8;
+  --vendetta-muted: #aaa8a2;
+  --vendetta-font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --vendetta-font-body: "Inter", system-ui, sans-serif;
+}
+
+.vendetta-case-surface {
+  background-color: var(--vendetta-case-black);
+  background-image:
+    linear-gradient(90deg, rgba(255,255,255,.018), transparent 18%, transparent 82%, rgba(255,255,255,.018)),
+    url("./flightcase-texture.avif");
+  background-size: auto, 768px 768px;
+}
