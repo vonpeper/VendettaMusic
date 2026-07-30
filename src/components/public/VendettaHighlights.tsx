@@ -276,41 +276,41 @@ export function VendettaHighlights() {
               <use href="#jack-plug-right" x="1310" y="170"/>
             </g>
 
-            {/* --- STATISTICS NUMBERS & LABELS (Weathered vector stencils) --- */}
+            {/* --- STATISTICS NUMBERS & LABELS (Weathered vector stencils using system layout fonts) --- */}
             <g filter="url(#heavy-grunge-filter)">
               
               {/* +500 */}
-              <text x="260" y="145" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
+              <text x="260" y="145" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
                 <tspan fontSize="50" dy="-18">+</tspan>500
               </text>
-              <text x="260" y="200" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
+              <text x="260" y="200" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
                 EVENTOS REALIZADOS
               </text>
 
               {/* +15 */}
-              <text x="490" y="145" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
+              <text x="490" y="145" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
                 <tspan fontSize="50" dy="-18">+</tspan>15
               </text>
-              <text x="490" y="200" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
+              <text x="490" y="200" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
                 AÑOS DE EXPERIENCIA
               </text>
 
               {/* 5 */}
-              <text x="720" y="145" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
+              <text x="720" y="145" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
                 5
               </text>
-              <text x="720" y="200" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
+              <text x="720" y="200" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
                 MÚSICOS EN ESCENA
               </text>
 
               {/* 2 H */}
-              <text x="950" y="94" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="rgba(255,255,255,0.4)" letterSpacing="0.15em">
+              <text x="950" y="94" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="rgba(255,255,255,0.4)" letterSpacing="0.15em">
                 DESDE
               </text>
-              <text x="950" y="145" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
+              <text x="950" y="145" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
                 2<tspan fontSize="60" dx="2">H</tspan>
               </text>
-              <text x="950" y="200" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
+              <text x="950" y="200" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
                 DE SHOW EN VIVO
               </text>
 
@@ -321,15 +321,15 @@ export function VendettaHighlights() {
                 <rect x="7" y="7" width="206" height="116" rx="3" fill="none" stroke="#55595D" strokeWidth="1.5"/>
                 {/* Metal corner rivets */}
                 <circle cx="14" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
-                <circle cx="206" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
+                <circle cx="206" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
                 <circle cx="14" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
                 <circle cx="206" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
                 
                 {/* Plate Titles */}
-                <text x="110" y="65" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="28" fill="#ffffff" letterSpacing="0.02em">
+                <text x="110" y="65" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="28" fill="#ffffff" letterSpacing="0.02em">
                   TOUR LEVEL
                 </text>
-                <text x="110" y="90" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="11" fill="#e31b23" letterSpacing="0.12em">
+                <text x="110" y="90" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="11" fill="#e31b23" letterSpacing="0.12em">
                   PRODUCCIÓN DE GIRA
                 </text>
                 <line x1="90" y1="105" x2="130" y2="105" stroke="#e31b23" strokeWidth="2"/>
@@ -382,35 +382,35 @@ export function VendettaHighlights() {
             <g filter="url(#heavy-grunge-filter)">
               
               {/* Row 1 Stats */}
-              <text x="120" y="70" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
+              <text x="120" y="70" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
                 <tspan fontSize="30" dy="-10">+</tspan>500
               </text>
-              <text x="120" y="110" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
+              <text x="120" y="110" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
                 EVENTOS REALIZADOS
               </text>
 
-              <text x="360" y="70" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
+              <text x="360" y="70" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
                 <tspan fontSize="30" dy="-10">+</tspan>15
               </text>
-              <text x="360" y="110" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
+              <text x="360" y="110" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
                 AÑOS DE EXPERIENCIA
               </text>
 
-              <text x="600" y="70" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
+              <text x="600" y="70" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
                 5
               </text>
-              <text x="600" y="110" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
+              <text x="600" y="110" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
                 MÚSICOS EN ESCENA
               </text>
 
               {/* Row 2 Stats */}
-              <text x="220" y="174" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="10" fill="rgba(255,255,255,0.4)" letterSpacing="0.12em">
+              <text x="220" y="174" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="10" fill="rgba(255,255,255,0.4)" letterSpacing="0.12em">
                 DESDE
               </text>
-              <text x="220" y="220" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
+              <text x="220" y="220" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
                 2<tspan fontSize="38" dx="2">H</tspan>
               </text>
-              <text x="220" y="252" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
+              <text x="220" y="252" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
                 DE SHOW EN VIVO
               </text>
 
@@ -419,14 +419,14 @@ export function VendettaHighlights() {
                 <rect width="220" height="130" rx="6" fill="#151719" stroke="url(#metal-grad-hard)" strokeWidth="4"/>
                 <rect x="7" y="7" width="206" height="116" rx="3" fill="none" stroke="#55595D" strokeWidth="1.5"/>
                 <circle cx="14" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
-                <circle cx="206" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
+                <circle cx="206" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
                 <circle cx="14" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
                 <circle cx="206" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
                 
-                <text x="110" y="65" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="28" fill="#ffffff" letterSpacing="0.02em">
+                <text x="110" y="65" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="28" fill="#ffffff" letterSpacing="0.02em">
                   TOUR LEVEL
                 </text>
-                <text x="110" y="90" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="11" fill="#e31b23" letterSpacing="0.12em">
+                <text x="110" y="90" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="11" fill="#e31b23" letterSpacing="0.12em">
                   PRODUCCIÓN DE GIRA
                 </text>
                 <line x1="90" y1="105" x2="130" y2="105" stroke="#e31b23" strokeWidth="2"/>
