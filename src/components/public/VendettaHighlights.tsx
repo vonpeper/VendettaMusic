@@ -2,6 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 
+interface HighlightItem {
+  id: string;
+  value: string;
+  valueRender: React.ReactNode;
+  label: string;
+  prefix?: string;
+  leftPercent: string; // Center X of the column
+}
+
 export function VendettaHighlights() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isIntersected, setIsIntersected] = useState(false);
@@ -24,12 +33,90 @@ export function VendettaHighlights() {
     return () => observer.disconnect();
   }, []);
 
+  const highlights: HighlightItem[] = [
+    { 
+      id: "events", 
+      value: "+500", 
+      valueRender: (
+        <>
+          <span className="text-[0.55em] align-super mr-0.5 font-bold select-none text-white/90">+</span>500
+        </>
+      ),
+      label: "EVENTOS REALIZADOS", 
+      leftPercent: "18.05%" 
+    },
+    { 
+      id: "experience", 
+      value: "+15", 
+      valueRender: (
+        <>
+          <span className="text-[0.55em] align-super mr-0.5 font-bold select-none text-white/90">+</span>15
+        </>
+      ),
+      label: "AÑOS DE EXPERIENCIA", 
+      leftPercent: "34.02%" 
+    },
+    { 
+      id: "musicians", 
+      value: "5", 
+      valueRender: <>5</>,
+      label: "MÚSICOS EN ESCENA", 
+      leftPercent: "50.0%" 
+    },
+    { 
+      id: "show", 
+      value: "2 H", 
+      valueRender: (
+        <>
+          2<span className="text-[0.7em] ml-1 font-black text-white/95">H</span>
+        </>
+      ),
+      label: "DE SHOW EN VIVO", 
+      prefix: "DESDE", 
+      leftPercent: "65.97%" 
+    },
+  ];
+
   return (
     <section 
       ref={containerRef}
       className="relative w-full bg-black py-0" 
       aria-label="Estadísticas de la Gira Vendetta"
     >
+      {/* Hidden SVG for filters and gradients */}
+      <svg className="absolute w-0 h-0 hidden" aria-hidden="true">
+        <defs>
+          <linearGradient id="metal-grad-hard" x1="0" y1="0" x2="0" y2="1">
+            <stop stopColor="#D1D2CF"/>
+            <stop offset="0.2" stopColor="#777B7F"/>
+            <stop offset="0.52" stopColor="#292C2F"/>
+            <stop offset="0.78" stopColor="#8D9194"/>
+            <stop offset="1" stopColor="#3C3F42"/>
+          </linearGradient>
+          <radialGradient id="rivet-grad-hard">
+            <stop stopColor="#D4D5D1"/>
+            <stop offset="0.35" stopColor="#777B7E"/>
+            <stop offset="1" stopColor="#202326"/>
+          </radialGradient>
+
+          {/* 
+            Corrected Grayscale/Alpha Grunge Filter
+            - Low frequency (0.075) creates large organic weathered cracks/scratches.
+            - feColorMatrix projects the noise to the alpha channel exclusively, preventing digital color static.
+          */}
+          <filter id="heavy-grunge-filter">
+            <feTurbulence type="fractalNoise" baseFrequency="0.075" numOctaves="4" result="noise"/>
+            <feColorMatrix type="matrix" values="
+              0 0 0 0 0
+              0 0 0 0 0
+              0 0 0 0 0
+              2.4 0 0 0 -1.1
+            " result="alpha-mask"/>
+            <feComposite operator="in" in="SourceGraphic" in2="alpha-mask"/>
+          </filter>
+        </defs>
+      </svg>
+
       {/* 
         Main Flight Case Wrapper
         - Uses the flightcase wood-leather texture.
@@ -65,43 +152,30 @@ export function VendettaHighlights() {
 
         {/* --- FIXED CORNER BRACKETS (Prevents distortion) --- */}
         
-        {/* SVG Reusable Corner Bracket Symbol Definitions */}
-        <svg className="hidden" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="metal-grad-hard" x1="0" y1="0" x2="0" y2="1">
-              <stop stopColor="#D1D2CF"/>
-              <stop offset="0.2" stopColor="#777B7F"/>
-              <stop offset="0.52" stopColor="#292C2F"/>
-              <stop offset="0.78" stopColor="#8D9194"/>
-              <stop offset="1" stopColor="#3C3F42"/>
-            </linearGradient>
-            <radialGradient id="rivet-grad-hard">
-              <stop stopColor="#D4D5D1"/>
-              <stop offset="0.35" stopColor="#777B7E"/>
-              <stop offset="1" stopColor="#202326"/>
-            </radialGradient>
-            
-            <g id="corner-bracket-path">
-              {/* The metal corner bracket angle shape */}
-              <path d="M0 0h108v22H22v86H0z" fill="url(#metal-grad-hard)"/>
-              {/* Big rivet at the corner intersection */}
-              <circle cx="42" cy="42" r="12" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="2"/>
-            </g>
-          </defs>
-        </svg>
-
         {/* Corner Brackets Positioned in the 4 corners */}
         <div className="absolute top-0 left-0 w-[108px] h-[86px] z-30 pointer-events-none">
-          <svg className="w-full h-full" viewBox="0 0 108 86"><use href="#corner-bracket-path"/></svg>
+          <svg className="w-full h-full" viewBox="0 0 108 86">
+            <path d="M0 0h108v22H22v86H0z" fill="url(#metal-grad-hard)"/>
+            <circle cx="42" cy="42" r="12" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="2"/>
+          </svg>
         </div>
         <div className="absolute top-0 right-0 w-[108px] h-[86px] scale-x-[-1] z-30 pointer-events-none">
-          <svg className="w-full h-full" viewBox="0 0 108 86"><use href="#corner-bracket-path"/></svg>
+          <svg className="w-full h-full" viewBox="0 0 108 86">
+            <path d="M0 0h108v22H22v86H0z" fill="url(#metal-grad-hard)"/>
+            <circle cx="42" cy="42" r="12" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="2"/>
+          </svg>
         </div>
         <div className="absolute bottom-0 left-0 w-[108px] h-[86px] scale-y-[-1] z-30 pointer-events-none">
-          <svg className="w-full h-full" viewBox="0 0 108 86"><use href="#corner-bracket-path"/></svg>
+          <svg className="w-full h-full" viewBox="0 0 108 86">
+            <path d="M0 0h108v22H22v86H0z" fill="url(#metal-grad-hard)"/>
+            <circle cx="42" cy="42" r="12" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="2"/>
+          </svg>
         </div>
         <div className="absolute bottom-0 right-0 w-[108px] h-[86px] scale-x-[-1] scale-y-[-1] z-30 pointer-events-none">
-          <svg className="w-full h-full" viewBox="0 0 108 86"><use href="#corner-bracket-path"/></svg>
+          <svg className="w-full h-full" viewBox="0 0 108 86">
+            <path d="M0 0h108v22H22v86H0z" fill="url(#metal-grad-hard)"/>
+            <circle cx="42" cy="42" r="12" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="2"/>
+          </svg>
         </div>
 
 
@@ -167,7 +241,7 @@ export function VendettaHighlights() {
         />
 
 
-        {/* --- VERTICAL DIVIDER LINES (Thin Metallic Slots) --- */}
+        {/* --- VERTICAL DIVIDER LINES --- */}
         <div className="absolute inset-0 pointer-events-none z-20 hidden lg:block" aria-hidden="true">
           <div className="absolute left-[26.04%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/25 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.03)]" />
           <div className="absolute left-[42.01%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/25 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.03)]" />
@@ -197,146 +271,130 @@ export function VendettaHighlights() {
         </div>
 
 
-        {/* --- DESKTOP VECTOR GRAPHICS & STATISTICS CONTAINER --- */}
-        <div className="hidden lg:block w-full h-full relative z-25">
+        {/* --- CABLE SVG LAYER (Background Matte Signal Cable) --- */}
+        <div 
+          className="absolute left-0 right-0 h-[220px] top-[18%] z-15 hidden lg:block pointer-events-none" 
+          aria-hidden="true"
+        >
           <svg 
             className="w-full h-full" 
-            viewBox="0 0 1440 320" 
+            viewBox="0 0 1440 220" 
             fill="none" 
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
           >
             <defs>
-              {/* SVG Plugs Definitions */}
-              <g id="jack-plug-left">
-                {/* Silver Metal Tip */}
-                <rect x="0" y="-3" width="12" height="6" rx="1" fill="url(#metal-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
-                {/* Black Housing Body */}
-                <rect x="-15" y="-5" width="15" height="10" rx="1.5" fill="#17191B" stroke="#7C8083" strokeWidth="1"/>
-                {/* Red Band Ring Accent */}
-                <rect x="-6" y="-4.5" width="3" height="9" fill="#B5121B"/>
-              </g>
-              <g id="jack-plug-right">
-                {/* Silver Metal Tip */}
-                <rect x="-12" y="-3" width="12" height="6" rx="1" fill="url(#metal-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
-                {/* Black Housing Body */}
-                <rect x="0" y="-5" width="15" height="10" rx="1.5" fill="#17191B" stroke="#7C8083" strokeWidth="1"/>
-                {/* Red Band Ring Accent */}
-                <rect x="3" y="-4.5" width="3" height="9" fill="#B5121B"/>
-              </g>
-
-              {/* 
-                Heavy-Grunge SVG Filter Mask
-                - Uses fractalNoise to generate infinite random high-frequency grain.
-                - Color matrix bumps up contrast of alpha channel, producing sharp weathered paint flakes.
-              */}
-              <filter id="heavy-grunge-filter">
-                <feTurbulence type="fractalNoise" baseFrequency="0.18" numOctaves="4" result="noise"/>
-                <feColorMatrix type="matrix" values="
-                  1 0 0 0 0
-                  0 1 0 0 0
-                  0 0 1 0 0
-                  0 0 0 1.9 -0.92
-                " result="high-contrast-noise"/>
-                <feComposite operator="in" in2="SourceGraphic" in="high-contrast-noise"/>
-              </filter>
-
               <filter id="cable-drop-shadow" x="-5%" y="-40%" width="110%" height="180%">
                 <feDropShadow dx="0" dy="7" stdDeviation="5" floodColor="#000" floodOpacity="0.85"/>
               </filter>
             </defs>
-
-            {/* --- CABLE PATHS (Matte tour-level red cable, zero gamer glow) --- */}
             <g filter="url(#cable-drop-shadow)">
-              {/* Base red cable path (Top row / Peaks at Y=130, Valleys at Y=200) */}
+              {/* Base red cable path (Peaks aligned to centers of columns at X=260, 490, 720, 950) */}
               <path 
                 d="M 110,170 C 160,170 200,130 260,130 C 320,130 330,200 375,200 C 420,200 430,130 490,130 C 550,130 560,200 605,200 C 660,200 670,130 720,130 C 780,130 790,200 835,200 C 890,200 900,130 950,130 C 1000,130 1050,170 1090,170"
                 stroke="#A80F16" strokeWidth="6.5" strokeLinecap="round"
               />
-              {/* Small cable segment exiting the right of the plate */}
+              {/* Small cable exiting the right side of the plate */}
               <path 
                 d="M 1310,170 C 1330,170 1350,170 1370,170"
                 stroke="#A80F16" strokeWidth="6.5" strokeLinecap="round"
               />
-
-              {/* Cable connectors (Jacks) plugged at each peak & plate side */}
-              <use href="#jack-plug-left" x="200" y="130"/>
-              <use href="#jack-plug-right" x="320" y="130"/>
-              
-              <use href="#jack-plug-left" x="430" y="130"/>
-              <use href="#jack-plug-right" x="550" y="130"/>
-
-              <use href="#jack-plug-left" x="682" y="130"/>
-              <use href="#jack-plug-right" x="758" y="130"/>
-
-              <use href="#jack-plug-left" x="898" y="130"/>
-              <use href="#jack-plug-right" x="1002" y="130"/>
-
-              <use href="#jack-plug-left" x="1090" y="170"/>
-              <use href="#jack-plug-right" x="1310" y="170"/>
-            </g>
-
-            {/* --- STATISTICS NUMBERS & LABELS (Weathered vector stencils using system layout fonts) --- */}
-            <g filter="url(#heavy-grunge-filter)">
-              
-              {/* +500 */}
-              <text x="260" y="145" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
-                <tspan fontSize="50" dy="-18">+</tspan>500
-              </text>
-              <text x="260" y="200" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
-                EVENTOS REALIZADOS
-              </text>
-
-              {/* +15 */}
-              <text x="490" y="145" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
-                <tspan fontSize="50" dy="-18">+</tspan>15
-              </text>
-              <text x="490" y="200" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
-                AÑOS DE EXPERIENCIA
-              </text>
-
-              {/* 5 */}
-              <text x="720" y="145" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
-                5
-              </text>
-              <text x="720" y="200" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
-                MÚSICOS EN ESCENA
-              </text>
-
-              {/* 2 H */}
-              <text x="950" y="94" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="rgba(255,255,255,0.4)" letterSpacing="0.15em">
-                DESDE
-              </text>
-              <text x="950" y="145" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
-                2<tspan fontSize="60" dx="2">H</tspan>
-              </text>
-              <text x="950" y="200" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
-                DE SHOW EN VIVO
-              </text>
-
-              {/* TOUR LEVEL PLATE (Grounded design, no blinking dashboard lights) */}
-              <g transform="translate(1090 95)">
-                {/* Plate base */}
-                <rect width="220" height="130" rx="6" fill="#151719" stroke="url(#metal-grad-hard)" strokeWidth="4"/>
-                <rect x="7" y="7" width="206" height="116" rx="3" fill="none" stroke="#55595D" strokeWidth="1.5"/>
-                {/* Metal corner rivets */}
-                <circle cx="14" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
-                <circle cx="206" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
-                <circle cx="14" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
-                <circle cx="206" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
-                
-                {/* Plate Titles */}
-                <text x="110" y="65" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="28" fill="#ffffff" letterSpacing="0.02em">
-                  TOUR LEVEL
-                </text>
-                <text x="110" y="90" textAnchor="middle" fontFamily="var(--font-barlow-condensed), 'Barlow Condensed', sans-serif" fontWeight="900" fontSize="11" fill="#e31b23" letterSpacing="0.12em">
-                  PRODUCCIÓN DE GIRA
-                </text>
-                <line x1="90" y1="105" x2="130" y2="105" stroke="#e31b23" strokeWidth="2"/>
-              </g>
-
             </g>
           </svg>
+        </div>
+
+
+        {/* --- HTML/CSS STATISTICS LAYER (Positioned over Cable Peaks) --- */}
+        <div className="hidden lg:block w-full h-full relative z-25">
+          <ul className="w-full h-full relative">
+            {highlights.map((item) => (
+              <li 
+                key={item.id}
+                style={{ left: item.leftPercent }}
+                className="absolute top-[41%] -translate-y-1/2 -translate-x-1/2 flex flex-col items-center text-center select-none"
+              >
+                {/* Prefix Label (like DESDE) */}
+                {item.prefix && (
+                  <span className="font-barlow font-black text-xs text-white/40 tracking-[0.15em] uppercase leading-none mb-1.5">
+                    {item.prefix}
+                  </span>
+                )}
+                
+                {/* 
+                  Weathered Numbers & Plugs Container
+                  - Utilizes HTML flexbox for perfect plug-to-text alignment, leaving zero gaps.
+                  - Heavy-grunge filter applied cleanly via CSS filter.
+                */}
+                <div 
+                  style={{ filter: "url(#heavy-grunge-filter)" }}
+                  className="flex items-center justify-center select-none"
+                >
+                  {/* Left Jack Plug */}
+                  <div className="w-4 h-1.5 bg-gradient-to-b from-[#ECE7DC] to-[#25282B] border border-black/60 rounded-l-sm mr-1 shadow-sm shrink-0" />
+                  
+                  {/* Big Number Text */}
+                  <span 
+                    className="font-barlow font-black text-[#e8e6e0] leading-none tracking-tighter text-[5.8rem] xl:text-[6.8rem] select-none block"
+                    style={{ fontFamily: "var(--font-barlow-condensed)" }}
+                  >
+                    {item.valueRender}
+                  </span>
+
+                  {/* Right Jack Plug */}
+                  <div className="w-4 h-1.5 bg-gradient-to-b from-[#ECE7DC] to-[#25282B] border border-black/60 rounded-r-sm ml-1 shadow-sm shrink-0" />
+                </div>
+
+                {/* Stat Title */}
+                <span 
+                  className="font-barlow font-black text-[12px] xl:text-[13px] text-[#afb3b6] tracking-[0.16em] uppercase leading-none mt-4 select-none"
+                  style={{ fontFamily: "var(--font-barlow-condensed)" }}
+                >
+                  {item.label}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+
+        {/* --- TOUR LEVEL PLATE (HTML Component over the Cable Right Peak) --- */}
+        <div 
+          className="absolute hidden lg:flex right-[102px] top-[41%] -translate-y-1/2 w-[220px] h-[130px] select-none items-center justify-center z-25"
+          aria-hidden="true"
+        >
+          {/* Connector Plugs on Plate Sides */}
+          <div className="absolute -left-4 top-[75px] -translate-y-1/2 w-4 h-1.5 bg-gradient-to-b from-[#ECE7DC] to-[#25282B] border border-black/60 rounded-l-sm z-30" />
+          <div className="absolute -right-4 top-[75px] -translate-y-1/2 w-4 h-1.5 bg-gradient-to-b from-[#ECE7DC] to-[#25282B] border border-black/60 rounded-r-sm z-30" />
+
+          {/* Stamped Metal Plate Box (With Heavy-Grunge weathering applied to borders & text) */}
+          <div 
+            style={{ filter: "url(#heavy-grunge-filter)" }}
+            className="w-full h-full rounded-lg bg-[#151719] border-4 border-[#777B7F] shadow-2xl p-3 flex flex-col items-center justify-center relative"
+          >
+            {/* Corner Rivets */}
+            <span className="absolute top-1 left-1.5 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#D4D5D1] via-[#777B7E] to-[#202326] border border-black/50" />
+            <span className="absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#D4D5D1] via-[#777B7E] to-[#202326] border border-black/50" />
+            <span className="absolute bottom-1 left-1.5 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#D4D5D1] via-[#777B7E] to-[#202326] border border-black/50" />
+            <span className="absolute bottom-1 right-1.5 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#D4D5D1] via-[#777B7E] to-[#202326] border border-black/50" />
+            
+            {/* Inner border */}
+            <div className="absolute inset-1.5 border border-[#55595D] rounded-md pointer-events-none" />
+
+            {/* Plate text */}
+            <span 
+              className="font-barlow font-black text-white text-2xl tracking-tight leading-none uppercase z-10"
+              style={{ fontFamily: "var(--font-barlow-condensed)" }}
+            >
+              TOUR LEVEL
+            </span>
+            <span 
+              className="font-barlow font-bold text-[#e31b23] text-[9px] tracking-wider uppercase mt-1 leading-none z-10"
+              style={{ fontFamily: "var(--font-barlow-condensed)" }}
+            >
+              PRODUCCIÓN DE GIRA
+            </span>
+            <div className="w-8 h-[2px] bg-[#e31b23] mt-2.5 z-10" />
+          </div>
         </div>
 
 
@@ -349,9 +407,13 @@ export function VendettaHighlights() {
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
           >
-            {/* Reuses same filters inside SVG */}
-            <g filter="url(#cable-drop-shadow)">
-              {/* Mobile cable path - loops from Top Row to Bottom Row organically */}
+            <defs>
+              <filter id="cable-drop-shadow-mob" x="-5%" y="-40%" width="110%" height="180%">
+                <feDropShadow dx="0" dy="7" stdDeviation="5" floodColor="#000" floodOpacity="0.85"/>
+              </filter>
+            </defs>
+            {/* Mobile Cable */}
+            <g filter="url(#cable-drop-shadow-mob)">
               <path 
                 d="M 30,90 C 60,90 90,60 120,60 C 150,60 210,110 240,110 C 270,110 330,60 360,60 C 390,60 450,110 480,110 C 510,110 570,60 600,60 C 660,60 695,110 660,160 C 620,210 300,160 220,210 C 140,260 270,300 305,300 C 330,300 350,280 390,280"
                 stroke="#A80F16" strokeWidth="6.5" strokeLinecap="round"
@@ -419,7 +481,7 @@ export function VendettaHighlights() {
                 <rect width="220" height="130" rx="6" fill="#151719" stroke="url(#metal-grad-hard)" strokeWidth="4"/>
                 <rect x="7" y="7" width="206" height="116" rx="3" fill="none" stroke="#55595D" strokeWidth="1.5"/>
                 <circle cx="14" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
-                <circle cx="206" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
+                <circle cx="206" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
                 <circle cx="14" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
                 <circle cx="206" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
                 
