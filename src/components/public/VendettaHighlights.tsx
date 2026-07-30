@@ -38,7 +38,7 @@ export function VendettaHighlights() {
         .vendetta-highlights-surface {
           background-color: #08090a;
           background-image:
-            linear-gradient(90deg, rgba(0,0,0,0.5), rgba(0,0,0,0.15) 18%, rgba(0,0,0,0.15) 82%, rgba(0,0,0,0.5)),
+            linear-gradient(90deg, rgba(0,0,0,0.65), rgba(0,0,0,0.2) 18%, rgba(0,0,0,0.2) 82%, rgba(0,0,0,0.65)),
             url("/images/vendetta-highlights-kit/flightcase-texture.webp");
           background-size: 100% 100%, 768px 768px;
           background-repeat: no-repeat, repeat;
@@ -46,7 +46,7 @@ export function VendettaHighlights() {
         @supports (background-image: url("/images/vendetta-highlights-kit/flightcase-texture.avif")) {
           .vendetta-highlights-surface {
             background-image:
-              linear-gradient(90deg, rgba(0,0,0,0.5), rgba(0,0,0,0.15) 18%, rgba(0,0,0,0.15) 82%, rgba(0,0,0,0.5)),
+              linear-gradient(90deg, rgba(0,0,0,0.65), rgba(0,0,0,0.2) 18%, rgba(0,0,0,0.2) 82%, rgba(0,0,0,0.65)),
               url("/images/vendetta-highlights-kit/flightcase-texture.avif");
           }
         }
@@ -55,10 +55,17 @@ export function VendettaHighlights() {
       {/* 
         Flight Case Container
       */}
-      <div className="w-full vendetta-highlights-surface h-[440px] lg:h-[320px] relative max-w-[1440px] mx-auto select-none overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.98)]">
+      <div className="w-full vendetta-highlights-surface h-[440px] lg:h-[320px] relative max-w-[1440px] mx-auto select-none overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.98)] border-y border-[#121416]">
         
         {/* Vignette Shadow Overlay (deep 3D lighting vignette) */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_20%,rgba(0,0,0,0.85)_100%)] pointer-events-none z-10" />
+
+        {/* 3D Atmospheric Lighting Glows from the Designer's Render */}
+        {/* Top-Left Red Stage Light Glow */}
+        <div className="absolute top-0 left-0 w-[400px] h-[300px] bg-[radial-gradient(circle_at_0%_0%,rgba(227,27,35,0.45)_0%,rgba(227,27,35,0.1)_40%,transparent_70%)] pointer-events-none z-20" />
+        
+        {/* Blue Indicator Light Glow at bottom right */}
+        <div className="absolute bottom-[20px] right-[120px] w-[180px] h-[180px] bg-[radial-gradient(circle_at_center,rgba(39,151,255,0.35)_0%,rgba(39,151,255,0.08)_45%,transparent_75%)] pointer-events-none z-20" />
 
         {/* --- DESKTOP VECTOR VIEWPORT (viewBox 0 0 1200 360) --- */}
         <div className="hidden lg:block w-full h-full relative z-20">
@@ -78,13 +85,19 @@ export function VendettaHighlights() {
               </linearGradient>
 
               {/* 
-                Drop Shadow Filters for realistic 3D depth
+                UserSpaceOnUse Distressed Stencil Filter
+                - Solves browser low-res scaling/blurriness bug.
+                - Renders pin-sharp, high-DPI cracks and wear directly on text vectors.
               */}
-              <filter id="shadow-text" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="1" dy="2" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.8"/>
-              </filter>
-              <filter id="shadow-panel" x="-15%" y="-15%" width="130%" height="130%">
-                <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor="#000000" floodOpacity="0.75"/>
+              <filter id="stencil-grunge" filterUnits="userSpaceOnUse" x="0" y="0" width="1200" height="360">
+                <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise"/>
+                <feColorMatrix type="matrix" values="
+                  1 0 0 0 0
+                  1 0 0 0 0
+                  1 0 0 0 0
+                  1.75 0 0 0 -0.42
+                " result="alpha-mask"/>
+                <feComposite operator="in" in="SourceGraphic" in2="alpha-mask"/>
               </filter>
 
               {/* Metal Plug Pointing Right (Tip on right) */}
@@ -106,6 +119,12 @@ export function VendettaHighlights() {
                   <path d="M73 12h15v26H73z" fill="#B5121B"/>
                 </g>
               </g>
+
+              {/* Silver circular socket ring */}
+              <g id="jack-socket">
+                <circle cx="0" cy="0" r="7" fill="#17191B" stroke="#7A7E81" strokeWidth="2"/>
+                <circle cx="0" cy="0" r="3.5" fill="#000"/>
+              </g>
             </defs>
 
             {/* 1. Designer's Cable Layer (Positioned behind numbers) */}
@@ -118,88 +137,96 @@ export function VendettaHighlights() {
               preserveAspectRatio="none"
             />
 
-            {/* 2. Channel micro indicators on bottom metal profile */}
+            {/* 2. Thin Vertical Separator Lines between Columns */}
+            <line x1="335" y1="65" x2="335" y2="295" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1"/>
+            <line x1="515" y1="65" x2="515" y2="295" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1"/>
+            <line x1="685" y1="65" x2="685" y2="295" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1"/>
+            <line x1="865" y1="65" x2="865" y2="295" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1"/>
+
+            {/* 3. Channels micro indicators (Below wood grain) */}
             <text x="135" y="327" fontFamily="var(--font-barlow-condensed)" fontWeight="bold" fontSize="10" fill="#626466" letterSpacing="0.18em">
               CH1   CH2   CH4   CH5   <tspan fill="#848688">CH6</tspan>   CH7   CH8
             </text>
             <circle cx="258" cy="333" r="2.5" fill="#2797ff" filter="drop-shadow(0 0 3px #2797ff)"/>
+            <circle cx="258" cy="333" r="1" fill="#fff"/>
 
-            {/* 
-              3. Statistics Panels & Texts (Perfect crisp rendering)
-              - Solid patch panels hide the continuous cable line behind them.
-              - Plugs connect physically to the sides of each panel.
-            */}
-            
-            {/* Stat 1: +500 (Peak 1 at X=238, Y_cable=137.5) */}
-            <g filter="url(#shadow-panel)">
-              <rect x="158" y="98" width="160" height="96" rx="6" fill="#151719" stroke="#3c3f42" strokeWidth="2" />
-              <rect x="164" y="104" width="148" height="84" rx="3" fill="none" stroke="#25282b" strokeWidth="1" />
-            </g>
-            <use href="#jack-plug-right-pointing" x="110" y="116"/>
-            <use href="#jack-plug-left-pointing" x="278" y="116"/>
-            <text x="238" y="152" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="56" fill="#f2efe8" filter="url(#shadow-text)">
-              <tspan fontSize="36" dy="-14">+</tspan><tspan dy="14">500</tspan>
+            {/* 4. Sockets & Plugs (Positioned directly next to the numbers) */}
+            {/* Stat 1 Plugs/Sockets (+500 at X=240, Y=138) */}
+            <use href="#jack-socket" x="178" y="138"/>
+            <use href="#jack-socket" x="302" y="138"/>
+            <use href="#jack-plug-right-pointing" x="90" y="113"/>
+            <use href="#jack-plug-left-pointing" x="302" y="113"/>
+
+            {/* Stat 2 Plugs/Sockets (+15 at X=430, Y=202) */}
+            <use href="#jack-socket" x="372" y="202"/>
+            <use href="#jack-socket" x="488" y="202"/>
+            <use href="#jack-plug-right-pointing" x="284" y="177"/>
+            <use href="#jack-plug-left-pointing" x="488" y="177"/>
+
+            {/* Stat 3 Plugs/Sockets (5 at X=600, Y=156) */}
+            <use href="#jack-socket" x="548" y="156"/>
+            <use href="#jack-socket" x="652" y="156"/>
+            <use href="#jack-plug-right-pointing" x="460" y="131"/>
+            <use href="#jack-plug-left-pointing" x="652" y="131"/>
+
+            {/* Stat 4 Plugs/Sockets (2 H at X=770, Y=206) */}
+            <use href="#jack-socket" x="712" y="206"/>
+            <use href="#jack-socket" x="828" y="206"/>
+            <use href="#jack-plug-right-pointing" x="624" y="181"/>
+            <use href="#jack-plug-left-pointing" x="828" y="181"/>
+
+            {/* Tour Level Sockets/Plugs */}
+            <use href="#jack-socket" x="908" y="173"/>
+            <use href="#jack-plug-right-pointing" x="820" y="148"/>
+
+            {/* 5. Statistics Text Layer (Printed directly on wood, with distressed stencil grunge) */}
+            {/* Stat 1: +500 */}
+            <text x="240" y="210" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="85" fill="#f2efe8" filter="url(#stencil-grunge)">
+              <tspan fontSize="45" dy="-22">+</tspan><tspan dy="22">500</tspan>
             </text>
-            <text x="238" y="180" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="700" fontSize="10" fill="#aaa8a2" letterSpacing="0.12em">
+            <text x="240" y="246" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="11" fill="#aaa8a2" letterSpacing="0.1em">
               EVENTOS REALIZADOS
             </text>
 
-            {/* Stat 2: +15 (Valley 1 at X=398, Y_cable=201.6) */}
-            <g filter="url(#shadow-panel)">
-              <rect x="318" y="162" width="160" height="96" rx="6" fill="#151719" stroke="#3c3f42" strokeWidth="2" />
-              <rect x="324" y="168" width="148" height="84" rx="3" fill="none" stroke="#25282b" strokeWidth="1" />
-            </g>
-            <use href="#jack-plug-right-pointing" x="270" y="180"/>
-            <use href="#jack-plug-left-pointing" x="438" y="180"/>
-            <text x="398" y="216" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="56" fill="#f2efe8" filter="url(#shadow-text)">
-              <tspan fontSize="36" dy="-14">+</tspan><tspan dy="14">15</tspan>
+            {/* Stat 2: +15 */}
+            <text x="430" y="210" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="85" fill="#f2efe8" filter="url(#stencil-grunge)">
+              <tspan fontSize="45" dy="-22">+</tspan><tspan dy="22">15</tspan>
             </text>
-            <text x="398" y="244" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="700" fontSize="10" fill="#aaa8a2" letterSpacing="0.12em">
+            <text x="430" y="246" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="11" fill="#aaa8a2" letterSpacing="0.1em">
               AÑOS DE EXPERIENCIA
             </text>
 
-            {/* Stat 3: 5 (Peak 2 at X=562, Y_cable=155.8) */}
-            <g filter="url(#shadow-panel)">
-              <rect x="482" y="116" width="160" height="96" rx="6" fill="#151719" stroke="#3c3f42" strokeWidth="2" />
-              <rect x="488" y="122" width="148" height="84" rx="3" fill="none" stroke="#25282b" strokeWidth="1" />
-            </g>
-            <use href="#jack-plug-right-pointing" x="434" y="134"/>
-            <use href="#jack-plug-left-pointing" x="602" y="134"/>
-            <text x="562" y="170" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="56" fill="#f2efe8" filter="url(#shadow-text)">
+            {/* Stat 3: 5 */}
+            <text x="600" y="210" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="85" fill="#f2efe8" filter="url(#stencil-grunge)">
               5
             </text>
-            <text x="562" y="198" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="700" fontSize="10" fill="#aaa8a2" letterSpacing="0.12em">
+            <text x="600" y="246" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="11" fill="#aaa8a2" letterSpacing="0.1em">
               MÚSICOS EN ESCENA
             </text>
 
-            {/* Stat 4: DESDE 2 H (Valley 2 at X=727, Y_cable=205.8) */}
-            <g filter="url(#shadow-panel)">
-              <rect x="647" y="164" width="160" height="96" rx="6" fill="#151719" stroke="#3c3f42" strokeWidth="2" />
-              <rect x="653" y="170" width="148" height="84" rx="3" fill="none" stroke="#25282b" strokeWidth="1" />
-            </g>
-            <use href="#jack-plug-right-pointing" x="599" y="182"/>
-            <use href="#jack-plug-left-pointing" x="767" y="182"/>
-            <text x="727" y="190" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="9" fill="rgba(242,239,232,0.4)" letterSpacing="0.12em">
+            {/* Stat 4: DESDE 2 H */}
+            <text x="770" y="125" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="11" fill="rgba(242,239,232,0.4)" letterSpacing="0.12em">
               DESDE
             </text>
-            <text x="727" y="232" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="48" fill="#f2efe8" filter="url(#shadow-text)">
-              2<tspan fontSize="36" dx="2">H</tspan>
+            <text x="770" y="210" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="85" fill="#f2efe8" filter="url(#stencil-grunge)">
+              2<tspan fontSize="55" dx="2">H</tspan>
             </text>
-            <text x="727" y="248" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="700" fontSize="9.5" fill="#aaa8a2" letterSpacing="0.12em">
+            <text x="770" y="246" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="11" fill="#aaa8a2" letterSpacing="0.1em">
               DE SHOW EN VIVO
             </text>
 
-            {/* 4. Sello / Text inside Plate (Aligned with the plate at X=920-1140, Y=108-238) */}
-            <use href="#jack-plug-left-pointing" x="842" y="148" />
-            <text x="1030" y="165" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="24" fill="#ffffff" filter="url(#shadow-text)" letterSpacing="0.02em">
-              TOUR LEVEL
-            </text>
-            <text x="1030" y="190" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="9.5" fill="#e31b23" filter="url(#shadow-text)" letterSpacing="0.12em">
+            {/* 6. TOUR LEVEL Stencil Paint (Printed directly on wood, to the left of the handle dish) */}
+            <g filter="url(#stencil-grunge)">
+              <rect x="888" y="105" width="136" height="110" fill="none" stroke="#f2efe8" strokeWidth="4.5" strokeDasharray="30 2 10 3 20 2" />
+              <text x="956" y="148" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="32" fill="#f2efe8">TOUR</text>
+              <text x="956" y="188" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="32" fill="#f2efe8">LEVEL</text>
+            </g>
+            <text x="956" y="242" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="11" fill="#e31b23" letterSpacing="0.1em">
               PRODUCCIÓN DE GIRA
             </text>
-            <line x1="1005" y1="205" x2="1055" y2="205" stroke="#e31b23" strokeWidth="2.5"/>
+            <line x1="916" y1="254" x2="996" y2="254" stroke="#e31b23" strokeWidth="2"/>
 
-            {/* 5. Metallic Frame Overlay (Covers viewport, providing profiles, brackets, rivets) */}
+            {/* 7. Metallic Frame Overlay (Covers viewport, providing profiles, brackets, rivets) */}
             <image 
               href="/images/vendetta-highlights-kit/flightcase-hardware.svg" 
               x="0" 
@@ -210,27 +237,27 @@ export function VendettaHighlights() {
               pointerEvents="none"
             />
 
-            {/* 6. Recessed Handles & Tape Details (Positioned outside hardware profiles) */}
-            {/* Left recessed handle */}
-            <g transform="translate(30 110)">
-              <rect width="48" height="140" rx="8" fill="#131517" stroke="#55595D" strokeWidth="2" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.6))"/>
-              <rect x="7" y="15" width="34" height="110" rx="4" fill="#000" />
-              <rect x="20" y="25" width="8" height="90" rx="4" fill="url(#metal-plug-grad)" stroke="#1d1f21" strokeWidth="1"/>
-              <circle cx="7" cy="7" r="1.5" fill="#74777b"/>
-              <circle cx="41" cy="7" r="1.5" fill="#74777b"/>
-              <circle cx="7" cy="133" r="1.5" fill="#74777b"/>
-              <circle cx="41" cy="133" r="1.5" fill="#74777b"/>
+            {/* 8. Recessed Handles (Fotorrealistic left and right steel dishes with grip bars) */}
+            {/* Left recessed handle (Symmetric replica of the right one) */}
+            <g transform="translate(60 108)" pointerEvents="none">
+              <rect width="220" height="130" rx="8" fill="#151719" stroke="url(#metal-plug-grad)" strokeWidth="5"/>
+              <rect x="13" y="13" width="194" height="104" rx="3" fill="none" stroke="#55595D" strokeWidth="1.5"/>
+              {/* Corner Dish Rivets */}
+              <circle cx="22" cy="22" r="5" fill="#777B7F" stroke="#121416" strokeWidth="0.5"/>
+              <circle cx="198" cy="22" r="5" fill="#777B7F" stroke="#121416" strokeWidth="0.5"/>
+              <circle cx="22" cy="108" r="5" fill="#777B7F" stroke="#121416" strokeWidth="0.5"/>
+              <circle cx="198" cy="108" r="5" fill="#777B7F" stroke="#121416" strokeWidth="0.5"/>
+              
+              {/* Recessed Grip bar handle */}
+              <rect x="40" y="30" width="140" height="70" rx="6" fill="#0c0d0e" />
+              <rect x="50" y="60" width="120" height="10" rx="5" fill="url(#metal-plug-grad)" stroke="#111" strokeWidth="1"/>
             </g>
 
-            {/* Right recessed handle */}
-            <g transform="translate(1122 110)">
-              <rect width="48" height="140" rx="8" fill="#131517" stroke="#55595D" strokeWidth="2" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.6))"/>
-              <rect x="7" y="15" width="34" height="110" rx="4" fill="#000" />
-              <rect x="20" y="25" width="8" height="90" rx="4" fill="url(#metal-plug-grad)" stroke="#1d1f21" strokeWidth="1"/>
-              <circle cx="7" cy="7" r="1.5" fill="#74777b"/>
-              <circle cx="41" cy="7" r="1.5" fill="#74777b"/>
-              <circle cx="7" cy="133" r="1.5" fill="#74777b"/>
-              <circle cx="41" cy="133" r="1.5" fill="#74777b"/>
+            {/* Right recessed handle (Inside the hardware SVG dish) */}
+            <g transform="translate(920 108)" pointerEvents="none">
+              {/* Recessed Grip bar handle */}
+              <rect x="40" y="30" width="140" height="70" rx="6" fill="#0c0d0e" />
+              <rect x="50" y="60" width="120" height="10" rx="5" fill="url(#metal-plug-grad)" stroke="#111" strokeWidth="1"/>
             </g>
 
             {/* Red Duct Tape (Vector paths inside the SVG for perfect blending) */}
@@ -289,70 +316,58 @@ export function VendettaHighlights() {
               preserveAspectRatio="none"
             />
 
-            {/* 2. Stats Rows with solid background panels to hide the mobile cable */}
+            {/* 2. Separators on mobile */}
+            <line x1="240" y1="40" x2="240" y2="180" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1"/>
+            <line x1="480" y1="40" x2="480" y2="180" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1"/>
+            <line x1="360" y1="210" x2="360" y2="380" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1"/>
+
+            {/* 3. Mobile Statistics Text Layer with userSpaceOnUse filter */}
             {/* Stat 1: +500 */}
-            <g filter="url(#shadow-panel)">
-              <rect x="35" y="55" width="180" height="110" rx="6" fill="#151719" stroke="#3c3f42" strokeWidth="2"/>
-            </g>
-            <text x="125" y="112" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="48" fill="#f2efe8" filter="url(#shadow-text)">
-              <tspan fontSize="30" dy="-12">+</tspan><tspan dy="12">500</tspan>
+            <text x="120" y="112" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="56" fill="#f2efe8" filter="url(#stencil-grunge)">
+              <tspan fontSize="32" dy="-14">+</tspan><tspan dy="14">500</tspan>
             </text>
-            <text x="125" y="142" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="700" fontSize="9" fill="#aaa8a2" letterSpacing="0.1em">
+            <text x="120" y="142" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="9" fill="#aaa8a2" letterSpacing="0.1em">
               EVENTOS REALIZADOS
             </text>
 
             {/* Stat 2: +15 */}
-            <g filter="url(#shadow-panel)">
-              <rect x="270" y="55" width="180" height="110" rx="6" fill="#151719" stroke="#3c3f42" strokeWidth="2"/>
-            </g>
-            <text x="360" y="112" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="48" fill="#f2efe8" filter="url(#shadow-text)">
-              <tspan fontSize="30" dy="-12">+</tspan><tspan dy="12">15</tspan>
+            <text x="360" y="112" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="56" fill="#f2efe8" filter="url(#stencil-grunge)">
+              <tspan fontSize="32" dy="-14">+</tspan><tspan dy="14">15</tspan>
             </text>
-            <text x="360" y="142" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="700" fontSize="9" fill="#aaa8a2" letterSpacing="0.1em">
+            <text x="360" y="142" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="9" fill="#aaa8a2" letterSpacing="0.1em">
               AÑOS DE EXPERIENCIA
             </text>
 
             {/* Stat 3: 5 */}
-            <g filter="url(#shadow-panel)">
-              <rect x="505" y="55" width="180" height="110" rx="6" fill="#151719" stroke="#3c3f42" strokeWidth="2"/>
-            </g>
-            <text x="595" y="112" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="48" fill="#f2efe8" filter="url(#shadow-text)">
+            <text x="600" y="112" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="56" fill="#f2efe8" filter="url(#stencil-grunge)">
               5
             </text>
-            <text x="595" y="142" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="700" fontSize="9" fill="#aaa8a2" letterSpacing="0.1em">
-              MÚCOS EN ESCENA
+            <text x="600" y="142" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="9" fill="#aaa8a2" letterSpacing="0.1em">
+              MÚSICOS EN ESCENA
             </text>
 
             {/* Stat 4: DESDE 2 H */}
-            <g filter="url(#shadow-panel)">
-              <rect x="120" y="220" width="180" height="120" rx="6" fill="#151719" stroke="#3c3f42" strokeWidth="2"/>
-            </g>
-            <text x="210" y="255" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="10" fill="rgba(242,239,232,0.4)" letterSpacing="0.12em">
+            <text x="180" y="255" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="10" fill="rgba(242,239,232,0.4)" letterSpacing="0.12em">
               DESDE
             </text>
-            <text x="210" y="295" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="48" fill="#f2efe8" filter="url(#shadow-text)">
-              2<tspan fontSize="36" dx="2">H</tspan>
+            <text x="180" y="315" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="56" fill="#f2efe8" filter="url(#stencil-grunge)">
+              2<tspan fontSize="42" dx="2">H</tspan>
             </text>
-            <text x="210" y="318" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="700" fontSize="9" fill="#aaa8a2" letterSpacing="0.1em">
+            <text x="180" y="342" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="9" fill="#aaa8a2" letterSpacing="0.1em">
               DE SHOW EN VIVO
             </text>
 
-            {/* Mobile Plate Box */}
-            <g transform="translate(390 220)" filter="url(#shadow-panel)">
-              <rect width="210" height="120" rx="8" fill="#151719" stroke="url(#metal-grad-mob)" strokeWidth="4"/>
-              <rect x="10" y="10" width="190" height="100" rx="3" fill="none" stroke="#55595D" strokeWidth="1.5"/>
-              <circle cx="18" cy="18" r="4" fill="url(#rivet-grad-mob)" stroke="#121416" strokeWidth="0.5"/>
-              <circle cx="192" cy="18" r="4" fill="url(#rivet-grad-mob)" stroke="#121416" strokeWidth="0.5"/>
-              <circle cx="18" cy="102" r="4" fill="url(#rivet-grad-mob)" stroke="#121416" strokeWidth="0.5"/>
-              <circle cx="192" cy="102" r="4" fill="url(#rivet-grad-mob)" stroke="#121416" strokeWidth="0.5"/>
-              
-              <text x="105" y="58" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="23" fill="#ffffff" filter="url(#shadow-text)" letterSpacing="0.02em">
-                TOUR LEVEL
-              </text>
-              <text x="105" y="82" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="9.5" fill="#e31b23" filter="url(#shadow-text)" letterSpacing="0.12em">
+            {/* Mobile Tour Level Stencil Paint */}
+            <g transform="translate(440 230)">
+              <g filter="url(#stencil-grunge)">
+                <rect width="130" height="96" fill="none" stroke="#f2efe8" strokeWidth="4.5" strokeDasharray="30 2 10 3 20 2" />
+                <text x="65" y="40" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="28" fill="#f2efe8">TOUR</text>
+                <text x="65" y="75" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="28" fill="#f2efe8">LEVEL</text>
+              </g>
+              <text x="65" y="120" textAnchor="middle" fontFamily="var(--font-barlow-condensed)" fontWeight="900" fontSize="10" fill="#e31b23" letterSpacing="0.1em">
                 PRODUCCIÓN DE GIRA
               </text>
-              <line x1="85" y1="94" x2="125" y2="94" stroke="#e31b23" strokeWidth="2"/>
+              <line x1="25" y1="130" x2="105" y2="130" stroke="#e31b23" strokeWidth="2"/>
             </g>
 
             {/* 3. Mobile Borders & Rivets */}
@@ -383,7 +398,7 @@ export function VendettaHighlights() {
             <circle cx="540" cy="8" r="5" fill="url(#rivet-grad-mob)"/>
 
             <circle cx="180" cy="432" r="5" fill="url(#rivet-grad-mob)"/>
-            <circle cx="360" cy="432" r="5" fill="url(#rivet-grad-mob)"/>
+            <circle cx="360" cy="432" r="5" fill="url(--metal-plug-grad)"/>
             <circle cx="540" cy="432" r="5" fill="url(#rivet-grad-mob)"/>
 
             {/* Red Duct Tape Mobile */}
