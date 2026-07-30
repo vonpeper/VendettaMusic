@@ -2,15 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 
-interface HighlightItem {
-  id: string;
-  value: string;
-  valueRender: React.ReactNode;
-  label: string;
-  prefix?: string;
-  leftPercent: string; // Center X of the column
-}
-
 export function VendettaHighlights() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isIntersected, setIsIntersected] = useState(false);
@@ -33,50 +24,6 @@ export function VendettaHighlights() {
     return () => observer.disconnect();
   }, []);
 
-  const highlights: HighlightItem[] = [
-    { 
-      id: "events", 
-      value: "+500", 
-      valueRender: (
-        <>
-          <span className="text-[0.55em] align-super mr-0.5 font-bold select-none text-white/90">+</span>500
-        </>
-      ),
-      label: "EVENTOS REALIZADOS", 
-      leftPercent: "18.05%" 
-    },
-    { 
-      id: "experience", 
-      value: "+15", 
-      valueRender: (
-        <>
-          <span className="text-[0.55em] align-super mr-0.5 font-bold select-none text-white/90">+</span>15
-        </>
-      ),
-      label: "AÑOS DE EXPERIENCIA", 
-      leftPercent: "34.02%" 
-    },
-    { 
-      id: "musicians", 
-      value: "5", 
-      valueRender: <>5</>,
-      label: "MÚSICOS EN ESCENA", 
-      leftPercent: "50.0%" 
-    },
-    { 
-      id: "show", 
-      value: "2 H", 
-      valueRender: (
-        <>
-          2<span className="text-[0.7em] ml-1 font-black text-white/95">H</span>
-        </>
-      ),
-      label: "DE SHOW EN VIVO", 
-      prefix: "DESDE", 
-      leftPercent: "65.97%" 
-    },
-  ];
-
   return (
     <section 
       ref={containerRef}
@@ -84,14 +31,14 @@ export function VendettaHighlights() {
       aria-label="Estadísticas de la Gira Vendetta"
     >
       {/* 
-        Main Flight Case Container
+        Main Flight Case Wrapper
         - Uses the flightcase wood-leather texture.
         - Adds a dramatic vignette gradient for deep 3D shading.
       */}
-      <div className="w-full vendetta-case-surface h-[440px] lg:h-[320px] relative max-w-[1440px] mx-auto select-none overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.95)]">
+      <div className="w-full vendetta-case-surface h-[440px] lg:h-[320px] relative max-w-[1440px] mx-auto select-none overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.98)]">
         
         {/* Vignette Shadow Overlay (dramatic studio lighting) */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.1)_0%,rgba(0,0,0,0.85)_100%)] pointer-events-none z-10" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.05)_0%,rgba(0,0,0,0.85)_100%)] pointer-events-none z-10" />
 
         {/* --- 3D METALLIC BEZEL FRAME (Top, Bottom, Left, Right profiles) --- */}
         
@@ -202,40 +149,65 @@ export function VendettaHighlights() {
 
         {/* Top Left Red Tape */}
         <div 
-          className="absolute left-[135px] top-[26px] w-[130px] h-[36px] bg-[#C80F1A]/85 backdrop-blur-[0.5px] border border-red-800/40 shadow-md transform -rotate-[9deg] z-40 pointer-events-none select-none opacity-90 mix-blend-multiply hidden lg:block"
+          className="absolute left-[135px] top-[26px] w-[130px] h-[36px] bg-[#9F0D15]/85 backdrop-blur-[0.5px] border border-red-950/40 shadow-md transform -rotate-[9deg] z-40 pointer-events-none select-none opacity-90 mix-blend-multiply hidden lg:block"
           style={{
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.06), rgba(0,0,0,0.18))",
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.05), rgba(0,0,0,0.2))",
             clipPath: "polygon(2% 6%, 98% 2%, 96% 94%, 3% 97%)"
           }}
           aria-hidden="true"
         />
         {/* Bottom Right Red Tape */}
         <div 
-          className="absolute right-[220px] bottom-[30px] w-[160px] h-[40px] bg-[#C80F1A]/85 backdrop-blur-[0.5px] border border-red-800/40 shadow-md transform -rotate-[5deg] z-40 pointer-events-none select-none opacity-95 mix-blend-multiply"
+          className="absolute right-[220px] bottom-[30px] w-[160px] h-[40px] bg-[#9F0D15]/85 backdrop-blur-[0.5px] border border-red-950/40 shadow-md transform -rotate-[5deg] z-40 pointer-events-none select-none opacity-95 mix-blend-multiply"
           style={{
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.06), rgba(0,0,0,0.18))",
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.05), rgba(0,0,0,0.2))",
             clipPath: "polygon(3% 2%, 97% 6%, 99% 91%, 1% 94%)"
           }}
           aria-hidden="true"
         />
 
 
-        {/* --- CABLES (Custom 5-Peak Bezier Path to line up with column positions) --- */}
-        
-        {/* Desktop Cable Container */}
+        {/* --- VERTICAL DIVIDER LINES (Thin Metallic Slots) --- */}
+        <div className="absolute inset-0 pointer-events-none z-20 hidden lg:block" aria-hidden="true">
+          <div className="absolute left-[26.04%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/25 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.03)]" />
+          <div className="absolute left-[42.01%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/25 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.03)]" />
+          <div className="absolute left-[57.98%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/25 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.03)]" />
+          <div className="absolute left-[73.95%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/25 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.03)]" />
+        </div>
+
+
+        {/* --- CH1-CH8 CHANNEL LABELS (Bottom Left) --- */}
         <div 
-          className="absolute left-0 right-0 h-[220px] top-[18%] z-15 hidden lg:block" 
+          className="absolute left-[110px] bottom-[28px] items-center gap-4 z-20 select-none pointer-events-none hidden lg:flex"
           aria-hidden="true"
         >
+          <div className="flex items-center gap-3 text-[10px] font-barlow font-bold text-[#626466] tracking-[0.18em]">
+            <span>CH1</span>
+            <span>CH2</span>
+            <span>CH4</span>
+            <span>CH5</span>
+            <div className="flex flex-col items-center gap-0.5 px-0.5 relative">
+              <span className="text-[#848688]">CH6</span>
+              {/* Electric blue LED signal micro-accent */}
+              <span className="w-1.5 h-1 bg-[#2797ff] shadow-[0_0_6px_#2797ff] rounded-sm" />
+            </div>
+            <span>CH7</span>
+            <span>CH8</span>
+          </div>
+        </div>
+
+
+        {/* --- DESKTOP VECTOR GRAPHICS & STATISTICS CONTAINER --- */}
+        <div className="hidden lg:block w-full h-full relative z-25">
           <svg 
             className="w-full h-full" 
-            viewBox="0 0 1440 220" 
+            viewBox="0 0 1440 320" 
             fill="none" 
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
           >
             <defs>
-              {/* Plugs Definitions */}
+              {/* SVG Plugs Definitions */}
               <g id="jack-plug-left">
                 {/* Silver Metal Tip */}
                 <rect x="0" y="-3" width="12" height="6" rx="1" fill="url(#metal-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
@@ -252,255 +224,216 @@ export function VendettaHighlights() {
                 {/* Red Band Ring Accent */}
                 <rect x="3" y="-4.5" width="3" height="9" fill="#B5121B"/>
               </g>
-              
-              <filter id="cable-shadow" x="-5%" y="-30%" width="110%" height="160%">
-                <feDropShadow dx="0" dy="7" stdDeviation="6" floodColor="#000" floodOpacity="0.8"/>
-              </filter>
-              <filter id="cable-glow" x="-10%" y="-150%" width="120%" height="400%">
-                <feGaussianBlur stdDeviation="3.5" result="blur"/>
-                <feMerge>
-                  <feMergeNode in="blur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            
-            {/* The Cable Paths (with shadow, base red, core neon glow) */}
-            <g filter="url(#cable-shadow)">
-              {/* Thick shadow base path */}
-              <path 
-                d="M 110,120 C 160,120 200,80 260,80 C 320,80 330,150 375,150 C 420,150 430,80 490,80 C 550,80 560,150 605,150 C 660,150 670,80 720,80 C 780,80 790,150 835,150 C 890,150 900,80 950,80 C 1000,80 1050,120 1090,120"
-                stroke="#1B0203" strokeWidth="13" strokeLinecap="round"
-              />
-              <path 
-                d="M 1310,120 C 1330,120 1350,120 1370,120"
-                stroke="#1B0203" strokeWidth="13" strokeLinecap="round"
-              />
-
-              {/* Base red cable path */}
-              <path 
-                d="M 110,120 C 160,120 200,80 260,80 C 320,80 330,150 375,150 C 420,150 430,80 490,80 C 550,80 560,150 605,150 C 660,150 670,80 720,80 C 780,80 790,150 835,150 C 890,150 900,80 950,80 C 1000,80 1050,120 1090,120"
-                stroke="#C80F1A" strokeWidth="8" strokeLinecap="round"
-              />
-              <path 
-                d="M 1310,120 C 1330,120 1350,120 1370,120"
-                stroke="#C80F1A" strokeWidth="8" strokeLinecap="round"
-              />
-
-              {/* Glowing inner red core */}
-              <path 
-                d="M 110,120 C 160,120 200,80 260,80 C 320,80 330,150 375,150 C 420,150 430,80 490,80 C 550,80 560,150 605,150 C 660,150 670,80 720,80 C 780,80 790,150 835,150 C 890,150 900,80 950,80 C 1000,80 1050,120 1090,120"
-                stroke="#FF3843" strokeWidth="2.5" strokeOpacity="0.6" strokeLinecap="round" filter="url(#cable-glow)"
-              />
-              <path 
-                d="M 1310,120 C 1330,120 1350,120 1370,120"
-                stroke="#FF3843" strokeWidth="2.5" strokeOpacity="0.6" strokeLinecap="round" filter="url(#cable-glow)"
-              />
 
               {/* 
-                Signal Pulse Flow Animation 
-                Only fires once when viewport triggers intersection
+                Heavy-Grunge SVG Filter Mask
+                - Uses fractalNoise to generate infinite random high-frequency grain.
+                - Color matrix bumps up contrast of alpha channel, producing sharp weathered paint flakes.
               */}
+              <filter id="heavy-grunge-filter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.18" numOctaves="4" result="noise"/>
+                <feColorMatrix type="matrix" values="
+                  1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  0 0 0 1.9 -0.92
+                " result="high-contrast-noise"/>
+                <feComposite operator="in" in2="SourceGraphic" in="high-contrast-noise"/>
+              </filter>
+
+              <filter id="cable-drop-shadow" x="-5%" y="-40%" width="110%" height="180%">
+                <feDropShadow dx="0" dy="7" stdDeviation="5" floodColor="#000" floodOpacity="0.85"/>
+              </filter>
+            </defs>
+
+            {/* --- CABLE PATHS (Matte tour-level red cable, zero gamer glow) --- */}
+            <g filter="url(#cable-drop-shadow)">
+              {/* Base red cable path (Top row / Peaks at Y=130, Valleys at Y=200) */}
               <path 
-                d="M 110,120 C 160,120 200,80 260,80 C 320,80 330,150 375,150 C 420,150 430,80 490,80 C 550,80 560,150 605,150 C 660,150 670,80 720,80 C 780,80 790,150 835,150 C 890,150 900,80 950,80 C 1000,80 1050,120 1090,120"
-                stroke="#FF4F59" strokeWidth="3" strokeLinecap="round" filter="url(#cable-glow)"
-                pathLength="100" strokeDasharray="15 100"
-                className={isIntersected ? "animate-cable-signal" : ""}
-                style={{ strokeDashoffset: 115 }}
+                d="M 110,170 C 160,170 200,130 260,130 C 320,130 330,200 375,200 C 420,200 430,130 490,130 C 550,130 560,200 605,200 C 660,200 670,130 720,130 C 780,130 790,200 835,200 C 890,200 900,130 950,130 C 1000,130 1050,170 1090,170"
+                stroke="#A80F16" strokeWidth="6.5" strokeLinecap="round"
+              />
+              {/* Small cable segment exiting the right of the plate */}
+              <path 
+                d="M 1310,170 C 1330,170 1350,170 1370,170"
+                stroke="#A80F16" strokeWidth="6.5" strokeLinecap="round"
               />
 
-              {/* --- PLUGS INSTANCED AT EACH STAT PEAK (Guarantees zero misalignment) --- */}
+              {/* Cable connectors (Jacks) plugged at each peak & plate side */}
+              <use href="#jack-plug-left" x="200" y="130"/>
+              <use href="#jack-plug-right" x="320" y="130"/>
               
-              {/* Plugs at +500 */}
-              <use href="#jack-plug-left" x="200" y="80"/>
-              <use href="#jack-plug-right" x="320" y="80"/>
+              <use href="#jack-plug-left" x="430" y="130"/>
+              <use href="#jack-plug-right" x="550" y="130"/>
 
-              {/* Plugs at +15 */}
-              <use href="#jack-plug-left" x="430" y="80"/>
-              <use href="#jack-plug-right" x="550" y="80"/>
+              <use href="#jack-plug-left" x="682" y="130"/>
+              <use href="#jack-plug-right" x="758" y="130"/>
 
-              {/* Plugs at 5 */}
-              <use href="#jack-plug-left" x="682" y="80"/>
-              <use href="#jack-plug-right" x="758" y="80"/>
+              <use href="#jack-plug-left" x="898" y="130"/>
+              <use href="#jack-plug-right" x="1002" y="130"/>
 
-              {/* Plugs at 2 H */}
-              <use href="#jack-plug-left" x="898" y="80"/>
-              <use href="#jack-plug-right" x="1002" y="80"/>
+              <use href="#jack-plug-left" x="1090" y="170"/>
+              <use href="#jack-plug-right" x="1310" y="170"/>
+            </g>
 
-              {/* Plug at left of TOUR LEVEL plate */}
-              <use href="#jack-plug-left" x="1090" y="120"/>
+            {/* --- STATISTICS NUMBERS & LABELS (Weathered vector stencils) --- */}
+            <g filter="url(#heavy-grunge-filter)">
+              
+              {/* +500 */}
+              <text x="260" y="145" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
+                <tspan fontSize="50" dy="-18">+</tspan>500
+              </text>
+              <text x="260" y="200" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
+                EVENTOS REALIZADOS
+              </text>
 
-              {/* Plug at right of TOUR LEVEL plate */}
-              <use href="#jack-plug-right" x="1310" y="120"/>
+              {/* +15 */}
+              <text x="490" y="145" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
+                <tspan fontSize="50" dy="-18">+</tspan>15
+              </text>
+              <text x="490" y="200" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
+                AÑOS DE EXPERIENCIA
+              </text>
+
+              {/* 5 */}
+              <text x="720" y="145" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
+                5
+              </text>
+              <text x="720" y="200" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
+                MÚSICOS EN ESCENA
+              </text>
+
+              {/* 2 H */}
+              <text x="950" y="94" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="rgba(255,255,255,0.4)" letterSpacing="0.15em">
+                DESDE
+              </text>
+              <text x="950" y="145" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="76" fill="#e8e6e0" letterSpacing="-0.04em">
+                2<tspan fontSize="60" dx="2">H</tspan>
+              </text>
+              <text x="950" y="200" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="12" fill="#afb3b6" letterSpacing="0.18em">
+                DE SHOW EN VIVO
+              </text>
+
+              {/* TOUR LEVEL PLATE (Grounded design, no blinking dashboard lights) */}
+              <g transform="translate(1090 95)">
+                {/* Plate base */}
+                <rect width="220" height="130" rx="6" fill="#151719" stroke="url(#metal-grad-hard)" strokeWidth="4"/>
+                <rect x="7" y="7" width="206" height="116" rx="3" fill="none" stroke="#55595D" strokeWidth="1.5"/>
+                {/* Metal corner rivets */}
+                <circle cx="14" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
+                <circle cx="206" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
+                <circle cx="14" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
+                <circle cx="206" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
+                
+                {/* Plate Titles */}
+                <text x="110" y="65" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="28" fill="#ffffff" letterSpacing="0.02em">
+                  TOUR LEVEL
+                </text>
+                <text x="110" y="90" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="11" fill="#e31b23" letterSpacing="0.12em">
+                  PRODUCCIÓN DE GIRA
+                </text>
+                <line x1="90" y1="105" x2="130" y2="105" stroke="#e31b23" strokeWidth="2"/>
+              </g>
+
             </g>
           </svg>
         </div>
 
 
-        {/* --- VERTICAL DIVIDER LINES (Thin Metallic Slots) --- */}
-        <div className="absolute inset-0 pointer-events-none z-20 hidden lg:block" aria-hidden="true">
-          <div className="absolute left-[26.04%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/30 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.03)]" />
-          <div className="absolute left-[42.01%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/30 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.03)]" />
-          <div className="absolute left-[57.98%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/30 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.03)]" />
-          <div className="absolute left-[73.95%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/30 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.03)]" />
-        </div>
+        {/* --- MOBILE VECTOR LAYOUT (Organized 2-row vector SVG) --- */}
+        <div className="lg:hidden w-full h-full relative z-25">
+          <svg 
+            className="w-full h-full" 
+            viewBox="0 0 720 440" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+          >
+            {/* Reuses same filters inside SVG */}
+            <g filter="url(#cable-drop-shadow)">
+              {/* Mobile cable path - loops from Top Row to Bottom Row organically */}
+              <path 
+                d="M 30,90 C 60,90 90,60 120,60 C 150,60 210,110 240,110 C 270,110 330,60 360,60 C 390,60 450,110 480,110 C 510,110 570,60 600,60 C 660,60 695,110 660,160 C 620,210 300,160 220,210 C 140,260 270,300 305,300 C 330,300 350,280 390,280"
+                stroke="#A80F16" strokeWidth="6.5" strokeLinecap="round"
+              />
+              <path 
+                d="M 610,280 C 630,280 670,280 690,280"
+                stroke="#A80F16" strokeWidth="6.5" strokeLinecap="round"
+              />
 
+              {/* Jacks plugs for Mobile */}
+              <use href="#jack-plug-left" x="70" y="60"/>
+              <use href="#jack-plug-right" x="170" y="60"/>
 
-        {/* --- CH1-CH8 CHANNEL LABELS (Bottom Left) --- */}
-        <div 
-          className="absolute left-[110px] bottom-[28px] items-center gap-4 z-20 select-none pointer-events-none hidden lg:flex"
-          aria-hidden="true"
-        >
-          <div className="flex items-center gap-3 text-[10px] font-barlow font-bold text-[#727578] tracking-[0.18em]">
-            <span>CH1</span>
-            <span>CH2</span>
-            <span>CH4</span>
-            <span>CH5</span>
-            <div className="flex flex-col items-center gap-0.5 px-0.5 relative">
-              <span className="text-[#96999b]">CH6</span>
-              {/* Electric blue LED signal micro-accent */}
-              <span className="w-1.5 h-1 bg-[#2797ff] shadow-[0_0_6px_#2797ff] rounded-sm" />
-            </div>
-            <span>CH7</span>
-            <span>CH8</span>
-          </div>
-        </div>
+              <use href="#jack-plug-left" x="310" y="60"/>
+              <use href="#jack-plug-right" x="410" y="60"/>
 
+              <use href="#jack-plug-left" x="550" y="60"/>
+              <use href="#jack-plug-right" x="650" y="60"/>
 
-        {/* --- DESKTOP STATISTICS (Absolutely positioned to match peaks exactly) --- */}
-        <div className="hidden lg:block w-full h-full relative z-25">
-          <ul className="w-full h-full relative">
-            {highlights.map((item) => (
-              <li 
-                key={item.id}
-                style={{ left: item.leftPercent }}
-                className="absolute top-[44%] -translate-y-1/2 -translate-x-1/2 flex flex-col items-center text-center select-none"
-              >
-                {/* Prefix Label (like DESDE) */}
-                {item.prefix && (
-                  <span className="font-barlow font-black text-xs text-white/40 tracking-[0.15em] uppercase leading-none mb-1.5">
-                    {item.prefix}
-                  </span>
-                )}
+              <use href="#jack-plug-left" x="160" y="210"/>
+              <use href="#jack-plug-right" x="280" y="210"/>
+
+              <use href="#jack-plug-left" x="390" y="280"/>
+              <use href="#jack-plug-right" x="610" y="280"/>
+            </g>
+
+            {/* Mobile weather stencils */}
+            <g filter="url(#heavy-grunge-filter)">
+              
+              {/* Row 1 Stats */}
+              <text x="120" y="70" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
+                <tspan fontSize="30" dy="-10">+</tspan>500
+              </text>
+              <text x="120" y="110" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
+                EVENTOS REALIZADOS
+              </text>
+
+              <text x="360" y="70" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
+                <tspan fontSize="30" dy="-10">+</tspan>15
+              </text>
+              <text x="360" y="110" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
+                AÑOS DE EXPERIENCIA
+              </text>
+
+              <text x="600" y="70" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
+                5
+              </text>
+              <text x="600" y="110" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
+                MÚSICOS EN ESCENA
+              </text>
+
+              {/* Row 2 Stats */}
+              <text x="220" y="174" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="10" fill="rgba(255,255,255,0.4)" letterSpacing="0.12em">
+                DESDE
+              </text>
+              <text x="220" y="220" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="48" fill="#e8e6e0" letterSpacing="-0.04em">
+                2<tspan fontSize="38" dx="2">H</tspan>
+              </text>
+              <text x="220" y="252" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="9" fill="#afb3b6" letterSpacing="0.1em">
+                DE SHOW EN VIVO
+              </text>
+
+              {/* Mobile custom Tour Level Plate */}
+              <g transform="translate(390 215)">
+                <rect width="220" height="130" rx="6" fill="#151719" stroke="url(#metal-grad-hard)" strokeWidth="4"/>
+                <rect x="7" y="7" width="206" height="116" rx="3" fill="none" stroke="#55595D" strokeWidth="1.5"/>
+                <circle cx="14" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" strokeWidth="0.5"/>
+                <circle cx="206" cy="14" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
+                <circle cx="14" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
+                <circle cx="206" cy="116" r="3.5" fill="url(#rivet-grad-hard)" stroke="#121416" stroke-width="0.5"/>
                 
-                {/* Giant Weathered Numbers */}
-                <span className="font-barlow font-black text-[#e8e6e0] leading-none tracking-tighter text-[5.8rem] xl:text-[6.8rem] distress-effect block select-none">
-                  {item.valueRender}
-                </span>
-
-                {/* Stat Title */}
-                <span className="font-barlow font-black text-[12px] xl:text-[13px] text-[#afb3b6] tracking-[0.16em] uppercase leading-none mt-4 select-none">
-                  {item.label}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-
-        {/* --- FIXED TOUR LEVEL PLATE (Absolutely positioned on the right panel) --- */}
-        <div 
-          className="absolute hidden lg:flex right-[102px] top-1/2 -translate-y-1/2 w-[220px] h-[130px] rounded-lg bg-[#191B1D] border-4 border-[#777B7F] shadow-2xl z-25 p-3 select-none flex-col items-center justify-center"
-          aria-hidden="true"
-        >
-          {/* Plate corner rivets */}
-          <span className="absolute top-1 left-1.5 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#D4D5D1] via-[#777B7E] to-[#202326] border border-black/50" />
-          <span className="absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#D4D5D1] via-[#777B7E] to-[#202326] border border-black/50" />
-          <span className="absolute bottom-1 left-1.5 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#D4D5D1] via-[#777B7E] to-[#202326] border border-black/50" />
-          <span className="absolute bottom-1 right-1.5 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#D4D5D1] via-[#777B7E] to-[#202326] border border-black/50" />
-          
-          {/* Inner decorative border */}
-          <div className="absolute inset-1.5 border border-[#676B6E] rounded-md pointer-events-none" />
-          
-          {/* LEDs at top-right */}
-          <div className="flex items-center gap-3 mb-1.5 z-10">
-            <div className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse shadow-[0_0_6px_#e31b23]" />
-              <span className="text-[8px] font-barlow font-bold tracking-widest text-[#aaa8a2]">LIVE</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2797ff] shadow-[0_0_6px_#2797ff]" />
-              <span className="text-[8px] font-barlow font-bold tracking-widest text-[#aaa8a2]">SIGNAL</span>
-            </div>
-          </div>
-          
-          {/* Plate Text */}
-          <span className="font-barlow font-black text-white text-2xl tracking-tight leading-none uppercase distress-effect z-10">
-            TOUR LEVEL
-          </span>
-          <span className="font-barlow font-bold text-[#e31b23] text-[9px] tracking-wider uppercase mt-1 leading-none z-10">
-            PRODUCCIÓN DE GIRA
-          </span>
-          <div className="w-8 h-[2px] bg-[#e31b23] mt-2.5 z-10" />
-        </div>
-
-
-        {/* --- MOBILE LAYOUT (2 Rows, clean proportions) --- */}
-        <div className="lg:hidden flex flex-col justify-between w-full h-full relative z-25 px-6 py-12">
-          
-          {/* Top Row: +500, +15, 5 */}
-          <ul className="grid grid-cols-3 gap-2 w-full pt-4">
-            {highlights.slice(0, 3).map((item) => (
-              <li key={item.id} className="flex flex-col items-center text-center">
-                <span className="font-barlow font-black text-4xl sm:text-5xl text-white leading-none tracking-tighter distress-effect">
-                  {item.value}
-                </span>
-                <span className="font-barlow font-bold text-[9px] sm:text-[10px] text-white/80 tracking-wider uppercase mt-2.5 leading-tight">
-                  {item.label}
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          {/* Bottom Row: DESDE 2 H, TOUR LEVEL Plate */}
-          <div className="grid grid-cols-2 gap-4 w-full items-center pb-4">
-            
-            {/* DESDE 2 H Column */}
-            <div className="flex flex-col items-center text-center pl-4">
-              <span className="font-barlow font-bold text-[10px] sm:text-xs text-white/50 tracking-wider leading-none uppercase">
-                {highlights[3].prefix}
-              </span>
-              <span className="font-barlow font-black text-4xl sm:text-5xl text-white leading-none tracking-tighter distress-effect">
-                {highlights[3].value}
-              </span>
-              <span className="font-barlow font-bold text-[9px] sm:text-[10px] text-primary tracking-widest uppercase mt-2.5 leading-tight">
-                {highlights[3].label}
-              </span>
-            </div>
-
-            {/* TOUR LEVEL Custom Plate Column */}
-            <div className="flex justify-center pr-4">
-              <div className="w-[150px] h-[86px] rounded-lg bg-[#191B1D] border-2 border-[#55595D] flex flex-col items-center justify-center p-2 relative shadow-inner">
-                {/* Rivets on plate corners */}
-                <span className="absolute top-1 left-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
-                <span className="absolute top-1 right-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
-                <span className="absolute bottom-1 left-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
-                <span className="absolute bottom-1 right-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
-                
-                {/* LEDs */}
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="flex items-center gap-0.5">
-                    <span className="w-1 h-1 rounded-full bg-red-600 animate-pulse" />
-                    <span className="text-[6px] font-barlow font-bold tracking-widest text-[#aaa8a2]">LIVE</span>
-                  </div>
-                  <div className="flex items-center gap-0.5">
-                    <span className="w-1 h-1 rounded-full bg-[#2797ff]" />
-                    <span className="text-[6px] font-barlow font-bold tracking-widest text-[#aaa8a2]">SIGNAL</span>
-                  </div>
-                </div>
-                {/* Plate Title */}
-                <div className="font-barlow font-black text-white text-xs tracking-tight leading-none uppercase">
+                <text x="110" y="65" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="28" fill="#ffffff" letterSpacing="0.02em">
                   TOUR LEVEL
-                </div>
-                {/* Plate Subtitle */}
-                <div className="font-barlow font-bold text-primary text-[7px] tracking-wider uppercase mt-1 leading-none">
+                </text>
+                <text x="110" y="90" textAnchor="middle" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" fontSize="11" fill="#e31b23" letterSpacing="0.12em">
                   PRODUCCIÓN DE GIRA
-                </div>
-              </div>
-            </div>
+                </text>
+                <line x1="90" y1="105" x2="130" y2="105" stroke="#e31b23" strokeWidth="2"/>
+              </g>
 
-          </div>
-
+            </g>
+          </svg>
         </div>
 
       </div>
