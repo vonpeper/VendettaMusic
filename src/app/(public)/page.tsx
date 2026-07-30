@@ -10,7 +10,7 @@ import { VideoSection } from "@/components/public/VideoSection"
 import { PhotoGallery } from "@/components/public/PhotoGallery"
 import { NeonBorder } from "@/components/public/NeonBorder"
 import { WhatsAppButton } from "@/components/public/WhatsAppButton"
-import { VendettaHighlights } from "@/components/public/VendettaHighlights"
+import { VendettaExperience } from "@/components/public/VendettaExperience"
 import { Suspense } from "react"
 import Image from "next/image"
 import { db } from "@/lib/db"
@@ -158,8 +158,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* -- VENDETTA HIGHLIGHTS ------------------------------------------- */}
-      <VendettaHighlights />
+      {/* -- VENDETTA EXPERIENCE ------------------------------------------- */}
+      <VendettaExperience />
 
       {/* -- PAQUETES ------------------------------------------------------- */}
       <PaquetesSection 
