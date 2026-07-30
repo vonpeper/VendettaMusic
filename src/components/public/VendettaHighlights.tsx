@@ -7,6 +7,7 @@ interface HighlightItem {
   value: string;
   label: string;
   prefix?: string;
+  leftPercent: string; // Absolute position of column center on desktop
 }
 
 export function VendettaHighlights() {
@@ -32,10 +33,10 @@ export function VendettaHighlights() {
   }, []);
 
   const highlights: HighlightItem[] = [
-    { id: "events", value: "+500", label: "EVENTOS REALIZADOS" },
-    { id: "experience", value: "+15", label: "AÑOS DE EXPERIENCIA" },
-    { id: "musicians", value: "5", label: "MÚSICOS EN ESCENA" },
-    { id: "show", value: "2 H", label: "DE SHOW EN VIVO", prefix: "DESDE" },
+    { id: "events", value: "+500", label: "EVENTOS REALIZADOS", leftPercent: "18.25%" },
+    { id: "experience", value: "+15", label: "AÑOS DE EXPERIENCIA", leftPercent: "34.75%" },
+    { id: "musicians", value: "5", label: "MÚSICOS EN ESCENA", leftPercent: "51.25%" },
+    { id: "show", value: "2 H", label: "DE SHOW EN VIVO", prefix: "DESDE", leftPercent: "67.75%" },
   ];
 
   return (
@@ -45,9 +46,9 @@ export function VendettaHighlights() {
       aria-label="Estadísticas e Highlights de Vendetta"
     >
       {/* Main Flight Case Wrapper */}
-      <div className="w-full vendetta-case-surface h-[440px] lg:h-[320px] relative max-w-[1440px] mx-auto select-none overflow-hidden border-x border-[#2d2f31] shadow-[inset_0_0_30px_rgba(0,0,0,0.9)]">
+      <div className="w-full vendetta-case-surface h-[440px] lg:h-[320px] relative max-w-[1440px] mx-auto select-none overflow-hidden border border-[#2d2f31] shadow-[0_15px_30px_rgba(0,0,0,0.8),inset_0_0_40px_rgba(0,0,0,0.9)]">
         
-        {/* Metal Profile & Hardware Overlay */}
+        {/* Metal Profile & Corner Hardware Overlay */}
         <div 
           className="absolute inset-0 pointer-events-none z-30" 
           style={{
@@ -100,7 +101,7 @@ export function VendettaHighlights() {
                 className={isIntersected ? "animate-cable-signal" : ""}
                 style={{ strokeDashoffset: 115 }}/>
 
-              {/* Left Jack Connector */}
+              {/* Left Jack Connector (plugs to wall) */}
               <g transform="translate(16 89)">
                 <path d="M0 14h28v22H0z" fill="url(#metal-grad)"/>
                 <path d="M28 8h42c15 0 26 10 26 17S85 42 70 42H28z" fill="#17191B" stroke="#7C8083" strokeWidth="3"/>
@@ -108,7 +109,7 @@ export function VendettaHighlights() {
                 <path d="M0 20h5v10H0z" fill="#E5E1D8"/>
                 <path d="M73 12h15v26H73z" fill="#B5121B"/>
               </g>
-              {/* Right Jack Connector */}
+              {/* Right Jack Connector (plugs to wall) */}
               <g transform="translate(1424 145) rotate(180)">
                 <path d="M0 14h28v22H0z" fill="url(#metal-grad)"/>
                 <path d="M28 8h42c15 0 26 10 26 17S85 42 70 42H28z" fill="#17191B" stroke="#7C8083" strokeWidth="3"/>
@@ -176,41 +177,143 @@ export function VendettaHighlights() {
         </div>
 
 
-        {/* --- DESKTOP LAYOUT --- */}
-        <div className="hidden lg:flex items-center w-full h-full relative z-20 px-[6%] pr-[26%]">
-          <ul className="flex items-center justify-between w-full">
+        {/* --- DECORATIVE HARDWARE (Handles & Red Tape) --- */}
+        
+        {/* Left Recessed Handle */}
+        <div 
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-28 rounded-lg bg-[#151719] border border-[#55595D] hidden lg:flex items-center justify-center shadow-[inset_0_0_12px_rgba(0,0,0,0.9)] z-40"
+          aria-hidden="true"
+        >
+          {/* Rivets */}
+          <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#74777b]" />
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#74777b]" />
+          <span className="absolute left-1 top-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
+          <span className="absolute right-1 top-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
+          <span className="absolute left-1 bottom-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
+          <span className="absolute right-1 bottom-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
+          {/* Handle Grip Bar */}
+          <div className="w-[60%] h-[75%] rounded-md bg-black shadow-[inset_0_0_8px_rgba(0,0,0,0.9)] flex items-center justify-center">
+            <div className="w-2.5 h-[80%] rounded-full bg-gradient-to-b from-[#777B7F] via-[#292C2F] to-[#8D9194] border border-[#3C3F42] shadow-sm flex flex-col justify-between py-1">
+              <span className="w-full h-[2px] bg-[#121416]" />
+              <span className="w-full h-[2px] bg-[#121416]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Right Recessed Handle */}
+        <div 
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-28 rounded-lg bg-[#151719] border border-[#55595D] hidden lg:flex items-center justify-center shadow-[inset_0_0_12px_rgba(0,0,0,0.9)] z-40"
+          aria-hidden="true"
+        >
+          {/* Rivets */}
+          <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#74777b]" />
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#74777b]" />
+          <span className="absolute left-1 top-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
+          <span className="absolute right-1 top-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
+          <span className="absolute left-1 bottom-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
+          <span className="absolute right-1 bottom-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
+          {/* Handle Grip Bar */}
+          <div className="w-[60%] h-[75%] rounded-md bg-black shadow-[inset_0_0_8px_rgba(0,0,0,0.9)] flex items-center justify-center">
+            <div className="w-2.5 h-[80%] rounded-full bg-gradient-to-b from-[#777B7F] via-[#292C2F] to-[#8D9194] border border-[#3C3F42] shadow-sm flex flex-col justify-between py-1">
+              <span className="w-full h-[2px] bg-[#121416]" />
+              <span className="w-full h-[2px] bg-[#121416]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Top Left Red Tape */}
+        <div 
+          className="absolute left-12 top-6 w-24 h-7 bg-red-700/80 backdrop-blur-[0.5px] border border-red-800/40 shadow-sm transform -rotate-[12deg] z-40 pointer-events-none select-none opacity-90 mix-blend-multiply hidden lg:block"
+          style={{
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.05), rgba(0,0,0,0.15))",
+            clipPath: "polygon(2% 8%, 98% 3%, 95% 95%, 4% 97%)"
+          }}
+          aria-hidden="true"
+        />
+        {/* Bottom Right Red Tape */}
+        <div 
+          className="absolute right-24 bottom-6 w-32 h-9 bg-red-700/80 backdrop-blur-[0.5px] border border-red-800/40 shadow-sm transform -rotate-[5deg] z-40 pointer-events-none select-none opacity-90 mix-blend-multiply"
+          style={{
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.05), rgba(0,0,0,0.15))",
+            clipPath: "polygon(4% 2%, 96% 7%, 98% 92%, 1% 95%)"
+          }}
+          aria-hidden="true"
+        />
+
+        {/* --- VERTICAL DIVIDER LINES (Metallic Engraved look) --- */}
+        <div className="absolute inset-0 pointer-events-none z-20 hidden lg:block" aria-hidden="true">
+          <div className="absolute left-[26.5%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/40 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.05)]" />
+          <div className="absolute left-[43%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/40 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.05)]" />
+          <div className="absolute left-[59.5%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/40 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.05)]" />
+          <div className="absolute left-[76%] top-1/2 -translate-y-1/2 w-[1px] h-[55%] bg-gradient-to-b from-transparent via-[#55595D]/40 to-transparent shadow-[1px_0_0_rgba(255,255,255,0.05)]" />
+        </div>
+
+        {/* --- CH1-CH8 CHANNEL PANEL (Bottom Left) --- */}
+        <div 
+          className="absolute left-[12%] bottom-6 items-center gap-4 z-20 select-none pointer-events-none hidden lg:flex"
+          aria-hidden="true"
+        >
+          <div className="flex items-center gap-2 text-[9px] font-barlow font-bold text-[#aaa8a2] tracking-[0.15em]">
+            <span>CH1</span>
+            <span>CH2</span>
+            <span>CH4</span>
+            <span>CH5</span>
+            <div className="flex flex-col items-center gap-0.5 px-0.5">
+              <span>CH6</span>
+              {/* Electric blue LED signal micro-accent */}
+              <span className="w-1.5 h-1 bg-[#2797ff] shadow-[0_0_6px_#2797ff] rounded-sm" />
+            </div>
+            <span>CH7</span>
+            <span>CH8</span>
+          </div>
+        </div>
+
+        {/* --- DESKTOP LAYOUT (Exact positions matching SVG curves) --- */}
+        <div className="hidden lg:block w-full h-full relative z-20">
+          <ul className="w-full h-full relative">
             {highlights.map((item, idx) => {
               const isFirst = idx === 0;
               return (
                 <li 
                   key={item.id}
-                  className={`flex flex-col items-start select-none ${isFirst ? "pr-4" : "px-2"}`}
+                  style={{ left: item.leftPercent }}
+                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center text-center select-none"
                 >
-                  <div className="flex items-baseline gap-1.5">
+                  {/* Outer relative box for number text with metal jacks on the sides */}
+                  <div className="relative flex items-center justify-center px-6">
+                    {/* Metal Plug left */}
+                    <div className="absolute left-0 top-[45%] -translate-y-1/2 w-4 h-1.5 bg-gradient-to-b from-[#ECE7DC] to-[#25282B] border border-black/50 rounded-l-sm shadow-sm" />
+                    
+                    {/* Prefix label (like DESDE) */}
                     {item.prefix && (
-                      <span className="font-barlow font-bold text-xs md:text-sm text-white/50 tracking-wider leading-none uppercase">
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 font-barlow font-bold text-[10px] text-white/50 tracking-wider uppercase leading-none">
                         {item.prefix}
                       </span>
                     )}
+                    
+                    {/* Big Stats Numbers */}
                     <span 
-                      className={`font-barlow font-black text-white leading-none tracking-tighter distress-effect ${
+                      className={`font-barlow font-black text-[#f2efe8] leading-none tracking-tighter distress-effect ${
                         isFirst 
                           ? "text-6xl xl:text-7xl" 
-                          : "text-4xl xl:text-5xl"
+                          : "text-5xl xl:text-6xl"
                       }`}
                     >
                       {item.value}
                     </span>
+
+                    {/* Metal Plug right */}
+                    <div className="absolute right-0 top-[45%] -translate-y-1/2 w-4 h-1.5 bg-gradient-to-b from-[#ECE7DC] to-[#25282B] border border-black/50 rounded-r-sm shadow-sm" />
                   </div>
-                  <span 
-                    className={`font-barlow font-black tracking-widest mt-2 uppercase ${
-                      isFirst 
-                        ? "text-xs md:text-sm text-primary" 
-                        : "text-[10px] md:text-xs text-white/90"
-                    }`}
-                  >
-                    {item.label}
-                  </span>
+
+                  {/* Descriptive Label below the number */}
+                  <div className="flex flex-col items-center mt-3">
+                    <span className="font-barlow font-black text-[11px] xl:text-[12px] text-white/90 tracking-[0.18em] uppercase leading-none">
+                      {item.label}
+                    </span>
+                    {/* Small red accent line centered below each label */}
+                    <div className="w-7 h-[2px] bg-[#e31b23] mt-2.5" />
+                  </div>
                 </li>
               );
             })}
@@ -226,7 +329,7 @@ export function VendettaHighlights() {
         >
           <div className="flex flex-col items-center justify-center h-full">
             {/* LED Indicators */}
-            <div className="flex items-center gap-2 mb-1.5">
+            <div className="flex items-center gap-3 mb-1.5">
               <div className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse shadow-[0_0_6px_#e31b23]" />
                 <span className="text-[8px] font-barlow font-bold tracking-widest text-[#aaa8a2]">LIVE</span>
@@ -245,6 +348,8 @@ export function VendettaHighlights() {
             <div className="font-barlow font-bold text-primary text-[8px] xl:text-[10px] tracking-wider uppercase mt-1 leading-none">
               PRODUCCIÓN DE GIRA
             </div>
+            {/* Red accent line under the plate label */}
+            <div className="w-7 h-[2px] bg-[#e31b23] mt-2" />
           </div>
         </div>
 
@@ -257,12 +362,17 @@ export function VendettaHighlights() {
           <ul className="grid grid-cols-3 gap-2 w-full pt-4">
             {highlights.slice(0, 3).map((item) => (
               <li key={item.id} className="flex flex-col items-center text-center">
-                <span className="font-barlow font-black text-4xl sm:text-5xl text-white leading-none tracking-tighter distress-effect">
-                  {item.value}
-                </span>
+                <div className="relative px-3 flex items-center justify-center">
+                  <div className="absolute left-0 top-[45%] -translate-y-1/2 w-2 h-1 bg-gradient-to-b from-[#ECE7DC] to-[#25282B] border border-black/50 rounded-l-sm" />
+                  <span className="font-barlow font-black text-4xl sm:text-5xl text-white leading-none tracking-tighter distress-effect">
+                    {item.value}
+                  </span>
+                  <div className="absolute right-0 top-[45%] -translate-y-1/2 w-2 h-1 bg-gradient-to-b from-[#ECE7DC] to-[#25282B] border border-black/50 rounded-r-sm" />
+                </div>
                 <span className="font-barlow font-bold text-[9px] sm:text-[10px] text-white/80 tracking-wider uppercase mt-2.5 leading-tight">
                   {item.label}
                 </span>
+                <div className="w-5 h-[1.5px] bg-[#e31b23] mt-2" />
               </li>
             ))}
           </ul>
@@ -272,47 +382,52 @@ export function VendettaHighlights() {
             
             {/* DESDE 2 H Column */}
             <div className="flex flex-col items-center text-center pl-4">
-              <div className="flex items-baseline gap-1 justify-center">
+              <div className="flex items-baseline gap-1 justify-center relative px-3">
+                <div className="absolute left-0 top-[45%] -translate-y-1/2 w-2 h-1 bg-gradient-to-b from-[#ECE7DC] to-[#25282B] border border-black/50 rounded-l-sm" />
                 <span className="font-barlow font-bold text-[10px] sm:text-xs text-white/50 tracking-wider leading-none uppercase">
                   {highlights[3].prefix}
                 </span>
                 <span className="font-barlow font-black text-4xl sm:text-5xl text-white leading-none tracking-tighter distress-effect">
                   {highlights[3].value}
                 </span>
+                <div className="absolute right-0 top-[45%] -translate-y-1/2 w-2 h-1 bg-gradient-to-b from-[#ECE7DC] to-[#25282B] border border-black/50 rounded-r-sm" />
               </div>
               <span className="font-barlow font-bold text-[9px] sm:text-[10px] text-primary tracking-widest uppercase mt-2.5 leading-tight">
                 {highlights[3].label}
               </span>
+              <div className="w-5 h-[1.5px] bg-[#e31b23] mt-2" />
             </div>
 
             {/* TOUR LEVEL Custom Plate Column */}
             <div className="flex justify-center pr-4">
-              <div className="w-[160px] h-[90px] rounded-lg bg-[#191B1D] border-2 border-[#55595D] flex flex-col items-center justify-center p-2 relative shadow-inner">
+              <div className="w-[150px] h-[86px] rounded-lg bg-[#191B1D] border-2 border-[#55595D] flex flex-col items-center justify-center p-2 relative shadow-inner">
                 {/* Rivets on plate corners */}
-                <span className="absolute top-1 left-1.5 w-1.5 h-1.5 rounded-full bg-[#74777b] border border-black/40" />
-                <span className="absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full bg-[#74777b] border border-black/40" />
-                <span className="absolute bottom-1 left-1.5 w-1.5 h-1.5 rounded-full bg-[#74777b] border border-black/40" />
-                <span className="absolute bottom-1 right-1.5 w-1.5 h-1.5 rounded-full bg-[#74777b] border border-black/40" />
+                <span className="absolute top-1 left-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
+                <span className="absolute top-1 right-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
+                <span className="absolute bottom-1 left-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
+                <span className="absolute bottom-1 right-1.5 w-1 h-1 rounded-full bg-[#74777b]" />
                 
                 {/* LEDs */}
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex items-center gap-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse shadow-[0_0_6px_#e31b23]" />
-                    <span className="text-[7px] font-barlow font-bold tracking-widest text-[#aaa8a2]">LIVE</span>
+                    <span className="w-1 h-1 rounded-full bg-red-600 animate-pulse" />
+                    <span className="text-[6px] font-barlow font-bold tracking-widest text-[#aaa8a2]">LIVE</span>
                   </div>
                   <div className="flex items-center gap-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#2797ff] shadow-[0_0_6px_#2797ff]" />
-                    <span className="text-[7px] font-barlow font-bold tracking-widest text-[#aaa8a2]">SIGNAL</span>
+                    <span className="w-1 h-1 rounded-full bg-[#2797ff]" />
+                    <span className="text-[6px] font-barlow font-bold tracking-widest text-[#aaa8a2]">SIGNAL</span>
                   </div>
                 </div>
                 {/* Plate Title */}
-                <div className="font-barlow font-black text-white text-sm tracking-tight leading-none uppercase">
+                <div className="font-barlow font-black text-white text-xs tracking-tight leading-none uppercase">
                   TOUR LEVEL
                 </div>
                 {/* Plate Subtitle */}
                 <div className="font-barlow font-bold text-primary text-[7px] tracking-wider uppercase mt-1 leading-none">
                   PRODUCCIÓN DE GIRA
                 </div>
+                {/* Red line */}
+                <div className="w-5 h-[1.5px] bg-[#e31b23] mt-1.5" />
               </div>
             </div>
 
