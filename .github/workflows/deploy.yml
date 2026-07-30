@@ -54,7 +54,7 @@ jobs:
               2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('result',{}).get('data',{}).get('json',{}).get('composeStatus','?'))" 2>/dev/null || echo "?")
             echo "Attempt $i: status=$status"
             case "$status" in
-              done|running)   echo "::notice::Deploy completed successfully"; exit 0 ;;
+              done)           echo "::notice::Deploy completed successfully"; exit 0 ;;
               error)          echo "::error::Deploy reported error"; exit 1 ;;
             esac
             sleep 10

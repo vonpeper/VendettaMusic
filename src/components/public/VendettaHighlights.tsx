@@ -107,9 +107,9 @@ export function VendettaHighlights() {
           <filter id="heavy-grunge-filter">
             <feTurbulence type="fractalNoise" baseFrequency="0.075" numOctaves="4" result="noise"/>
             <feColorMatrix type="matrix" values="
-              0 0 0 0 0
-              0 0 0 0 0
-              0 0 0 0 0
+              1 0 0 0 0
+              1 0 0 0 0
+              1 0 0 0 0
               2.4 0 0 0 -1.1
             " result="alpha-mask"/>
             <feComposite operator="in" in="SourceGraphic" in2="alpha-mask"/>
