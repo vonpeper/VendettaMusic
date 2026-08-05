@@ -2,6 +2,7 @@ import type { NextAuthConfig } from "next-auth"
 
 export const authConfig = {
   providers: [],
+  secret: process.env.AUTH_SECRET,
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
