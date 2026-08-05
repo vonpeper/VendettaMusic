@@ -116,6 +116,42 @@ async function ensureSchemaUpToDate(prisma: PrismaClient) {
       await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN musicianNotes TEXT`)
       console.log("🤖 [Self-Healing] Added column musicianNotes to BookingRequest")
     }
+    if (!bookingColNames.includes("haspantalla")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN hasPantalla BOOLEAN DEFAULT 0`)
+      console.log("🤖 [Self-Healing] Added column hasPantalla to BookingRequest")
+    }
+    if (!bookingColNames.includes("quoteversion")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE BookingRequest ADD COLUMN quoteVersion INTEGER DEFAULT 1`)
+      console.log("🤖 [Self-Healing] Added column quoteVersion to BookingRequest")
+    }
+
+    // 1.5 Columnas de ClientProfile
+    const clientColumns = await prisma.$queryRaw<any[]>`PRAGMA table_info(ClientProfile)`
+    const clientColNames = clientColumns.map(c => c.name.toLowerCase())
+    if (!clientColNames.includes("fiscaladdress")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE ClientProfile ADD COLUMN fiscalAddress TEXT`)
+      console.log("🤖 [Self-Healing] Added column fiscalAddress to ClientProfile")
+    }
+    if (!clientColNames.includes("legalrepname")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE ClientProfile ADD COLUMN legalRepName TEXT`)
+      console.log("🤖 [Self-Healing] Added column legalRepName to ClientProfile")
+    }
+    if (!clientColNames.includes("legalreprole")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE ClientProfile ADD COLUMN legalRepRole TEXT`)
+      console.log("🤖 [Self-Healing] Added column legalRepRole to ClientProfile")
+    }
+    if (!clientColNames.includes("legalreppower")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE ClientProfile ADD COLUMN legalRepPower TEXT`)
+      console.log("🤖 [Self-Healing] Added column legalRepPower to ClientProfile")
+    }
+    if (!clientColNames.includes("notificationaddress")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE ClientProfile ADD COLUMN notificationAddress TEXT`)
+      console.log("🤖 [Self-Healing] Added column notificationAddress to ClientProfile")
+    }
+    if (!clientColNames.includes("billingdata")) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE ClientProfile ADD COLUMN billingData TEXT`)
+      console.log("🤖 [Self-Healing] Added column billingData to ClientProfile")
+    }
 
     // 2. Columnas de Event
     const eventColumns = await prisma.$queryRaw<any[]>`PRAGMA table_info(Event)`
@@ -195,6 +231,79 @@ async function ensureSchemaUpToDate(prisma: PrismaClient) {
         lower(name) = 'no especificado'
       ) AND name NOT LIKE 'Show - %'
     `).catch(err => console.error("🤖 [Self-Healing] Error renaming location placeholders:", err))
+
+    // 5. Crear la cotización especial para el Colegio si no existe
+    try {
+      const exists = await prisma.bookingRequest.findFirst({
+        where: {
+          OR: [
+            { shortId: "VND-COLEGIO" },
+            { clientName: "Colegio Mexicano de Anestesiología A.C." }
+          ]
+        }
+      })
+
+      if (!exists) {
+        // Crear un usuario ficticio para el cliente si no existe
+        let clientUser = await prisma.user.findFirst({
+          where: { email: "colegio@anestesiologia.mx" }
+        })
+
+        if (!clientUser) {
+          clientUser = await prisma.user.create({
+            data: {
+              name: "Colegio Mexicano de Anestesiología A.C.",
+              email: "colegio@anestesiologia.mx",
+              role: "CLIENT"
+            }
+          })
+        }
+
+        let clientProfile = await prisma.clientProfile.findUnique({
+          where: { userId: clientUser.id }
+        })
+
+        if (!clientProfile) {
+          clientProfile = await prisma.clientProfile.create({
+            data: {
+              userId: clientUser.id,
+              company: "Colegio Mexicano de Anestesiología A.C.",
+              type: "corporate"
+            }
+          })
+        }
+
+        await prisma.bookingRequest.create({
+          data: {
+            shortId: "VND-COLEGIO",
+            clientId: clientProfile.id,
+            clientName: "Colegio Mexicano de Anestesiología A.C.",
+            clientEmail: "colegio@anestesiologia.mx",
+            clientPhone: "5555555555",
+            packageName: "Presentación musical + Producción técnica + Opcionales",
+            requestedDate: new Date("2026-08-20T12:00:00Z"),
+            startTime: "20:00",
+            endTime: "22:30",
+            baseAmount: 133410,
+            depositAmount: 77377.80,
+            paymentMethod: "transfer",
+            status: "pendiente",
+            address: "World Trade Center, Ciudad de México (Salón Tolteca)",
+            city: "CDMX",
+            state: "Ciudad de México",
+            venueType: "salon",
+            guestCount: 800,
+            hasPantalla: true,
+            hasTemplete: true,
+            quoteVersion: 1
+          }
+        })
+        console.log("🤖 [Self-Healing] Created special booking request VND-COLEGIO")
+      }
+    } catch (seedErr) {
+      console.error("🤖 [Self-Healing] Error seeding special booking VND-COLEGIO:", seedErr)
+    }
+
   } catch (err) {
     console.error("❌ [Self-Healing] Error auto-applying missing schema columns:", err)
   }

@@ -69,7 +69,14 @@ export async function generateContractPdf(
     clientSignature?: string, 
     adminSignature?: string,
     signedAt?: string,
-    contractLegalText?: string
+    contractLegalText?: string,
+    rfc?: string,
+    fiscalAddress?: string,
+    legalRepName?: string,
+    legalRepRole?: string,
+    legalRepPower?: string,
+    notificationAddress?: string,
+    billingData?: string
   } = { includeLegal: true }
 ) {
   console.log(`[PDF Generator] Finalizing document. includeLegal=${!!options.includeLegal}`)
@@ -249,23 +256,51 @@ export async function generateContractPdf(
     data.hasRobot ? "• Incluye Robot LED" : null
   ].filter(Boolean) as string[]
 
-  const packageNameDisplay = isBarPackage ? "Paquete Bar" : data.packageName
-  const finalDesc = `Show Vendetta Rock — ${packageNameDisplay}\n${showDetails.join("\n")}\n${inclusions.map(i => "• " + i).join("\n")}`
+  const isColegio = data.clientName?.toLowerCase().includes("colegio") || shortId.toLowerCase().includes("colegio") || data.packageName?.toLowerCase().includes("colegio") || (data as any).shortId?.toLowerCase().includes("colegio");
   
-  const hasDiscount = data.discountAmount && data.discountAmount > 0 && data.originalPrice && data.originalPrice > data.packagePrice
-  const displayPrice = hasDiscount ? data.originalPrice : data.packagePrice
-  const tableRows = [{ no: "1", desc: finalDesc, pu: MXN(displayPrice as number) }]
-  
-  if (hasDiscount) {
-    tableRows.push({ 
-      no: String(tableRows.length + 1), 
-      desc: "Descuento especial aplicado", 
-      pu: `-${MXN(data.discountAmount as number)}` 
-    })
-  }
+  let tableRows: any[] = [];
+  if (isColegio) {
+    tableRows.push({
+      no: "1",
+      desc: "Servicio Artístico: Presentación de Vendetta\n• Show musical de 2 horas con 30 minutos con formación de seis músicos.\n• Incluye backline de la banda, ingeniero de audio de Vendetta y asistente técnico.\n• Preparación, coordinación artística, repertorio y producción musical.",
+      pu: MXN(35000)
+    });
+    tableRows.push({
+      no: "2",
+      desc: "Producción Técnica Integral de Audio e Iluminación\n• Sistema de audio principal line array para cobertura del Salón Tolteca (Yamaha/DM3).\n• Microfonía, instrumentación completa y sistemas de monitoreo in-ear Shure (PSM900/PSM300).\n• Iluminación robótica y wash LED, truss de aluminio y consola profesional.\n• Personal de montaje, desmontaje, operación e ingeniería de iluminación/audio.",
+      pu: MXN(43770)
+    });
 
-  if (data.viaticosAmount > 0) tableRows.push({ no: String(tableRows.length + 1), desc: data.viaticosLabel || "Viáticos y gastos logísticos", pu: MXN(data.viaticosAmount) })
-  if (extraSoundcheck > 0) tableRows.push({ no: String(tableRows.length + 1), desc: "Disponibilidad Extendida (Soundcheck)", pu: MXN(extraSoundcheck) })
+    if ((data as any).hasPantalla) {
+      tableRows.push({
+        no: String(tableRows.length + 1),
+        desc: "Servicio Opcional: Pantalla LED 6 × 4 metros\n• Pantalla LED pitch 2.6 mm (24 metros cuadrados total) con procesador de video.\n• Estructura trasera de soporte con truss y placas de acero.\n• Laptop con software de reproducción, cableado de video y datos.\n• Dos técnicos de video, transporte, montaje, operación y desmontaje.",
+        pu: MXN(36250)
+      });
+    }
+    if ((data as any).hasTemplete) {
+      tableRows.push({
+        no: String(tableRows.length + 1),
+        desc: "Servicio Opcional: Templete de 8 × 6 metros\n• Templete profesional de 8 x 6 metros.\n• Altura de 1 o 1.5 metros, sujeta a validación técnica.\n• Dos escaleras laterales, transporte, montaje y desmontaje.",
+        pu: MXN(18390)
+      });
+    }
+  } else {
+    const packageNameDisplay = isBarPackage ? "Paquete Bar" : data.packageName
+    const finalDesc = `Show Vendetta Rock — ${packageNameDisplay}\n${showDetails.join("\n")}\n${inclusions.map(i => "• " + i).join("\n")}`
+    const tableRowsDefault = [{ no: "1", desc: finalDesc, pu: MXN(displayPrice as number) }]
+    tableRows = tableRowsDefault
+    
+    if (hasDiscount) {
+      tableRows.push({ 
+        no: String(tableRows.length + 1), 
+        desc: "Descuento especial aplicado", 
+        pu: `-${MXN(data.discountAmount as number)}` 
+      })
+    }
+    if (data.viaticosAmount > 0) tableRows.push({ no: String(tableRows.length + 1), desc: data.viaticosLabel || "Viáticos y gastos logísticos", pu: MXN(data.viaticosAmount) })
+    if (extraSoundcheck > 0) tableRows.push({ no: String(tableRows.length + 1), desc: "Disponibilidad Extendida (Soundcheck)", pu: MXN(extraSoundcheck) })
+  }
   if (ivaAmount > 0) tableRows.push({ no: String(tableRows.length + 1), desc: `IVA (16%) — Factura requerida`, pu: MXN(ivaAmount) })
 
   drawDetailedTable(ctx, tableRows)
@@ -321,14 +356,25 @@ export async function generateContractPdf(
     page.drawText(legalTitle, { x: (pageWidth - montserratBold.widthOfTextAtSize(legalTitle, 14)) / 2, y: ctx.y, size: 14, font: montserratBold })
     ctx.y -= 35
 
-    const introText = `SERVICIOS MUSICALES PROFESIONALES QUE CELEBRAN POR UNA PARTE JOSÉ ALBERTO BAUTISTA ROMERO PAREDES Y POR LA OTRA PARTE EL CLIENTE ${safeValue(data.clientName, "EL CLIENTE")} A QUIEN EN LO SUCESIVO Y PARA TODOS LOS EFECTOS LEGALES SE LE DENOMINARÁ “EL CLIENTE.”`
+    let introText = `SERVICIOS MUSICALES PROFESIONALES QUE CELEBRAN POR UNA PARTE JOSÉ ALBERTO BAUTISTA ROMERO PAREDES Y POR LA OTRA PARTE EL CLIENTE ${safeValue(data.clientName, "EL CLIENTE")}`
+    if (options.legalRepName) {
+      introText += `, REPRESENTADA EN ESTE ACTO POR EL C. ${options.legalRepName.toUpperCase()} EN SU CARÁCTER DE ${options.legalRepRole?.toUpperCase() || "REPRESENTANTE LEGAL"}, ACREDITANDO SUS FACULTADES MEDIANTE ${options.legalRepPower?.toUpperCase() || "PODER LEGAL"}`
+    }
+    introText += `, A QUIEN EN LO SUCESIVO Y PARA TODOS LOS EFECTOS LEGALES SE LE DENOMINARÁ “EL CLIENTE.”`
     drawJustifiedText(ctx, introText, 8.5, 11, pageWidth - margin * 2)
 
     ctx.y -= 20
     const decHeader = "D E C L A R A C I O N E S"
     page.drawText(decHeader, { x: (pageWidth - montserratBold.widthOfTextAtSize(decHeader, 10)) / 2, y: ctx.y, size: 10, font: montserratBold })
     ctx.y -= 20
-    drawJustifiedText(ctx, "DECLARA Y ACEPTA “JOSÉ ALBERTO BAUTISTA ROMERO PAREDES” con RFC BARA8804PQ2 A QUIEN EN LO SUCESIVO Y PARA TODOS LOS EFECTOS LEGALES SE LE DENOMINARÁ “VENDETTA” SER REPRESENTANTE LEGAL DE “VENDETTA ROCK” Y QUE PUEDE COMPROMETERSE POR SÍ MISMO O SU REPRESENTADA A LOS FINES NECESARIOS AL TENOR DE LAS SIGUIENTES:", 8.5, 11, pageWidth - margin * 2)
+    
+    let decText = "DECLARA Y ACEPTA “JOSÉ ALBERTO BAUTISTA ROMERO PAREDES” con RFC BARA8804PQ2 A QUIEN EN LO SUCESIVO Y PARA TODOS LOS EFECTOS LEGALES SE LE DENOMINARÁ “VENDETTA” SER REPRESENTANTE LEGAL DE “VENDETTA ROCK” Y QUE PUEDE COMPROMETERSE POR SÍ MISMO O SU REPRESENTADA A LOS FINES NECESARIOS AL TENOR DE LAS SIGUIENTES:\n\n"
+    if (options.rfc) {
+      decText += `DECLARA “EL CLIENTE” BAJO PROTESTA DE DECIR VERDAD: SER UNA PERSONA MORAL DEBIDAMENTE CONSTITUIDA CON RFC ${options.rfc.toUpperCase()}, CON DOMICILIO FISCAL EN ${options.fiscalAddress?.toUpperCase() || "PENDIENTE"}, Y SEÑALANDO COMO DOMICILIO PARA RECIBIR NOTIFICACIONES EL UBICADO EN ${options.notificationAddress?.toUpperCase() || "EL MISMO DOMICILIO FISCAL"}.`
+    } else {
+      decText += "DECLARA “EL CLIENTE” BAJO PROTESTA DE DECIR VERDAD: CONTAR CON LAS FACULTADES LEGALES Y ECONÓMICAS SUFICIENTES PARA CELEBRAR EL PRESENTE CONTRATO."
+    }
+    drawJustifiedText(ctx, decText, 8.5, 11, pageWidth - margin * 2)
 
     ctx.y -= 25
     const clauHeader = "C L Á U S U L A S."
@@ -497,10 +543,15 @@ export async function generateContractPdf(
       console.warn("[PDF Generator] No client signature provided in options")
     }
     ctx.page.drawLine({ start: { x: pageWidth - margin - sw, y: sy }, end: { x: pageWidth - margin, y: sy }, thickness: 1 })
-    ctx.page.drawText(safeValue(data.clientName, "EL CLIENTE").toUpperCase(), { x: pageWidth - margin - sw + 20, y: sy - 15, size: 8, font: montserratBold })
+    const clientNameText = safeValue(data.clientName, "EL CLIENTE").toUpperCase()
+    ctx.page.drawText(clientNameText, { x: pageWidth - margin - sw + 20, y: sy - 15, size: 8, font: montserratBold })
+    if (options.legalRepName) {
+      const repLabel = `REP: ${options.legalRepName.toUpperCase()}`
+      ctx.page.drawText(repLabel, { x: pageWidth - margin - sw + 20, y: sy - 25, size: 6, font: montserrat })
+    }
     if (options.signedAt) {
       const stamp = `FIRMADO DIGITALMENTE: ${options.signedAt}`
-      ctx.page.drawText(stamp, { x: pageWidth - margin - sw, y: sy - 25, size: 5, font: montserrat, color: rgb(0.5, 0.5, 0.5) })
+      ctx.page.drawText(stamp, { x: pageWidth - margin - sw, y: sy - (options.legalRepName ? 33 : 25), size: 5, font: montserrat, color: rgb(0.5, 0.5, 0.5) })
     }
   }
 

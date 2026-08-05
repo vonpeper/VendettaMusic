@@ -23,22 +23,28 @@ model User {
 }
 
 model ClientProfile {
-  id         String           @id @default(uuid())
-  userId     String           @unique
-  type       String?
-  company    String?
-  rfc        String?
-  notes      String?
-  city       String?
-  state      String?
-  whatsapp   String?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @default(now()) @updatedAt
-  bookings   BookingRequest[]
-  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  events     Event[]
-  inboxItems InboxItem[]
-  quotes     Quote[]
+  id                  String           @id @default(uuid())
+  userId              String           @unique
+  type                String?
+  company             String?
+  rfc                 String?
+  fiscalAddress       String?
+  legalRepName        String?
+  legalRepRole        String?
+  legalRepPower       String?
+  notificationAddress String?
+  billingData         String?
+  notes               String?
+  city                String?
+  state               String?
+  whatsapp            String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @default(now()) @updatedAt
+  bookings            BookingRequest[]
+  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events              Event[]
+  inboxItems          InboxItem[]
+  quotes              Quote[]
 }
 
 model MusicianProfile {
@@ -463,6 +469,8 @@ model BookingRequest {
   hasTemplete           Boolean?       @default(false)
   hasPista              Boolean?       @default(false)
   hasRobot              Boolean?       @default(false)
+  hasPantalla           Boolean?       @default(false)
+  quoteVersion          Int            @default(1)
   stripePaymentIntentId String?
   stripeSessionId       String?        @unique
   adminSignature        String?

@@ -10,10 +10,6 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session?.user || !ADMIN_ROLES.has(session.user.role as string)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
   try {
     const { id } = await params
     let booking = await db.bookingRequest.findUnique({
@@ -59,6 +55,51 @@ export async function GET(
       return NextResponse.json({ error: "Reserva no encontrada" }, { status: 404 })
     }
 
+    // Validar autorización (Admin, Cliente dueño, o Token firmado de URL pública)
+    const session = await auth()
+    const isAdmin = session?.user && ADMIN_ROLES.has(session.user.role as string)
+    let isAuthorized = isAdmin
+
+    if (!isAuthorized && session?.user) {
+      const isOwner = booking.client?.userId === session.user.id || booking.clientEmail === session.user.email
+      if (isOwner) isAuthorized = true
+    }
+
+    if (!isAuthorized) {
+      const crypto = await import("crypto")
+      const secret = process.env.AUTH_SECRET || "fallback_secret_vendetta_music_app_2026"
+      const expectedToken = crypto.createHmac("sha256", secret).update(id).digest("hex")
+      const token = req.nextUrl.searchParams.get("token")
+      if (token === expectedToken) isAuthorized = true
+    }
+
+    if (!isAuthorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const isQuote = booking.status === "pendiente" || req.nextUrl.searchParams.get("type") === "quote"
+    if (!isQuote) {
+      // Validar datos legales requeridos para contrato definitivo
+      const clientProfile = booking.client
+      const missingFields = []
+      if (!clientProfile?.rfc) missingFields.push("RFC")
+      if (!clientProfile?.fiscalAddress) missingFields.push("Domicilio Fiscal")
+      if (!clientProfile?.legalRepName) missingFields.push("Nombre del Representante Legal")
+      if (!clientProfile?.legalRepRole) missingFields.push("Cargo del Representante Legal")
+      if (!clientProfile?.legalRepPower) missingFields.push("Instrumento de Facultades")
+      if (!clientProfile?.notificationAddress) missingFields.push("Domicilio de Notificaciones")
+      if (!clientProfile?.billingData) missingFields.push("Datos de Facturación")
+      if (!booking.clientEmail) missingFields.push("Correo Electrónico")
+      if (!booking.clientPhone) missingFields.push("Teléfono")
+
+      if (missingFields.length > 0) {
+        return NextResponse.json({ 
+          error: "Datos legales incompletos para generar el contrato definitivo", 
+          missingFields 
+        }, { status: 400 })
+      }
+    }
+
     console.log(`[Contract API] Processing booking ${booking.shortId} (Status: ${booking.status})`)
     console.log(`[Contract API] Signatures: Client=${!!booking.clientSignature}, Admin=${!!booking.adminSignature}`)
 
@@ -84,7 +125,7 @@ export async function GET(
       hasTemplete: booking.hasTemplete || false,
       hasPista:    booking.hasPista || false,
       hasRobot:    booking.hasRobot || false,
-      hasPantalla: false, // Coming soon
+      hasPantalla: booking.hasPantalla || false,
       // Ubicación
       street: booking.event?.location?.address?.split(',')[0] || booking.calle || "",
       houseNumber: booking.numero || "",
@@ -115,7 +156,6 @@ export async function GET(
       ivaAmount: booking.event?.ivaAmount || 0,
     } as any
 
-    const isQuote = booking.status === "pendiente"
     const pdfBytes = await generateContractPdf(funnelData, booking.shortId || booking.id, {
       includeLegal: !isQuote,
       clientSignature: booking.clientSignature || undefined,
@@ -125,7 +165,14 @@ export async function GET(
       signedAt: booking.signedAt ? booking.signedAt.toISOString() : undefined,
       contractLegalText: (booking.venueType?.toLowerCase() === "bar" || booking.event?.venueType?.toLowerCase() === "bar") 
         ? ((globalConfig as any)?.contractBarLegalText || undefined)
-        : (globalConfig?.contractLegalText || undefined)
+        : (globalConfig?.contractLegalText || undefined),
+      rfc: booking.client?.rfc || undefined,
+      fiscalAddress: booking.client?.fiscalAddress || undefined,
+      legalRepName: booking.client?.legalRepName || undefined,
+      legalRepRole: booking.client?.legalRepRole || undefined,
+      legalRepPower: booking.client?.legalRepPower || undefined,
+      notificationAddress: booking.client?.notificationAddress || undefined,
+      billingData: booking.client?.billingData || undefined
     })
 
     // Crear la respuesta con el PDF

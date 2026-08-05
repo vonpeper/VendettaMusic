@@ -11,23 +11,20 @@ export default async function ClienteDashboardPage(props: { searchParams: { quot
   const searchParams = await props.searchParams
   
   // Get real data if logged in
-  let quotes: any[] = []
+  let bookings: any[] = []
   if (session?.user?.id) {
     const profile = await db.clientProfile.findUnique({
       where: { userId: session.user.id }
     })
     
     if (profile) {
-      quotes = await db.quote.findMany({
+      bookings = await db.bookingRequest.findMany({
         where: { clientId: profile.id },
         orderBy: { createdAt: 'desc' },
-        take: 3,
-        include: { items: true }
+        take: 5
       })
     }
   }
-
-  const latestQuote = quotes[0]
 
   return (
     <div className="p-4 md:p-8">
@@ -50,31 +47,35 @@ export default async function ClienteDashboardPage(props: { searchParams: { quot
             <Calendar className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            {quotes.length === 0 ? (
+            {bookings.length === 0 ? (
               <div className="py-6 text-center">
                 <div className="text-xl font-bold font-heading text-white">No tienes cotizaciones activas</div>
                 <p className="text-sm text-muted-foreground mt-1">Cotiza tu primer evento con nosotros</p>
               </div>
             ) : (
               <div className="space-y-4 mt-2">
-                {quotes.map(q => (
-                  <div key={q.id} className="flex justify-between items-center p-3 rounded-md bg-white/5 border border-white/5">
+                {bookings.map(b => (
+                  <Link 
+                    href={`/propuesta/${b.shortId}`} 
+                    key={b.id} 
+                    className="flex justify-between items-center p-4 rounded-xl bg-white/5 border border-white/5 hover:border-primary/50 transition-all block"
+                  >
                     <div>
                       <h4 className="font-bold text-sm text-white">
-                        {q.items[0]?.description?.split('(')[0] || "Cotización de Evento"}
+                        {b.packageName || "Cotización de Evento"} (v{b.quoteVersion || 1})
                       </h4>
                       <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                         <Clock className="w-3 h-3" /> 
-                        {q.eventDate ? new Date(q.eventDate).toLocaleDateString() : 'Sin fecha'}
+                        {b.requestedDate ? new Date(b.requestedDate).toLocaleDateString() : 'Sin fecha'}
                       </p>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-bold text-primary">${q.totalEstimated.toLocaleString()} MXN</div>
+                      <div className="text-sm font-bold text-primary">${(b.baseAmount || 0).toLocaleString()} MXN</div>
                       <div className="text-[10px] uppercase font-bold text-yellow-500 tracking-wider">
-                        {q.status === 'pendiente' ? 'EN REVISIÓN' : q.status === 'agendado' ? 'APROBADA' : 'CANCELADA'}
+                        {b.status === 'pendiente' ? 'EN REVISIÓN' : b.status === 'agendado' ? 'APROBADA / FIRMAR' : b.status === 'completado' ? 'COMPLETADA' : 'CANCELADA'}
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
