@@ -5,6 +5,7 @@ import { RockBackground } from "@/components/funnel/RockBackground"
 import { ProposalInteractive } from "@/components/funnel/ProposalInteractive"
 import { ContractSigner } from "@/components/funnel/ContractSigner"
 import { formatDateMX } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import crypto from "crypto"
 
 export const dynamic = "force-dynamic"
@@ -87,9 +88,8 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
 
   const isAccepted = booking.status === "agendado" || booking.status === "completado"
   
-  // Validar si los datos legales obligatorios están listos
-  const clientProfile = booking.client || {}
-  const hasIncompleteLegal = !clientProfile.rfc || !clientProfile.fiscalAddress || !clientProfile.legalRepName || !clientProfile.legalRepRole || !clientProfile.legalRepPower || !clientProfile.notificationAddress || !clientProfile.billingData || !booking.clientEmail || !booking.clientPhone
+  const clientProfile = booking.client
+  const hasIncompleteLegal = !clientProfile?.rfc || !clientProfile?.fiscalAddress || !clientProfile?.legalRepName || !clientProfile?.legalRepRole || !clientProfile?.legalRepPower || !clientProfile?.notificationAddress || !clientProfile?.billingData || !booking.clientEmail || !booking.clientPhone
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden py-20">

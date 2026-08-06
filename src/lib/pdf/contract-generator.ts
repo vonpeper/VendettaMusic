@@ -288,10 +288,10 @@ export async function generateContractPdf(
   } else {
     const packageNameDisplay = isBarPackage ? "Paquete Bar" : data.packageName
     const finalDesc = `Show Vendetta Rock — ${packageNameDisplay}\n${showDetails.join("\n")}\n${inclusions.map(i => "• " + i).join("\n")}`
-    const tableRowsDefault = [{ no: "1", desc: finalDesc, pu: MXN(displayPrice as number) }]
+    const tableRowsDefault = [{ no: "1", desc: finalDesc, pu: MXN(data.packagePrice) }]
     tableRows = tableRowsDefault
     
-    if (hasDiscount) {
+    if (data.discountAmount && data.discountAmount > 0) {
       tableRows.push({ 
         no: String(tableRows.length + 1), 
         desc: "Descuento especial aplicado", 
