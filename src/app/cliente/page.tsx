@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { db } from "@/lib/db"
 import { auth } from "@/lib/auth"
-import { formatDateMX } from "@/lib/utils"
 
 export default async function ClienteDashboardPage(props: { searchParams: { quote_success?: string } }) {
   const session = await auth()
