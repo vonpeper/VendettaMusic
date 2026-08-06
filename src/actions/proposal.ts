@@ -249,7 +249,7 @@ export async function requestChangesAction(bookingId: string) {
     })
 
     if (!exists) {
-      const { id, shortId, createdAt, updatedAt, ...cloneData } = booking
+      const { id, shortId, createdAt, updatedAt, event, ...cloneData } = booking
       await db.bookingRequest.create({
         data: {
           ...cloneData,
