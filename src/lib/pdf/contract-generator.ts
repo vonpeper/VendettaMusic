@@ -309,6 +309,7 @@ export async function generateContractPdf(
   page.drawText("IMPORTANTE:", { x: margin, y: ctx.y, size: 9, font: montserratBold, color: VENDETTA_RED })
   ctx.y -= 12
   const importantNotes = [
+    "Los precios y montos cotizados son más IVA (16%).",
     "No incluye planta de luz (Toma de corriente estable requerida).",
     "Capacidad de audio limitada al número de personas cotizado.",
     "VENDETTA no se hace responsable por fallas eléctricas del inmueble."
@@ -590,7 +591,7 @@ function drawDetailedTable(ctx: DrawContext, rows: any[]) {
   page.drawRectangle({ x: margin, y: y - rowH, width: width - margin * 2, height: rowH, color: BLACK_COLOR })
   page.drawText("NO.", { x: margin + 10, y: y - 14, size: 8, font: boldFont, color: WHITE_COLOR })
   page.drawText("DESCRIPCIÓN DEL SERVICIO", { x: margin + 40, y: y - 14, size: 8, font: boldFont, color: WHITE_COLOR })
-  page.drawText("COSTO", { x: width - margin - 80, y: y - 14, size: 8, font: boldFont, color: WHITE_COLOR })
+  page.drawText("COSTO (MÁS IVA)", { x: width - margin - 110, y: y - 14, size: 8, font: boldFont, color: WHITE_COLOR })
 
   let cy = y - rowH
   rows.forEach(r => {
