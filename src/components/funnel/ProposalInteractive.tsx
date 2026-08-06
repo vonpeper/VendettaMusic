@@ -13,7 +13,7 @@ import {
   LegalData 
 } from "@/actions/proposal"
 import { toast } from "sonner"
-import { Loader2, FileText, CheckCircle2, ChevronRight, RefreshCw, Download } from "lucide-react"
+import { Loader2, CheckCircle2, ChevronRight, RefreshCw, Download } from "lucide-react"
 
 interface ProposalInteractiveProps {
   booking: any

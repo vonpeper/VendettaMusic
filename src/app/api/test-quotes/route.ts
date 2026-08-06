@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { 
   updateProposalSelectionsAction, 
-  saveClientLegalDataAction, 
   acceptProposalAction,
   requestChangesAction 
 } from "@/actions/proposal"
@@ -12,7 +11,7 @@ import { ADMIN_ROLES } from "@/lib/auth-guards"
 
 export const dynamic = "force-dynamic"
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await auth()
   const isAdmin = session?.user && ADMIN_ROLES.has(session.user.role as string)
   if (!isAdmin) {
