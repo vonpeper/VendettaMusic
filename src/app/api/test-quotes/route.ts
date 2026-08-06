@@ -7,7 +7,8 @@ import {
   requestChangesAction 
 } from "@/actions/proposal"
 
-import { auth, ADMIN_ROLES } from "@/lib/auth"
+import { auth } from "@/lib/auth"
+import { ADMIN_ROLES } from "@/lib/auth-guards"
 
 export const dynamic = "force-dynamic"
 
