@@ -9,7 +9,7 @@ import crypto from "crypto"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const booking = await db.bookingRequest.findFirst({
     where: {
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(v)
 
-export default async function ProposalDetailPage({ params }: { params: { id: string } }) {
+export default async function ProposalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const booking = await db.bookingRequest.findFirst({
     where: {
