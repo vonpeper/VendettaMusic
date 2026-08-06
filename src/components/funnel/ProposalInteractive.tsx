@@ -4,7 +4,6 @@ import React, { useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { 
   updateProposalSelectionsAction, 
@@ -171,11 +170,16 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
             </div>
             <div className="flex items-center gap-4 shrink-0 justify-between sm:justify-end">
               <span className="text-sm font-black text-primary">{formatCurrency(OPTIONAL_PANTALLA)} <span className="text-[10px] text-muted-foreground">+ IVA</span></span>
-              <Switch 
-                checked={hasPantalla}
-                onCheckedChange={(checked) => handleToggle("pantalla", checked)}
-                disabled={isPending || isAccepted}
-              />
+              <label className="relative inline-flex items-center cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={hasPantalla}
+                  onChange={(e) => handleToggle("pantalla", e.target.checked)}
+                  disabled={isPending || isAccepted}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-foreground/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
             </div>
           </div>
 
@@ -192,11 +196,16 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
             </div>
             <div className="flex items-center gap-4 shrink-0 justify-between sm:justify-end">
               <span className="text-sm font-black text-primary">{formatCurrency(OPTIONAL_TEMPLETE)} <span className="text-[10px] text-muted-foreground">+ IVA</span></span>
-              <Switch 
-                checked={hasTemplete}
-                onCheckedChange={(checked) => handleToggle("templete", checked)}
-                disabled={isPending || isAccepted}
-              />
+              <label className="relative inline-flex items-center cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={hasTemplete}
+                  onChange={(e) => handleToggle("templete", e.target.checked)}
+                  disabled={isPending || isAccepted}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-foreground/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
             </div>
           </div>
         </div>
