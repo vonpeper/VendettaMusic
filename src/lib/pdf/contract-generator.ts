@@ -265,11 +265,13 @@ export async function generateContractPdf(
       desc: "Servicio Artístico: Presentación de Vendetta\n• Show musical de 2 horas con 30 minutos con formación de seis músicos.\n• Incluye backline de la banda, ingeniero de audio de Vendetta y asistente técnico.\n• Preparación, coordinación artística, repertorio y producción musical.",
       pu: MXN(35000)
     });
-    tableRows.push({
-      no: "2",
-      desc: "Producción Técnica Integral de Audio e Iluminación\n• Sistema de audio principal line array para cobertura del Salón Tolteca (Yamaha/DM3).\n• Microfonía, instrumentación completa y sistemas de monitoreo in-ear Shure (PSM900/PSM300).\n• Iluminación robótica y wash LED, truss de aluminio y consola profesional.\n• Personal de montaje, desmontaje, operación e ingeniería de iluminación/audio.",
-      pu: MXN(43770)
-    });
+    if (!data.clientProvidesAudio) {
+      tableRows.push({
+        no: String(tableRows.length + 1),
+        desc: "Producción Técnica Integral de Audio e Iluminación\n• Sistema de audio principal line array para cobertura del Salón Tolteca (Yamaha/DM3).\n• Microfonía, instrumentación completa y sistemas de monitoreo in-ear Shure (PSM900/PSM300).\n• Iluminación robótica y wash LED, truss de aluminio y consola profesional.\n• Personal de montaje, desmontaje, operación e ingeniería de iluminación/audio.",
+        pu: MXN(43770)
+      });
+    }
 
     if ((data as any).hasPantalla) {
       tableRows.push({

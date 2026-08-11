@@ -27,7 +27,8 @@ export interface LegalData {
 export async function updateProposalSelectionsAction(
   bookingId: string,
   hasPantalla: boolean,
-  hasTemplete: boolean
+  hasTemplete: boolean,
+  hasAudio: boolean = true
 ) {
   try {
     const booking = await db.bookingRequest.findUnique({
@@ -45,7 +46,8 @@ export async function updateProposalSelectionsAction(
     // Recalcular montos en servidor
     const pantallaPrice = hasPantalla ? OPTIONAL_PANTALLA : 0
     const templetePrice = hasTemplete ? OPTIONAL_TEMPLETE : 0
-    const subtotal = BASE_VENDETTA + BASE_PRODUCCION + pantallaPrice + templetePrice
+    const audioPrice = hasAudio ? BASE_PRODUCCION : 0
+    const subtotal = BASE_VENDETTA + audioPrice + pantallaPrice + templetePrice
     
     // Tasa IVA 16%
     const ivaAmount = Math.round(subtotal * 0.16 * 100) / 100
@@ -58,6 +60,7 @@ export async function updateProposalSelectionsAction(
       data: {
         hasPantalla,
         hasTemplete,
+        clientProvidesAudio: !hasAudio,
         baseAmount: subtotal,
         depositAmount
       }
@@ -65,7 +68,7 @@ export async function updateProposalSelectionsAction(
 
     // Alerta administrador
     await dispatchAdminAlert(
-      `🔔 El cliente de la propuesta ${booking.shortId} (${booking.clientName}) modificó sus opciones. Opcionales seleccionados: Pantalla LED: ${hasPantalla ? "SÍ" : "NO"}, Templete: ${hasTemplete ? "SÍ" : "NO"}. Nuevo Total: $${total.toLocaleString("es-MX")} MXN.`
+      `🔔 El cliente de la propuesta ${booking.shortId} (${booking.clientName}) modificó sus opciones. Opcionales seleccionados: Producción Técnica: ${hasAudio ? "SÍ" : "NO"}, Pantalla LED: ${hasPantalla ? "SÍ" : "NO"}, Templete: ${hasTemplete ? "SÍ" : "NO"}. Nuevo Total: $${total.toLocaleString("es-MX")} MXN.`
     )
 
     revalidatePath(`/propuesta/${booking.shortId}`)

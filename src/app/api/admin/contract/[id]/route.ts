@@ -126,6 +126,7 @@ export async function GET(
       hasPista:    booking.hasPista || false,
       hasRobot:    booking.hasRobot || false,
       hasPantalla: booking.hasPantalla || false,
+      clientProvidesAudio: booking.clientProvidesAudio || false,
       // Ubicación
       street: booking.event?.location?.address?.split(',')[0] || booking.calle || "",
       houseNumber: booking.numero || "",

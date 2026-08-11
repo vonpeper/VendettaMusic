@@ -82,6 +82,7 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
   const downloadQuoteUrl = `/api/admin/contract/${booking.id}?token=${pdfToken}&type=quote`
   const downloadContractUrl = `/api/admin/contract/${booking.id}?token=${pdfToken}`
 
+  const hasAudio = !booking.clientProvidesAudio
   const base = Number(booking.baseAmount || 0)
   const iva = Math.round(base * 0.16 * 100) / 100
   const total = base + iva
@@ -143,17 +144,21 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
 
                 {/* Alcance Técnico Detallado */}
                 <div className="pt-6 border-t border-border/20 space-y-4">
-                  <h4 className="text-xs font-black text-foreground uppercase tracking-widest">Alcance Técnico Incluido (Básico Obligatorio)</h4>
+                  <h4 className="text-xs font-black text-foreground uppercase tracking-widest">
+                    {hasAudio ? "Alcance Técnico Incluido (Básico Obligatorio)" : "Alcance Técnico Incluido"}
+                  </h4>
                   
                   <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
                     <div className="p-4 rounded-xl bg-foreground/[0.02] border border-border/20">
-                      <strong className="text-foreground block mb-1">1. Presentación de Vendetta:</strong>
+                      <strong className="text-foreground block mb-1">1. Presentación de Vendetta (Básico Obligatorio):</strong>
                       Show musical completo, backline de la banda, ingeniero de audio y staff técnico dedicado, preparación y coordinación de repertorio a la medida.
                     </div>
-                    <div className="p-4 rounded-xl bg-foreground/[0.02] border border-border/20">
-                      <strong className="text-foreground block mb-1">2. Producción Técnica de Audio e Iluminación:</strong>
-                      Sistema Line Array completo Yamaha/DM3, microfonía y soporte técnico completo, sistema de monitoreo in-ear Shure (PSM900/PSM300), iluminación robótica y paneles wash LED con truss de aluminio, técnicos especialistas de operación de luz y sonido.
-                    </div>
+                    {hasAudio && (
+                      <div className="p-4 rounded-xl bg-foreground/[0.02] border border-border/20">
+                        <strong className="text-foreground block mb-1">2. Producción Técnica de Audio e Iluminación:</strong>
+                        Sistema Line Array completo Yamaha/DM3, microfonía y soporte técnico completo, sistema de monitoreo in-ear Shure (PSM900/PSM300), iluminación robótica y paneles wash LED con truss de aluminio, técnicos especialistas de operación de luz y sonido.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

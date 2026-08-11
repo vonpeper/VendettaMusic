@@ -25,6 +25,7 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
   const [isPending, startTransition] = useTransition()
   const [hasPantalla, setHasPantalla] = useState(booking.hasPantalla || false)
   const [hasTemplete, setHasTemplete] = useState(booking.hasTemplete || false)
+  const [hasAudio, setHasAudio] = useState(!booking.clientProvidesAudio)
 
   // Datos legales del cliente
   const clientProfile = booking.client || {}
@@ -51,7 +52,7 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
   const OPTIONAL_TEMPLETE = 18390
 
   // Recálculo local reactivo para UX instantáneo
-  const subtotal = BASE_VENDETTA + BASE_PRODUCCION + (hasPantalla ? OPTIONAL_PANTALLA : 0) + (hasTemplete ? OPTIONAL_TEMPLETE : 0)
+  const subtotal = BASE_VENDETTA + (hasAudio ? BASE_PRODUCCION : 0) + (hasPantalla ? OPTIONAL_PANTALLA : 0) + (hasTemplete ? OPTIONAL_TEMPLETE : 0)
   const iva = Math.round(subtotal * 0.16 * 100) / 100
   const total = subtotal + iva
   const anticipo = Math.round(total * 0.50 * 100) / 100
@@ -65,15 +66,17 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
   }
 
   // Manejar cambio de opcionales
-  const handleToggle = (type: "pantalla" | "templete", checked: boolean) => {
+  const handleToggle = (type: "pantalla" | "templete" | "audio", checked: boolean) => {
     const nextPantalla = type === "pantalla" ? checked : hasPantalla
     const nextTemplete = type === "templete" ? checked : hasTemplete
+    const nextAudio = type === "audio" ? checked : hasAudio
 
     if (type === "pantalla") setHasPantalla(checked)
     if (type === "templete") setHasTemplete(checked)
+    if (type === "audio") setHasAudio(checked)
 
     startTransition(async () => {
-      const res = await updateProposalSelectionsAction(booking.id, nextPantalla, nextTemplete)
+      const res = await updateProposalSelectionsAction(booking.id, nextPantalla, nextTemplete, nextAudio)
       if (res.success) {
         toast.success("Presupuesto actualizado en servidor")
       } else {
@@ -81,6 +84,7 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
         // Revertir estado local
         if (type === "pantalla") setHasPantalla(!checked)
         if (type === "templete") setHasTemplete(!checked)
+        if (type === "audio") setHasAudio(!checked)
       }
     })
   }
@@ -157,6 +161,32 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
         </p>
 
         <div className="space-y-6">
+          {/* Opcional: Producción Técnica */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-foreground/[0.02] border border-border/40">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-foreground">Producción Técnica de Audio e Iluminación</span>
+                <span className="text-[10px] font-black uppercase bg-primary/20 text-primary px-2 py-0.5 rounded">Opcional</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+                Sistema de audio principal Line Array Yamaha/DM3, microfonía, instrumentación completa, sistemas de monitoreo in-ear Shure (PSM900/PSM300), iluminación robótica y paneles wash LED con truss de aluminio, y equipo técnico para el montaje, operación y desmontaje.
+              </p>
+            </div>
+            <div className="flex items-center gap-4 shrink-0 justify-between sm:justify-end">
+              <span className="text-sm font-black text-primary">{formatCurrency(BASE_PRODUCCION)} <span className="text-[10px] text-muted-foreground">+ IVA</span></span>
+              <label className="relative inline-flex items-center cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={hasAudio}
+                  onChange={(e) => handleToggle("audio", e.target.checked)}
+                  disabled={isPending || isAccepted}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-foreground/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+          </div>
+
           {/* Opcional 1: Pantalla LED */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-foreground/[0.02] border border-border/40">
             <div>
@@ -223,10 +253,12 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
               <span className="text-muted-foreground">Presentación Artística Vendetta (Obligatorio)</span>
               <span className="font-bold text-foreground">{formatCurrency(BASE_VENDETTA)}</span>
             </div>
-            <div className="flex justify-between py-1 border-b border-border/10">
-              <span className="text-muted-foreground">Producción Técnica Integral (Obligatorio)</span>
-              <span className="font-bold text-foreground">{formatCurrency(BASE_PRODUCCION)}</span>
-            </div>
+            {hasAudio && (
+              <div className="flex justify-between py-1 border-b border-border/10 text-primary">
+                <span>Servicio Adicional: Producción Técnica Integral</span>
+                <span className="font-bold">{formatCurrency(BASE_PRODUCCION)}</span>
+              </div>
+            )}
             {hasPantalla && (
               <div className="flex justify-between py-1 border-b border-border/10 text-primary">
                 <span>Servicio Adicional: Pantalla LED 6x4m</span>
