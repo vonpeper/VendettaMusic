@@ -45,13 +45,17 @@ def fetch_logs():
         
         stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 cat \"/app/src/app/api/admin/contract/[id]/route.ts\" || echo \"Not found in source\"")
         cat_route = stdout.read().decode('utf-8')
+
+        stdin, stdout, stderr = ssh.exec_command("docker ps -q | xargs docker inspect --format '{{.Name}} - {{.Config.Labels}}' | grep -i vendetta.mx || echo \"No direct match\"")
+        traefik_match = stdout.read().decode('utf-8')
             
         report = {
             "docker_ps": docker_ps,
             "docker_ps_err": docker_ps_err,
             "container_logs": logs_dict,
             "grep_next": grep_next,
-            "cat_route": cat_route
+            "cat_route": cat_route,
+            "traefik_match": traefik_match
         }
         
         import json
