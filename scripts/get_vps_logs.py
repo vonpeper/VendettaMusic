@@ -50,7 +50,11 @@ def fetch_logs():
         stdin, stdout, stderr = ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 node -e \'const crypto = require(\"crypto\"); const secret = process.env.AUTH_SECRET || \"fallback_secret_vendetta_music_app_2026\"; const id = \"349d67ae-ee3f-44c5-a0d8-9a37ffa77b65\"; console.log(crypto.createHmac(\"sha256\", secret).update(id).digest(\"hex\"));\'')
         expected_token = stdout.read().decode('utf-8').strip()
         
-        # Write node script to a file on VPS and run it inside container
+        # Inspect labels of all running containers to see Traefik configuration
+        stdin, stdout, stderr = ssh.exec_command("docker inspect --format '{{.Name}} {{range $k, $v := .Config.Labels}}{{printf \"%s=%s\\n\" $k $v}}{{end}}' $(docker ps -q)")
+        grep_next = stdout.read().decode('utf-8')
+        
+        # Run node fetch inside the container to bypass any external routing/caching
         node_script = """const http = require('http');
 const crypto = require('crypto');
 const secret = process.env.AUTH_SECRET || 'fallback_secret_vendetta_music_app_2026';
@@ -82,6 +86,11 @@ http.get(url, (res) => {
         
         ssh.exec_command('rm -f /tmp/test-contract.js')
         ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 rm -f /tmp/test-contract.js')
+        
+        # Test curling Traefik locally using --resolve
+        stdin, stdout, stderr = ssh.exec_command(f'curl -v -k -L --resolve vendetta.mx:443:127.0.0.1 --resolve vendetta.mx:80:127.0.0.1 "http://127.0.0.1/api/admin/contract/349d67ae-ee3f-44c5-a0d8-9a37ffa77b65?token={expected_token}"')
+        curl_local_out = stdout.read().decode('utf-8')
+        curl_local_err = stderr.read().decode('utf-8')
             
         report = {
             "docker_ps": docker_ps,
@@ -89,7 +98,7 @@ http.get(url, (res) => {
             "container_logs": logs_dict,
             "grep_next": grep_next,
             "cat_route": cat_route,
-            "bookings_list": f"INTERNAL NODE FETCH OUTPUT:\n{node_output}\nINTERNAL NODE FETCH ERR:\n{node_err}",
+            "bookings_list": f"INTERNAL NODE FETCH OUTPUT:\n{node_output}\nINTERNAL NODE FETCH ERR:\n{node_err}\n\nTRAEFIK LOCAL CURL OUTPUT:\n{curl_local_out}\nTRAEFIK LOCAL CURL ERR:\n{curl_local_err}",
             "bookings_list_err": ""
         }
         
