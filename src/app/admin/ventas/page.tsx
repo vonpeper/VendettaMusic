@@ -430,7 +430,7 @@ function ContratosGrid({
                             asChild
                             className="h-9 gap-2 border-green-600/30 text-green-400 hover:bg-green-600 hover:text-foreground w-full flex items-center justify-center rounded-lg border text-xs font-bold transition-all cursor-pointer" 
                           >
-                            <a href={`/api/admin/contract/${c.id}`}>
+                            <a href={`/api/admin/contract/${c.id}?t=${Date.now()}`}>
                               <Download className="w-3 h-3" /> Contrato
                             </a>
                           </Button>

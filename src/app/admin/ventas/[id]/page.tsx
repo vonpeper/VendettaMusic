@@ -246,7 +246,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-red-600/10 border border-red-600/20 text-red-600 hover:bg-red-600/20 transition-all cursor-pointer p-0"
               title={booking.status === "pendiente" ? "Descargar Cotización PDF" : "Descargar Contrato PDF"}
             >
-              <a href={`/api/admin/contract/${booking.id}`}>
+              <a href={`/api/admin/contract/${booking.id}?t=${Date.now()}`}>
                 <FileText className="w-4 h-4" />
               </a>
             </Button>
