@@ -3,8 +3,8 @@
   "docker_ps_err": "",
   "container_logs": {
     "vendetta-prod-gcqoaf-vendetta-app-1": {
-      "stdout": "\u25b2 Next.js 16.2.6\n- Local:         http://localhost:3000\n- Network:       http://0.0.0.0:3000\n\u2713 Ready in 0ms\n\u25c7 injected env (0) from .env // tip: \u2318 custom filepath { path: '/custom/path/.env' }\n",
-      "stderr": ""
+      "stdout": "",
+      "stderr": "Error response from daemon: can not get logs from container which is dead or marked for removal\n"
     },
     "vendetta-secuencias-app": {
       "stdout": "\u25b2 Next.js 16.2.10\n- Local:         http://localhost:3000\n- Network:       http://0.0.0.0:3000\n\u2713 Ready in 0ms\n\u25b2 Next.js 16.2.10\n- Local:         http://localhost:3000\n- Network:       http://0.0.0.0:3000\n\u2713 Ready in 0ms\n",
@@ -13,6 +13,6 @@
   },
   "grep_next": "Not found in Next build\n",
   "cat_route": "Not found in source\n",
-  "bookings_list": "log not found\n",
-  "bookings_list_err": "cat: '/etc/dokploy/logs/vendetta-prod-gcqoaf/vendetta-prod-gcqoaf-2026-08-15:02:51:00.log': Permission denied\n"
+  "bookings_list": "No log files found",
+  "bookings_list_err": ""
 }
