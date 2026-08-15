@@ -74,11 +74,8 @@ export async function generateContractPdf(
 ) {
   console.log(`[PDF Generator] Finalizing document. includeLegal=${!!options.includeLegal}`)
   
-  if (options.includeLegal) {
-    if (!data.mapsLink || data.mapsLink.trim() === "") {
-      throw new Error("Datos incompletos: Se requiere Link de Google Maps para generar un contrato oficial.")
-    }
-  }
+  // Se eliminó la obligatoriedad de contar con link de Google Maps para permitir descargar la versión de cotización o contrato sin trabas.
+
 
   const doc = await PDFDocument.create()
   doc.registerFontkit(fontkit)
