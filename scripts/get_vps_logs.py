@@ -19,14 +19,12 @@ def fetch_logs():
         
         # 1. get docker ps
         stdin, stdout, stderr = ssh.exec_command("docker ps -a")
-        docker_ps = stdout.read().decode('utf-8')
-        docker_ps_err = stderr.read().decode('utf-8')
+        docker_ps = stdout.read().decode('utf-8', errors='ignore')
+        docker_ps_err = stderr.read().decode('utf-8', errors='ignore')
         
         # 2. get docker logs of vendetta container
-        # Dokploy compose containers usually have vendetta-app or similar in their name.
-        # Let's run docker ps to find the container name and then run docker logs on it.
         stdin, stdout, stderr = ssh.exec_command("docker ps -a --filter name=vendetta --format '{{.Names}}'")
-        containers = stdout.read().decode('utf-8').strip().split('\n')
+        containers = stdout.read().decode('utf-8', errors='ignore').strip().split('\n')
         
         logs_dict = {}
         for container in containers:
@@ -35,24 +33,24 @@ def fetch_logs():
             print(f"Fetching logs for container: {container}...")
             stdin, stdout, stderr = ssh.exec_command(f"docker logs --tail=300 {container}")
             logs_dict[container] = {
-                "stdout": stdout.read().decode('utf-8'),
-                "stderr": stderr.read().decode('utf-8')
+                "stdout": stdout.read().decode('utf-8', errors='ignore'),
+                "stderr": stderr.read().decode('utf-8', errors='ignore')
             }
             
         # 3. get custom diagnostic info
         stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 find /app -name \"route.js\" -o -name \"route.ts\" || echo \"not found\"")
-        find_routes = stdout.read().decode('utf-8')
+        find_routes = stdout.read().decode('utf-8', errors='ignore')
         
         stdin, stdout, stderr = ssh.exec_command("cat /etc/dokploy/compose/vendetta-prod-gcqoaf/code/docker-compose.yml || echo \"No compose file\"")
-        cat_route = "VPS DOCKER COMPOSE:\n" + stdout.read().decode('utf-8') + "\n\nFIND ROUTE FILES:\n" + find_routes
+        cat_route = "VPS DOCKER COMPOSE:\n" + stdout.read().decode('utf-8', errors='ignore') + "\n\nFIND ROUTE FILES:\n" + find_routes
 
         # Generate authorization token and curl contract endpoint via container IP
         stdin, stdout, stderr = ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 node -e \'const crypto = require(\"crypto\"); const secret = process.env.AUTH_SECRET || \"fallback_secret_vendetta_music_app_2026\"; const id = \"349d67ae-ee3f-44c5-a0d8-9a37ffa77b65\"; console.log(crypto.createHmac(\"sha256\", secret).update(id).digest(\"hex\"));\'')
-        expected_token = stdout.read().decode('utf-8').strip()
+        expected_token = stdout.read().decode('utf-8', errors='ignore').strip()
         
         # Inspect labels of all running containers to see Traefik configuration
         stdin, stdout, stderr = ssh.exec_command("docker inspect --format '{{.Name}} {{range $k, $v := .Config.Labels}}{{printf \"%s=%s\\n\" $k $v}}{{end}}' $(docker ps -q)")
-        grep_next = stdout.read().decode('utf-8')
+        grep_next = stdout.read().decode('utf-8', errors='ignore')
         
         # Run node fetch inside the container to bypass any external routing/caching
         node_script = """const http = require('http');
@@ -81,16 +79,16 @@ http.get(url, (res) => {
         ssh.exec_command('docker cp /tmp/test-contract.js vendetta-prod-gcqoaf-vendetta-app-1:/tmp/test-contract.js')
         
         stdin, stdout, stderr = ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 node /tmp/test-contract.js')
-        node_output = stdout.read().decode('utf-8')
-        node_err = stderr.read().decode('utf-8')
+        node_output = stdout.read().decode('utf-8', errors='ignore')
+        node_err = stderr.read().decode('utf-8', errors='ignore')
         
         ssh.exec_command('rm -f /tmp/test-contract.js')
         ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 rm -f /tmp/test-contract.js')
         
         # Test curling Traefik locally using --resolve
         stdin, stdout, stderr = ssh.exec_command(f'curl -v -k -L --resolve vendetta.mx:443:127.0.0.1 --resolve vendetta.mx:80:127.0.0.1 "http://vendetta.mx/api/admin/contract/349d67ae-ee3f-44c5-a0d8-9a37ffa77b65?token={expected_token}"')
-        curl_local_out = stdout.read().decode('utf-8')
-        curl_local_err = stderr.read().decode('utf-8')
+        curl_local_out = stdout.read().decode('utf-8', errors='ignore')
+        curl_local_err = stderr.read().decode('utf-8', errors='ignore')
             
         report = {
             "docker_ps": docker_ps,
@@ -108,7 +106,9 @@ http.get(url, (res) => {
         print("Saved logs report to vps-container-logs.json successfully.")
         
     except Exception as e:
+        import traceback
         print(f"Error fetching logs: {e}")
+        traceback.print_exc()
     finally:
         ssh.close()
 
