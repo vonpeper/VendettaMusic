@@ -57,7 +57,7 @@ const crypto = require('crypto');
 const secret = process.env.AUTH_SECRET || 'fallback_secret_vendetta_music_app_2026';
 const id = '349d67ae-ee3f-44c5-a0d8-9a37ffa77b65';
 const token = crypto.createHmac('sha256', secret).update(id).digest('hex');
-const url = `http://localhost:3000/api/admin/contract/${id}?token=${token}`;
+const url = 'http://localhost:3000/api/admin/contract/' + id + '?token=' + token;
 http.get(url, (res) => {
   console.log('STATUSCODE:' + res.statusCode);
   console.log('HEADERS:' + JSON.stringify(res.headers));
