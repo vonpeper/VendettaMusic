@@ -10,7 +10,7 @@ def fetch_logs():
             hostname='66.29.152.229', 
             port=2226, 
             username='jose', 
-            password='zNb+kFF7X8COrbKB',
+            password='VuQmPgXP3EiDNSx1GHsR',
             look_for_keys=False,
             allow_agent=False,
             timeout=15
