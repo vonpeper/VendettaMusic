@@ -29,7 +29,29 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   return {
     title: `Propuesta Comercial ${booking.shortId} | Vendetta Live Music`,
-    description: `Cotización de show musical y producción técnica para ${booking.clientName}.`
+    description: `Cotización de show musical y producción técnica para ${booking.clientName}.`,
+    openGraph: {
+      title: `Propuesta Comercial ${booking.shortId} | Vendetta Live Music`,
+      description: `Cotización de show musical y producción técnica para ${booking.clientName}.`,
+      url: `https://vendetta.mx/propuesta/${booking.shortId}`,
+      siteName: 'Vendetta Live Music',
+      images: [
+        {
+          url: 'https://vendetta.mx/images/opengraph-evento.png',
+          width: 1200,
+          height: 630,
+          alt: 'Evento Vendetta Live Music',
+        },
+      ],
+      locale: 'es_MX',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `Propuesta Comercial ${booking.shortId} | Vendetta Live Music`,
+      description: `Cotización de show musical y producción técnica para ${booking.clientName}.`,
+      images: ['https://vendetta.mx/images/opengraph-evento.png'],
+    },
   }
 }
 

@@ -39,10 +39,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       siteName: 'Vendetta Live Music',
       images: [
         {
-          url: 'https://vendetta.mx/images/shows/arma-tu-show.jpg',
+          url: 'https://vendetta.mx/images/opengraph-evento.png',
           width: 1200,
           height: 630,
-          alt: 'Vendetta Live Music Show',
+          alt: 'Evento Vendetta Live Music',
         },
       ],
       locale: 'es_MX',
@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       card: 'summary_large_image',
       title,
       description,
-      images: ['https://vendetta.mx/images/shows/arma-tu-show.jpg'],
+      images: ['https://vendetta.mx/images/opengraph-evento.png'],
     },
   }
 }
