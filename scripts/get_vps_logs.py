@@ -50,9 +50,8 @@ def fetch_logs():
         stdin, stdout, stderr = ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 node -e \'const crypto = require(\"crypto\"); const secret = process.env.AUTH_SECRET || \"fallback_secret_vendetta_music_app_2026\"; const id = \"349d67ae-ee3f-44c5-a0d8-9a37ffa77b65\"; console.log(crypto.createHmac(\"sha256\", secret).update(id).digest(\"hex\"));\'')
         expected_token = stdout.read().decode('utf-8').strip()
         
-        # Run node fetch inside the container to bypass any external routing/caching
-        node_script = """
-const http = require('http');
+        # Write node script to a file on VPS and run it inside container
+        node_script = """const http = require('http');
 const crypto = require('crypto');
 const secret = process.env.AUTH_SECRET || 'fallback_secret_vendetta_music_app_2026';
 const id = '349d67ae-ee3f-44c5-a0d8-9a37ffa77b65';
@@ -70,9 +69,19 @@ http.get(url, (res) => {
   console.log('ERROR:' + err.message);
 });
 """
-        stdin, stdout, stderr = ssh.exec_command(f"docker exec vendetta-prod-gcqoaf-vendetta-app-1 node -e {repr(node_script)}")
+        sftp = ssh.open_sftp()
+        with sftp.file('/tmp/test-contract.js', 'w') as f:
+            f.write(node_script)
+        sftp.close()
+        
+        ssh.exec_command('docker cp /tmp/test-contract.js vendetta-prod-gcqoaf-vendetta-app-1:/tmp/test-contract.js')
+        
+        stdin, stdout, stderr = ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 node /tmp/test-contract.js')
         node_output = stdout.read().decode('utf-8')
         node_err = stderr.read().decode('utf-8')
+        
+        ssh.exec_command('rm -f /tmp/test-contract.js')
+        ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 rm -f /tmp/test-contract.js')
             
         report = {
             "docker_ps": docker_ps,
