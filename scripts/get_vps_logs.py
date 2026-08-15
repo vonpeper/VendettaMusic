@@ -46,7 +46,7 @@ def fetch_logs():
         stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 cat \"/app/src/app/api/admin/contract/[id]/route.ts\" || echo \"Not found in source\"")
         cat_route = stdout.read().decode('utf-8')
 
-        stdin, stdout, stderr = ssh.exec_command("sqlite3 /opt/vendetta/prisma/prod.db \".schema ClientProfile\" && sqlite3 -line /opt/vendetta/prisma/prod.db \"SELECT * FROM ClientProfile WHERE id = '1a5ac87f-fe88-4cef-b7dc-851afa9fde1e';\"")
+        stdin, stdout, stderr = ssh.exec_command("sqlite3 /opt/vendetta/prisma/prod.db \"SELECT id, status, eventId FROM Contract;\" && sqlite3 /opt/vendetta/prisma/prod.db \"SELECT id, title, bookingId FROM Event;\"")
         bookings_list = stdout.read().decode('utf-8')
         bookings_list_err = stderr.read().decode('utf-8')
             
