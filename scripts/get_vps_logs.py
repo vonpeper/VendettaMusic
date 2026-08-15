@@ -88,7 +88,7 @@ http.get(url, (res) => {
         ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 rm -f /tmp/test-contract.js')
         
         # Test curling Traefik locally using --resolve
-        stdin, stdout, stderr = ssh.exec_command(f'curl -v -k -L --resolve vendetta.mx:443:127.0.0.1 --resolve vendetta.mx:80:127.0.0.1 "http://127.0.0.1/api/admin/contract/349d67ae-ee3f-44c5-a0d8-9a37ffa77b65?token={expected_token}"')
+        stdin, stdout, stderr = ssh.exec_command(f'curl -v -k -L --resolve vendetta.mx:443:127.0.0.1 --resolve vendetta.mx:80:127.0.0.1 "http://vendetta.mx/api/admin/contract/349d67ae-ee3f-44c5-a0d8-9a37ffa77b65?token={expected_token}"')
         curl_local_out = stdout.read().decode('utf-8')
         curl_local_err = stderr.read().decode('utf-8')
             
