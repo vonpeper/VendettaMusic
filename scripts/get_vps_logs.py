@@ -53,7 +53,7 @@ def fetch_logs():
         stdin, stdout, stderr = ssh.exec_command("docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' vendetta-prod-gcqoaf-vendetta-app-1")
         container_ip = stdout.read().decode('utf-8').strip()
         
-        stdin, stdout, stderr = ssh.exec_command(f'curl -v "http://{container_ip}:3000/api/admin/contract/349d67ae-ee3f-44c5-a0d8-9a37ffa77b65?token={expected_token}"')
+        stdin, stdout, stderr = ssh.exec_command(f'curl -v -H "Host: vendetta.mx" "http://127.0.0.1/api/admin/contract/349d67ae-ee3f-44c5-a0d8-9a37ffa77b65?token={expected_token}"')
         curl_output = stdout.read().decode('utf-8')
         curl_err = stderr.read().decode('utf-8')
             
@@ -63,7 +63,7 @@ def fetch_logs():
             "container_logs": logs_dict,
             "grep_next": grep_next,
             "cat_route": cat_route,
-            "bookings_list": f"CONTAINER IP: {container_ip}\nCURL OUTPUT (first 30 lines):\n" + "\n".join(curl_output.split("\n")[:30]) + f"\nCURL ERR:\n{curl_err}",
+            "bookings_list": f"CURL OUTPUT (first 30 lines):\n" + "\n".join(curl_output.split("\n")[:30]) + f"\nCURL ERR:\n{curl_err}",
             "bookings_list_err": ""
         }
         
