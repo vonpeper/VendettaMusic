@@ -55,7 +55,6 @@ def fetch_logs():
             "container_logs": logs_dict,
             "grep_next": grep_next,
             "cat_route": cat_route,
-            "traefik_match": traefik_match,
             "bookings_list": bookings_list
         }
         
