@@ -46,8 +46,8 @@ def fetch_logs():
         stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 cat \"/app/src/app/api/admin/contract/[id]/route.ts\" || echo \"Not found in source\"")
         cat_route = stdout.read().decode('utf-8')
 
-        stdin, stdout, stderr = ssh.exec_command("docker ps -q | xargs docker inspect --format '{{.Name}} - {{.Config.Labels}}' | grep -i vendetta.mx || echo \"No direct match\"")
-        traefik_match = stdout.read().decode('utf-8')
+        stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 node -e \"const { PrismaClient } = require('@prisma/client'); const db = new PrismaClient(); db.bookingRequest.findMany({ select: { id: true, shortId: true, clientName: true, status: true } }).then(b => console.log(JSON.stringify(b)))\"")
+        bookings_list = stdout.read().decode('utf-8')
             
         report = {
             "docker_ps": docker_ps,
@@ -55,7 +55,8 @@ def fetch_logs():
             "container_logs": logs_dict,
             "grep_next": grep_next,
             "cat_route": cat_route,
-            "traefik_match": traefik_match
+            "traefik_match": traefik_match,
+            "bookings_list": bookings_list
         }
         
         import json
