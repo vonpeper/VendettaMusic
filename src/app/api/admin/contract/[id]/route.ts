@@ -78,27 +78,8 @@ export async function GET(
     }
 
     const isQuote = booking.status === "pendiente" || req.nextUrl.searchParams.get("type") === "quote"
-    if (!isQuote) {
-      // Validar datos legales requeridos para contrato definitivo
-      const clientProfile = booking.client
-      const missingFields = []
-      if (!clientProfile?.rfc) missingFields.push("RFC")
-      if (!clientProfile?.fiscalAddress) missingFields.push("Domicilio Fiscal")
-      if (!clientProfile?.legalRepName) missingFields.push("Nombre del Representante Legal")
-      if (!clientProfile?.legalRepRole) missingFields.push("Cargo del Representante Legal")
-      if (!clientProfile?.legalRepPower) missingFields.push("Instrumento de Facultades")
-      if (!clientProfile?.notificationAddress) missingFields.push("Domicilio de Notificaciones")
-      if (!clientProfile?.billingData) missingFields.push("Datos de Facturación")
-      if (!booking.clientEmail) missingFields.push("Correo Electrónico")
-      if (!booking.clientPhone) missingFields.push("Teléfono")
+    // Se eliminó la validación estricta de datos legales para permitir generar y descargar el contrato con fallbacks genéricos
 
-      if (missingFields.length > 0) {
-        return NextResponse.json({ 
-          error: "Datos legales incompletos para generar el contrato definitivo", 
-          missingFields 
-        }, { status: 400 })
-      }
-    }
 
     console.log(`[Contract API] Processing booking ${booking.shortId} (Status: ${booking.status})`)
     console.log(`[Contract API] Signatures: Client=${!!booking.clientSignature}, Admin=${!!booking.adminSignature}`)
