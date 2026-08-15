@@ -39,10 +39,19 @@ def fetch_logs():
                 "stderr": stderr.read().decode('utf-8')
             }
             
+        # 3. get custom diagnostic info
+        stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 grep -rn \"Datos legales\" /app/.next/ || echo \"Not found in Next build\"")
+        grep_next = stdout.read().decode('utf-8')
+        
+        stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 cat \"/app/src/app/api/admin/contract/[id]/route.ts\" || echo \"Not found in source\"")
+        cat_route = stdout.read().decode('utf-8')
+            
         report = {
             "docker_ps": docker_ps,
             "docker_ps_err": docker_ps_err,
-            "container_logs": logs_dict
+            "container_logs": logs_dict,
+            "grep_next": grep_next,
+            "cat_route": cat_route
         }
         
         import json
