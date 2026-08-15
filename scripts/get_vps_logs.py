@@ -46,7 +46,7 @@ def fetch_logs():
         stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 cat \"/app/src/app/api/admin/contract/[id]/route.ts\" || echo \"Not found in source\"")
         cat_route = stdout.read().decode('utf-8')
 
-        stdin, stdout, stderr = ssh.exec_command("docker logs --tail=1000 vendetta-prod-gcqoaf-vendetta-app-1 2>&1 | grep -iE 'error|contract' || true")
+        stdin, stdout, stderr = ssh.exec_command("cat /etc/dokploy/logs/vendetta-prod-gcqoaf/vendetta-prod-gcqoaf-2026-08-15:02:51:00.log || echo \"log not found\"")
         bookings_list = stdout.read().decode('utf-8')
         bookings_list_err = stderr.read().decode('utf-8')
             
