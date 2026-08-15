@@ -13,6 +13,6 @@
   },
   "grep_next": "Not found in Next build\n",
   "cat_route": "Not found in source\n",
-  "bookings_list": "",
-  "bookings_list_err": ""
+  "bookings_list": "log not found\n",
+  "bookings_list_err": "cat: '/etc/dokploy/logs/vendetta-prod-gcqoaf/vendetta-prod-gcqoaf-2026-08-15:02:51:00.log': Permission denied\n"
 }
