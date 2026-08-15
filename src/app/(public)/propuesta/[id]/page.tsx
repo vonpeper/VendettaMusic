@@ -89,8 +89,8 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
 
   const isAccepted = booking.status === "agendado" || booking.status === "completado"
   
-  const clientProfile = booking.client
-  const hasIncompleteLegal = !clientProfile?.rfc || !clientProfile?.fiscalAddress || !clientProfile?.legalRepName || !clientProfile?.legalRepRole || !clientProfile?.legalRepPower || !clientProfile?.notificationAddress || !clientProfile?.billingData || !booking.clientEmail || !booking.clientPhone
+  const hasIncompleteLegal = false
+
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden py-20">

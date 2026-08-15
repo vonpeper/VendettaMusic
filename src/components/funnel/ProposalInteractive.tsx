@@ -146,8 +146,8 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
 
   const isAccepted = booking.status === "agendado" || booking.status === "completado"
 
-  // Validar si los datos legales obligatorios están listos
-  const hasIncompleteLegal = !legalData.rfc || !legalData.fiscalAddress || !legalData.legalRepName || !legalData.legalRepRole || !legalData.legalRepPower || !legalData.notificationAddress || !legalData.billingData || !legalData.clientEmail || !legalData.clientPhone
+  const hasIncompleteLegal = false
+
 
   return (
     <div className="space-y-8">
@@ -326,7 +326,6 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
                 value={legalData.rfc}
                 onChange={(e) => setLegalData({ ...legalData, rfc: e.target.value })}
                 placeholder="RFC del Colegio"
-                required
                 className="bg-background border-border/40 h-11 rounded-xl font-mono uppercase"
               />
             </div>
@@ -337,7 +336,6 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
                 value={legalData.fiscalAddress}
                 onChange={(e) => setLegalData({ ...legalData, fiscalAddress: e.target.value })}
                 placeholder="Dirección fiscal oficial completa"
-                required
                 className="bg-background border-border/40 h-11 rounded-xl"
               />
             </div>
@@ -348,7 +346,6 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
                 value={legalData.legalRepName}
                 onChange={(e) => setLegalData({ ...legalData, legalRepName: e.target.value })}
                 placeholder="Nombre completo"
-                required
                 className="bg-background border-border/40 h-11 rounded-xl"
               />
             </div>
@@ -359,7 +356,6 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
                 value={legalData.legalRepRole}
                 onChange={(e) => setLegalData({ ...legalData, legalRepRole: e.target.value })}
                 placeholder="Ej. Presidente / Apoderado Legal"
-                required
                 className="bg-background border-border/40 h-11 rounded-xl"
               />
             </div>
@@ -370,7 +366,6 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
                 value={legalData.legalRepPower}
                 onChange={(e) => setLegalData({ ...legalData, legalRepPower: e.target.value })}
                 placeholder="Ej. Escritura Pública No. 12345"
-                required
                 className="bg-background border-border/40 h-11 rounded-xl"
               />
             </div>
@@ -381,7 +376,6 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
                 value={legalData.notificationAddress}
                 onChange={(e) => setLegalData({ ...legalData, notificationAddress: e.target.value })}
                 placeholder="Dirección para recibir notificaciones"
-                required
                 className="bg-background border-border/40 h-11 rounded-xl"
               />
             </div>
@@ -393,7 +387,6 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
                 value={legalData.clientEmail}
                 onChange={(e) => setLegalData({ ...legalData, clientEmail: e.target.value })}
                 placeholder="correo@ejemplo.com"
-                required
                 className="bg-background border-border/40 h-11 rounded-xl"
               />
             </div>
@@ -404,7 +397,6 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
                 value={legalData.clientPhone}
                 onChange={(e) => setLegalData({ ...legalData, clientPhone: e.target.value })}
                 placeholder="WhatsApp (10 dígitos)"
-                required
                 className="bg-background border-border/40 h-11 rounded-xl"
               />
             </div>
@@ -416,7 +408,6 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
               value={legalData.billingData}
               onChange={(e) => setLegalData({ ...legalData, billingData: e.target.value })}
               placeholder="Instrucciones especiales de facturación (CFDI, método de pago, etc.)"
-              required
               rows={3}
               className="bg-background border-border/40 rounded-xl"
             />
