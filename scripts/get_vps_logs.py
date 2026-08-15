@@ -46,16 +46,10 @@ def fetch_logs():
         stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 cat \"/app/src/app/api/admin/contract/[id]/route.ts\" || echo \"Not found in source\"")
         cat_route = stdout.read().decode('utf-8')
 
-        stdin, stdout, stderr = ssh.exec_command('echo "VuQmPgXP3EiDNSx1GHsR" | sudo -S ls -1t /etc/dokploy/logs/vendetta-prod-gcqoaf/')
-        log_files = stdout.read().decode('utf-8').strip().split('\n')
-        newest_log = log_files[0] if log_files and log_files[0] else ""
-        if newest_log:
-            stdin, stdout, stderr = ssh.exec_command(f'echo "VuQmPgXP3EiDNSx1GHsR" | sudo -S cat "/etc/dokploy/logs/vendetta-prod-gcqoaf/{newest_log}"')
-            bookings_list = stdout.read().decode('utf-8')
-            bookings_list_err = stderr.read().decode('utf-8')
-        else:
-            bookings_list = "No log files found"
-            bookings_list_err = ""
+        stdin, stdout, stderr = ssh.exec_command('pm2 list || echo "no pm2"')
+        pm2_status = stdout.read().decode('utf-8')
+        stdin, stdout, stderr = ssh.exec_command('systemctl list-units --type=service | grep -i vendetta || echo "no vendetta systemd"')
+        systemd_status = stdout.read().decode('utf-8')
             
         report = {
             "docker_ps": docker_ps,
@@ -63,8 +57,8 @@ def fetch_logs():
             "container_logs": logs_dict,
             "grep_next": grep_next,
             "cat_route": cat_route,
-            "bookings_list": bookings_list,
-            "bookings_list_err": bookings_list_err
+            "bookings_list": f"PM2:\n{pm2_status}\nSystemd:\n{systemd_status}",
+            "bookings_list_err": ""
         }
         
         import json
