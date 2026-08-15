@@ -46,10 +46,13 @@ def fetch_logs():
         stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 cat \"/app/src/app/api/admin/contract/[id]/route.ts\" || echo \"Not found in source\"")
         cat_route = stdout.read().decode('utf-8')
 
-        stdin, stdout, stderr = ssh.exec_command('pm2 list || echo "no pm2"')
-        pm2_status = stdout.read().decode('utf-8')
-        stdin, stdout, stderr = ssh.exec_command('systemctl list-units --type=service | grep -i vendetta || echo "no vendetta systemd"')
-        systemd_status = stdout.read().decode('utf-8')
+        # Generate authorization token and curl contract endpoint
+        stdin, stdout, stderr = ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 node -e \'const crypto = require(\"crypto\"); const secret = process.env.AUTH_SECRET || \"fallback_secret_vendetta_music_app_2026\"; const id = \"349d67ae-ee3f-44c5-a0d8-9a37ffa77b65\"; console.log(crypto.createHmac(\"sha256\", secret).update(id).digest(\"hex\"));\'')
+        expected_token = stdout.read().decode('utf-8').strip()
+        
+        stdin, stdout, stderr = ssh.exec_command(f'docker exec vendetta-prod-gcqoaf-vendetta-app-1 curl -i -s "http://localhost:3000/api/admin/contract/349d67ae-ee3f-44c5-a0d8-9a37ffa77b65?token={expected_token}"')
+        curl_output = stdout.read().decode('utf-8')
+        curl_err = stderr.read().decode('utf-8')
             
         report = {
             "docker_ps": docker_ps,
@@ -57,7 +60,7 @@ def fetch_logs():
             "container_logs": logs_dict,
             "grep_next": grep_next,
             "cat_route": cat_route,
-            "bookings_list": f"PM2:\n{pm2_status}\nSystemd:\n{systemd_status}",
+            "bookings_list": f"CURL OUTPUT:\n{curl_output}\nCURL ERR:\n{curl_err}",
             "bookings_list_err": ""
         }
         
