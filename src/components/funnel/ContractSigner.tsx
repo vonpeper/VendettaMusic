@@ -188,7 +188,7 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
                   asChild
                   className="bg-primary/20 text-primary hover:bg-primary/30 border border-primary/50 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl transition-all gap-2"
                 >
-                  <a href={`/api/admin/contract/${bookingId}`} target="_blank" rel="noreferrer">
+                  <a href={`/api/admin/contract/${bookingId}?t=${Date.now()}`} target="_blank" rel="noreferrer">
                     <FileText className="w-4 h-4" />
                     Descargar Contrato PDF
                   </a>
