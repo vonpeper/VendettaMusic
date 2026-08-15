@@ -40,11 +40,11 @@ def fetch_logs():
             }
             
         # 3. get custom diagnostic info
-        stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 grep -rn \"Datos legales\" /app/.next/ || echo \"Not found in Next build\"")
-        grep_next = stdout.read().decode('utf-8')
+        stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 find /app -name \"route.js\" -o -name \"route.ts\" || echo \"not found\"")
+        find_routes = stdout.read().decode('utf-8')
         
-        stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 cat \"/app/src/app/api/admin/contract/[id]/route.ts\" || echo \"Not found in source\"")
-        cat_route = stdout.read().decode('utf-8')
+        stdin, stdout, stderr = ssh.exec_command("cat /etc/dokploy/compose/vendetta-prod-gcqoaf/code/docker-compose.yml || echo \"No compose file\"")
+        cat_route = "VPS DOCKER COMPOSE:\n" + stdout.read().decode('utf-8') + "\n\nFIND ROUTE FILES:\n" + find_routes
 
         # Generate authorization token and curl contract endpoint via container IP
         stdin, stdout, stderr = ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 node -e \'const crypto = require(\"crypto\"); const secret = process.env.AUTH_SECRET || \"fallback_secret_vendetta_music_app_2026\"; const id = \"349d67ae-ee3f-44c5-a0d8-9a37ffa77b65\"; console.log(crypto.createHmac(\"sha256\", secret).update(id).digest(\"hex\"));\'')
