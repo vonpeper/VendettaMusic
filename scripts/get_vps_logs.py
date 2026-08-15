@@ -50,12 +50,29 @@ def fetch_logs():
         stdin, stdout, stderr = ssh.exec_command('docker exec vendetta-prod-gcqoaf-vendetta-app-1 node -e \'const crypto = require(\"crypto\"); const secret = process.env.AUTH_SECRET || \"fallback_secret_vendetta_music_app_2026\"; const id = \"349d67ae-ee3f-44c5-a0d8-9a37ffa77b65\"; console.log(crypto.createHmac(\"sha256\", secret).update(id).digest(\"hex\"));\'')
         expected_token = stdout.read().decode('utf-8').strip()
         
-        stdin, stdout, stderr = ssh.exec_command("docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' vendetta-prod-gcqoaf-vendetta-app-1")
-        container_ip = stdout.read().decode('utf-8').strip()
-        
-        stdin, stdout, stderr = ssh.exec_command(f'curl -v -k -L -H "Host: vendetta.mx" "http://127.0.0.1/api/admin/contract/349d67ae-ee3f-44c5-a0d8-9a37ffa77b65?token={expected_token}"')
-        curl_output = stdout.read().decode('utf-8')
-        curl_err = stderr.read().decode('utf-8')
+        # Run node fetch inside the container to bypass any external routing/caching
+        node_script = """
+const http = require('http');
+const crypto = require('crypto');
+const secret = process.env.AUTH_SECRET || 'fallback_secret_vendetta_music_app_2026';
+const id = '349d67ae-ee3f-44c5-a0d8-9a37ffa77b65';
+const token = crypto.createHmac('sha256', secret).update(id).digest('hex');
+const url = `http://localhost:3000/api/admin/contract/${id}?token=${token}`;
+http.get(url, (res) => {
+  console.log('STATUSCODE:' + res.statusCode);
+  console.log('HEADERS:' + JSON.stringify(res.headers));
+  let data = '';
+  res.on('data', (chunk) => { data += chunk; });
+  res.on('end', () => {
+    console.log('BODY:' + data.slice(0, 500));
+  });
+}).on('error', (err) => {
+  console.log('ERROR:' + err.message);
+});
+"""
+        stdin, stdout, stderr = ssh.exec_command(f"docker exec vendetta-prod-gcqoaf-vendetta-app-1 node -e {repr(node_script)}")
+        node_output = stdout.read().decode('utf-8')
+        node_err = stderr.read().decode('utf-8')
             
         report = {
             "docker_ps": docker_ps,
@@ -63,7 +80,7 @@ def fetch_logs():
             "container_logs": logs_dict,
             "grep_next": grep_next,
             "cat_route": cat_route,
-            "bookings_list": f"CURL OUTPUT (first 30 lines):\n" + "\n".join(curl_output.split("\n")[:30]) + f"\nCURL ERR:\n{curl_err}",
+            "bookings_list": f"INTERNAL NODE FETCH OUTPUT:\n{node_output}\nINTERNAL NODE FETCH ERR:\n{node_err}",
             "bookings_list_err": ""
         }
         
