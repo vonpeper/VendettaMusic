@@ -46,9 +46,16 @@ def fetch_logs():
         stdin, stdout, stderr = ssh.exec_command("docker exec vendetta-prod-gcqoaf-vendetta-app-1 cat \"/app/src/app/api/admin/contract/[id]/route.ts\" || echo \"Not found in source\"")
         cat_route = stdout.read().decode('utf-8')
 
-        stdin, stdout, stderr = ssh.exec_command("cat /etc/dokploy/logs/vendetta-prod-gcqoaf/vendetta-prod-gcqoaf-2026-08-15:02:51:00.log || echo \"log not found\"")
-        bookings_list = stdout.read().decode('utf-8')
-        bookings_list_err = stderr.read().decode('utf-8')
+        stdin, stdout, stderr = ssh.exec_command('echo "VuQmPgXP3EiDNSx1GHsR" | sudo -S ls -1t /etc/dokploy/logs/vendetta-prod-gcqoaf/')
+        log_files = stdout.read().decode('utf-8').strip().split('\n')
+        newest_log = log_files[0] if log_files and log_files[0] else ""
+        if newest_log:
+            stdin, stdout, stderr = ssh.exec_command(f'echo "VuQmPgXP3EiDNSx1GHsR" | sudo -S cat "/etc/dokploy/logs/vendetta-prod-gcqoaf/{newest_log}"')
+            bookings_list = stdout.read().decode('utf-8')
+            bookings_list_err = stderr.read().decode('utf-8')
+        else:
+            bookings_list = "No log files found"
+            bookings_list_err = ""
             
         report = {
             "docker_ps": docker_ps,
