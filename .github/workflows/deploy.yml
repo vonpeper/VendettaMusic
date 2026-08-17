@@ -27,7 +27,7 @@ jobs:
             exit 1
           fi
           echo "Calling compose.deploy on $DOKPLOY_URL for compose $COMPOSE_ID"
-          response=$(curl -k -sw "\n%{http_code}" -X POST \
+          response=$(curl -sw "\n%{http_code}" -X POST \
             -H "x-api-key: $DOKPLOY_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{\"json\":{\"composeId\":\"$COMPOSE_ID\"}}" \
@@ -49,7 +49,7 @@ jobs:
           COMPOSE_ID: ${{ vars.DOKPLOY_COMPOSE_ID }}
         run: |
           for i in $(seq 1 30); do
-            status=$(curl -k -sf \
+            status=$(curl -sf \
               -H "x-api-key: $DOKPLOY_TOKEN" \
               "$DOKPLOY_URL/api/trpc/compose.one?input=%7B%22json%22%3A%7B%22composeId%22%3A%22$COMPOSE_ID%22%7D%7D" \
               2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('result',{}).get('data',{}).get('json',{}).get('composeStatus','?'))" 2>/dev/null || echo "?")
