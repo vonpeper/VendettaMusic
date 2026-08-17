@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Trigger Dokploy compose redeploy
         env:
-          DOKPLOY_URL: "https://66.94.114.222"
+          DOKPLOY_URL: ${{ vars.DOKPLOY_URL }}
           DOKPLOY_TOKEN: ${{ secrets.DOKPLOY_TOKEN }}
           COMPOSE_ID: ${{ vars.DOKPLOY_COMPOSE_ID }}
         run: |
@@ -29,7 +29,6 @@ jobs:
           echo "Calling compose.deploy on $DOKPLOY_URL for compose $COMPOSE_ID"
           response=$(curl -k -sw "\n%{http_code}" -X POST \
             -H "x-api-key: $DOKPLOY_TOKEN" \
-            -H "Host: panel.prosuite.pro" \
             -H "Content-Type: application/json" \
             -d "{\"json\":{\"composeId\":\"$COMPOSE_ID\"}}" \
             "$DOKPLOY_URL/api/trpc/compose.deploy")
@@ -45,14 +44,13 @@ jobs:
 
       - name: Poll status (up to 5 min)
         env:
-          DOKPLOY_URL: "https://66.94.114.222"
+          DOKPLOY_URL: ${{ vars.DOKPLOY_URL }}
           DOKPLOY_TOKEN: ${{ secrets.DOKPLOY_TOKEN }}
           COMPOSE_ID: ${{ vars.DOKPLOY_COMPOSE_ID }}
         run: |
           for i in $(seq 1 30); do
             status=$(curl -k -sf \
               -H "x-api-key: $DOKPLOY_TOKEN" \
-              -H "Host: panel.prosuite.pro" \
               "$DOKPLOY_URL/api/trpc/compose.one?input=%7B%22json%22%3A%7B%22composeId%22%3A%22$COMPOSE_ID%22%7D%7D" \
               2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('result',{}).get('data',{}).get('json',{}).get('composeStatus','?'))" 2>/dev/null || echo "?")
             echo "Attempt $i: status=$status"
