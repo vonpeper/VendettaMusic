@@ -1,9 +1,9 @@
 {
   "compose_status": {
-    "error": "HTTP Error 526: <none>"
+    "error": "HTTP Error 404: Not Found"
   },
   "recent_deployments": {
-    "error": "HTTP Error 526: <none>"
+    "error": "HTTP Error 404: Not Found"
   },
   "latest_deployment_logs": null
 }
