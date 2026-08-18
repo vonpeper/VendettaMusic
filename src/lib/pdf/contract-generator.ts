@@ -586,8 +586,15 @@ export async function generateContractPdf(
       console.warn("[PDF Generator] No admin signature provided in options")
     }
     ctx.page.drawLine({ start: { x: margin, y: sy }, end: { x: margin + sw, y: sy }, thickness: 1 })
-    ctx.page.drawText("VENDETTA LIVE MUSIC", { x: margin + 35, y: sy - 15, size: 8, font: montserratBold })
-    ctx.page.drawText("REPRESENTANTE LEGAL", { x: margin + 35, y: sy - 25, size: 6, font: montserrat })
+    
+    // Centrar textos de VENDETTA (Izquierda)
+    const adminLabelText = "VENDETTA LIVE MUSIC"
+    const adminLabelWidth = montserratBold.widthOfTextAtSize(adminLabelText, 8)
+    ctx.page.drawText(adminLabelText, { x: margin + (sw - adminLabelWidth) / 2, y: sy - 15, size: 8, font: montserratBold })
+    
+    const adminRepText = "REPRESENTANTE LEGAL"
+    const adminRepWidth = montserrat.widthOfTextAtSize(adminRepText, 6)
+    ctx.page.drawText(adminRepText, { x: margin + (sw - adminRepWidth) / 2, y: sy - 25, size: 6, font: montserrat })
 
     // Firma Cliente (Derecha)
     if (options.clientSignature) {
@@ -612,15 +619,38 @@ export async function generateContractPdf(
       console.warn("[PDF Generator] No client signature provided in options")
     }
     ctx.page.drawLine({ start: { x: pageWidth - margin - sw, y: sy }, end: { x: pageWidth - margin, y: sy }, thickness: 1 })
+    
+    // Centrar y ajustar textos del CLIENTE (Derecha)
     const clientNameText = safeValue(data.clientName, "EL CLIENTE").toUpperCase()
-    ctx.page.drawText(clientNameText, { x: pageWidth - margin - sw + 20, y: sy - 15, size: 8, font: montserratBold })
+    const clientNameLines = wrapTextRobust(clientNameText, montserratBold, 8, sw + 20)
+    let lineY = sy - 15
+    clientNameLines.forEach(line => {
+      const lineWidth = montserratBold.widthOfTextAtSize(line, 8)
+      const lineX = (pageWidth - margin - sw) + (sw - lineWidth) / 2
+      ctx.page.drawText(line, { x: lineX, y: lineY, size: 8, font: montserratBold })
+      lineY -= 10
+    })
+
     if (options.legalRepName) {
       const repLabel = `REP: ${options.legalRepName.toUpperCase()}`
-      ctx.page.drawText(repLabel, { x: pageWidth - margin - sw + 20, y: sy - 25, size: 6, font: montserrat })
+      const repLines = wrapTextRobust(repLabel, montserrat, 6, sw + 20)
+      repLines.forEach(line => {
+        const lineWidth = montserrat.widthOfTextAtSize(line, 6)
+        const lineX = (pageWidth - margin - sw) + (sw - lineWidth) / 2
+        ctx.page.drawText(line, { x: lineX, y: lineY, size: 6, font: montserrat })
+        lineY -= 8
+      })
     }
+
     if (options.signedAt) {
       const stamp = `FIRMADO DIGITALMENTE: ${options.signedAt}`
-      ctx.page.drawText(stamp, { x: pageWidth - margin - sw, y: sy - (options.legalRepName ? 33 : 25), size: 5, font: montserrat, color: rgb(0.5, 0.5, 0.5) })
+      const stampLines = wrapTextRobust(stamp, montserrat, 5, sw + 40)
+      stampLines.forEach(line => {
+        const lineWidth = montserrat.widthOfTextAtSize(line, 5)
+        const lineX = (pageWidth - margin - sw) + (sw - lineWidth) / 2
+        ctx.page.drawText(line, { x: lineX, y: lineY, size: 5, font: montserrat, color: rgb(0.5, 0.5, 0.5) })
+        lineY -= 7
+      })
     }
   }
 
