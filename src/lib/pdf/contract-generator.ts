@@ -164,6 +164,12 @@ export async function generateContractPdf(
   const safeValue = (val: any, fallback = "N/A") => (val && val !== "undefined" && val !== "") ? String(val) : fallback
   const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(v || 0)
 
+  const isColegio = data.clientName?.toLowerCase().includes("colegio") || 
+                    shortId.toLowerCase().includes("colegio") || 
+                    data.packageName?.toLowerCase().includes("colegio") || 
+                    (data as any).shortId?.toLowerCase().includes("colegio") ||
+                    data.clientName?.toLowerCase().includes("anestesi");
+
   const isEarlySoundcheck = (data as any).adminNote?.toLowerCase().includes("soundcheck") || false
   const extraSoundcheck = isEarlySoundcheck ? 2000 : 0
   // fullAddress se define abajo para evitar ReferenceError en algunos entornos de ejecución
@@ -201,7 +207,9 @@ export async function generateContractPdf(
 
   drawEventHeader(ctx, "DATOS DEL EVENTO", [
     { label: "CLIENTE:", value: safeValue(data.clientName, "CLIENTE") },
-    { label: "TIPO VENUE:", value: capitalize(safeValue(data.venueType, "SALÓN")) },
+    isColegio 
+      ? { label: "TIPO EVENTO:", value: "Happening" }
+      : { label: "TIPO VENUE:", value: capitalize(safeValue(data.venueType, "SALÓN")) },
     { label: "UBICACIÓN:", value: data.address || `${safeValue(data.street)} ${safeValue(data.houseNumber)}, ${safeValue(data.colonia)}, ${safeValue(data.municipio)}` },
     { label: "GOOGLE MAPS:", value: safeValue(data.mapsLink, "NO PROPORCIONADO") },
     { label: "FECHA:", value: formatDateSpanish(data.requestedDate) },
@@ -253,7 +261,7 @@ export async function generateContractPdf(
     data.hasRobot ? "• Incluye Robot LED" : null
   ].filter(Boolean) as string[]
 
-  const isColegio = data.clientName?.toLowerCase().includes("colegio") || shortId.toLowerCase().includes("colegio") || data.packageName?.toLowerCase().includes("colegio") || (data as any).shortId?.toLowerCase().includes("colegio");
+  // isColegio already defined above
   
   let tableRows: any[] = [];
   if (isColegio) {
@@ -368,13 +376,37 @@ export async function generateContractPdf(
     page.drawText(decHeader, { x: (pageWidth - montserratBold.widthOfTextAtSize(decHeader, 10)) / 2, y: ctx.y, size: 10, font: montserratBold })
     ctx.y -= 20
     
-    let decText = "DECLARA Y ACEPTA “JOSÉ ALBERTO BAUTISTA ROMERO PAREDES” con RFC BARA8804PQ2 A QUIEN EN LO SUCESIVO Y PARA TODOS LOS EFECTOS LEGALES SE LE DENOMINARÁ “VENDETTA” SER REPRESENTANTE LEGAL DE “VENDETTA ROCK” Y QUE PUEDE COMPROMETERSE POR SÍ MISMO O SU REPRESENTADA A LOS FINES NECESARIOS AL TENOR DE LAS SIGUIENTES:\n\n"
-    if (options.rfc) {
-      decText += `DECLARA “EL CLIENTE” BAJO PROTESTA DE DECIR VERDAD: SER UNA PERSONA MORAL DEBIDAMENTE CONSTITUIDA CON RFC ${options.rfc.toUpperCase()}, CON DOMICILIO FISCAL EN ${options.fiscalAddress?.toUpperCase() || "PENDIENTE"}, Y SEÑALANDO COMO DOMICILIO PARA RECIBIR NOTIFICACIONES EL UBICADO EN ${options.notificationAddress?.toUpperCase() || "EL MISMO DOMICILIO FISCAL"}.`
+    if (isColegio) {
+      const decText = "DECLARACIONES DEL PRESTADOR\n" +
+        "Primera.- El Prestador José Alberto Bautista Romero Paredes, declara bajo protesta de decir verdad que:\n" +
+        "• Cuenta con la experiencia, capacidad técnica, conocimientos y recursos necesarios para prestar los servicios objeto de este documento.\n" +
+        "• Se encuentra debidamente registrado ante las autoridades fiscales correspondientes para el ejercicio de sus actividades económicas.\n" +
+        "• Que el nombre Vendeta Rock es una denominación comercial utilizada únicamente para la identificación del servicio en el mercado, recayendo toda la responsabilidad legal, fiscal y administrativa en la persona física ya precisada.\n\n" +
+        "Segunda.- El objeto y Alcance del Servicio se hace consistir en: Describir y detallar el servicio objeto del contrato.\n\n" +
+        "DECLARACIONES DE EL CLIENTE\n" +
+        "El Cliente declara bajo protesta de decir verdad que:\n" +
+        "a) Que es una sociedad de carácter mercantil debidamente constituida de acuerdo con las leyes de la República Mexicana según consta en la escritura pública No. 46,971 de fecha 23 de febrero de 1995, pasada ante la fe del Notario Público No. 5 del Distrito Federal hoy Ciudad de México, el licenciado Alfonso Zermeño Infante, la cual se encuentra debidamente inscrita en el Registro Público de Comercio de Ciudad de México, bajo el folio de personas morales número 29792.\n" +
+        "b) Que su representante acredita su personalidad mediante escritura pública No. 48,819 de fecha 10 de octubre de 2025, pasada ante la fe del Notario Público No. 150 de la Ciudad de México, el licenciado José Luis Franco Jiménez, facultades que a la fecha del presente no le han sido limitadas ni revocadas en forma alguna;\n" +
+        "c) Que tiene su domicilio en Calle Providencia No 835, Col. Del Valle Centro, Alcaldía Benito Juárez, C.P. 03100, Ciudad de México y su RFC es CMA950123F48.\n" +
+        "d) Tiene la capacidad jurídica, económica y profesional necesaria para obligarse y que dispone de todos los medios humanos y materiales para organizar y llevar a cabo el presente contrato, evento y para permitir que Vendeta Rock realice las actividades mencionadas en el presente contrato.\n" +
+        "e) Que cuenta con los permisos, licencias y/o autorizaciones necesarios y suficientes para la realización del Evento en tiempo y forma, en términos de lo establecido en el presente contrato.\n\n" +
+        "DECLARACIÓN CONJUNTA\n" +
+        "Ambas partes en el presente contrato manifiestan:\n" +
+        "• Que comparecen al otorgamiento y firma del presente documento por su propia e independiente voluntad.\n" +
+        "• Conocen y entienden cabalmente el alcance, contenido, efectos jurídicos y consecuencias de cada uno de los compromisos aquí asumidos.\n" +
+        "• En la celebración del presente acto no ha mediado ni existe error, dolo, mala fe, violencia, lesión, coacción ni ningún otro vicio del consentimiento que pudiera invalidarlo, rescindirlo o viciarlo en todo o en parte.\n" +
+        "• Reconocen que las prestaciones acordadas son equitativas, proporcionales y justas para sus respectivos intereses, renunciando formalmente a invocar la nulidad del presente acto con fundamento en cualquier supuesta desproporción o vicio de la voluntad.\n" +
+        "• Es su libre y soberana voluntad someterse incondicionalmente al cumplimiento y observancia de las siguientes:"
+      drawJustifiedText(ctx, decText, 8.0, 10.5, pageWidth - margin * 2)
     } else {
-      decText += "DECLARA “EL CLIENTE” BAJO PROTESTA DE DECIR VERDAD: CONTAR CON LAS FACULTADES LEGALES Y ECONÓMICAS SUFICIENTES PARA CELEBRAR EL PRESENTE CONTRATO."
+      let decText = "DECLARA Y ACEPTA “JOSÉ ALBERTO BAUTISTA ROMERO PAREDES” con RFC BARA8804PQ2 A QUIEN EN LO SUCESIVO Y PARA TODOS LOS EFECTOS LEGALES SE LE DENOMINARÁ “VENDETTA” SER REPRESENTANTE LEGAL DE “VENDETTA ROCK” Y QUE PUEDE COMPROMETERSE POR SÍ MISMO O SU REPRESENTADA A LOS FINES NECESARIOS AL TENOR DE LAS SIGUIENTES:\n\n"
+      if (options.rfc) {
+        decText += `DECLARA “EL CLIENTE” BAJO PROTESTA DE DECIR VERDAD: SER UNA PERSONA MORAL DEBIDAMENTE CONSTITUIDA CON RFC ${options.rfc.toUpperCase()}, CON DOMICILIO FISCAL EN ${options.fiscalAddress?.toUpperCase() || "PENDIENTE"}, Y SEÑALANDO COMO DOMICILIO PARA RECIBIR NOTIFICACIONES EL UBICADO EN ${options.notificationAddress?.toUpperCase() || "EL MISMO DOMICILIO FISCAL"}.`
+      } else {
+        decText += "DECLARA “EL CLIENTE” BAJO PROTESTA DE DECIR VERDAD: CONTAR CON LAS FACULTADES LEGALES Y ECONÓMICAS SUFICIENTES PARA CELEBRAR EL PRESENTE CONTRATO."
+      }
+      drawJustifiedText(ctx, decText, 8.5, 11, pageWidth - margin * 2)
     }
-    drawJustifiedText(ctx, decText, 8.5, 11, pageWidth - margin * 2)
 
     ctx.y -= 25
     const clauHeader = "C L Á U S U L A S."
@@ -386,7 +418,36 @@ export async function generateContractPdf(
 
     let clausesToDraw: { n: string, t: string }[] = []
 
-    if (options.contractLegalText) {
+    if (isColegio) {
+      const bankDetails = "medio de transferencia electrónica a la cuenta CLABE: 072 180 01127840168 2 a nombre de ESTEFANY MONSERRAT VERDUZCO MERCADO"
+      clausesToDraw = [
+        { n: "PRIMERA", t: "DECLARA Y ACEPTA “EL CLIENTE.” Conocer el trabajo que desempeña “VENDETTA” y estar de acuerdo en su modalidad de “BANDA DE MÚSICA EN VIVO”" },
+        { n: "SEGUNDA", t: "DECLARA “VENDETTA” tener la capacidad y experiencia necesaria en términos musicales para cumplir con el compromiso motivo de este contrato de forma profesional." },
+        { n: "TERCERA", t: `“VENDETTA” se compromete a tocar en el evento que se efectuará el día ${formatDateSpanish(data.requestedDate)} en ${fullLegalAddress}.` },
+        { n: "CUARTA", t: `La actuación de “VENDETTA” será efectuada dentro del siguiente programa: ${safeValue(data.startTime)} HRS A ${safeValue(data.endTime)} HRS.` },
+        { 
+          n: "QUINTA", 
+          t: `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación. La cual “EL CLIENTE” se compromete a liquidar en 2 pagos: un anticipo de ${MXN(anticipo)} por ${bankDetails}, y la liquidación del restante por un monto de ${MXN(liquidacion)} se realizará el día del evento en el momento en el que “VENDETTA” llegue a la dirección mencionada en la tercera cláusula, antes de descargar y montar la producción de la presentación.`
+        },
+        { n: "SEXTA", t: "En caso de alternar con otro grupo (musical, mariachis, disco, etc.), si dicho grupo no respeta el horario establecido entre ambos y llegara a ocupar más tiempo del establecido, “VENDETTA” no repondrá dicho tiempo y será sujeto a cumplir dentro del horario de inicio y final estipulado en el presente contrato. En caso de que el tiempo sea agotado no habrá opción de reembolso, VENDETTA cobrará el 100% del monto estipulado en este contrato y en caso de acordar seguir con el evento en un nuevo tiempo se tendrá que negociar un nuevo contrato." },
+        { n: "SÉPTIMA", t: "“EL CLIENTE.” se compromete a poner a la disposición de “VENDETTA” un espacio (mesa, sala, silla o sillas) con servicio para sus descansos, asimismo “EL CLIENTE.” será el único responsable de contar con el espacio adecuado para la instalación del equipo, provista de la instalación eléctrica mínima, dos tomas de corriente de 110 V y como máximo 10 metros de distancia, el espacio deberá ser exclusivo para la colocación de VENDETTA por seguridad del público como para el buen desempeño de la actuación de “VENDETTA”, si por alguna razón imputable a “EL CLIENTE” o a los asistentes al evento, el equipo de VENDETTA sufre algún percance de consideración (que lo deje incapacitado para realizar su función) “EL CLIENTE” acepta cubrir el costo de la reparación o reemplazo en dado caso de que sea irreparable, del aparato, instrumento afectado o daño físico o agresión a algún miembro de la agrupación." },
+        { n: "OCTAVA", t: "“EL CLIENTE” se compromete a proporcionar a “VENDETTA” bebidas hidratantes durante el desarrollo del evento (agua, refrescos o equivalentes). El ofrecimiento de bebidas alcohólicas o cualquier otro tipo de cortesía queda a criterio exclusivo del cliente, entendiéndose que tales cortesías no constituyen obligación contractual ni condicionan la ejecución del servicio. Asimismo, “VENDETTA” manifiesta que su personal no realizará sus actividades bajo influencia de sustancias, estupefacientes o niveles inapropiados de alcohol, conservando en todo momento la capacidad óptima para el desempeño de su trabajo. La existencia de cortesías por parte de “EL CLIENTE” no será interpretada como autorización o exigencia para su consumo. Cualquier consumo voluntario por parte del personal de “VENDETTA”, dentro de los límites que no afecten la correcta ejecución del servicio, no será causa de cancelación, rescisión ni penalización contractual, salvo que se comprometa de manera evidente la integridad del evento, extremo que deberá ser objetivamente comprobable." },
+        { n: "NOVENA", t: "“VENDETTA” asegura presentarse en tiempo y forma con vestimenta, limpieza y respeto para el cumplimiento del evento, motivo de este contrato." },
+        { n: "DÉCIMA", t: "“EL CLIENTE” se obliga a proporcionar a “VENDETTA” las condiciones adecuadas para la correcta, cómoda y segura ejecución del servicio. Esto incluye, de manera enunciativa mas no limitativa, brindar seguridad en el área designada, suficiente espacio para la instalación del equipo y libre movilidad de los integrantes, así como un entorno que no comprometa la integridad del personal ni del equipo técnico. En ningún caso “EL CLIENTE” podrá solicitar que “VENDETTA” se presente, instale o opere bajo condiciones atmosféricas adversas, riesgos de seguridad, falta de espacio, exposure directa a lluvia, humedad o viento, o cualquier otro factor que pueda perjudicar la ejecución musical, la estabilidad del equipo o el bienestar del personal, especialmente en eventos al aire libre. En caso de que no se cumplan las condiciones mencionadas, “VENDETTA” podrá suspender temporalmente o ajustar la prestación del servicio hasta que el área sea acondicionada adecuadamente, sin que ello implique responsabilidad alguna para VENDETTA." },
+        { n: "DÉCIMA PRIMERA", t: "Si por algún motivo el evento citado en la cláusula primera de este contrato no se realizara por causas imputables a “EL CLIENTE”, éste mismo se compromete a pagar a “VENDETTA” el 50% del costo total de la presentación por concepto de indemnización, por daños y perjuicios ocasionados por razones de apartado de fecha y/o movilización de equipo. En el respectivo caso, si el motivo es por causas imputables a VENDETTA, ésta se compromete a realizar el reembolso del anticipo otorgado así como a volver a agendar la fecha, en caso de que “EL CLIENTE.” así lo desee, con un 10% de descuento sobre el monto del presente contrato por concepto de indemnización por daños y perjuicios ocasionados." },
+        { n: "DÉCIMA SEGUNDA", t: "Las partes están de acuerdo en que una vez terminada la actuación de “VENDETTA” y si fuese necesario seguir tocando por tiempo extra y las condiciones son adecuadas, el precio por este será de $3,500.00 MN por TURNO EXTRA (Sujeta a disponibilidad de agenda)." },
+        { n: "DÉCIMA TERCERA", t: "“EL CLIENTE” hace constar bajo protesta de decir verdad que la información anteriormente asentada es verídica, comprometiéndose a resarcir los daños y perjuicios que sean ocasionados con base en una falsa declaración de su parte, SOBRE TODO EN EL CASO ESPECÍFICO DE QUE DICHO CONTRATO SEA ENVIADO Y RECIBIDO POR ALGÚN MEDIO ELECTRÓNICO AJENO AL CONTROL DE “VENDETTA”; en todo caso este se reserva el derecho de hacer válida la garantía de indemnización enumerada en la cláusula DÉCIMA PRIMERA de este documento." },
+        { n: "DÉCIMA CUARTA", t: "Para todo lo relativo a la interpretación, cumplimiento y ejecución en su caso del presente CONTRATO, así como para todo aquello que no esté estipulado en el mismo, “las partes” que en él intervinieron se someten a la jurisdicción y competencia de las leyes y tribunales civiles de Toluca, Estado de México, renunciado expresamente a cualquier otro fuero que por razón de su actual o futuro domicilio o, por cualquier otra causa pudiere llegar a corresponderles. Leído que fue el presente CONTRATO y estando “las partes” que en él intervinieron conformes en todas y cada una de las cláusulas que anteceden, firman por duplicado el mismo, teniendo ambos ejemplares la misma fuerza y valor de un documento original, independientemente de que dicho convenio se haya celebrado por medio de alguna otra forma de comunicación como pudiese ser el caso de envío del mismo por medio de correo electrónico, mensajería instantánea ó cualquier otro medio electrónico moderno, bastando únicamente la firma electrónica, rastro digital de envío/recepción o la confirmación por medios digitales para hacerlo valer conforme a derecho y de conformidad con lo dispuesto por el artículo 89 del Código de Comercio, quedando un ejemplar en poder de cada una de “las partes”, firman con fecha del día en el que el anticipo es depositado y comprobado por el banco receptor y que “VENDETTA” pueda verificar." },
+        { n: "DÉCIMA QUINTA", t: "“VENDETTA” podrá interrumpir la presentación a criterio en el caso específico donde alguno de los miembros de VENDETTA o staff sea molestado con motivo sexual, racial, de clase, género, violencia verbal o física, además de no respetar la seguridad en el espacio o ubicación donde se lleve a cabo la presentación, también aplica para daños a transportes de los músicos, “EL CLIENTE” deberá pagar el 100% del monto total estipulado en este contrato como indemnización, el arreglo deberá ser expuesto con “EL CLIENTE” con pruebas y a una posterior consideración de ambas partes." },
+        { n: "DÉCIMA SEXTA", t: "“EL CLIENTE” Acepta al firmar este contrato que la propuesta de equipo de audio no puede ser modificada en el momento del evento, “EL CLIENTE” confirma que fue notificado sobre los alcances del montaje y está de acuerdo con el equipo de audio y backline establecido conociendo sus limitaciones. Toda modificación deberá ser solicitada 72 hrs antes del evento y deberá cumplir con el costo adicional e indirectos necesarios para poder realizar el nuevo montaje solicitado." },
+        { n: "DÉCIMA SÉPTIMA", t: "LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Cuando el servicio se realice fuera del área de cobertura sin viáticos (radio previamente establecido) o cuando, por requerimientos del evento, el tiempo total de permanencia de “VENDETTA” en el lugar exceda el tiempo estándar de operación (considerando hasta 1 hora de montaje, 2 horas de show y 1 hora de desmontaje), se considerará como logística extendida. En dichos casos, “EL CLIENTE” acepta que podrán generarse cargos adicionales por tiempo de estancia, horas extra y/o disponibilidad extendida. Asimismo, cuando la logística implique tiempos prolongados entre montaje, presentación y desmontaje, o traslados que imposibiliten el retorno inmediato, “EL CLIENTE” se obliga a proporcionar a “VENDETTA” un espacio adecuado de descanso, el cual podrá consistir en habitación de hotel, Airbnb, sala privada o área acondicionada, que garantice seguridad, comodidad y resguardo del equipo." },
+        { n: "DÉCIMA OCTAVA", t: "RESPONSABILIDAD SONORA (EQUIPO EXTERNO): Vendetta no se hace responsable por la calidad sonora, fidelidad, estado estético ni de funcionamiento del equipo externo al no ser el que Vendetta usa o es de sus proveedores certificados. Nuestra misión es brindar el mejor show posible, y para ello dependemos de la estabilidad y desempeño de los sistemas proporcionados por terceros." },
+        { 
+          n: "DÉCIMA NOVENA", 
+          t: "NO EXISTENCIA DE RELACIÓN LABORAL. Las partes reconocen y aceptan que las únicas relaciones jurídicas existentes entre ellas son las derivadas del presente contrato, razón por la cual el PRESTADOR (Vendeta) es y será el único responsable ante el personal que utilice, contrate, y/o subcontrate, y que se encontrará bajo su inmediata dirección y dependencia, del cumplimiento a todas las obligaciones derivadas de las disposiciones laborales, de seguridad social, impositivas y de cualquier otra índole, vigentes y aplicables, incluyendo el pago de salarios ordinarios y extraordinarios, vacaciones, aguinaldo, prima de antigüedad, accidentes, riesgos de trabajo, reparto de utilidades, finiquitos, despidos, así como cualquier obligación aplicable derivada de la Ley Federal del Trabajo en vigor, del Instituto Mexicano del Seguro Social, del “INFONAVIT”, por lo que el PRESTADOR asume expresamente el carácter de patrón en términos de lo que se establecen los artículo 8, 10 y 20 y demás relativos y aplicables de la Ley Federal del Trabajo respecto de las personas que se encuentren comprendidas dentro del personal, para todos los efectos legales a que haya lugar. Asimismo, el PRESTADOR se obliga a contratar expresamente y en nombre propio al personal administrativo, técnico y demás personas, que requiera para el cumplimiento del objeto del presente contrato, obligándose a celebrar los contratos individuales de trabajo con todos los requisitos y formalidades establecidas por los artículos 24 y 25 de la Ley Federal del Trabajo, estipulando con toda claridad las prestaciones a otorgarles por parte del PRESTADOR, por lo que no existe ni existirá relación laboral alguna entre los trabajadores y dependientes o aquellos que sean subcontratados por el PRESTADOR y COLEGIO MEXICANO DE ANESTESIOLOGIA , sus filiales, subsidiarias y partes relacionadas. El PRESTADOR se obliga a defender, mantener y sacar en paz y a salvo a El Cliente, receptor de los Servicios y a sus funcionarios, directivos y empleados de su controladora, filiales y/o subsidiarias, en caso de que se vieran involucrados inútilmente en alguna demanda, reclamación y/o responsabilidad de cualquier clase exigida por cualquier empleado, agente y/o contratista y/o subcontratista del PRESTADOR presentada ante cualquier Junta de Conciliación y Arbitraje, Tribunal Laboral o Autoridad Administrativa o Judicial, sea federal, local o municipal, y en caso de que El Cliente o el receptor de los Servicios tuviera que cumplir con alguna obligación de pago o de cualquier otra índole que surja de cualesquier resolución relativa a cualquier demanda, queja o reclamación entablada por algún trabajador del PRESTADOR, éste último le reembolsará a El Cliente la cantidad que corresponda. Las obligaciones previstas en esta Cláusula a cargo del PRESTADOR sobrevivirán y subsistirán a la expiración del plazo de este contrato y a la terminación y/o rescisión por cualquier causa, de conformidad con la Ley, por lo que El Cliente podrá solicitar en cualquier momento al PRESTADOR que le acredite con documentación idónea, que cumple con sus obligaciones laborales y que cuenta con los elementos propios y suficientes para cumplir con las obligaciones que deriven de las relaciones con sus trabajadores. El PRESTADOR es el único y exclusivo responsable y obligado, sin contar con obligados solidarios ni sustitutos, de la relación laboral con su Personal en términos de los ordenamientos legales laborales, por tanto, conviene y se obliga a sacar en paz a El Cliente."
+        }
+      ]
+    } else if (options.contractLegalText) {
       // Si el usuario proporcionó un texto legal personalizado, realizamos los reemplazos de variables
       let rawText = options.contractLegalText
 
@@ -573,13 +634,24 @@ function drawEventHeader(ctx: DrawContext, title: string, items: { label: string
   const { page, margin, width, y, font, boldFont } = ctx
   const itemHeight = 16
   const padding = 15
-  const boxH = (items.length * itemHeight) + padding * 2
+  const maxWidth = width - margin * 2 - 135
+  const processedItems = items.map(it => {
+    const wrapped = wrapTextRobust(it.value, font, 8.5, maxWidth)
+    return { label: it.label, lines: wrapped }
+  })
+  
+  const totalLines = processedItems.reduce((acc, it) => acc + it.lines.length, 0)
+  const boxH = (totalLines * itemHeight) + padding * 2
+  
   page.drawRectangle({ x: margin, y: y - boxH, width: width - margin * 2, height: boxH, color: GRAY_BG, borderWidth: 0 })
   let cy = y - padding - 8
-  items.forEach(it => {
+  
+  processedItems.forEach(it => {
     page.drawText(it.label, { x: margin + 15, y: cy, size: 8.5, font: boldFont, color: rgb(0.3, 0.3, 0.3) })
-    page.drawText(it.value, { x: margin + 120, y: cy, size: 8.5, font: font, color: BLACK_COLOR })
-    cy -= itemHeight
+    it.lines.forEach(line => {
+      page.drawText(line, { x: margin + 120, y: cy, size: 8.5, font: font, color: BLACK_COLOR })
+      cy -= itemHeight
+    })
   })
   ctx.y -= boxH
 }
@@ -594,7 +666,7 @@ function drawDetailedTable(ctx: DrawContext, rows: any[]) {
 
   let cy = y - rowH
   rows.forEach(r => {
-    const descLines = wrapTextForTable(r.desc, font, 7.5, width - margin * 2 - 140)
+    const descLines = wrapTextRobust(r.desc, font, 7.5, width - margin * 2 - 140)
     const actualRowH = Math.max(rowH, descLines.length * 10 + 10)
     page.drawRectangle({ x: margin, y: cy - actualRowH, width: width - margin * 2, height: actualRowH, borderColor: rgb(0.92, 0.92, 0.92), borderWidth: 0.5 })
     page.drawText(r.no, { x: margin + 10, y: cy - 14, size: 7.5, font: font })
@@ -606,17 +678,44 @@ function drawDetailedTable(ctx: DrawContext, rows: any[]) {
   ctx.y = cy
 }
 
-function wrapTextForTable(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+function wrapTextRobust(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
   const lines: string[] = []
-  text.split("\n").forEach(p => {
-    const words = p.split(/\s+/)
-    let line = ""
-    for (const w of words) {
-      if (font.widthOfTextAtSize(line + w + " ", size) > maxWidth) {
-        lines.push(line.trim()); line = w + " "
-      } else { line += w + " " }
+  text.split("\n").forEach(paragraph => {
+    if (!paragraph.trim()) {
+      lines.push("")
+      return
     }
-    lines.push(line.trim())
+    const words = paragraph.split(/\s+/)
+    let currentLine = ""
+    for (const word of words) {
+      const lineWithWord = currentLine ? `${currentLine} ${word}` : word
+      if (font.widthOfTextAtSize(lineWithWord, size) <= maxWidth) {
+        currentLine = lineWithWord
+      } else {
+        if (font.widthOfTextAtSize(word, size) > maxWidth) {
+          if (currentLine) {
+            lines.push(currentLine)
+            currentLine = ""
+          }
+          let temp = ""
+          for (const char of word) {
+            if (font.widthOfTextAtSize(temp + char, size) <= maxWidth) {
+              temp += char
+            } else {
+              lines.push(temp)
+              temp = char
+            }
+          }
+          currentLine = temp
+        } else {
+          lines.push(currentLine)
+          currentLine = word
+        }
+      }
+    }
+    if (currentLine) {
+      lines.push(currentLine)
+    }
   })
   return lines
 }
