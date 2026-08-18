@@ -175,7 +175,7 @@ export async function generateContractPdf(
   // fullAddress se define abajo para evitar ReferenceError en algunos entornos de ejecución
   const baseTotal = data.packagePrice + (data.viaticosAmount || 0)
   const subtotal = baseTotal + extraSoundcheck
-  const ivaAmount = (data as any).invoice ? Math.round(subtotal * 0.16 * 100) / 100 : ((data as any).ivaAmount || 0)
+  const ivaAmount = (isColegio || (data as any).invoice) ? Math.round(subtotal * 0.16 * 100) / 100 : ((data as any).ivaAmount || 0)
   const total = subtotal + ivaAmount
 
   const logoDims = logoImage ? logoImage.scale(0.16) : { width: 0, height: 0 }
@@ -290,6 +290,14 @@ export async function generateContractPdf(
         no: String(tableRows.length + 1),
         desc: "Servicio Opcional: Templete de 8 × 6 metros\n• Templete profesional de 8 x 6 metros.\n• Altura de 1 o 1.5 metros, sujeta a validación técnica.\n• Dos escaleras laterales, transporte, montaje y desmontaje.",
         pu: MXN(18390)
+      });
+    }
+    
+    if (data.viaticosAmount > 0) {
+      tableRows.push({
+        no: String(tableRows.length + 1),
+        desc: data.viaticosLabel || "Viáticos y gastos logísticos",
+        pu: MXN(data.viaticosAmount)
       });
     }
   } else {
