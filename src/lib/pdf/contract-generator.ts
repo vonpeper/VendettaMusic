@@ -296,7 +296,7 @@ export async function generateContractPdf(
     if (data.viaticosAmount > 0) {
       tableRows.push({
         no: String(tableRows.length + 1),
-        desc: data.viaticosLabel || "Viáticos y gastos logísticos",
+        desc: isColegio ? "Viáticos de traslado" : (data.viaticosLabel || "Viáticos y gastos logísticos"),
         pu: MXN(data.viaticosAmount)
       });
     }
