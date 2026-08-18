@@ -427,7 +427,7 @@ export async function generateContractPdf(
     let clausesToDraw: { n: string, t: string }[] = []
 
     if (isColegio) {
-      const bankDetails = "medio de transferencia electrónica a la cuenta CLABE: 072 180 01127840168 2 a nombre de ESTEFANY MONSERRAT VERDUZCO MERCADO"
+      const bankDetails = "medio de transferencia electrónica a la cuenta CLABE: 072 180 01127840168 2 de Banco Banorte a nombre de ESTEFANY MONSERRAT VERDUZCO MERCADO"
       clausesToDraw = [
         { n: "PRIMERA", t: "DECLARA Y ACEPTA “EL CLIENTE.” Conocer el trabajo que desempeña “VENDETTA” y estar de acuerdo en su modalidad de “BANDA DE MÚSICA EN VIVO”" },
         { n: "SEGUNDA", t: "DECLARA “VENDETTA” tener la capacidad y experiencia necesaria en términos musicales para cumplir con el compromiso motivo de este contrato de forma profesional." },
