@@ -267,7 +267,7 @@ export async function generateContractPdf(
   if (isColegio) {
     tableRows.push({
       no: "1",
-      desc: "Servicio Artístico: Presentación de Vendetta\n• Show musical de 2 horas con 30 minutos con formación de seis músicos.\n• Incluye backline de la banda, ingeniero de audio de Vendetta y asistente técnico.\n• Preparación, coordinación artística, repertorio y producción musical.",
+      desc: "Servicio Artístico: Presentación de Vendetta\n• Show musical de 2 horas con 30 minutos con formación de cinco músicos.\n• Incluye backline de la banda, ingeniero de audio de Vendetta y asistente técnico.\n• Preparación, coordinación artística, repertorio y producción musical.",
       pu: MXN(35000)
     });
     if (!data.clientProvidesAudio) {
@@ -296,7 +296,7 @@ export async function generateContractPdf(
     if (data.viaticosAmount > 0) {
       tableRows.push({
         no: String(tableRows.length + 1),
-        desc: data.viaticosLabel || "Viáticos y gastos logísticos",
+        desc: isColegio ? "Viáticos de traslado" : (data.viaticosLabel || "Viáticos y gastos logísticos"),
         pu: MXN(data.viaticosAmount)
       });
     }
