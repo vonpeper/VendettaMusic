@@ -74,6 +74,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
       items: [
         { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
         { name: "Shows / Eventos", href: "/admin/eventos", icon: Calendar },
+        { name: "Calendario / Agenda", href: "/agenda", icon: Calendar },
         { name: "Agenda de Ensayos", href: "/admin/ensayos", icon: Mic, adminOnly: true },
         { name: "Eventualidades", href: "/admin/eventualidades", icon: TrendingUp },
       ]

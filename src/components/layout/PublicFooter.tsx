@@ -136,7 +136,7 @@ export async function PublicFooter() {
               ))}
             </div>
             <Link
-              href="/cotizar"
+              href="/#paquetes"
               className="group relative flex items-center justify-center gap-3 bg-white text-black font-black text-[10px] uppercase tracking-widest px-8 py-5 rounded-2xl hover:bg-primary hover:text-white transition-all duration-500 shadow-xl shadow-primary/10 overflow-hidden"
             >
               <span className="relative z-10">Cotizar mi Evento</span>

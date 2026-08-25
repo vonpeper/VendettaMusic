@@ -89,7 +89,7 @@ export default function LocationPage({ params }: { params: { slug: string } }) {
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
             Energía real, talento profesional y el mejor repertorio versátil para bodas y eventos en {loc.fullName}.
           </p>
-          <a href="/cotizar">
+          <a href="/#paquetes">
             <Button size="lg" className="font-black text-lg px-10 h-16 rounded-2xl shadow-xl shadow-primary/25 gap-2">
               Cotizar mi fecha <ChevronRight className="w-5 h-5" />
             </Button>
@@ -143,7 +143,7 @@ export default function LocationPage({ params }: { params: { slug: string } }) {
             Estamos agendando fechas para 2026. ¡No te quedes sin la mejor música!
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-             <a href="/cotizar">
+             <a href="/#paquetes">
                 <Button size="lg" className="h-16 px-12 rounded-2xl font-black text-xl shadow-2xl shadow-primary/40 gap-3">
                   <Zap className="w-6 h-6 fill-white" /> Cotizar ahora
                 </Button>

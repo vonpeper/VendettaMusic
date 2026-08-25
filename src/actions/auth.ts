@@ -10,8 +10,9 @@ const LOCKOUT_MS = 15 * 60 * 1000 // 15 minutos
 
 export async function loginAction(prevState: any, formData: FormData) {
   try {
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
+    const rawEmail = formData.get("email") as string || ""
+    const email = rawEmail.trim().toLowerCase()
+    const password = formData.get("password") as string || ""
     
     // 1. Rate Limiting Check
     const now = Date.now()

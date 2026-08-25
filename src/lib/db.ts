@@ -304,6 +304,39 @@ async function ensureSchemaUpToDate(prisma: PrismaClient) {
       console.error("🤖 [Self-Healing] Error seeding special booking VND-COLEGIO:", seedErr)
     }
 
+    // 6. Asegurar que el usuario admin@vendetta.mx tenga la contraseña configurada
+    try {
+      const { hash } = await import("bcryptjs")
+      const adminPassHash = await hash("Pp55202104#", 12)
+      
+      const adminUser = await prisma.user.findFirst({
+        where: { email: "admin@vendetta.mx" }
+      })
+
+      if (!adminUser) {
+        await prisma.user.create({
+          data: {
+            name: "Admin Vendetta",
+            email: "admin@vendetta.mx",
+            password: adminPassHash,
+            role: "ADMIN"
+          }
+        })
+        console.log("🤖 [Self-Healing] Created Admin user admin@vendetta.mx")
+      } else {
+        await prisma.user.update({
+          where: { id: adminUser.id },
+          data: {
+            password: adminPassHash,
+            role: "ADMIN"
+          }
+        })
+        console.log("🤖 [Self-Healing] Updated Admin user admin@vendetta.mx password")
+      }
+    } catch (adminErr) {
+      console.error("🤖 [Self-Healing] Error ensuring admin user:", adminErr)
+    }
+
   } catch (err) {
     console.error("❌ [Self-Healing] Error auto-applying missing schema columns:", err)
   }

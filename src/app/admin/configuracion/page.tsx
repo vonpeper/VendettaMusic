@@ -19,6 +19,7 @@ import { LogInboundToggle } from "@/components/admin/LogInboundToggle"
 import { GoogleSyncAllButton } from "@/components/admin/GoogleSyncAllButton"
 import { EvolutionStatusIndicator } from "@/components/admin/EvolutionStatusIndicator"
 import { EvolutionQrButton } from "@/components/admin/EvolutionQrButton"
+import { AgendaLinkShare } from "@/components/admin/AgendaLinkShare"
 
 interface Props {
   searchParams: Promise<{ tab?: string }>
@@ -76,6 +77,10 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
           <TabsTrigger value="pagos" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 font-bold">
             <CreditCard className="w-4 h-4 mr-2" />
             Pagos
+          </TabsTrigger>
+          <TabsTrigger value="agenda" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400 font-bold">
+            <Calendar className="w-4 h-4 mr-2" />
+            Agenda / Fechas
           </TabsTrigger>
         </TabsList>
 
@@ -876,6 +881,12 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
               </div>
             </section>
           </div>
+        </TabsContent>
+
+        <TabsContent value="agenda" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
+          <section>
+            <AgendaLinkShare />
+          </section>
         </TabsContent>
       </Tabs>
 

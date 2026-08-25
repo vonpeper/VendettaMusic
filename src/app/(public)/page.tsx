@@ -3,7 +3,6 @@ import { PaquetesSection } from "@/components/public/PaquetesSection"
 import {
   Volume2, Cpu, Music2, Star, Clock, ChevronRight, Quote, Zap, Loader2, MapPin
 } from "lucide-react"
-import { BuildShowHero } from "@/components/public/BuildShowHero"
 import { MusiciansSection } from "@/components/public/MusiciansSection"
 import { UpcomingGigs } from "@/components/public/UpcomingGigs"
 import { VideoSection } from "@/components/public/VideoSection"
@@ -161,15 +160,9 @@ export default async function HomePage() {
       {/* -- VENDETTA EXPERIENCE ------------------------------------------- */}
       <VendettaExperience />
 
-      {/* -- PAQUETES ------------------------------------------------------- */}
+       {/* -- PAQUETES ------------------------------------------------------- */}
       <PaquetesSection 
         dbPackages={dbPackages as any} 
-        viaticosConfig={{
-          zona2Rate: config?.zona2Rate || undefined,
-          zona3Rate: config?.zona3Rate || undefined,
-          zona2Cities: (config as any)?.zona2Cities || undefined,
-          zona3Cities: (config as any)?.zona3Cities || undefined,
-        }}
       />
 
       {mediaMap.video_home && <VideoSection videoUrl={mediaMap.video_home} />}
@@ -211,9 +204,6 @@ export default async function HomePage() {
             </div>
          </div>
       </section>
-
-      {/* -- ARMA TU SHOW HERO ---------------------------------------------- */}
-      <BuildShowHero imageUrl={mediaMap.arma_tu_show} />
 
       {/* -- CERTIFICADOS DE CALIDAD (SERVICIOS) --------------------------- */}
       <section id="servicios" className="py-24 bg-[#050505] relative overflow-hidden">

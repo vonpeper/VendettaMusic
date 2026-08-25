@@ -1,18 +1,13 @@
 "use client"
 
-import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Input }  from "@/components/ui/input"
 import * as Icons from "lucide-react"
-import Link from "next/link"
-import { calcularViatcos, type ViaticosConfig } from "@/lib/viaticos"
-import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import Image from "next/image"
 
 const {
-  Check, X, ChevronRight, MapPin, Sparkles, Music2,
+  Check, X, Sparkles, Music2,
   Mic2, Lightbulb, Users, Volume2, Monitor, Star,
-  Plus, Minus, Loader2, ArrowRight, AlertCircle, Zap
+  MessageCircle, ArrowUpRight
 } = Icons
 
 // Helper to get Lucide icon from string
@@ -41,7 +36,7 @@ interface PackageData {
   active?: boolean
 }
 
-// Estilos visuales por defecto para paquetes (se pueden personalizar en el futuro)
+// Estilos visuales por defecto para paquetes
 const PACKAGE_STLYES: Record<number, any> = {
   0: { // Primer paquete
     emoji: "🎸",
@@ -71,9 +66,6 @@ const PACKAGE_STLYES: Record<number, any> = {
     highlight: false
   }
 }
-
-const MXN = (v: number) =>
-  new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(v)
 
 const HARDCODED_FEATURES: Record<string, { includes: {icon: string, text: string}[], notIncludes: string[] }> = {
   "Essential": {
@@ -119,321 +111,172 @@ const HARDCODED_FEATURES: Record<string, { includes: {icon: string, text: string
   }
 }
 
-
-// --- Modal de ubicación + precio ---------------------------------------------
-function LocationModal({
-  pkg,
-  onClose,
-  isCustom = false,
-  viaticosConfig,
-}: {
-  pkg: PackageData & { emoji?: string; accentColor?: string; badgeColor?: string }
-  onClose: () => void
-  isCustom?: boolean
-  viaticosConfig?: ViaticosConfig
-}) {
-  const [city,         setCity]         = useState("")
-  const [state,        setState]        = useState("Estado de México")
-  const [isManualCity, setIsManualCity] = useState(false)
-  const [checked,      setChecked]      = useState(false)
-  const [loading,      setLoading]      = useState(false)
-  const [viaticos,     setViaticos]     = useState<{ isOutsideZone: boolean; amount: number; label: string; description: string } | null>(null)
-  const [isLocating,   setIsLocating]   = useState(false)
-
-
-  function calcPrice() {
-    const base = pkg.baseCostPerHour * pkg.minDuration
-    const viat = viaticos?.isOutsideZone ? viaticos.amount : 0
-    const extraMult = viaticos?.isOutsideZone ? 1.20 : 1.00
-    return {
-      base:    Math.round(base * extraMult),
-      viaticos: viat,
-      total:   Math.round(base * extraMult) + viat,
-    }
-  }
-
-  async function handleCheck() {
-    if (!city.trim()) return
-    setLoading(true)
-    try {
-      const destination = `${city}, ${state}`
-      const resp = await fetch(`/api/viaticos?destination=${encodeURIComponent(destination)}`)
-      const data = await resp.json()
-      if (!resp.ok || data.error) {
-        console.error('Error viáticos API', data)
-        const result = calcularViatcos(city, state, viaticosConfig)
-        setViaticos(result)
-      } else {
-        const { viaticosAmount, tollCost, distanceKm, label, description } = data
-        setViaticos({
-          isOutsideZone: viaticosAmount > 0,
-          amount: viaticosAmount,
-          label: label || (viaticosAmount > 0 ? 'Viáticos' : 'Zona 1 (Local)'),
-          description: description || `Distancia ${distanceKm?.toFixed(1) ?? '-'} km, Peaje ${tollCost ?? 0} MXN`
-        })
-      }
-    } catch (e) {
-      console.error('Fetch viáticos failed', e)
-      const result = calcularViatcos(city, state, viaticosConfig)
-      setViaticos(result)
-    } finally {
-      setLoading(false)
-      setChecked(true)
-    }
-  }
-
-  const price = calcPrice()
+export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[]; viaticosConfig?: any }) {
+  const WHATSAPP_PHONE = "527222417045"
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-[#0d0d0d] border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[94vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-white/8 sticky top-0 bg-[#0d0d0d] z-10">
-          <div>
-            <div className="text-xs font-bold text-primary uppercase tracking-widest mb-1">
-              Apartar fecha — {pkg.emoji || "✨"} {pkg.name}
-            </div>
-            <h3 className="text-xl font-heading font-black text-white">¿Dónde será tu evento?</h3>
-          </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/10 text-muted-foreground">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="p-6 space-y-6">
-          {!checked ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Ingresa la ubicación para calcular viáticos y precio final.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {isManualCity ? (
-                  <Input placeholder="Ej. Metepec, Toluca..." value={city === "Otro Municipio (Escribir manualmente)" ? "" : city} onChange={e => setCity(e.target.value)} className="bg-white/5 border-white/15 h-11" />
-                ) : (
-                  <div className="relative">
-                    <select
-                      value={city}
-                      onChange={e => {
-                        const val = e.target.value
-                        if (val === "Otro Municipio (Escribir manualmente)") {
-                          setIsManualCity(true)
-                          setCity("")
-                        } else {
-                          setCity(val)
-                        }
-                      }}
-                      className="w-full bg-[#161616]/80 border border-white/15 h-11 px-3 text-sm focus:border-primary focus:outline-none rounded-md text-white cursor-pointer appearance-none pr-8"
-                    >
-                      <option value="" disabled className="bg-[#161616] text-white">Municipio / Delegación</option>
-                      {(ESTADOS_MUNICIPIOS[state] || []).map(m => (
-                        <option key={m} value={m} className="bg-[#161616] text-white">{m}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                <div className="relative">
-                  <select
-                    value={state}
-                    onChange={e => {
-                      setState(e.target.value)
-                      setIsManualCity(false)
-                      setCity("")
-                    }}
-                    className="w-full bg-[#161616]/80 border border-white/15 h-11 px-3 text-sm focus:border-primary focus:outline-none rounded-md text-white cursor-pointer appearance-none pr-8"
-                  >
-                    {Object.keys(ESTADOS_MUNICIPIOS).map(s => (
-                      <option key={s} value={s} className="bg-[#161616] text-white">{s}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <Button onClick={handleCheck} disabled={!city.trim() || loading} className="w-full h-12 font-bold">
-                {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <MapPin className="w-4 h-4 mr-2" />} Verificar ubicación
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className={`rounded-xl border p-4 flex items-start gap-3 ${viaticos?.isOutsideZone ? "border-yellow-500/40 bg-yellow-900/10" : "border-green-500/40 bg-green-900/10"}`}>
-                <MapPin className={`w-4 h-4 mt-0.5 shrink-0 ${viaticos?.isOutsideZone ? "text-yellow-400" : "text-green-400"}`} />
-                <div className="flex-1">
-                  <div className={`font-bold text-sm ${viaticos?.isOutsideZone ? "text-yellow-300" : "text-green-300"}`}>📍 {city} — {viaticos?.label}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{viaticos?.description}</div>
-                </div>
-                <button onClick={() => setChecked(false)} className="text-xs text-muted-foreground hover:text-white underline">Cambiar</button>
-              </div>
-
-              <div className="bg-black/60 border border-white/8 rounded-2xl p-5 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Paquete {pkg.name} ({pkg.minDuration}h)</span>
-                  <span className="text-white font-bold">{MXN(price.base)}</span>
-                </div>
-                {price.viaticos > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-yellow-400/80">Viáticos (Logística + Transporte)</span>
-                    <span className="text-yellow-300 font-bold">{MXN(price.viaticos)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between border-t border-white/10 pt-3 mt-1">
-                  <span className="font-black text-white text-lg">Total estimado</span>
-                  <span className="font-black text-primary text-2xl">{MXN(price.total)}</span>
-                </div>
-              </div>
-
-              <Link href={`/cotizar?pkg=${pkg.id}&city=${encodeURIComponent(city)}&step=1`}>
-                <Button size="lg" className="w-full h-14 font-black text-base gap-2">
-                  <ArrowRight className="w-5 h-5" /> Continuar y apartar fecha
-                </Button>
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export function PaquetesSection({ dbPackages, viaticosConfig }: { dbPackages: PackageData[]; viaticosConfig?: ViaticosConfig }) {
-  const [selectedPkg, setSelectedPkg] = useState<any>(null)
-
-  return (
-    <>
-      {selectedPkg && (
-        <LocationModal
-          pkg={selectedPkg}
-          onClose={() => setSelectedPkg(null)}
-          viaticosConfig={viaticosConfig}
+    <section id="paquetes" className="py-24 md:py-32 relative overflow-hidden">
+      <div className="absolute inset-0">
+        <Image
+          src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=1600&auto=format&fit=crop"
+          alt=""
+          fill
+          className="object-cover opacity-[0.07]"
         />
-      )}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
+      </div>
 
-      <section id="paquetes" className="py-24 md:py-32 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=1600&auto=format&fit=crop"
-            alt=""
-            fill
-            className="object-cover opacity-[0.07]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center mb-16 flex flex-col items-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest mb-6">
+            <Sparkles className="w-3.5 h-3.5" /> Nuestros Paquetes
+          </div>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-black tracking-tight uppercase mb-4 animated-title pr-4">
+            Elige tu Show
+          </h2>
+          <p className="text-muted-foreground max-w-xl mx-auto text-lg font-medium">
+            Producción musical de primer nivel para tu evento. Consulta disponibilidad y cotiza de inmediato por WhatsApp.
+          </p>
         </div>
 
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16 flex flex-col items-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest mb-6">
-              <Sparkles className="w-3.5 h-3.5" /> Nuestros Paquetes
-            </div>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-black tracking-tight uppercase mb-4 animated-title pr-4">
-              Elige tu Show
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto text-lg font-medium">
-              Producción de primer nivel sin costos ocultos. Presiona <strong className="text-white">Apartar Fecha</strong> para ver el precio según tu ubicación.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
-            {dbPackages.map((pkg, i) => {
-              const style = PACKAGE_STLYES[i % 3] || PACKAGE_STLYES[0]
-              const isUnavailable = pkg.active === false
-              
-              return (
-                <div
-                  key={pkg.id}
-                  className={`relative flex flex-col rounded-3xl border p-7 transition-all duration-300 bg-gradient-to-br ${style.gradient} ${
-                    isUnavailable 
-                      ? "border-neutral-800 opacity-60 filter grayscale-[40%] cursor-not-allowed" 
-                      : style.border
-                  } ${
-                    !isUnavailable && style.highlight ? `shadow-2xl ${style.glow} lg:-translate-y-5 scale-[1.03]` : "hover:scale-[1.01] hover:shadow-xl"
-                  }`}
-                >
-                  {style.highlight && !isUnavailable && (
-                    <div className={`absolute -top-4 left-1/2 -translate-x-1/2 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full border ${style.badgeColor}`}>
-                      ★ Más Solicitado
-                    </div>
-                  )}
-                  {isUnavailable && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-neutral-900 text-neutral-400 text-[9px] font-black uppercase tracking-wider px-3.5 py-0.5 rounded-full border border-neutral-700">
-                      No Disponible
-                    </div>
-                  )}
-
-                  <div className="mb-6">
-                    <div className="text-3xl mb-2">{style.emoji}</div>
-                    <h3 className={`font-heading font-black text-2xl mb-2 ${style.accentColor}`}>{pkg.name}</h3>
-                    <p className="text-sm text-white/70 leading-relaxed">{pkg.description}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
+          {dbPackages.map((pkg, i) => {
+            const style = PACKAGE_STLYES[i % 3] || PACKAGE_STLYES[0]
+            const isUnavailable = pkg.active === false
+            const isEssential = pkg.name.toLowerCase().includes("essent")
+            const waMessage = encodeURIComponent(`¡Hola Vendetta! Me interesa cotizar el paquete "${pkg.name}" para mi evento. ¿Me podrían dar información de disponibilidad y detalles?`)
+            const waUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${waMessage}`
+            
+            return (
+              <div
+                key={pkg.id}
+                className={`relative flex flex-col rounded-3xl border p-7 transition-all duration-300 bg-gradient-to-br ${style.gradient} ${
+                  isUnavailable 
+                    ? "border-neutral-800 opacity-60 filter grayscale-[40%] cursor-not-allowed" 
+                    : style.border
+                } ${
+                  !isUnavailable && style.highlight ? `shadow-2xl ${style.glow} lg:-translate-y-5 scale-[1.03]` : "hover:scale-[1.01] hover:shadow-xl"
+                }`}
+              >
+                {style.highlight && !isUnavailable && (
+                  <div className={`absolute -top-4 left-1/2 -translate-x-1/2 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full border ${style.badgeColor}`}>
+                    ★ Más Solicitado
                   </div>
+                )}
+                {isUnavailable && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-neutral-900 text-neutral-400 text-[9px] font-black uppercase tracking-wider px-3.5 py-0.5 rounded-full border border-neutral-700">
+                    No Disponible
+                  </div>
+                )}
 
-                  <div className="flex-1 mb-6">
-                    <div className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${style.accentColor}`}>¿Qué incluye?</div>
-                    <ul className="space-y-2.5">
-                      {HARDCODED_FEATURES[pkg.name] ? (
-                        HARDCODED_FEATURES[pkg.name].includes.map((item, j) => {
-                          const IconComp = getIcon(item.icon)
-                          return (
-                            <li key={j} className="flex items-start gap-2.5">
-                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${style.badgeColor}`}>
-                                <IconComp className="w-2.5 h-2.5" />
-                              </div>
-                              <span className="text-sm text-white/80 leading-snug">{item.text}</span>
-                            </li>
-                          )
-                        })
-                      ) : pkg.serviceItems && pkg.serviceItems.length > 0 ? (
-                        pkg.serviceItems.map((item) => {
-                          const IconComp = getIcon(item.icon)
-                          return (
-                            <li key={item.id} className="flex items-start gap-2.5">
-                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${style.badgeColor}`}>
-                                <IconComp className="w-2 h-2" />
-                              </div>
-                              <span className="text-sm text-white/80 leading-snug">{item.name}</span>
-                            </li>
-                          )
-                        })
-                      ) : (
-                        pkg.includes?.split(',').map((inc, idx) => (
-                          <li key={idx} className="flex items-start gap-2.5">
+                <div className="mb-6">
+                  <div className="text-3xl mb-2">{style.emoji}</div>
+                  <h3 className={`font-heading font-black text-2xl mb-2 ${style.accentColor}`}>{pkg.name}</h3>
+                  <p className="text-sm text-white/70 leading-relaxed">{pkg.description}</p>
+                </div>
+
+                {/* Precios: Solo se despliega para Essentia */}
+                {isEssential ? (
+                  <div className="mb-6 pb-6 border-b border-white/10">
+                    <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Inversión</div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-white">Desde $8,500</span>
+                      <span className="text-xs text-primary font-bold">MXN</span>
+                    </div>
+                    <div className="text-xs text-primary font-semibold mt-1">2 horas de show</div>
+                  </div>
+                ) : (
+                  <div className="mb-6 pb-6 border-b border-white/10">
+                    <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Inversión</div>
+                    <div className="text-lg font-black text-white/90">Cotización personalizada</div>
+                    <div className="text-xs text-muted-foreground mt-1">Atención directa a la medida</div>
+                  </div>
+                )}
+
+                <div className="flex-1 mb-6">
+                  <div className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${style.accentColor}`}>¿Qué incluye?</div>
+                  <ul className="space-y-2.5">
+                    {HARDCODED_FEATURES[pkg.name] ? (
+                      HARDCODED_FEATURES[pkg.name].includes.map((item, j) => {
+                        const IconComp = getIcon(item.icon)
+                        return (
+                          <li key={j} className="flex items-start gap-2.5">
                             <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${style.badgeColor}`}>
-                              <Check className="w-2 h-2" />
+                              <IconComp className="w-2.5 h-2.5" />
                             </div>
-                            <span className="text-sm text-white/80 leading-snug">{inc.trim()}</span>
+                            <span className="text-sm text-white/80 leading-snug">{item.text}</span>
                           </li>
-                        ))
-                      )}
-                    </ul>
-
-                    {HARDCODED_FEATURES[pkg.name]?.notIncludes.length > 0 && (
-                      <ul className="mt-3 space-y-1.5">
-                        {HARDCODED_FEATURES[pkg.name].notIncludes.map((item, j) => (
-                          <li key={j} className="flex items-center gap-2.5">
-                            <div className="w-4 h-4 rounded-full bg-white/5 border border-white/15 flex items-center justify-center shrink-0">
-                              <X className="w-2.5 h-2.5 text-white/30" />
+                        )
+                      })
+                    ) : pkg.serviceItems && pkg.serviceItems.length > 0 ? (
+                      pkg.serviceItems.map((item) => {
+                        const IconComp = getIcon(item.icon)
+                        return (
+                          <li key={item.id} className="flex items-start gap-2.5">
+                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${style.badgeColor}`}>
+                              <IconComp className="w-2 h-2" />
                             </div>
-                            <span className="text-xs text-white/30">{item}</span>
+                            <span className="text-sm text-white/80 leading-snug">{item.name}</span>
                           </li>
-                        ))}
-                      </ul>
+                        )
+                      })
+                    ) : (
+                      pkg.includes?.split(',').map((inc, idx) => (
+                        <li key={idx} className="flex items-start gap-2.5">
+                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${style.badgeColor}`}>
+                            <Check className="w-2 h-2" />
+                          </div>
+                          <span className="text-sm text-white/80 leading-snug">{inc.trim()}</span>
+                        </li>
+                      ))
                     )}
-                  </div>
+                  </ul>
 
+                  {HARDCODED_FEATURES[pkg.name]?.notIncludes.length > 0 && (
+                    <ul className="mt-3 space-y-1.5">
+                      {HARDCODED_FEATURES[pkg.name].notIncludes.map((item, j) => (
+                        <li key={j} className="flex items-center gap-2.5">
+                          <div className="w-4 h-4 rounded-full bg-white/5 border border-white/15 flex items-center justify-center shrink-0">
+                            <X className="w-2.5 h-2.5 text-white/30" />
+                          </div>
+                          <span className="text-xs text-white/30">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <a
+                  href={isUnavailable ? undefined : waUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full mt-auto"
+                >
                   <Button
                     disabled={isUnavailable}
-                    onClick={() => setSelectedPkg({ ...pkg, ...style })}
-                    className={`w-full h-12 font-black gap-2 ${
+                    className={`w-full h-12 font-black gap-2 cursor-pointer transition-all duration-300 ${
                       isUnavailable
                         ? "bg-neutral-800 border border-neutral-700/50 text-neutral-500 cursor-not-allowed"
                         : style.highlight
-                          ? "bg-red-600 hover:bg-red-500 text-white animate-pulse"
-                          : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                          ? "bg-[#25D366] hover:bg-[#20ba59] text-white shadow-xl shadow-[#25D366]/20 hover:scale-[1.02]"
+                          : "bg-white/10 hover:bg-[#25D366] text-white hover:text-white border border-white/20 hover:border-[#25D366]"
                     }`}
                   >
-                    {isUnavailable ? "No Disponible" : "Apartar Fecha"}
-                    {!isUnavailable && <ChevronRight className="w-4 h-4" />}
+                    {isUnavailable ? "No Disponible" : (
+                      <>
+                        <MessageCircle className="w-4 h-4" />
+                        <span>Cotizar por WhatsApp</span>
+                        <ArrowUpRight className="w-4 h-4 opacity-70" />
+                      </>
+                    )}
                   </Button>
-                </div>
-              )
-            })}
-          </div>
+                </a>
+              </div>
+            )
+          })}
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   )
 }
+
