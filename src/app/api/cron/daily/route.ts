@@ -264,6 +264,23 @@ export async function GET(request: Request) {
             }
           }
         }
+        // Web Push reminder to all subscribed devices for today's events
+        if (todayEvents.length > 0) {
+          const { broadcastWebPush } = await import("@/lib/webpush")
+          for (const event of todayEvents) {
+            const title = event.customName || "Show Vendetta"
+            const time = event.performanceStart || "21:00"
+            const location = (event as any).location?.name || "Lugar confirmado"
+            const arrival = event.arrivalTime || event.setupTime ? ` (Llegada: ${event.arrivalTime || event.setupTime})` : ""
+
+            await broadcastWebPush({
+              title: "⚡ VENDETTA | ¡HOY HAY SHOW!",
+              body: `🎸 ${title} — ${time} hrs en ${location}${arrival}. Toca para ver los detalles.`,
+              url: "/agenda",
+              data: { eventId: event.id }
+            }).catch(e => console.error("WebPush broadcast error in cron:", e))
+          }
+        }
       } catch (cronMusErr: any) {
         results.errors.push(`Error querying today's events for musicians: ${cronMusErr.message}`)
       }

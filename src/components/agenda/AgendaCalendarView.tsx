@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { motion, AnimatePresence } from "framer-motion"
+import { PushNotificationBanner } from "@/components/agenda/PushNotificationBanner"
 
 interface Props {
   events: AgendaEvent[]
@@ -240,6 +241,9 @@ export function AgendaCalendarView({ events }: Props) {
 
       {/* Main Container */}
       <main className="container mx-auto px-4 max-w-6xl mt-6 space-y-6">
+        {/* Web Push Notification Banner for Musicians / Users */}
+        <PushNotificationBanner />
+
         {/* Filters and Search Bar */}
         <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center bg-zinc-900/40 border border-white/10 p-3 md:p-4 rounded-2xl backdrop-blur-md">
           {/* Search Input */}

@@ -101,6 +101,34 @@ export function AgendaLinkShare() {
             </div>
           </div>
         </div>
+
+        {/* Broadcast Push Reminder Card */}
+        <div className="mt-4 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <div className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+              🔔 Notificaciones Push a Músicos
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Envía un recordatorio push a todos los dispositivos que hayan activado las notificaciones en la agenda.
+            </p>
+          </div>
+
+          <Button
+            size="sm"
+            onClick={async () => {
+              const { sendTodayShowReminderAction } = await import("@/actions/push")
+              const res = await sendTodayShowReminderAction()
+              if (res.success) {
+                toast.success(res.message)
+              } else {
+                toast.error(res.message)
+              }
+            }}
+            className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shrink-0 h-9 px-4 rounded-xl shadow-md cursor-pointer"
+          >
+            Enviar Recordatorio Ahora
+          </Button>
+        </div>
       </div>
     </div>
   )
