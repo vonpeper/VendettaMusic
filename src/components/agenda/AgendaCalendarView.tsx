@@ -184,7 +184,7 @@ export function AgendaCalendarView({ events }: Props) {
   return (
     <div className="min-h-screen bg-[#070709] text-foreground pb-20">
       {/* Top Banner / Header */}
-      <header className="relative border-b border-white/10 bg-gradient-to-b from-black via-zinc-950 to-[#070709] py-8 md:py-12 overflow-hidden">
+      <header className="relative border-b border-white/10 bg-gradient-to-b from-black via-zinc-950 to-[#070709] pt-32 md:pt-36 pb-10 md:pb-14 overflow-hidden">
         {/* Glow FX */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 md:w-[600px] h-32 bg-primary/20 blur-[100px] pointer-events-none rounded-full" />
 
