@@ -107,23 +107,47 @@ export function PushNotificationBanner() {
   }
 
   const handleSendTest = async () => {
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-      const reg = await navigator.serviceWorker.getRegistration()
+    try {
+      if (typeof window === "undefined" || !("Notification" in window)) {
+        toast.error("Tu navegador no soporta notificaciones")
+        return
+      }
+
+      if (Notification.permission !== "granted") {
+        const perm = await Notification.requestPermission()
+        if (perm !== "granted") {
+          toast.error("Por favor concede permiso de notificaciones en tu navegador.")
+          return
+        }
+      }
+
+      let reg = await navigator.serviceWorker.getRegistration()
+      if (!reg) {
+        reg = await navigator.serviceWorker.register("/sw.js")
+        await navigator.serviceWorker.ready
+      }
+
       if (reg && reg.showNotification) {
-        reg.showNotification("⚡ VENDETTA MUSIC | Recordatorio", {
-          body: "🎸 ¡Hoy hay show! Recuerda revisar tus horarios de llamado y vestimenta en la agenda.",
-          icon: "/images/logo-icon.png",
-          badge: "/images/logo-icon.png",
+        await reg.showNotification("⚡ VENDETTA | ¡HOY HAY SHOW!", {
+          body: "🎸 Boda Mariana & Carlos — Show 21:00 hrs en Hacienda San José. Llamado 18:30 hrs. Vestimenta: Formal Rock.",
+          icon: "/images/branding/logo-vendetta.png",
+          badge: "/images/branding/logo-vendetta.png",
+          vibrate: [200, 100, 200, 100, 200],
+          tag: "vendetta-show-demo",
+          renotify: true,
           data: { url: "/agenda" }
         })
-        toast.success("Notificación de prueba enviada a tu pantalla")
+        toast.success("¡Notificación de prueba enviada a tu pantalla!")
       } else {
-        new Notification("⚡ VENDETTA MUSIC", {
-          body: "🎸 ¡Recordatorio activo! Notificaciones funcionando.",
-          icon: "/images/logo-icon.png"
+        new Notification("⚡ VENDETTA | ¡HOY HAY SHOW!", {
+          body: "🎸 Boda Mariana & Carlos — Show 21:00 hrs en Hacienda San José. Llamado 18:30 hrs.",
+          icon: "/images/branding/logo-vendetta.png"
         })
-        toast.success("Notificación enviada")
+        toast.success("¡Notificación de prueba enviada!")
       }
+    } catch (err: any) {
+      console.error("Test notification error:", err)
+      toast.error(`Error al mostrar notificación: ${err?.message || "Desconocido"}`)
     }
   }
 
