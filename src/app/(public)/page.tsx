@@ -292,7 +292,7 @@ export default async function HomePage() {
           </div>
         </div>
         
-        <div className="pt-24 border-t border-white/5 mt-20">
+        <div id="galeria" className="pt-24 border-t border-white/5 mt-20">
           <PhotoGallery images={mediaMap.galeria} />
         </div>
       </section>

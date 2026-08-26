@@ -130,12 +130,7 @@ export async function UpcomingGigs() {
           </div>
         )}
         
-        <div className="mt-12 text-center max-w-2xl mx-auto flex flex-col items-center gap-4">
-           <Link href="/agenda">
-             <Button variant="outline" className="border-white/20 hover:border-primary/50 text-white font-bold text-xs uppercase tracking-widest px-6 h-11 rounded-xl bg-white/5 hover:bg-primary/10 transition-all">
-               <Calendar className="w-4 h-4 mr-2 text-primary" /> Ver Calendario Completo de Fechas
-             </Button>
-           </Link>
+        <div className="mt-12 text-center max-w-2xl mx-auto">
            <p className="text-gray-500 text-[11px] md:text-sm italic px-6">
               * Debido a la naturaleza de los eventos privados (bodas, corporativos), algunas ubicaciones exactas están reservadas por privacidad de nuestros clientes.
            </p>

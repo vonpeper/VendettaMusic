@@ -12,21 +12,26 @@ import {
 } from "lucide-react"
 
 export function PhotoGallery({ images = [] }: { images?: string[] }) {
-  // Map strings to objects if needed, or use directly
-  const PHOTOS = images.length > 0 
+  // Map strings to objects if needed, or use verified default photos
+  const DEFAULT_PHOTOS = [
+    { src: "/images/galeria/vendetta-live-music-show-boda.jpeg", alt: "Vendetta Live Show en Boda" },
+    { src: "/images/galeria/vendetta-banda-en-vivo-evento.jpg", alt: "Banda en Vivo para Eventos" },
+    { src: "/images/galeria/vendetta-cantante-escenario.jpg", alt: "Voz en Escenario Vendetta" },
+    { src: "/images/galeria/vendetta-guitarrista-solo.jpg", alt: "Solo de Guitarra Eléctrica" },
+    { src: "/images/galeria/vendetta-bajista-ritmo.jpg", alt: "Bajo y Ritmo Vendetta" },
+    { src: "/images/galeria/vendetta-bateria-iluminacion.jpg", alt: "Batería e Iluminación Robótica" },
+    { src: "/images/galeria/vendetta-saxofonista-metales.jpg", alt: "Sección de Metales Saxofón" },
+    { src: "/images/galeria/vendetta-trompetista-show.jpg", alt: "Trompeta en Vivo" },
+    { src: "/images/galeria/vendetta-grupo-musical-animacion.jpg", alt: "Animación y Fiesta en Vivo" },
+    { src: "/images/galeria/vendetta-concierto-versatil.jpg", alt: "Concierto Versátil Vendetta" },
+    { src: "/images/galeria/vendetta-musica-corporativo.jpg", alt: "Evento Corporativo de Gala" },
+    { src: "/images/galeria/vendetta-vocalista-grupo.jpg", alt: "Vocalistas Vendetta Live" },
+  ]
+
+  const PHOTOS = images && images.length > 0 
     ? images.map(src => ({ src, alt: "Vendetta en Vivo" }))
-    : [
-        { src: "/images/galeria/535121155_761041770195307_8126776643887802338_n.jpg", alt: "Banda en Vivo" },
-        { src: "/images/galeria/535681229_761041766861974_6926113629069895939_n.jpg", alt: "Energía Vendetta" },
-        { src: "/images/galeria/535103174_761041763528641_7245225103265677160_n.jpg", alt: "Show Premium" },
-        { src: "/images/galeria/481504769_629534706679348_1561716134611844203_n.jpg", alt: "Producción de Gala" },
-        { src: "/images/galeria/536600427_761041776861973_6445050278382618381_n.jpg", alt: "Rock Show" },
-        { src: "/images/galeria/514286757_724509610515190_4657541336968800422_n.jpg", alt: "Vocalistas" },
-        { src: "/images/galeria/480443072_617491504550335_3034048089450482085_n.jpg", alt: "Evento de Marca" },
-        { src: "/images/galeria/534982425_761041773528640_8278088169193635074_n.jpg", alt: "Stage Setup" },
-        { src: "/images/galeria/597393886_854962487469901_2382660845125978946_n.jpg", alt: "Público Prendido" },
-        { src: "/images/galeria/515963015_724509627181855_2465529527478650196_n.jpg", alt: "Vendetta Night" },
-      ]
+    : DEFAULT_PHOTOS
+
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [selectedImage, setSelectedImage] = useState<number | null>(null)
@@ -54,7 +59,7 @@ export function PhotoGallery({ images = [] }: { images?: string[] }) {
   }, [nextSlide])
 
   return (
-    <section className="py-24 bg-[#080808] overflow-hidden">
+    <section id="galeria" className="py-24 bg-[#080808] overflow-hidden">
       <div className="container mx-auto px-4 mb-12 text-center md:text-left">
         <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
           <div className="max-w-xl">

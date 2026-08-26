@@ -6,7 +6,13 @@ import { AgendaCalendarView } from "@/components/agenda/AgendaCalendarView"
 
 export const metadata: Metadata = {
   title: "Agenda de Fechas y Shows | Vendetta Music",
-  description: "Calendario en tiempo real de fechas, horarios y locaciones de shows de Vendetta Music.",
+  description: "Agenda interna de fechas, horarios y presentaciones de Vendetta Music.",
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+    nosnippet: true,
+  },
 }
 
 export default async function AgendaPage() {

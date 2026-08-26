@@ -15,8 +15,57 @@ interface Musician {
   ig: string | null
 }
 
-export function MusiciansSection({ musicians }: { musicians: Musician[] }) {
+const DEFAULT_MUSICIANS: Musician[] = [
+  {
+    name: "Diego",
+    role: "Voz Principal",
+    emoji: "🎤",
+    img: "/images/musicians/diego.jpg",
+    shortBio: "Vocalista versátil con potencia escénica y carisma inigualable.",
+    fullBio: "Líder vocal de Vendetta Music, especialista en prender al público y dominar el pop y rock en español e inglés.",
+    ig: "https://instagram.com/vendettamusica"
+  },
+  {
+    name: "Maryx",
+    role: "Voz Femenina",
+    emoji: "✨",
+    img: "/images/musicians/maryx.jpg",
+    shortBio: "Voz femenina de gran tesitura, elegancia y energía pop.",
+    fullBio: "Cantante profesional con amplia trayectoria en shows de alto nivel y producciones de gala.",
+    ig: "https://instagram.com/vendettamusica"
+  },
+  {
+    name: "Pepe",
+    role: "Guitarra & Dirección",
+    emoji: "🎸",
+    img: "/images/musicians/pepe.jpg",
+    shortBio: "Guitarrista y director musical, arreglista del repertorio.",
+    fullBio: "Más de 15 años en producción musical, diseño sonoro y ejecución en vivo de pop, funk y rock.",
+    ig: "https://instagram.com/vendettamusica"
+  },
+  {
+    name: "Alex",
+    role: "Batería & Percusión",
+    emoji: "🥁",
+    img: "/images/musicians/alex.jpg",
+    shortBio: "El motor rítmico que mantiene la pista encendida.",
+    fullBio: "Baterista de sesión con precisión y potencia para hacer bailar a todos en cualquier fiesta.",
+    ig: "https://instagram.com/vendettamusica"
+  },
+  {
+    name: "Edgar",
+    role: "Bajo Eléctrico",
+    emoji: "⚡",
+    img: "/images/musicians/edgar.jpg",
+    shortBio: "Solidez y groove en cada nota del show.",
+    fullBio: "Bajista profesional encargado de la base armónica y rítmica del sonido en vivo de Vendetta.",
+    ig: "https://instagram.com/vendettamusica"
+  }
+]
+
+export function MusiciansSection({ musicians = [] }: { musicians?: Musician[] }) {
   const [activeMuso, setActiveMuso] = useState<Musician | null>(null)
+  const displayMusicians = musicians && musicians.length > 0 ? musicians : DEFAULT_MUSICIANS
 
   return (
     <>
@@ -90,7 +139,7 @@ export function MusiciansSection({ musicians }: { musicians: Musician[] }) {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 max-w-6xl mx-auto">
-            {musicians.map(m => (
+            {displayMusicians.map(m => (
               <button
                 key={m.name}
                 onClick={() => setActiveMuso(m)}

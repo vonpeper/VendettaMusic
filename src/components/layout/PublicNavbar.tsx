@@ -13,11 +13,14 @@ import {
 } from "@/components/ui/sheet"
 
 const NAV_LINKS = [
-  { href: "/", label: "Inicio" },
-  { href: "/#nosotros", label: "La Banda" },
-  { href: "/#servicios", label: "Show" },
+  { href: "/#inicio", label: "Inicio" },
   { href: "/#paquetes", label: "Paquetes" },
+  { href: "/#servicios", label: "Show" },
+  { href: "/#nosotros", label: "La Banda" },
   { href: "/#fechas", label: "Fechas" },
+  { href: "/#galeria", label: "Galería" },
+  { href: "/#testimonios", label: "Opiniones" },
+  { href: "/#estatus", label: "Estatus" },
 ]
 
 export function PublicNavbar() {
@@ -39,19 +42,19 @@ export function PublicNavbar() {
         </Link>
         
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex gap-8 items-center">
+        <nav className="hidden lg:flex gap-5 xl:gap-7 items-center">
           {NAV_LINKS.map((link) => (
             <Link 
               key={link.label} 
               href={link.href} 
-              className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-primary transition-all"
+              className="text-[10px] font-black uppercase tracking-[0.18em] hover:text-primary transition-all whitespace-nowrap"
             >
               {link.label}
             </Link>
           ))}
-          <div className="w-px h-4 bg-white/10 mx-2" />
+          <div className="w-px h-4 bg-white/10 mx-1" />
           <Link href="/#paquetes">
-            <Button className="bg-primary hover:bg-primary/90 text-white font-heading font-black text-[10px] uppercase tracking-widest px-6 h-10 rounded-lg shadow-lg shadow-primary/20 border-0 cursor-pointer">
+            <Button className="bg-primary hover:bg-primary/90 text-white font-heading font-black text-[10px] uppercase tracking-widest px-5 h-9 rounded-lg shadow-lg shadow-primary/20 border-0 cursor-pointer">
               Cotizar
             </Button>
           </Link>
