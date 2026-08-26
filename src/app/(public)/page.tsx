@@ -98,8 +98,7 @@ export default async function HomePage() {
             alt="Grupo musical Vendetta en vivo para eventos sociales y bodas"
             fill
             priority
-            quality={100}
-            sizes="(max-width: 1024px) 100vw, 70vw"
+            unoptimized
             className="opacity-95 object-cover object-[75%_center] lg:object-contain lg:object-bottom-right"
           />
           {/* Subtle horizontal gradient to blend image seamlessly with black background on desktop protecting text zone */}
