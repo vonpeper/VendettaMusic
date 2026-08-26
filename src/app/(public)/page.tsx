@@ -118,12 +118,12 @@ export default async function HomePage() {
               VENDETTA LIVE MUSIC
             </span>
             
-            <h1 className="font-heading font-black uppercase text-left tracking-tight leading-[0.92] text-[clamp(2.2rem,5.5vw,4.2rem)] mb-6 select-none drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+            <h1 className="font-heading font-black uppercase text-left tracking-tight leading-[1.04] text-[clamp(1.85rem,4.2vw,3.5rem)] mb-6 select-none drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
               <span className="block animate-hero-line-1 whitespace-nowrap">
                 <span className="text-white">EL </span>
-                <span className="text-primary bg-gradient-to-r from-primary via-rose-500 to-red-500 bg-clip-text text-transparent">SOUNDTRACK</span>
+                <span className="text-primary bg-gradient-to-r from-primary via-rose-500 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(225,29,72,0.55)]">SOUNDTRACK</span>
               </span>
-              <span className="block text-white mt-2 sm:mt-2.5 animate-hero-line-2 lg:whitespace-nowrap">
+              <span className="block text-white mt-1.5 sm:mt-2.5 animate-hero-line-2 lg:whitespace-nowrap">
                 <span className="block lg:inline">DE TU MEJOR </span>
                 <span className="block lg:inline">NOCHE</span>
               </span>

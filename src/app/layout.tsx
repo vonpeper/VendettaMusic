@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit, Plus_Jakarta_Sans, Advent_Pro } from "next/font/google";
+import { Unbounded, Plus_Jakarta_Sans, Advent_Pro } from "next/font/google";
 import "./globals.css";
 import { SchemaMarkup } from "@/components/public/SchemaMarkup"
 import { Toaster } from "sonner"
@@ -13,7 +13,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-const outfit = Outfit({
+const unbounded = Unbounded({
   variable: "--font-heading",
   subsets: ["latin"],
   weight: ["700", "800", "900"],
@@ -81,7 +81,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${plusJakartaSans.variable} ${outfit.variable} ${advent.variable} dark antialiased scroll-smooth`}
+      className={`${plusJakartaSans.variable} ${unbounded.variable} ${advent.variable} dark antialiased scroll-smooth`}
     >
       <head>
         <meta name="google-site-verification" content="xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY" />
