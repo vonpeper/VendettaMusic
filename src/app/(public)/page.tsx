@@ -113,19 +113,19 @@ export default async function HomePage() {
         <div className="absolute inset-x-0 bottom-0 h-16 sm:h-20 lg:h-24 bg-gradient-to-t from-black to-transparent z-10" />
 
         <div className="container relative z-20 px-4 md:px-8 lg:px-16 mx-auto flex items-center w-full">
-          <div className="w-full lg:max-w-[480px] xl:max-w-[560px] 2xl:max-w-[620px] text-left flex flex-col items-start pt-20 lg:pt-0">
+          <div className="w-full lg:max-w-[580px] xl:max-w-[650px] 2xl:max-w-[720px] text-left flex flex-col items-start pt-20 lg:pt-0">
             <span className="text-primary font-sans font-bold text-xs md:text-sm tracking-[0.25em] uppercase mb-3 block animate-hero-line-1">
               VENDETTA LIVE MUSIC
             </span>
             
-            <h1 className="font-heading font-black uppercase text-left tracking-[-0.03em] leading-[0.84] text-[clamp(2.75rem,7.5vw,5.5rem)] mb-6 select-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
-              <span className="block animate-hero-line-1">
+            <h1 className="font-heading font-black uppercase text-left tracking-tight leading-[0.92] text-[clamp(2.2rem,5.5vw,4.2rem)] mb-6 select-none drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+              <span className="block animate-hero-line-1 whitespace-nowrap">
                 <span className="text-white">EL </span>
-                <span className="text-primary bg-gradient-to-r from-primary via-red-500 to-rose-500 bg-clip-text text-transparent">SOUNDTRACK</span>
+                <span className="text-primary bg-gradient-to-r from-primary via-rose-500 to-red-500 bg-clip-text text-transparent">SOUNDTRACK</span>
               </span>
-              <span className="block text-white mt-1.5 sm:mt-2 animate-hero-line-2">
-                <span className="block sm:inline">DE TU MEJOR </span>
-                <span className="block sm:inline">NOCHE</span>
+              <span className="block text-white mt-2 sm:mt-2.5 animate-hero-line-2 lg:whitespace-nowrap">
+                <span className="block lg:inline">DE TU MEJOR </span>
+                <span className="block lg:inline">NOCHE</span>
               </span>
             </h1>
 

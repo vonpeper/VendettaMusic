@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
-import { Manrope, Barlow_Condensed, Advent_Pro } from "next/font/google";
+import { Outfit, Plus_Jakarta_Sans, Advent_Pro } from "next/font/google";
 import "./globals.css";
 import { SchemaMarkup } from "@/components/public/SchemaMarkup"
 import { Toaster } from "sonner"
 
 import { db } from "@/lib/db";
 
-const manrope = Manrope({
+const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
-const barlowCondensed = Barlow_Condensed({
+const outfit = Outfit({
   variable: "--font-heading",
   subsets: ["latin"],
-  weight: ["700", "900"],
+  weight: ["700", "800", "900"],
   display: "swap",
 });
 
@@ -81,7 +81,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${manrope.variable} ${barlowCondensed.variable} ${advent.variable} dark antialiased scroll-smooth`}
+      className={`${plusJakartaSans.variable} ${outfit.variable} ${advent.variable} dark antialiased scroll-smooth`}
     >
       <head>
         <meta name="google-site-verification" content="xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY" />
