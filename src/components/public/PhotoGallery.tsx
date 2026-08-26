@@ -11,7 +11,7 @@ import {
   X 
 } from "lucide-react"
 
-export function PhotoGallery({ images = [] }: { images?: string[] }) {
+export function PhotoGallery({ images = [] }: { images?: (string | null | undefined)[] }) {
   // Map strings to objects if needed, or use verified default photos
   const DEFAULT_PHOTOS = [
     { src: "/images/galeria/vendetta-live-music-show-boda.jpeg", alt: "Vendetta Live Show en Boda" },
@@ -28,8 +28,9 @@ export function PhotoGallery({ images = [] }: { images?: string[] }) {
     { src: "/images/galeria/vendetta-vocalista-grupo.jpg", alt: "Vocalistas Vendetta Live" },
   ]
 
-  const PHOTOS = images && images.length > 0 
-    ? images.map(src => ({ src, alt: "Vendetta en Vivo" }))
+  const cleanImages = (images || []).filter((img): img is string => typeof img === "string" && img.trim().length > 0)
+  const PHOTOS = cleanImages.length > 0 
+    ? cleanImages.map(src => ({ src, alt: "Vendetta en Vivo" }))
     : DEFAULT_PHOTOS
 
   const [currentIndex, setCurrentIndex] = useState(0)

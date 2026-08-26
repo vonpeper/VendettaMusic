@@ -66,7 +66,7 @@ export default async function HomePage() {
     mentiras: allMedia.find((m: any) => m.section === "mentiras")?.url || "/images/shows/mentiras.jpg",
     arma_tu_show: allMedia.find((m: any) => m.section === "arma_tu_show")?.url || "/images/shows/arma-tu-show.jpg",
     video_home: allMedia.find((m: any) => m.section === "video_home")?.url || "",
-    galeria: allMedia.filter((m: any) => m.section === "galeria").map(m => m.url),
+    galeria: allMedia.filter((m: any) => m.section === "galeria" && m.url).map((m: any) => m.url as string),
   }
   
   const liveDbReviews = await db.review.findMany({ 
