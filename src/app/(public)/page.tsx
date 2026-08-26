@@ -92,7 +92,7 @@ export default async function HomePage() {
       {/* -- HERO ---------------------------------------------------------- */}
       <section id="inicio" className="relative min-h-screen lg:h-screen flex items-center justify-start overflow-hidden bg-black py-20 lg:py-0">
         {/* Background Image Container - contains the full band image on the right on desktop, covers screen on mobile */}
-        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[72%] xl:w-[68%] 2xl:w-[64%] z-0 select-none pointer-events-none bg-black">
+        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[72%] xl:w-[68%] 2xl:w-[64%] z-0 select-none pointer-events-none bg-black animate-hero-bg">
           <Image
             src="/images/vendetta-web-assets/vendetta-hero.jpg"
             alt="Grupo musical Vendetta en vivo para eventos sociales y bodas"
@@ -113,45 +113,55 @@ export default async function HomePage() {
         <div className="absolute inset-x-0 bottom-0 h-16 sm:h-20 lg:h-24 bg-gradient-to-t from-black to-transparent z-10" />
 
         <div className="container relative z-20 px-4 md:px-8 lg:px-16 mx-auto flex items-center w-full">
-          <div className="w-full lg:max-w-[440px] xl:max-w-[500px] text-left flex flex-col items-start pt-20 lg:pt-0">
-            <span className="text-primary font-heading font-black text-xs md:text-sm tracking-[0.3em] uppercase mb-4 block">
+          <div className="w-full lg:max-w-[480px] xl:max-w-[560px] 2xl:max-w-[620px] text-left flex flex-col items-start pt-20 lg:pt-0">
+            <span className="text-primary font-sans font-bold text-xs md:text-sm tracking-[0.25em] uppercase mb-3 block animate-hero-line-1">
               VENDETTA LIVE MUSIC
             </span>
-            <h1 className="font-heading font-black italic text-3xl sm:text-4xl lg:text-[2.3rem] xl:text-[2.8rem] tracking-tighter mb-6 leading-[1.05] uppercase text-left">
-              <span className="text-white block">EL SOUNDTRACK DE</span>
-              <span className="text-primary block mt-1">TU MEJOR NOCHE</span>
-            </h1>
-            <p className="text-sm md:text-base text-gray-400 max-w-sm mb-8 md:mb-10 font-sans font-medium leading-relaxed text-left">
-              Pop y rock en vivo para bodas, eventos corporativos y celebraciones inolvidables.
-            </p>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
-              <a href="#paquetes" className="w-full sm:w-auto">
-                <Button 
-                  size="lg" 
-                  className="w-full sm:w-auto font-heading font-black text-xs md:text-sm px-8 h-12 md:h-14 rounded-xl uppercase tracking-wider bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all duration-300 cursor-pointer border-0"
-                >
-                  COTIZAR MI EVENTO
-                </Button>
-              </a>
-              <a href="#servicios" className="w-full sm:w-auto">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="w-full sm:w-auto font-heading font-black text-xs md:text-sm px-8 h-12 md:h-14 rounded-xl uppercase tracking-wider border-primary/60 hover:border-primary hover:bg-white/5 text-white flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer"
-                >
-                  VER EL SHOW 
-                  <ChevronRight className="w-4 h-4 text-primary" />
-                </Button>
-              </a>
-            </div>
             
-            <div className="flex items-center gap-2.5 mt-12 md:mt-16 text-[10px] md:text-xs font-heading font-black uppercase tracking-[0.25em] text-white/90">
-              <MapPin className="w-4 h-4 text-primary fill-primary/10 shrink-0" />
-              <span>TOLUCA</span>
-              <span className="text-primary font-bold">•</span>
-              <span>CDMX</span>
-              <span className="text-primary font-bold">•</span>
-              <span>Y ALREDEDORES</span>
+            <h1 className="font-heading font-black uppercase text-left tracking-[-0.03em] leading-[0.84] text-[clamp(2.75rem,7.5vw,5.5rem)] mb-6 select-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
+              <span className="block animate-hero-line-1">
+                <span className="text-white">EL </span>
+                <span className="text-primary bg-gradient-to-r from-primary via-red-500 to-rose-500 bg-clip-text text-transparent">SOUNDTRACK</span>
+              </span>
+              <span className="block text-white mt-1.5 sm:mt-2 animate-hero-line-2">
+                <span className="block sm:inline">DE TU MEJOR </span>
+                <span className="block sm:inline">NOCHE</span>
+              </span>
+            </h1>
+
+            <div className="animate-hero-cta flex flex-col items-start w-full">
+              <p className="text-sm md:text-base text-gray-400 max-w-sm mb-8 md:mb-10 font-sans font-medium leading-relaxed text-left">
+                Pop y rock en vivo para bodas, eventos corporativos y celebraciones inolvidables.
+              </p>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+                <a href="#paquetes" className="w-full sm:w-auto">
+                  <Button 
+                    size="lg" 
+                    className="w-full sm:w-auto font-sans font-bold text-xs md:text-sm px-8 h-12 md:h-14 rounded-xl uppercase tracking-wider bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all duration-300 cursor-pointer border-0"
+                  >
+                    COTIZAR MI EVENTO
+                  </Button>
+                </a>
+                <a href="#servicios" className="w-full sm:w-auto">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="w-full sm:w-auto font-sans font-bold text-xs md:text-sm px-8 h-12 md:h-14 rounded-xl uppercase tracking-wider border-primary/60 hover:border-primary hover:bg-white/5 text-white flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer"
+                  >
+                    VER EL SHOW 
+                    <ChevronRight className="w-4 h-4 text-primary" />
+                  </Button>
+                </a>
+              </div>
+              
+              <div className="flex items-center gap-2.5 mt-10 md:mt-14 text-[10px] md:text-xs font-sans font-semibold uppercase tracking-[0.2em] text-white/80">
+                <MapPin className="w-4 h-4 text-primary fill-primary/10 shrink-0" />
+                <span>TOLUCA</span>
+                <span className="text-primary font-bold">•</span>
+                <span>CDMX</span>
+                <span className="text-primary font-bold">•</span>
+                <span>Y ALREDEDORES</span>
+              </div>
             </div>
           </div>
         </div>

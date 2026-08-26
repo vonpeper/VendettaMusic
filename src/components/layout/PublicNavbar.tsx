@@ -47,14 +47,14 @@ export function PublicNavbar() {
             <Link 
               key={link.label} 
               href={link.href} 
-              className="text-[10px] font-black uppercase tracking-[0.18em] hover:text-primary transition-all whitespace-nowrap"
+              className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-gray-300 hover:text-primary transition-all whitespace-nowrap"
             >
               {link.label}
             </Link>
           ))}
           <div className="w-px h-4 bg-white/10 mx-1" />
           <Link href="/#paquetes">
-            <Button className="bg-primary hover:bg-primary/90 text-white font-heading font-black text-[10px] uppercase tracking-widest px-5 h-9 rounded-lg shadow-lg shadow-primary/20 border-0 cursor-pointer">
+            <Button className="bg-primary hover:bg-primary/90 text-white font-sans font-bold text-xs uppercase tracking-wider px-5 h-9 rounded-lg shadow-lg shadow-primary/20 border-0 cursor-pointer">
               Cotizar
             </Button>
           </Link>

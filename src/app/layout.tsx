@@ -1,31 +1,30 @@
 import type { Metadata } from "next";
-import { Inter, Montserrat, Advent_Pro, Barlow_Condensed } from "next/font/google";
+import { Manrope, Barlow_Condensed, Advent_Pro } from "next/font/google";
 import "./globals.css";
 import { SchemaMarkup } from "@/components/public/SchemaMarkup"
 import { Toaster } from "sonner"
 
 import { db } from "@/lib/db";
 
-const inter = Inter({
+const manrope = Manrope({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
-const montserrat = Montserrat({
+const barlowCondensed = Barlow_Condensed({
   variable: "--font-heading",
   subsets: ["latin"],
+  weight: ["700", "900"],
+  display: "swap",
 });
 
 const advent = Advent_Pro({
   variable: "--font-advent",
   subsets: ["latin"],
-  weight: ["500"], // Medium
-});
-
-const barlowCondensed = Barlow_Condensed({
-  variable: "--font-barlow-condensed",
-  subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
+  weight: ["500"],
+  display: "swap",
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -82,7 +81,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${inter.variable} ${montserrat.variable} ${advent.variable} ${barlowCondensed.variable} dark antialiased scroll-smooth`}
+      className={`${manrope.variable} ${barlowCondensed.variable} ${advent.variable} dark antialiased scroll-smooth`}
     >
       <head>
         <meta name="google-site-verification" content="xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY" />
