@@ -1,8 +1,6 @@
 import { Calendar, MapPin, Music, ChevronRight, Phone } from "lucide-react"
 import { formatDateMX } from "@/lib/utils"
 import { db } from "@/lib/db"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 
 export async function UpcomingGigs() {
   const now = new Date()
