@@ -93,7 +93,7 @@ export function PushNotificationBanner() {
           icon: "/images/logo-icon.png",
           badge: "/images/logo-icon.png",
           data: { url: "/agenda" }
-        })
+        } as any)
       }
 
       setIsSubscribed(true)
@@ -136,7 +136,7 @@ export function PushNotificationBanner() {
           tag: "vendetta-show-demo",
           renotify: true,
           data: { url: "/agenda" }
-        })
+        } as any)
         toast.success("¡Notificación de prueba enviada a tu pantalla!")
       } else {
         new Notification("⚡ VENDETTA | ¡HOY HAY SHOW!", {
