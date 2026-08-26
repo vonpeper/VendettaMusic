@@ -6,10 +6,12 @@ import * as Icons from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
 
+import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
+
 const {
   Check, X, Sparkles, Music2,
   Mic2, Lightbulb, Users, Volume2, Monitor, Star,
-  MessageCircle, ArrowUpRight, Calendar, Clock, MapPin, User, PartyPopper
+  ArrowUpRight, Calendar, Clock, MapPin, User, PartyPopper
 } = Icons
 
 // Helper to get Lucide icon from string
@@ -330,19 +332,19 @@ Me gustaría cotizar el *Paquete ${pkgName}* para mi evento:
                 <Button
                   disabled={isUnavailable}
                   onClick={() => handleOpenQuote(pkg)}
-                  className={`w-full h-12 font-black gap-2 cursor-pointer transition-all duration-300 mt-auto ${
+                  className={`w-full h-12 font-black gap-2 cursor-pointer transition-all duration-300 mt-auto group ${
                     isUnavailable
                       ? "bg-neutral-800 border border-neutral-700/50 text-neutral-500 cursor-not-allowed"
                       : style.highlight
-                        ? "bg-[#25D366] hover:bg-[#20ba59] text-white shadow-xl shadow-[#25D366]/20 hover:scale-[1.02]"
-                        : "bg-white/10 hover:bg-[#25D366] text-white hover:text-white border border-white/20 hover:border-[#25D366]"
+                        ? "bg-[#25D366] hover:bg-[#20ba59] text-white shadow-xl shadow-[#25D366]/20 hover:scale-[1.02] active:scale-[0.98]"
+                        : "bg-white/10 hover:bg-[#25D366] text-white hover:text-white border border-white/20 hover:border-[#25D366] hover:scale-[1.01] active:scale-[0.98]"
                   }`}
                 >
                   {isUnavailable ? "No Disponible" : (
                     <>
-                      <MessageCircle className="w-4 h-4" />
+                      <WhatsAppIcon className="w-4 h-4 fill-white transition-transform duration-300 group-hover:scale-110" />
                       <span>Cotizar Paquete</span>
-                      <ArrowUpRight className="w-4 h-4 opacity-70" />
+                      <ArrowUpRight className="w-4 h-4 opacity-70 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </>
                   )}
                 </Button>
@@ -495,11 +497,11 @@ Me gustaría cotizar el *Paquete ${pkgName}* para mi evento:
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-13 font-black text-sm uppercase tracking-wider gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-xl shadow-[#25D366]/20 transition-all duration-300 rounded-xl cursor-pointer"
+                  className="w-full h-13 font-black text-sm uppercase tracking-wider gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-xl shadow-[#25D366]/25 transition-all duration-300 rounded-xl cursor-pointer group hover:scale-[1.01] active:scale-[0.99]"
                 >
-                  <MessageCircle className="w-5 h-5 fill-white" />
+                  <WhatsAppIcon className="w-5 h-5 fill-white transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110" />
                   <span>Continuar a WhatsApp</span>
-                  <ArrowUpRight className="w-4 h-4" />
+                  <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Button>
                 <p className="text-[10px] text-gray-500 text-center mt-2.5">
                   ⚡ Tu información se abrirá automáticamente en WhatsApp para atención personalizada y formalización.
