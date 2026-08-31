@@ -25,13 +25,14 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
     let finalLocationId = data.locationId as string
 
     // Si hay texto libre, usamos la nueva utilidad de consolidación
+    const locationFreeName = data.locationFreeName as string
     const locationFree = data.locationFree as string
     const locationFreeCity = data.locationFreeCity as string
-    if (locationFree) {
+    if (locationFree || locationFreeName) {
       const { findOrCreateLocation } = await import("@/lib/locations")
       const locId = await findOrCreateLocation({
-        name: locationFree,
-        address: locationFree,
+        name: locationFreeName || locationFree,
+        address: locationFree || locationFreeName,
         city: locationFreeCity || null,
         mapsLink: data.mapsLink as string || null
       })
@@ -86,12 +87,16 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
 
 
     if (updatedEvent?.quoteId) {
-      await db.quote.update({
-        where: { id: updatedEvent.quoteId },
-        data: { 
-          status: (data.status as string) || "scheduled"
-        }
-      })
+      try {
+        await db.quote.updateMany({
+          where: { id: updatedEvent.quoteId },
+          data: { 
+            status: (data.status as string) || "scheduled"
+          }
+        })
+      } catch (quoteErr) {
+        console.warn("Could not sync legacy quote:", quoteErr)
+      }
     }
 
     // Sincronizar con BookingRequest (Nuevo Funnel)
@@ -323,13 +328,14 @@ export async function createEventAction(_prev: any, formData: FormData) {
     let finalLocationId = data.locationId as string
 
     // Automación de catálogo de ubicaciones con nueva utilidad
+    const locationFreeName = data.locationFreeName as string
     const locationFree = data.locationFree as string
     const locationFreeCity = data.locationFreeCity as string
-    if (locationFree) {
+    if (locationFree || locationFreeName) {
       const { findOrCreateLocation } = await import("@/lib/locations")
       const locId = await findOrCreateLocation({
-        name: locationFree,
-        address: locationFree,
+        name: locationFreeName || locationFree,
+        address: locationFree || locationFreeName,
         city: locationFreeCity || null,
         mapsLink: data.mapsLink as string || null
       })

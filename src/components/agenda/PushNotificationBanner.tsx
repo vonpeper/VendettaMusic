@@ -5,12 +5,26 @@ import { Bell, BellRing, Check, Sparkles, Loader2, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
+const VAPID_PUBLIC_KEY = "BNed5hz80wadrpiAoeOqHQ5SWOa5Fgw_OJepWU8zomvD9HLPObjZGM_oc4L219jhAicmbUiG4dgct3gRCm24R-U"
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/")
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i)
+  }
+  return outputArray
+}
+
 export function PushNotificationBanner() {
   const [isSupported, setIsSupported] = useState<boolean>(false)
   const [permission, setPermission] = useState<NotificationPermission>("default")
   const [isSubscribing, setIsSubscribing] = useState<boolean>(false)
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false)
 
+  // Auto-register service worker & sync subscription if already granted
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator) {
       setIsSupported(true)
@@ -18,17 +32,48 @@ export function PushNotificationBanner() {
 
       if (Notification.permission === "granted") {
         setIsSubscribed(true)
+        // Background sync subscription to server
+        syncSubscription().catch(() => {})
       }
     }
   }, [])
 
   const registerServiceWorker = async () => {
     try {
-      const reg = await navigator.serviceWorker.register("/sw.js")
+      const reg = await navigator.serviceWorker.register("/sw.js?v=3")
+      await reg.update().catch(() => {})
       await navigator.serviceWorker.ready
       return reg
     } catch (err) {
       console.error("Service worker registration error:", err)
+      return null
+    }
+  }
+
+  const syncSubscription = async () => {
+    try {
+      const reg = await registerServiceWorker()
+      if (!reg || !reg.pushManager) return null
+
+      let sub = await reg.pushManager.getSubscription()
+      if (!sub) {
+        const key = urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: key
+        })
+      }
+
+      if (sub) {
+        await fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscription: sub.toJSON() })
+        })
+      }
+      return sub
+    } catch (err) {
+      console.warn("Sync subscription error:", err)
       return null
     }
   }
@@ -47,49 +92,19 @@ export function PushNotificationBanner() {
       setPermission(result)
 
       if (result !== "granted") {
-        toast.error("Permiso de notificaciones denegado. Habilítalo en los ajustes de tu navegador.")
+        toast.error("Permiso denegado. Habilítalo en los ajustes de tu navegador o PWA.")
         setIsSubscribing(false)
         return
       }
 
-      // 2. Register Service Worker
-      const reg = await registerServiceWorker()
-      if (!reg) {
-        toast.error("No se pudo iniciar el servicio de notificaciones")
-        setIsSubscribing(false)
-        return
-      }
+      // 2. Register and subscribe with VAPID key
+      const pushSubscription = await syncSubscription()
 
-      // 3. Try subscribing with pushManager if supported
-      let pushSubscription = null
-      if (reg.pushManager) {
-        try {
-          pushSubscription = await reg.pushManager.getSubscription()
-          if (!pushSubscription) {
-            // Subscribe with standard push
-            pushSubscription = await reg.pushManager.subscribe({
-              userVisibleOnly: true,
-            }).catch(() => null)
-          }
-        } catch (e) {
-          console.log("PushManager subscribe fallback:", e)
-        }
-      }
-
-      // 4. Send subscription to server if available
-      if (pushSubscription) {
-        const subJSON = pushSubscription.toJSON()
-        await fetch("/api/push/subscribe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subscription: subJSON })
-        }).catch(err => console.error("Error sending subscription:", err))
-      }
-
-      // 5. Show local confirmation notification
-      if (reg.showNotification) {
+      // 3. Show local test notification
+      const reg = await navigator.serviceWorker.ready
+      if (reg && reg.showNotification) {
         reg.showNotification("⚡ VENDETTA MUSIC", {
-          body: "🔔 ¡Recordatorios activados! Te avisaremos el día de cada show con tus horarios y locación.",
+          body: "🔔 ¡Recordatorios activados! Recibirás avisos de shows y llamados directamente en tu pantalla.",
           icon: "/images/logo-icon.png",
           badge: "/images/logo-icon.png",
           data: { url: "/agenda" }
@@ -97,7 +112,7 @@ export function PushNotificationBanner() {
       }
 
       setIsSubscribed(true)
-      toast.success("¡Recordatorios de shows activados exitosamente!")
+      toast.success("¡Notificaciones de shows activadas exitosamente!")
     } catch (err: any) {
       console.error("Subscription error:", err)
       toast.error(`Error al activar: ${err?.message || "Desconocido"}`)
@@ -107,20 +122,28 @@ export function PushNotificationBanner() {
   }
 
   const handleSendTest = async () => {
+    setIsSubscribing(true)
     try {
       if (typeof window === "undefined" || !("Notification" in window)) {
         toast.error("Tu navegador no soporta notificaciones")
+        setIsSubscribing(false)
         return
       }
 
       if (Notification.permission !== "granted") {
         const perm = await Notification.requestPermission()
+        setPermission(perm)
         if (perm !== "granted") {
-          toast.error("Por favor concede permiso de notificaciones en tu navegador.")
+          toast.error("Permiso denegado. Habilítalo en los Ajustes de tu teléfono.")
+          setIsSubscribing(false)
           return
         }
       }
 
+      // 1. Re-sincronizar suscripción VAPID con el servidor
+      const sub = await syncSubscription()
+
+      // 2. Disparar notificación directa por Service Worker local
       let reg = await navigator.serviceWorker.getRegistration()
       if (!reg) {
         reg = await navigator.serviceWorker.register("/sw.js")
@@ -129,25 +152,26 @@ export function PushNotificationBanner() {
 
       if (reg && reg.showNotification) {
         await reg.showNotification("⚡ VENDETTA | ¡HOY HAY SHOW!", {
-          body: "🎸 Boda Mariana & Carlos — Show 21:00 hrs en Hacienda San José. Llamado 18:30 hrs. Vestimenta: Formal Rock.",
+          body: "🎸 Show Vendetta — 21:00 hrs. Montaje: 18:00 hrs. Toca para ver la agenda.",
           icon: "/images/branding/logo-vendetta.png",
           badge: "/images/branding/logo-vendetta.png",
           vibrate: [200, 100, 200, 100, 200],
-          tag: "vendetta-show-demo",
+          tag: "vendetta-show-test-" + Date.now(),
           renotify: true,
           data: { url: "/agenda" }
         } as any)
-        toast.success("¡Notificación de prueba enviada a tu pantalla!")
-      } else {
-        new Notification("⚡ VENDETTA | ¡HOY HAY SHOW!", {
-          body: "🎸 Boda Mariana & Carlos — Show 21:00 hrs en Hacienda San José. Llamado 18:30 hrs.",
-          icon: "/images/branding/logo-vendetta.png"
-        })
-        toast.success("¡Notificación de prueba enviada!")
       }
+
+      // 3. Disparar push desde el servidor
+      await fetch("/api/push/send-reminder?test=true").catch(() => {})
+
+      setIsSubscribed(true)
+      toast.success("¡Notificación de prueba enviada a tu pantalla!")
     } catch (err: any) {
       console.error("Test notification error:", err)
-      toast.error(`Error al mostrar notificación: ${err?.message || "Desconocido"}`)
+      toast.error(`Error al enviar prueba: ${err?.message || "Desconocido"}`)
+    } finally {
+      setIsSubscribing(false)
     }
   }
 
@@ -158,7 +182,7 @@ export function PushNotificationBanner() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3.5">
           <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
-            {isSubscribed ? <BellRing className="w-5 h-5 animate-bounce" /> : <Bell className="w-5 h-5" />}
+            {isSubscribed ? <BellRing className="w-5 h-5 text-emerald-400" /> : <Bell className="w-5 h-5" />}
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -173,40 +197,37 @@ export function PushNotificationBanner() {
             </div>
             <p className="text-xs text-muted-foreground mt-0.5 max-w-lg leading-relaxed">
               {isSubscribed
-                ? "Recibirás una notificación en tu pantalla el día de cada show con tus horarios y locación."
-                : "Activa las alertas push para recibir un aviso elegante en tu teléfono el día de cada presentación."}
+                ? "Dispositivo vinculado. Recibirás avisos de shows, montajes y llamados en tu pantalla."
+                : "Activa las alertas push para recibir recordatorios en tu teléfono el día de cada presentación."}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-          {isSubscribed ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSendTest}
-              className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10 text-xs font-bold gap-1.5 h-10 px-4 rounded-xl cursor-pointer w-full sm:w-auto"
-            >
-              <Send className="w-3.5 h-3.5" /> Probar Notificación
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              onClick={handleSubscribe}
-              disabled={isSubscribing}
-              className="bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider gap-2 h-10 px-5 rounded-xl shadow-lg shadow-purple-600/20 cursor-pointer w-full sm:w-auto transition-all"
-            >
-              {isSubscribing ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Activando...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" /> Activar Notificaciones
-                </>
-              )}
-            </Button>
-          )}
+          <Button
+            size="sm"
+            onClick={handleSendTest}
+            disabled={isSubscribing}
+            className={
+              isSubscribed
+                ? "border border-purple-500/40 bg-purple-950/40 hover:bg-purple-900/60 text-purple-200 font-bold text-xs gap-1.5 h-10 px-4 rounded-xl cursor-pointer w-full sm:w-auto transition-all"
+                : "bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider gap-2 h-10 px-5 rounded-xl shadow-lg shadow-purple-600/20 cursor-pointer w-full sm:w-auto transition-all"
+            }
+          >
+            {isSubscribing ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Enviando...
+              </>
+            ) : isSubscribed ? (
+              <>
+                <Send className="w-3.5 h-3.5 text-purple-400" /> Probar Notificación
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5" /> Activar Notificaciones
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </div>

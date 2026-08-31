@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Unbounded, Plus_Jakarta_Sans, Advent_Pro } from "next/font/google";
+import { Kanit, Plus_Jakarta_Sans, Advent_Pro } from "next/font/google";
 import "./globals.css";
 import { SchemaMarkup } from "@/components/public/SchemaMarkup"
 import { Toaster } from "sonner"
@@ -13,7 +13,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-const unbounded = Unbounded({
+const kanit = Kanit({
   variable: "--font-heading",
   subsets: ["latin"],
   weight: ["700", "800", "900"],
@@ -73,6 +73,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+import { PwaStandaloneRedirect } from "@/components/pwa/PwaStandaloneRedirect";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -81,12 +83,13 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${plusJakartaSans.variable} ${unbounded.variable} ${advent.variable} dark antialiased scroll-smooth`}
+      className={`${plusJakartaSans.variable} ${kanit.variable} ${advent.variable} dark antialiased scroll-smooth`}
     >
       <head>
         <meta name="google-site-verification" content="xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY" />
       </head>
       <body className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden max-w-[100vw]">
+        <PwaStandaloneRedirect />
         <Toaster theme="dark" position="bottom-right" richColors />
         <SchemaMarkup />
         {children}

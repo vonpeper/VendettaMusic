@@ -9,3 +9,4 @@ export type NotificationType =
   | "MUSICIAN_REHEARSAL" // Aviso de ensayo
   | "EVENT_CANCELLED"    // Aviso de cancelación de evento
   | "MUSICIAN_TODAY_REMINDER" // Recordatorio del día del evento para músicos
+  | "MUSICIAN_REMINDER_3DAYS" // Recordatorio a 3 días para músicos no confirmados

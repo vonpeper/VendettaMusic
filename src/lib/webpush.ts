@@ -1,9 +1,9 @@
 import { db } from "@/lib/db"
 import crypto from "crypto"
 
-// Default VAPID Keys for Vendetta Music (P-256)
-const DEFAULT_VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || "BNoN-p8rGvN0fE7fFvGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789-_abcdefghijklmnopqrstuvwxyzABCDEFGHIJK"
-const DEFAULT_VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "vendetta_vapid_private_key_secret_2026"
+// Real NIST P-256 VAPID Keys for Vendetta Music
+export const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || "BNed5hz80wadrpiAoeOqHQ5SWOa5Fgw_OJepWU8zomvD9HLPObjZGM_oc4L219jhAicmbUiG4dgct3gRCm24R-U"
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "oyo-u47ia_nWqZnHsibBZ9lmApR6Rg-bBOntPBCH54k"
 const VAPID_SUBJECT = "mailto:contacto@vendetta.mx"
 
 export interface PushNotificationPayload {
@@ -20,6 +20,67 @@ export interface WebSubscription {
   keys: {
     p256dh: string
     auth: string
+  }
+}
+
+/**
+ * Generates RFC 8292 ES256 VAPID Authorization header
+ */
+function getVapidAuthHeader(endpoint: string): Record<string, string> {
+  try {
+    const url = new URL(endpoint)
+    const audience = `${url.protocol}//${url.host}`
+    
+    const header = Buffer.from(JSON.stringify({ typ: "JWT", alg: "ES256" })).toString("base64url")
+    const claims = Buffer.from(JSON.stringify({
+      aud: audience,
+      exp: Math.floor(Date.now() / 1000) + 12 * 3600,
+      sub: VAPID_SUBJECT
+    })).toString("base64url")
+    
+    const unsignedToken = `${header}.${claims}`
+    
+    const jwk = {
+      kty: "EC",
+      crv: "P-256",
+      x: Buffer.from(VAPID_PUBLIC_KEY, "base64url").slice(1, 33).toString("base64url"),
+      y: Buffer.from(VAPID_PUBLIC_KEY, "base64url").slice(33, 65).toString("base64url"),
+      d: VAPID_PRIVATE_KEY
+    }
+    
+    const privateKey = crypto.createPrivateKey({ format: "jwk", key: jwk })
+    
+    const signer = crypto.createSign("SHA256")
+    signer.update(unsignedToken)
+    signer.end()
+    
+    const derSignature = signer.sign(privateKey)
+    
+    // Convert DER signature to 64-byte raw R+S format for JWT ES256
+    let offset = 2
+    if (derSignature[offset] & 0x80) offset += (derSignature[offset] & 0x7f) + 1
+    offset++
+    let rLen = derSignature[offset++]
+    let r = derSignature.slice(offset, offset + rLen)
+    offset += rLen
+    offset++
+    let sLen = derSignature[offset++]
+    let s = derSignature.slice(offset, offset + sLen)
+    
+    while (r.length > 32) r = r.slice(1)
+    while (s.length > 32) s = s.slice(1)
+    while (r.length < 32) r = Buffer.concat([Buffer.from([0]), r])
+    while (s.length < 32) s = Buffer.concat([Buffer.from([0]), s])
+    
+    const signature = Buffer.concat([r, s]).toString("base64url")
+    const jwt = `${unsignedToken}.${signature}`
+    
+    return {
+      Authorization: `vapid t=${jwt}, k=${VAPID_PUBLIC_KEY}`
+    }
+  } catch (vapidErr) {
+    console.error("Error generating VAPID auth header:", vapidErr)
+    return {}
   }
 }
 
@@ -122,38 +183,24 @@ function encryptPayload(userPublicKeyBase64: string, userAuthBase64: string, pay
   // Salt (16 bytes random)
   const salt = crypto.randomBytes(16)
 
-  // HKDF for PRK auth
-  const authInfo = Buffer.from("WebPush: info\0", "utf-8")
-  const prkAuth = crypto.createHmac("sha256", userAuth).update(sharedSecret).digest()
-
-  // Key derivation for IKM
+  // RFC 8291 Section 3.2: info = "WebPush: info\0" || receiver_public_key || sender_public_key
   const keyInfo = Buffer.concat([
-    Buffer.from("Content-Encoding: auth\0", "utf-8"),
-    authInfo
+    Buffer.from("WebPush: info\0", "utf-8"),
+    userPublicKey,
+    localPublicKey
   ])
-  const ikmHmac = crypto.createHmac("sha256", prkAuth)
-  ikmHmac.update(keyInfo)
-  ikmHmac.update(Buffer.from([1]))
-  const ikm = ikmHmac.digest()
 
-  // PRK from salt and ikm
-  const prk = crypto.createHmac("sha256", salt).update(ikm).digest()
+  // IKM = HKDF-Expand(HKDF-Extract(userAuth, sharedSecret), keyInfo, 32)
+  const ikm = Buffer.from(crypto.hkdfSync("sha256", sharedSecret, userAuth, keyInfo, 32))
 
-  // Derive Content Encryption Key (CEK)
-  const cekInfo = Buffer.concat([
-    Buffer.from("Content-Encoding: aes128gcm\0", "utf-8"),
-    Buffer.from([1])
-  ])
-  const cek = crypto.createHmac("sha256", prk).update(cekInfo).digest().slice(0, 16)
+  // PRK = HKDF-Extract(salt, IKM)
+  // CEK = HKDF-Expand(PRK, "Content-Encoding: aes128gcm\0", 16)
+  const cek = Buffer.from(crypto.hkdfSync("sha256", ikm, salt, Buffer.from("Content-Encoding: aes128gcm\0", "utf-8"), 16))
 
-  // Derive Nonce
-  const nonceInfo = Buffer.concat([
-    Buffer.from("Content-Encoding: nonce\0", "utf-8"),
-    Buffer.from([1])
-  ])
-  const nonce = crypto.createHmac("sha256", prk).update(nonceInfo).digest().slice(0, 12)
+  // Nonce = HKDF-Expand(PRK, "Content-Encoding: nonce\0", 12)
+  const nonce = Buffer.from(crypto.hkdfSync("sha256", ikm, salt, Buffer.from("Content-Encoding: nonce\0", "utf-8"), 12))
 
-  // Padding: \0\0 at the end of the record
+  // Padding: 0x02 delimiter at end of record according to RFC 8188
   const payloadBuffer = Buffer.from(payloadString, "utf-8")
   const paddedPayload = Buffer.concat([payloadBuffer, Buffer.from([2])])
 
@@ -203,22 +250,17 @@ export async function sendWebPush(subscription: WebSubscription, payload: PushNo
       payloadText
     )
 
-    const url = new URL(subscription.endpoint)
-    const audience = `${url.protocol}//${url.host}`
-
-    // Simple VAPID claim (audience + exp)
-    const header = Buffer.from(JSON.stringify({ typ: "JWT", alg: "none" })).toString("base64url")
-    const claims = Buffer.from(JSON.stringify({
-      aud: audience,
-      exp: Math.floor(Date.now() / 1000) + 12 * 3600,
-      sub: VAPID_SUBJECT
-    })).toString("base64url")
+    const vapidHeaders = getVapidAuthHeader(subscription.endpoint)
 
     const headers: Record<string, string> = {
       "Content-Type": "application/octet-stream",
       "Content-Encoding": "aes128gcm",
       "TTL": "86400",
       "Urgency": "high"
+    }
+
+    if (vapidHeaders.Authorization) {
+      headers["Authorization"] = vapidHeaders.Authorization
     }
 
     const response = await fetch(subscription.endpoint, {
@@ -269,11 +311,14 @@ export async function broadcastWebPush(payload: PushNotificationPayload) {
     )
 
     if (res.success) {
+      console.log(`✅ [WebPush] Delivered to ${sub.endpoint.slice(0, 45)}...`)
       successCount++
     } else {
+      console.error(`❌ [WebPush] Failed for ${sub.endpoint.slice(0, 45)}...: ${res.error}`)
       failCount++
     }
   }
 
+  console.log(`📊 [WebPush] Broadcast complete: ${successCount} succeeded, ${failCount} failed.`)
   return { total: subscriptions.length, successCount, failCount }
 }

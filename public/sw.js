@@ -1,54 +1,68 @@
 // Vendetta Music — Web Push Service Worker
-const CACHE_NAME = 'vendetta-sw-v1';
+const CACHE_VERSION = 'vendetta-sw-v3';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(),
+      caches.keys().then((keys) => {
+        return Promise.all(
+          keys.filter((key) => key !== CACHE_VERSION).map((key) => caches.delete(key))
+        );
+      })
+    ])
+  );
 });
 
 // Push notification received in background
 self.addEventListener('push', (event) => {
-  let data = {
-    title: '⚡ Vendetta Music',
-    body: '¡Hay una actualización en la agenda de shows!',
-    icon: '/images/logo-icon.png',
-    badge: '/images/logo-icon.png',
+  let payload = {
+    title: '⚡ VENDETTA | ¡HOY HAY SHOW!',
+    body: '🎸 Hay show agendado para hoy. Toca para ver horarios y locación.',
+    icon: '/images/branding/logo-vendetta.png',
     url: '/agenda'
   };
 
-  try {
-    if (event.data) {
-      const parsed = event.data.json();
-      data = { ...data, ...parsed };
-    }
-  } catch (e) {
-    if (event.data) {
-      data.body = event.data.text();
+  if (event.data) {
+    try {
+      const json = event.data.json();
+      if (json && typeof json === 'object') {
+        payload = { ...payload, ...json };
+      }
+    } catch (e) {
+      try {
+        const text = event.data.text();
+        if (text) {
+          payload.body = text;
+        }
+      } catch (_) {}
     }
   }
 
+  const title = payload.title || '⚡ VENDETTA MUSIC';
+
+  // Safe options compatible with iOS Safari webpushd, Android Chrome, and Desktop
   const options = {
-    body: data.body,
-    icon: data.icon || '/images/logo-icon.png',
-    badge: data.badge || '/images/logo-icon.png',
-    vibrate: [200, 100, 200],
-    tag: 'vendetta-reminder',
-    renotify: true,
+    body: payload.body || '¡Hay una actualización en la agenda!',
+    icon: payload.icon || '/images/branding/logo-vendetta.png',
+    tag: 'vendetta-push-' + Date.now(),
     data: {
-      url: data.url || '/agenda',
-      dateOfArrival: Date.now(),
-    },
-    actions: [
-      { action: 'open_agenda', title: '🎸 Ver Agenda' },
-      { action: 'close', title: 'Cerrar' }
-    ]
+      url: payload.url || '/agenda',
+      dateOfArrival: Date.now()
+    }
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(title, options).catch((err) => {
+      console.error('Error showing notification with full options, retrying fallback:', err);
+      return self.registration.showNotification(title, {
+        body: payload.body || 'Aviso de Vendetta Music'
+      });
+    })
   );
 });
 

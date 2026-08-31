@@ -138,6 +138,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
   } | null>(null)
   const [calculatingViaticos, setCalculatingViaticos] = useState(false)
 
+  const [locationFreeName, setLocationFreeName] = useState("")
   const [locationFree, setLocationFree] = useState(
     initialData?.locationId ? "" : (initialData?.bookingRequest?.address || "")
   )
@@ -517,6 +518,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                   onChange={(e) => {
                      setSelectedLocationId(e.target.value)
                      if (e.target.value) {
+                       setLocationFreeName("")
                        setLocationFree("")
                        setLocationFreeCity("")
                      }
@@ -552,8 +554,20 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="locationFree" className="text-slate-700 font-semibold">Dirección libre (si no está en catálogo)</Label>
-                <Input id="locationFree" name="locationFree" placeholder="Ej. Hacienda San José, Querétaro"
+                <Label htmlFor="locationFreeName" className="text-slate-700 font-semibold">Nombre del Venue / Lugar nuevo (opcional)</Label>
+                <Input id="locationFreeName" name="locationFreeName" placeholder="Ej. Vizzio Bar & Lounge, Terraza 609..."
+                  value={locationFreeName}
+                  onChange={(e) => {
+                    setLocationFreeName(e.target.value)
+                    if (e.target.value) {
+                      setSelectedLocationId("")
+                    }
+                  }}
+                  className="bg-slate-50 border-slate-200 text-slate-900 focus:bg-white placeholder:text-slate-400" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="locationFree" className="text-slate-700 font-semibold">Dirección libre / Calle (si no está en catálogo)</Label>
+                <Input id="locationFree" name="locationFree" placeholder="Ej. Av. Tecnológico 639, Col. Bella Vista"
                   value={locationFree}
                   onChange={(e) => {
                     setLocationFree(e.target.value)
@@ -565,7 +579,7 @@ export function EventForm({ onClose, clients, locations, packages, staff = [], a
               </div>
               <div className="space-y-2">
                 <Label htmlFor="locationFreeCity" className="text-slate-700 font-semibold">Ciudad / Municipio (para dirección libre)</Label>
-                <Input id="locationFreeCity" name="locationFreeCity" placeholder="Ej. Querétaro, Toluca, CDMX..."
+                <Input id="locationFreeCity" name="locationFreeCity" placeholder="Ej. Metepec, Toluca, CDMX..."
                   value={locationFreeCity}
                   onChange={(e) => {
                     setLocationFreeCity(e.target.value)

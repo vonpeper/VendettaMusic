@@ -321,14 +321,27 @@ export async function notifyEventCancellation(eventId: string, prisma?: any) {
 
   if (!event) return
 
+  // 🛡️ CANDADO ESTRICTO DE CANCELACIÓN:
+  // Solo se avisa a los músicos SI Y SOLO SI:
+  // 1. Al evento previamente se le envió una convocatoria formal (notificationSent === true), O
+  // 2. Al menos un músico estaba explícitamente confirmado (status === "confirmed").
+  // Si el evento era solo una solicitud pendiente, cotización web no confirmada, borrador o expirado: NO MOLESTAR A LOS MÚSICOS.
+  const hasEverBeenNotified = event.notificationSent === true
+  const hasConfirmedMusicians = event.musicians.some((em: any) => em.status === "confirmed")
+
+  if (!hasEverBeenNotified && !hasConfirmedMusicians) {
+    console.log(`ℹ️ notifyEventCancellation: El evento ${eventId} (${event.customName || 'Sin Nombre'}) nunca fue convocado ni estuvo confirmado. Omitiendo mensaje de cancelación para evitar confusiones.`)
+    return
+  }
+
   const dateStr = formatDateMX(event.date, "d 'de' MMMM")
   const eventName = event.customName || "Evento Vendetta"
 
   const userIdsToNotify: string[] = []
 
   for (const em of event.musicians) {
-    // Notificar solo a los que están confirmados o pendientes (que están esperando el show)
-    if (em.status !== "confirmed" && em.status !== "pending") continue
+    // Notificar solo a los que realmente estaban confirmados o fueron formalmente convocados
+    if (em.status !== "confirmed" && !hasEverBeenNotified) continue
 
     const musician = em.musician
     if (musician.status !== "active") {
