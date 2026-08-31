@@ -24,16 +24,25 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 
   const isConfirmed = booking.status === "agendado" || booking.status === "completado"
+  const dateStr = booking.requestedDate ? formatDateMX(booking.requestedDate, "d 'de' MMMM") : ""
+  
   const title = isConfirmed 
-    ? `Contrato & Estatus de Evento ${booking.shortId} | Vendetta Live Music`
-    : `Propuesta de Evento ${booking.shortId} | Vendetta Live Music`
-  const description = `Estatus de reserva para el evento de ${booking.clientName}. Revisa tu cotización, pagos y firma tu contrato digital.`
+    ? `✍️ Firma de Contrato & Estatus (${booking.shortId}) | Vendetta Live Music`
+    : `🎸 Cotización & Propuesta Exclusiva (${booking.shortId}) | Vendetta Live Music`
+    
+  const ogTitle = isConfirmed
+    ? `✍️ Contrato Digital & Confirmación de Show (${booking.shortId})`
+    : `🎸 Cotización de Show: ${booking.clientName} (${booking.shortId})`
+
+  const description = isConfirmed
+    ? `¡Fecha confirmada para ${booking.clientName} el ${dateStr}! Entra para consultar la ficha técnica y firmar digitalmente tu contrato de prestación de servicios.`
+    : `Hola ${booking.clientName}, te compartimos la cotización exclusiva para tu evento el ${dateStr}. Revisa tu propuesta y aprueba tu fecha en línea.`
 
   return {
     title,
     description,
     openGraph: {
-      title,
+      title: ogTitle,
       description,
       url: `https://vendetta.mx/status/${booking.shortId}`,
       siteName: 'Vendetta Live Music',
@@ -42,7 +51,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
           url: 'https://vendetta.mx/images/opengraph-evento.png',
           width: 1200,
           height: 630,
-          alt: 'Evento Vendetta Live Music',
+          alt: isConfirmed ? 'Contrato Digital Vendetta Live Music' : 'Cotización Vendetta Live Music',
         },
       ],
       locale: 'es_MX',
@@ -50,7 +59,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     },
     twitter: {
       card: 'summary_large_image',
-      title,
+      title: ogTitle,
       description,
       images: ['https://vendetta.mx/images/opengraph-evento.png'],
     },
@@ -313,8 +322,8 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
             <div className="p-6 rounded-3xl bg-primary/10 border border-primary/20 space-y-4">
                <div className="text-sm font-black text-foreground uppercase tracking-tight">¿Alguna duda?</div>
                <p className="text-[11px] text-muted-foreground leading-relaxed">Contáctanos vía WhatsApp para cualquier ajuste o duda sobre tu contrato.</p>
-               <a href={`https://wa.me/5215500000000?text=Hola, soy ${mainBooking.clientName}, tengo una duda sobre mi folio ${mainBooking.shortId}`} className="block">
-                 <Button className="w-full h-11 text-[10px] font-black uppercase tracking-widest rounded-xl">WhatsApp Directo</Button>
+               <a href={process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ? `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola, tengo una duda sobre mi folio ${mainBooking.shortId}`)}` : `mailto:rock.vendettamx@gmail.com?subject=${encodeURIComponent(`Duda sobre evento folio ${mainBooking.shortId}`)}`} className="block">
+                 <Button className="w-full h-11 text-[10px] font-black uppercase tracking-widest rounded-xl">{process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ? "WhatsApp Directo" : "Contactar por Correo"}</Button>
                </a>
             </div>
           </div>

@@ -3,9 +3,16 @@
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
 
 export function WhatsAppButton() {
-  const phoneNumber = "527222417045"
+  const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim()
+  
+  // Si no hay línea de WhatsApp comercial configurada, no mostramos el botón flotante
+  if (!rawNumber) {
+    return null
+  }
+
+  const cleanPhone = rawNumber.replace(/\D/g, "")
   const message = encodeURIComponent("¡Hola Vendetta Live Music! 🎸⚡ Me gustaría pedir información y cotización para mi evento.")
-  const url = `https://wa.me/${phoneNumber}?text=${message}`
+  const url = `https://wa.me/${cleanPhone}?text=${message}`
 
   return (
     <a

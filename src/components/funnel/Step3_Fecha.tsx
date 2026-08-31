@@ -122,21 +122,23 @@ export default function Step3_Fecha({ data, onNext, onBack }: Props) {
     setSelected(d)
   }
 
-  const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WA ?? "5215500000000"
-  const waUrl = selected
-    ? `https://wa.me/${adminPhone.replace(/\D/g,"")}?text=${encodeURIComponent(
-        `Hola, me interesa apartar la fecha ${formatDateMX(selected, "PPP")} entre las ${startTime} y las ${endTime}. El sistema indica que requiere coordinación logística. ¿Me apoyan?`
-      )}`
-    : "#"
+  const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WA || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || ""
+  const cleanAdminPhone = adminPhone.replace(/\D/g, "")
+  const conflictMsg = selected 
+    ? `Hola, me interesa apartar la fecha ${formatDateMX(selected, "PPP")} entre las ${startTime} y las ${endTime}. El sistema indica que requiere coordinación logística. ¿Me apoyan?`
+    : "Consulta de fecha para evento"
+  const waUrl = cleanAdminPhone
+    ? `https://wa.me/${cleanAdminPhone}?text=${encodeURIComponent(conflictMsg)}`
+    : `mailto:rock.vendettamx@gmail.com?subject=${encodeURIComponent("Coordinación de fecha para evento")}&body=${encodeURIComponent(conflictMsg)}`
 
   function handleNext() {
     if (!selected)   { setError("Selecciona una fecha."); return }
     const iso = dateToISO(selected)
     if (dayStatus[iso] && !dayStatus[iso].available) {
-      setError("Esa fecha ya está reservada. Escríbenos por WhatsApp para opciones."); return
+      setError("Esa fecha ya está reservada. Contáctanos por correo o formulario para verificar opciones."); return
     }
     if (logisticalConflict) {
-        setError("Hay un conflicto de logística. Por favor contáctanos por WhatsApp."); return
+        setError("Hay un conflicto de logística con otra fecha. Por favor contáctanos para coordinar."); return
     }
     onNext({
       requestedDate: dateToISO(selected),
