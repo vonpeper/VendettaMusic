@@ -1,7 +1,39 @@
 import { db } from "./db"
 
+const INVALID_PHONES = new Set([
+  "0000000000",
+  "5500000000",
+  "1234567890",
+  "5555555555",
+  "1111111111",
+  "9999999999",
+  "1234567899"
+])
+
 /**
- * Busca un cliente por email o teléfono, o lo crea si no existe.
+ * Normaliza un número telefónico a 10 dígitos o retorna null si es inválido.
+ */
+export function normalizeClientPhone(phone?: string | null): string | null {
+  if (!phone) return null
+  const digits = phone.replace(/\D/g, "")
+  if (digits.length < 10) return null
+  const last10 = digits.slice(-10)
+  if (INVALID_PHONES.has(last10)) return null
+  return last10
+}
+
+/**
+ * Normaliza un email a minúsculas o retorna null si es inválido.
+ */
+export function normalizeClientEmail(email?: string | null): string | null {
+  if (!email) return null
+  const trimmed = email.trim().toLowerCase()
+  if (!trimmed || trimmed === "no@no.com" || !trimmed.includes("@")) return null
+  return trimmed
+}
+
+/**
+ * Busca un cliente por email o teléfono con normalización estricta, o lo crea atómicamente si no existe.
  * Retorna el profileId (ClientProfile.id).
  */
 export async function findOrCreateClient(data: {
@@ -10,15 +42,19 @@ export async function findOrCreateClient(data: {
   whatsapp?: string | null
   city?: string | null
   state?: string | null
-}) {
-  const { name, email, whatsapp, city, state } = data
+}): Promise<string> {
+  const cleanName = data.name?.trim() || "Cliente"
+  const cleanEmail = normalizeClientEmail(data.email)
+  const cleanPhone = normalizeClientPhone(data.whatsapp)
+  const cleanCity = data.city?.trim() || null
+  const cleanState = data.state?.trim() || null
 
   let clientProfile = null
 
-  // 1. Intentar buscar por Email si existe
-  if (email && email.trim() !== "") {
+  // 1. Buscar por email canónico
+  if (cleanEmail) {
     const user = await db.user.findUnique({
-      where: { email: email.trim() },
+      where: { email: cleanEmail },
       include: { clientProfile: true }
     })
     if (user?.clientProfile) {
@@ -26,72 +62,56 @@ export async function findOrCreateClient(data: {
     }
   }
 
-  // 2. Si no se encontró por email, intentar buscar por WhatsApp en ClientProfile
-  if (!clientProfile && whatsapp && whatsapp.trim() !== "") {
+  // 2. Si no se encontró por email, buscar por teléfono normalizado de 10 dígitos
+  if (!clientProfile && cleanPhone) {
     clientProfile = await db.clientProfile.findFirst({
-      where: { 
-        whatsapp: whatsapp.trim()
-      }
+      where: {
+        OR: [
+          { whatsapp: cleanPhone },
+          { whatsapp: { endsWith: cleanPhone } }
+        ]
+      },
+      include: { user: true }
     })
   }
 
-  // 3. Si se encontró un perfil, retornar su ID
+  // 3. Si se encontró un perfil existente: actualizar únicamente campos faltantes (sin sobreescritura destructiva)
   if (clientProfile) {
-    // ACTUALIZAR DATOS SI CAMBIARON (El usuario quiere que los datos de la cotización se guarden para el cliente)
-    // Solo actualizamos si el valor nuevo existe y es diferente
-    const userUpdates: any = {}
-    if (name && name !== "ClienteAnónimo") userUpdates.name = name
-    
-    if (Object.keys(userUpdates).length > 0) {
-      await db.user.update({
-        where: { id: clientProfile.userId },
-        data: userUpdates
-      })
-    }
-    
-    const profileUpdates: any = {}
-    if (city && city !== clientProfile.city) profileUpdates.city = city
-    if (state && state !== clientProfile.state) profileUpdates.state = state
-    if (whatsapp && whatsapp !== clientProfile.whatsapp) {
-      profileUpdates.whatsapp = whatsapp
-    }
+    const profileUpdates: Record<string, any> = {}
+    if (cleanCity && !clientProfile.city) profileUpdates.city = cleanCity
+    if (cleanState && !clientProfile.state) profileUpdates.state = cleanState
+    if (cleanPhone && !clientProfile.whatsapp) profileUpdates.whatsapp = cleanPhone
 
     if (Object.keys(profileUpdates).length > 0) {
       await db.clientProfile.update({
         where: { id: clientProfile.id },
         data: profileUpdates
-      })
+      }).catch(() => null)
     }
 
     return clientProfile.id
   }
 
-  // 4. Si no existe, crear usuario + perfil
-  // Nota: Si no hay email, creamos un usuario sin email (permitido en SQLite/Prisma con unique nulls)
-  const newUser = await db.user.create({
-    data: {
-      name,
-      email: (email && email.trim() !== "") ? email.trim() : null,
-      role: "CLIENT"
-    }
+  // 4. Si no existe, crear usuario y perfil de forma atómica en transacción
+  return await db.$transaction(async (tx) => {
+    const newUser = await tx.user.create({
+      data: {
+        name: cleanName,
+        email: cleanEmail,
+        role: "CLIENT"
+      }
+    })
+
+    const newProfile = await tx.clientProfile.create({
+      data: {
+        userId: newUser.id,
+        whatsapp: cleanPhone,
+        city: cleanCity,
+        state: cleanState,
+        type: "social"
+      }
+    })
+
+    return newProfile.id
   })
-
-  if (!newUser) throw new Error("No se pudo crear el usuario base para el cliente")
-
-  // Crear el perfil por separado ya que el conector custom no retorna el objeto anidado en el record
-  const newProfile = await db.clientProfile.create({
-    data: {
-      userId: newUser.id,
-      whatsapp: whatsapp,
-      city,
-      state,
-      type: "social"
-    }
-  })
-
-  if (!newProfile || !newProfile.id) {
-    throw new Error("No se pudo crear el perfil del cliente")
-  }
-
-  return newProfile.id
 }
