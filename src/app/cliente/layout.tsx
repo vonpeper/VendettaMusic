@@ -1,5 +1,6 @@
 import Link from "next/link"
-import { LogOut, Calendar, CreditCard, User, LayoutDashboard, FileText } from "lucide-react"
+import { Calendar, CreditCard, User, LayoutDashboard, FileText } from "lucide-react"
+import { LogoutButton } from "@/components/auth/LogoutButton"
 
 export default function ClienteLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -32,9 +33,7 @@ export default function ClienteLayout({ children }: { children: React.ReactNode 
           </Link>
         </nav>
         <div className="p-4 border-t border-border/40">
-          <Link href="/" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-            <LogOut className="h-4 w-4" /> Cerrar Sesión
-          </Link>
+          <LogoutButton />
         </div>
       </aside>
 
