@@ -35,6 +35,24 @@ export interface QuoteTotalsResult {
   depositAmount: number
   balanceAmount: number
   isFullyPaid: boolean
+  depositExceedsTotal: boolean
+  depositError: string | null
+}
+
+/**
+ * Valida que el anticipo solicitado sea coherente con el total del evento
+ */
+export function validatePlannedDeposit(depositAmount: number, totalAmount: number): { isValid: boolean; error?: string } {
+  const dep = roundCurrency(depositAmount)
+  const tot = roundCurrency(totalAmount)
+
+  if (dep < 0) {
+    return { isValid: false, error: "El anticipo solicitado no puede ser negativo" }
+  }
+  if (dep > tot && tot > 0) {
+    return { isValid: false, error: `El anticipo solicitado ($${dep.toLocaleString("es-MX")}) no puede superar el total del evento ($${tot.toLocaleString("es-MX")})` }
+  }
+  return { isValid: true }
 }
 
 /**
@@ -77,7 +95,13 @@ export function calculateQuoteTotals(input: CalculateQuoteInput): QuoteTotalsRes
   const totalAmount = roundCurrency(subtotal + ivaAmount)
 
   // Anticipo y Saldo
-  const depositAmount = Math.max(0, roundCurrency(input.depositAmount))
+  const rawDeposit = Math.max(0, roundCurrency(input.depositAmount))
+  const depositExceedsTotal = totalAmount > 0 && rawDeposit > totalAmount
+  const depositError = depositExceedsTotal
+    ? `El anticipo solicitado ($${rawDeposit.toLocaleString("es-MX")}) no puede superar el total ($${totalAmount.toLocaleString("es-MX")})`
+    : null
+
+  const depositAmount = rawDeposit
   const balanceAmount = Math.max(0, roundCurrency(totalAmount - depositAmount))
   const isFullyPaid = totalAmount > 0 && depositAmount >= totalAmount
 
@@ -91,7 +115,9 @@ export function calculateQuoteTotals(input: CalculateQuoteInput): QuoteTotalsRes
     totalAmount,
     depositAmount,
     balanceAmount,
-    isFullyPaid
+    isFullyPaid,
+    depositExceedsTotal,
+    depositError
   }
 }
 

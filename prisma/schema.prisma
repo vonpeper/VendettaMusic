@@ -417,11 +417,11 @@ model Notification {
 }
 
 model BookingRequest {
-  id                    String         @id @default(uuid())
-  shortId               String?        @unique
+  id                    String            @id @default(uuid())
+  shortId               String?           @unique
   packageId             String?
   packageName           String
-  guestCount            Int            @default(0)
+  guestCount            Int               @default(0)
   venueType             String
   calle                 String?
   numero                String?
@@ -430,14 +430,14 @@ model BookingRequest {
   municipio             String?
   address               String
   city                  String
-  state                 String         @default("México")
-  isOutsideZone         Boolean        @default(false)
-  viaticosAmount        Float          @default(0)
+  state                 String            @default("México")
+  isOutsideZone         Boolean           @default(false)
+  viaticosAmount        Float             @default(0)
   distanceKm            Float?
   durationSec           Int?
   tollCost              Float?
   fuelCost              Float?
-  requiresManualQuote   Boolean        @default(false)
+  requiresManualQuote   Boolean           @default(false)
   mapsLink              String?
   requestedDate         DateTime
   startTime             String
@@ -445,49 +445,50 @@ model BookingRequest {
   baseAmount            Float
   depositAmount         Float
   paymentMethod         String
-  paymentStatus         String         @default("pending")
+  paymentStatus         String            @default("pending")
   paymentRef            String?
   clientName            String
   clientPhone           String
   clientEmail           String?
   clientUserId          String?
-  status                String         @default("pending")
+  status                String            @default("pending")
   adminNote             String?
-  notifiedAdmin         Boolean        @default(false)
-  notifiedMusicians     Boolean        @default(false)
-  eventId               String?        @unique
+  notifiedAdmin         Boolean           @default(false)
+  notifiedMusicians     Boolean           @default(false)
+  eventId               String?           @unique
   clientId              String?
-  isPublic              Boolean        @default(false)
-  clientProvidesAudio   Boolean        @default(false)
-  source                String         @default("web")
-  followUpCount         Int            @default(0)
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @default(now()) @updatedAt
-  bandHours             Int?           @default(0)
-  djHours               Int?           @default(0)
-  isDjWithTvs           Boolean?       @default(false)
-  hasTemplete           Boolean?       @default(false)
-  hasPista              Boolean?       @default(false)
-  hasRobot              Boolean?       @default(false)
-  hasPantalla           Boolean?       @default(false)
-  quoteVersion          Int            @default(1)
+  isPublic              Boolean           @default(false)
+  clientProvidesAudio   Boolean           @default(false)
+  source                String            @default("web")
+  followUpCount         Int               @default(0)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @default(now()) @updatedAt
+  bandHours             Int?              @default(0)
+  djHours               Int?              @default(0)
+  isDjWithTvs           Boolean?          @default(false)
+  hasTemplete           Boolean?          @default(false)
+  hasPista              Boolean?          @default(false)
+  hasRobot              Boolean?          @default(false)
+  hasPantalla           Boolean?          @default(false)
+  quoteVersion          Int               @default(1)
   stripePaymentIntentId String?
-  stripeSessionId       String?        @unique
+  stripeSessionId       String?           @unique
   adminSignature        String?
   clientSignature       String?
   signedAt              DateTime?
   signedIp              String?
-  discountAmount        Float?         @default(0)
-  originalPrice         Float?         @default(0)
-  invoice               Boolean        @default(false)
+  discountAmount        Float?            @default(0)
+  originalPrice         Float?            @default(0)
+  invoice               Boolean           @default(false)
   customName            String?
   ceremonyType          String?
   arrivalTime           String?
   setupTime             String?
   dressCode             String?
   musicianNotes         String?
-  event                 Event?         @relation(fields: [eventId], references: [id])
-  client                ClientProfile? @relation(fields: [clientId], references: [id])
+  lineItems             BookingLineItem[]
+  event                 Event?            @relation(fields: [eventId], references: [id])
+  client                ClientProfile?    @relation(fields: [clientId], references: [id])
   inboxItems            InboxItem[]
   payments              Payment[]
 
@@ -665,4 +666,37 @@ model SongSuggestion {
 
   @@index([suggestedById])
   @@index([status])
+}
+
+model BookingLineItem {
+  id               String         @id @default(uuid())
+  bookingRequestId String
+  description      String
+  quantity         Int            @default(1)
+  unitCost         Float          @default(0)
+  lineTotal        Float          @default(0)
+  order            Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
+  bookingRequest   BookingRequest @relation(fields: [bookingRequestId], references: [id], onDelete: Cascade)
+
+  @@index([bookingRequestId])
+}
+
+model ContactInquiry {
+  id                 String    @id @default(uuid())
+  name               String
+  phone              String?
+  email              String
+  requestedDate      DateTime?
+  eventType          String?
+  message            String?
+  status             String    @default("new") // "new", "reviewing", "converted", "closed"
+  matchedClientId    String?
+  convertedBookingId String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @default(now()) @updatedAt
+
+  @@index([status])
+  @@index([email])
 }
