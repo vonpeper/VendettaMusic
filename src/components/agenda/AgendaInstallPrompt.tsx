@@ -50,7 +50,7 @@ export function AgendaInstallPrompt() {
 
     // On iOS Safari, show after 1.5 seconds if not standalone
     let timer: NodeJS.Timeout | undefined
-    if (isAppleDevice) {
+    if (isIOS) {
       timer = setTimeout(() => setShowPrompt(true), 1500)
     }
 
