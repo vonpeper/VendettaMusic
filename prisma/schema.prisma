@@ -554,66 +554,66 @@ model EventMusician {
 }
 
 model GlobalConfig {
-  id                     String    @id @default("vendetta_config")
-  googleClientId         String?
-  googleClientSecret     String?
-  googleRefreshToken     String?
-  googleCalendarId       String?
-  lastCalendarSync       DateTime?
-  evolutionUrl           String?
-  evolutionApiKey        String?
-  evolutionInstance      String?   @default("vendetta_admin")
-  adminWhatsapp          String?
-  facebookUrl            String?
-  instagramUrl           String?
-  tiktokUrl              String?
-  whatsappUrl            String?
-  msgTemplateGig         String?
-  msgTemplateQuote       String?
-  msgTemplateEventClose  String?
-  msgTemplateBarClose    String?
-  zona2Rate              Float?    @default(1500.0)
-  zona3Rate              Float?    @default(3000.0)
-  zona2Cities            String?   @default("valle de bravo, avandaro, malinalco, ixtapan de la sal, tonatico, ciudad de mexico, cdmx, df, distrito federal, naucalpan, tlalnepantla, huixquilucan, interlomas, santa fe, cuajimalpa, alvaro obregon, coyoacan, tlalpan, tepotzotlan, atizapan, izcalli")
-  zona3Cities            String?   @default("cuernavaca, tepoztlan, jiutepec, morelos, queretaro, san juan del rio, juriquilla, puebla, cholula, atlixco, pachuca, hidalgo, tlaxcala")
-  bankName               String?
-  bankAccount            String?
-  bankClabe              String?
-  bankBeneficiary        String?
-  evolutionWebhookSecret String?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-  msgTemplateFollowUp    String?
-  autoFollowUpEnabled    Boolean   @default(true)
-  autoThanksEnabled      Boolean   @default(true)
-  msgTemplateExpiring    String?
-  msgExpiringActive      Boolean   @default(true)
-  msgTemplateReminder    String?
-  msgReminderActive      Boolean   @default(true)
-  msgTemplateThanks      String?
-  msgThanksActive        Boolean   @default(true)
-  adminSignature         String?
-  isSandbox              Boolean   @default(false)
-  logInboundActive       Boolean   @default(true)
-  ogTitle                String?
-  ogDescription          String?
-  ogImage                String?
-  contractLegalText      String?
-  contractBarLegalText   String?
-  payMercadoPagoActive   Boolean   @default(true)
-  payTransferenciaActive Boolean   @default(true)
-  payPersonalActive      Boolean   @default(true)
-  payStripeActive        Boolean   @default(false)
-  stripePublicKey        String?
-  stripeSecretKey        String?
-  stripeWebhookSecret    String?
-  mercadoPagoAccessToken String?
-  mercadoPagoPublicKey   String?
-  googleMapsApiKey       String?
-  viaticosLocalRadius       Float?    @default(50.0)
-  viaticosVehicleCount      Int?      @default(2)
-  msgTodayReminderActive    Boolean   @default(true)
-  msgTemplateTodayReminder  String?
+  id                       String    @id @default("vendetta_config")
+  googleClientId           String?
+  googleClientSecret       String?
+  googleRefreshToken       String?
+  googleCalendarId         String?
+  lastCalendarSync         DateTime?
+  evolutionUrl             String?
+  evolutionApiKey          String?
+  evolutionInstance        String?   @default("vendetta_admin")
+  adminWhatsapp            String?
+  facebookUrl              String?
+  instagramUrl             String?
+  tiktokUrl                String?
+  whatsappUrl              String?
+  msgTemplateGig           String?
+  msgTemplateQuote         String?
+  msgTemplateEventClose    String?
+  msgTemplateBarClose      String?
+  zona2Rate                Float?    @default(1500.0)
+  zona3Rate                Float?    @default(3000.0)
+  zona2Cities              String?   @default("valle de bravo, avandaro, malinalco, ixtapan de la sal, tonatico, ciudad de mexico, cdmx, df, distrito federal, naucalpan, tlalnepantla, huixquilucan, interlomas, santa fe, cuajimalpa, alvaro obregon, coyoacan, tlalpan, tepotzotlan, atizapan, izcalli")
+  zona3Cities              String?   @default("cuernavaca, tepoztlan, jiutepec, morelos, queretaro, san juan del rio, juriquilla, puebla, cholula, atlixco, pachuca, hidalgo, tlaxcala")
+  bankName                 String?
+  bankAccount              String?
+  bankClabe                String?
+  bankBeneficiary          String?
+  evolutionWebhookSecret   String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  msgTemplateFollowUp      String?
+  autoFollowUpEnabled      Boolean   @default(true)
+  autoThanksEnabled        Boolean   @default(true)
+  msgTemplateExpiring      String?
+  msgExpiringActive        Boolean   @default(true)
+  msgTemplateReminder      String?
+  msgReminderActive        Boolean   @default(true)
+  msgTemplateThanks        String?
+  msgThanksActive          Boolean   @default(true)
+  adminSignature           String?
+  isSandbox                Boolean   @default(false)
+  logInboundActive         Boolean   @default(true)
+  ogTitle                  String?
+  ogDescription            String?
+  ogImage                  String?
+  contractLegalText        String?
+  contractBarLegalText     String?
+  payMercadoPagoActive     Boolean   @default(true)
+  payTransferenciaActive   Boolean   @default(true)
+  payPersonalActive        Boolean   @default(true)
+  payStripeActive          Boolean   @default(false)
+  stripePublicKey          String?
+  stripeSecretKey          String?
+  stripeWebhookSecret      String?
+  mercadoPagoAccessToken   String?
+  mercadoPagoPublicKey     String?
+  googleMapsApiKey         String?
+  viaticosLocalRadius      Float?    @default(50.0)
+  viaticosVehicleCount     Int?      @default(2)
+  msgTodayReminderActive   Boolean   @default(true)
+  msgTemplateTodayReminder String?
 }
 
 model InboxItem {
