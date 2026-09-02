@@ -164,9 +164,60 @@ export async function convertInquiryToBookingAction(inquiryId: string) {
     })
 
     revalidatePath("/admin/ventas")
+    revalidatePath("/admin/prospectos")
     return { success: true, bookingId: booking.id, shortId: booking.shortId }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error al convertir el prospecto"
+    return { success: false, error: message }
+  }
+}
+
+/**
+ * Actualiza el estado administrativo de un ContactInquiry (new, reviewing, contacted, converted, discarded).
+ */
+export async function updateInquiryStatusAction(inquiryId: string, status: string) {
+  try {
+    const session = await auth()
+    if (!session || session.user?.role !== "ADMIN") {
+      return { success: false, error: "No autorizado. Se requiere sesión de administrador." }
+    }
+
+    const validStatuses = ["new", "reviewing", "contacted", "converted", "discarded"]
+    if (!validStatuses.includes(status)) {
+      return { success: false, error: "Estado inválido" }
+    }
+
+    await db.contactInquiry.update({
+      where: { id: inquiryId },
+      data: { status }
+    })
+
+    revalidatePath("/admin/prospectos")
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Error al actualizar estado del prospecto"
+    return { success: false, error: message }
+  }
+}
+
+/**
+ * Elimina un ContactInquiry (acción de administración).
+ */
+export async function deleteInquiryAction(inquiryId: string) {
+  try {
+    const session = await auth()
+    if (!session || session.user?.role !== "ADMIN") {
+      return { success: false, error: "No autorizado. Se requiere sesión de administrador." }
+    }
+
+    await db.contactInquiry.delete({
+      where: { id: inquiryId }
+    })
+
+    revalidatePath("/admin/prospectos")
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Error al eliminar prospecto"
     return { success: false, error: message }
   }
 }

@@ -2,21 +2,20 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   Users, Calendar, Settings, LogOut, FileText, Music, 
   LayoutDashboard, TrendingUp, ShoppingBag, Image as LucideImage, 
   Truck, Mic, Shield, Bell, Inbox, ChevronDown, ChevronRight,
-  BarChart3, Wallet, XCircle, BookOpen, History, MessageSquare, Menu
+  BarChart3, Wallet, XCircle, BookOpen, History, MessageSquare, Menu,
+  UserPlus
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import Image from "next/image"
-
 interface SidebarItem {
   name: string
   href: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   adminOnly?: boolean
   badgeCount?: number
 }
@@ -24,7 +23,7 @@ interface SidebarItem {
 interface SidebarSection {
   title: string
   id: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   items: SidebarItem[]
   placeholder?: boolean
 }
@@ -37,33 +36,36 @@ interface AdminSidebarProps {
   pendingInbox?: number
 }
 
-export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
+export function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname()
   const isAdmin = user.role === "ADMIN"
 
-  const [mounted, setMounted] = useState(false)
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ operacion: true, comms: true })
-
-  useEffect(() => {
-    setMounted(true)
-    const saved = localStorage.getItem("admin_sidebar_expanded")
-    if (saved) {
-      try {
-        setExpandedSections(JSON.parse(saved))
-      } catch (e) {
-        console.error("Error parsing sidebar state", e)
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("admin_sidebar_expanded")
+      if (saved) {
+        try {
+          return JSON.parse(saved)
+        } catch {
+          // Ignore parse errors
+        }
       }
     }
-  }, [])
-
-  useEffect(() => {
-    if (mounted) {
-      localStorage.setItem("admin_sidebar_expanded", JSON.stringify(expandedSections))
-    }
-  }, [expandedSections, mounted])
+    return { operacion: true, comms: true }
+  })
 
   const toggleSection = (id: string) => {
-    setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }))
+    setExpandedSections(prev => {
+      const next = { ...prev, [id]: !prev[id] }
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("admin_sidebar_expanded", JSON.stringify(next))
+        } catch {
+          // Ignore storage errors
+        }
+      }
+      return next
+    })
   }
 
   const sections: SidebarSection[] = [
@@ -94,6 +96,7 @@ export function AdminSidebar({ user, pendingInbox = 0 }: AdminSidebarProps) {
       id: "crm",
       icon: Users,
       items: [
+        { name: "Prospectos Web", href: "/admin/prospectos", icon: UserPlus, adminOnly: true },
         { name: "Clientes", href: "/admin/clientes", icon: Users },
         { name: "Centro de Ventas", href: "/admin/ventas", icon: ShoppingBag },
         { name: "Testimoniales", href: "/admin/testimoniales", icon: FileText, adminOnly: true },

@@ -95,13 +95,16 @@ export function calculateQuoteTotals(input: CalculateQuoteInput): QuoteTotalsRes
   const totalAmount = roundCurrency(subtotal + ivaAmount)
 
   // Anticipo y Saldo
-  const rawDeposit = Math.max(0, roundCurrency(input.depositAmount))
-  const depositExceedsTotal = totalAmount > 0 && rawDeposit > totalAmount
-  const depositError = depositExceedsTotal
+  const rawDeposit = roundCurrency(input.depositAmount)
+  const isNegativeDeposit = rawDeposit < 0
+  const depositExceedsTotal = isNegativeDeposit || (totalAmount > 0 && rawDeposit > totalAmount)
+  const depositError = isNegativeDeposit
+    ? "El anticipo solicitado no puede ser negativo"
+    : depositExceedsTotal
     ? `El anticipo solicitado ($${rawDeposit.toLocaleString("es-MX")}) no puede superar el total ($${totalAmount.toLocaleString("es-MX")})`
     : null
 
-  const depositAmount = rawDeposit
+  const depositAmount = Math.max(0, rawDeposit)
   const balanceAmount = Math.max(0, roundCurrency(totalAmount - depositAmount))
   const isFullyPaid = totalAmount > 0 && depositAmount >= totalAmount
 
