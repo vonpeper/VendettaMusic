@@ -828,3 +828,307 @@ export async function notifySingleMusicianAction(eventId: string, musicianId: st
     return { success: false, error: "Error al enviar notificación" }
   }
 }
+
+import { calculateQuoteTotals, roundCurrency, AdditionalLineItem } from "@/lib/pricing"
+import { findOrCreateClient } from "@/lib/clients"
+import { findOrCreateLocation } from "@/lib/locations"
+
+export interface SaveUnifiedEventQuotePayload {
+  mode?: "create" | "edit"
+  targetId?: string
+  clientId?: string | null
+  clientName: string
+  clientPhone?: string | null
+  clientEmail?: string | null
+  clientCity?: string | null
+
+  customName?: string | null
+  ceremonyType?: string | null
+  eventDate: string
+  startTime?: string | null
+  endTime?: string | null
+  arrivalTime?: string | null
+  setupTime?: string | null
+  guestCount?: number | null
+  dressCode?: string | null
+  status?: string | null
+  musicianNotes?: string | null
+  audioEngineer?: string | null
+
+  locationId?: string | null
+  venueAddress?: string | null
+  venueCity?: string | null
+  venueState?: string | null
+  mapsLink?: string | null
+
+  packageId?: string | null
+  packageName?: string | null
+  basePrice: number
+  viaticosAmount?: number | null
+  discountAmount?: number | null
+  additionalItems?: AdditionalLineItem[] | null
+  invoice?: boolean | null
+  depositAmount?: number | null
+  totalAmount?: number | null
+  balanceAmount?: number | null
+}
+
+export async function saveUnifiedEventQuoteAction(payload: SaveUnifiedEventQuotePayload) {
+  try {
+    const {
+      mode = "create",
+      targetId,
+      clientName,
+      clientPhone,
+      clientEmail,
+      clientCity,
+      customName,
+      ceremonyType,
+      eventDate,
+      startTime = "21:00",
+      endTime = "23:00",
+      arrivalTime = "19:00",
+      setupTime = "17:00",
+      guestCount = 0,
+      dressCode = "formal",
+      status = "pendiente",
+      musicianNotes,
+      audioEngineer,
+      packageId,
+      packageName,
+      basePrice,
+      viaticosAmount,
+      discountAmount,
+      additionalItems = [],
+      invoice = false,
+      depositAmount,
+      venueAddress,
+      venueCity,
+      venueState,
+      mapsLink
+    } = payload
+
+    if (!clientName || !clientName.trim()) {
+      return { success: false, error: "El nombre del cliente es obligatorio" }
+    }
+
+    if (!eventDate) {
+      return { success: false, error: "La fecha del evento es obligatoria" }
+    }
+
+    const dateObj = new Date(`${eventDate}T12:00:00`)
+    if (isNaN(dateObj.getTime())) {
+      return { success: false, error: "Fecha de evento inválida" }
+    }
+
+    // 1. Recalcular montos en servidor mediante la función canónica
+    const totals = calculateQuoteTotals({
+      basePrice,
+      viaticosAmount,
+      discountAmount,
+      additionalItems,
+      invoice,
+      depositAmount
+    })
+
+    // 2. Resolver o reutilizar Cliente
+    let finalClientId = payload.clientId
+    if (!finalClientId && clientName) {
+      finalClientId = await findOrCreateClient({
+        name: clientName,
+        email: clientEmail || null,
+        whatsapp: clientPhone || null,
+        city: clientCity || "CDMX / Toluca"
+      })
+    }
+
+    // 3. Resolver Locación (si no es pendiente)
+    let finalLocationId = payload.locationId
+    if (!finalLocationId && venueAddress && venueAddress !== "Lugar por confirmar" && venueAddress !== "Por confirmar" && venueAddress !== "No especificada") {
+      finalLocationId = await findOrCreateLocation({
+        name: venueAddress,
+        address: venueAddress,
+        city: venueCity || null,
+        state: venueState || "México",
+        mapsLink: mapsLink || null
+      })
+    }
+
+    if (mode === "edit" && targetId) {
+      // Buscar si el targetId es Event o BookingRequest
+      const existingBooking = await db.bookingRequest.findUnique({
+        where: { id: targetId },
+        include: { event: true }
+      })
+
+      const existingEvent = !existingBooking
+        ? await db.event.findUnique({ where: { id: targetId }, include: { bookingRequest: true } })
+        : null
+
+      const bookingIdToUpdate = existingBooking?.id || existingEvent?.bookingRequest?.id
+      const eventIdToUpdate = existingBooking?.eventId || existingEvent?.id
+
+      await db.$transaction(async (tx) => {
+        if (bookingIdToUpdate) {
+          await tx.bookingRequest.update({
+            where: { id: bookingIdToUpdate },
+            data: {
+              clientName,
+              clientPhone: clientPhone || "",
+              clientEmail: clientEmail || null,
+              clientId: finalClientId || null,
+              customName: customName || `Evento ${clientName}`,
+              ceremonyType: ceremonyType || "boda",
+              requestedDate: dateObj,
+              startTime: startTime || "21:00",
+              endTime: endTime || "23:00",
+              arrivalTime: arrivalTime || "19:00",
+              setupTime: setupTime || "17:00",
+              guestCount: guestCount || 0,
+              dressCode: dressCode || "formal",
+              musicianNotes: musicianNotes || null,
+              packageId: packageId || null,
+              packageName: packageName || "Paquete Personalizado",
+              baseAmount: totals.basePrice,
+              viaticosAmount: totals.viaticosAmount,
+              discountAmount: totals.discountAmount,
+              invoice: Boolean(invoice),
+              depositAmount: totals.depositAmount,
+              address: venueAddress || "Por confirmar",
+              city: venueCity || "Toluca",
+              state: venueState || "México",
+              mapsLink: mapsLink || null,
+              status: status || "pendiente"
+            }
+          })
+        }
+
+        if (eventIdToUpdate) {
+          await tx.event.update({
+            where: { id: eventIdToUpdate },
+            data: {
+              customName: customName || `Evento ${clientName}`,
+              ceremonyType: ceremonyType || "boda",
+              date: dateObj,
+              startTime: startTime || "21:00",
+              performanceStart: startTime || "21:00",
+              performanceEnd: endTime || "23:00",
+              arrivalTime: arrivalTime || "19:00",
+              setupTime: setupTime || "17:00",
+              guestCount: guestCount || 0,
+              dressCode: dressCode || "formal",
+              musicianNotes: musicianNotes || null,
+              audioEngineer: audioEngineer || null,
+              package: packageId ? { connect: { id: packageId } } : { disconnect: true },
+              location: finalLocationId ? { connect: { id: finalLocationId } } : { disconnect: true },
+              client: finalClientId ? { connect: { id: finalClientId } } : undefined,
+              amount: totals.subtotal,
+              deposit: totals.depositAmount,
+              balance: totals.balanceAmount,
+              ivaAmount: totals.ivaAmount,
+              totalWithTax: totals.totalAmount,
+              totalIncome: totals.totalAmount,
+              invoice: Boolean(invoice),
+              status: status === "pendiente" ? "scheduled" : status || "scheduled",
+              mapsLink: mapsLink || null
+            }
+          })
+        }
+      })
+
+      revalidatePath("/admin/eventos")
+      revalidatePath("/admin/ventas")
+      revalidatePath(`/admin/ventas/${targetId}`)
+      revalidatePath("/agenda")
+
+      return { success: true, id: targetId }
+    } else {
+      // MODE: CREATE
+      const shortId = "VND-" + crypto.randomBytes(2).toString("hex").toUpperCase()
+      const eventId = crypto.randomUUID()
+
+      const created = await db.$transaction(async (tx) => {
+        // Crear Evento si el estatus es agendado o completado
+        const newEvent = await tx.event.create({
+          data: {
+            id: eventId,
+            customName: customName || `Evento ${clientName}`,
+            ceremonyType: ceremonyType || "boda",
+            date: dateObj,
+            startTime: startTime || "21:00",
+            performanceStart: startTime || "21:00",
+            performanceEnd: endTime || "23:00",
+            arrivalTime: arrivalTime || "19:00",
+            setupTime: setupTime || "17:00",
+            guestCount: guestCount || 0,
+            dressCode: dressCode || "formal",
+            musicianNotes: musicianNotes || null,
+            audioEngineer: audioEngineer || null,
+            package: packageId ? { connect: { id: packageId } } : undefined,
+            location: finalLocationId ? { connect: { id: finalLocationId } } : undefined,
+            client: finalClientId ? { connect: { id: finalClientId } } : undefined,
+            amount: totals.subtotal,
+            deposit: totals.depositAmount,
+            balance: totals.balanceAmount,
+            ivaAmount: totals.ivaAmount,
+            totalWithTax: totals.totalAmount,
+            totalIncome: totals.totalAmount,
+            invoice: Boolean(invoice),
+            status: status === "pendiente" ? "scheduled" : status || "scheduled",
+            mapsLink: mapsLink || null,
+            source: "admin"
+          }
+        })
+
+        // Crear BookingRequest asociado
+        const newBooking = await tx.bookingRequest.create({
+          data: {
+            shortId,
+            clientName,
+            clientPhone: clientPhone || "",
+            clientEmail: clientEmail || null,
+            clientId: finalClientId || null,
+            customName: customName || `Evento ${clientName}`,
+            ceremonyType: ceremonyType || "boda",
+            requestedDate: dateObj,
+            startTime: startTime || "21:00",
+            endTime: endTime || "23:00",
+            arrivalTime: arrivalTime || "19:00",
+            setupTime: setupTime || "17:00",
+            guestCount: guestCount || 0,
+            dressCode: dressCode || "formal",
+            musicianNotes: musicianNotes || null,
+            venueType: "salon",
+            packageId: packageId || null,
+            packageName: packageName || "Paquete Personalizado",
+            baseAmount: totals.basePrice,
+            viaticosAmount: totals.viaticosAmount,
+            discountAmount: totals.discountAmount,
+            invoice: Boolean(invoice),
+            depositAmount: totals.depositAmount,
+            paymentMethod: "transfer",
+            paymentStatus: totals.isFullyPaid ? "paid" : totals.depositAmount > 0 ? "partial" : "pending",
+            address: venueAddress || "Por confirmar",
+            city: venueCity || "Toluca",
+            state: venueState || "México",
+            mapsLink: mapsLink || null,
+            status: status || "pendiente",
+            eventId: newEvent.id,
+            source: "admin"
+          }
+        })
+
+        return { bookingId: newBooking.id, eventId: newEvent.id, shortId }
+      })
+
+      revalidatePath("/admin/eventos")
+      revalidatePath("/admin/ventas")
+      revalidatePath("/agenda")
+
+      return { success: true, ...created }
+    }
+  } catch (err: any) {
+    console.error("saveUnifiedEventQuoteAction error:", err)
+    return { success: false, error: err?.message || "Error al guardar el evento / cotización" }
+  }
+}

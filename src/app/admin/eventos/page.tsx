@@ -38,7 +38,7 @@ export default async function AdminEventosPage() {
       include: { user: true },
       orderBy: { user: { name: "asc" } }
     }),
-    db.$queryRawUnsafe<any[]>(`SELECT * FROM Location ORDER BY name ASC`),
+    db.location.findMany({ orderBy: { name: "asc" } }),
     db.package.findMany({ orderBy: { name: "asc" } }),
     db.musicianProfile.findMany({
       where: { status: "active" },
