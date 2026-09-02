@@ -59,14 +59,14 @@ describe("Generación y Validación de Folios Criptográficos (folios.ts)", () =
           callCount++
           // Simular 2 colisiones antes de encontrar un ID libre
           if (callCount <= 2) {
-            return { id: "existing-id" } as any
+            return { id: "existing-id" }
           }
           return null
         }
       }
     }
 
-    const uniqueId = await generateUniqueShortId(mockTx as any, 5)
+    const uniqueId = await generateUniqueShortId(mockTx as unknown as Parameters<typeof generateUniqueShortId>[0], 5)
     assert.ok(uniqueId)
     assert.equal(callCount, 3) // Reintentó y encontró libre al 3er intento
   })

@@ -1,26 +1,36 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Share, PlusSquare, X, Smartphone, Check } from 'lucide-react'
+import { Download, Share, PlusSquare, X, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
+interface NavigatorStandalone {
+  standalone?: boolean
+}
+
 export function AgendaInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
-  const [isIOS, setIsIOS] = useState<boolean>(false)
-  const [isStandalone, setIsStandalone] = useState<boolean>(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [isIOS] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase())
+  })
   const [showPrompt, setShowPrompt] = useState<boolean>(false)
   const [showIOSInstructions, setShowIOSInstructions] = useState<boolean>(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // Check if already installed / standalone
+    const nav = window.navigator as Navigator & NavigatorStandalone
     const standalone =
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true ||
+      nav.standalone === true ||
       document.referrer.includes('android-app://')
 
-    setIsStandalone(standalone)
     if (standalone) return
 
     // Check if dismissed recently
@@ -29,28 +39,24 @@ export function AgendaInstallPrompt() {
       return
     }
 
-    // Detect iOS
-    const userAgent = window.navigator.userAgent.toLowerCase()
-    const isAppleDevice = /iphone|ipad|ipod/.test(userAgent)
-    setIsIOS(isAppleDevice)
-
     // Android / Desktop beforeinstallprompt handler
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault()
-      setDeferredPrompt(e)
+      setDeferredPrompt(e as BeforeInstallPromptEvent)
       setShowPrompt(true)
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall)
 
     // On iOS Safari, show after 1.5 seconds if not standalone
-    if (isAppleDevice && !standalone) {
-      const timer = setTimeout(() => setShowPrompt(true), 1500)
-      return () => clearTimeout(timer)
+    let timer: NodeJS.Timeout | undefined
+    if (isAppleDevice) {
+      timer = setTimeout(() => setShowPrompt(true), 1500)
     }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
+      if (timer) clearTimeout(timer)
     }
   }, [])
 
@@ -79,7 +85,7 @@ export function AgendaInstallPrompt() {
     localStorage.setItem('vendetta_install_dismissed', Date.now().toString())
   }
 
-  if (isStandalone || !showPrompt) return null
+  if (!showPrompt) return null
 
   return (
     <div className='relative my-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-red-950/40 via-zinc-900/90 to-black border border-primary/40 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-300'>

@@ -82,7 +82,7 @@ export async function findOrCreateClient(
 
   // 3. Si se encontró un perfil existente: actualizar únicamente campos faltantes (sin sobreescritura destructiva)
   if (clientProfile) {
-    const profileUpdates: Record<string, any> = {}
+    const profileUpdates: { city?: string; state?: string; whatsapp?: string } = {}
     if (cleanCity && !clientProfile.city) profileUpdates.city = cleanCity
     if (cleanState && !clientProfile.state) profileUpdates.state = cleanState
     if (cleanPhone && !clientProfile.whatsapp) profileUpdates.whatsapp = cleanPhone

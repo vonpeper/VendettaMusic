@@ -110,7 +110,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
     where: { id: "vendetta_config" }
   })
 
-  const statusMap: Record<string, { label: string, color: string, icon: any }> = {
+  const statusMap: Record<string, { label: string, color: string, icon: React.ComponentType<{ className?: string }> }> = {
     pendiente: { label: "Pendiente de Revisión", color: "text-yellow-500", icon: Clock },
     agendado:  { label: "Evento Confirmado",    color: "text-green-500",  icon: CheckCircle2 },
     cancelado: { label: "Solicitud Cancelada",  color: "text-red-500",    icon: XCircle },
@@ -166,7 +166,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                       subValue={`${mainBooking.startTime} - ${mainBooking.endTime} hrs`}
                     />
                     {(() => {
-                      const cleanParts = (parts: any[]) => parts.filter(p => p && p !== "null" && p !== "undefined" && String(p).trim() !== "")
+                      const cleanParts = (parts: (string | null | undefined)[]) => parts.filter((p): p is string => Boolean(p && p !== "null" && p !== "undefined" && String(p).trim() !== ""))
                       const addressLine1 = cleanParts([mainBooking.calle, mainBooking.numero]).join(" ").trim()
                       const addressLine2 = cleanParts([mainBooking.colonia, mainBooking.municipio, mainBooking.state]).join(", ").trim()
                       
@@ -240,13 +240,13 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                 bookingId={mainBooking.id}
                 clientName={mainBooking.clientName}
                 shortId={mainBooking.shortId || ""}
-                isSigned={!!mainBooking.clientSignature || (mainBooking as any).event?.contracts?.some((c: any) => c.status === "signed")}
-                signedAt={mainBooking.signedAt || (mainBooking as any).event?.contracts?.find((c: any) => c.status === "signed")?.signedAt}
+                isSigned={!!mainBooking.clientSignature || (mainBooking.event?.contracts?.some((c: { status: string }) => c.status === "signed") ?? false)}
+                signedAt={mainBooking.signedAt || (mainBooking.event?.contracts?.find((c: { status: string, signedAt?: Date | null }) => c.status === "signed")?.signedAt)}
                 clientSignature={mainBooking.clientSignature}
                 adminSignature={mainBooking.adminSignature}
                 contractLegalText={
-                  ((mainBooking as any).event?.venueType?.toLowerCase() === "bar" || mainBooking.venueType?.toLowerCase() === "bar") 
-                    ? ((globalConfig as any)?.contractBarLegalText || undefined)
+                  (mainBooking.event?.venueType?.toLowerCase() === "bar" || mainBooking.venueType?.toLowerCase() === "bar") 
+                    ? (globalConfig?.contractBarLegalText || undefined)
                     : (globalConfig?.contractLegalText || undefined)
                 }
                 eventDate={mainBooking.requestedDate}
@@ -305,7 +305,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
   )
 }
 
-function DetailItem({ icon: Icon, label, value, subValue }: { icon: any, label: string, value: string, subValue?: string }) {
+function DetailItem({ icon: Icon, label, value, subValue }: { icon: React.ComponentType<{ className?: string }>, label: string, value: string, subValue?: string }) {
   return (
     <div className="flex gap-4">
       <div className="w-10 h-10 rounded-xl bg-foreground/5 border border-border/40 flex items-center justify-center shrink-0">

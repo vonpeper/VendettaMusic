@@ -4,7 +4,6 @@ import { db } from "@/lib/db"
 import { z } from "zod"
 import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
-import crypto from "crypto"
 
 export const contactSchema = z.object({
   nombre: z.string().min(2, "El nombre es obligatorio").max(100),

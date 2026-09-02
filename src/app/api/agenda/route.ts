@@ -21,10 +21,11 @@ export async function GET() {
         }
       }
     )
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching live agenda events:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Error al obtener agenda'
     return NextResponse.json(
-      { success: false, error: error?.message || 'Error al obtener agenda' },
+      { success: false, error: errorMessage },
       { status: 500 }
     )
   }

@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { 
   Search, Mail, Phone, Calendar, MessageSquare, 
-  ArrowRight, CheckCircle2, UserCheck, RefreshCw, 
+  ArrowRight, CheckCircle2, UserCheck, 
   Trash2
 } from "lucide-react"
-import { updateInquiryStatusAction, convertInquiryToBookingAction, deleteInquiryAction } from "@/actions/contact"
+import { updateInquiryStatusAction, deleteInquiryAction } from "@/actions/contact"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -33,11 +33,11 @@ interface ProspectosClientProps {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  new: { label: "Nuevo", color: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
-  reviewing: { label: "En Revisión", color: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
-  contacted: { label: "Contactado", color: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
-  converted: { label: "Convertido", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
-  discarded: { label: "Descartado", color: "bg-zinc-500/10 text-zinc-400 border-zinc-500/30" },
+  new: { label: "Nuevo", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+  reviewing: { label: "En Revisión", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
+  contacted: { label: "Contactado", color: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+  converted: { label: "Convertido", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+  discarded: { label: "Descartado", color: "bg-muted text-muted-foreground border-border" },
 }
 
 export function ProspectosClient({ initialInquiries }: ProspectosClientProps) {
@@ -69,21 +69,6 @@ export function ProspectosClient({ initialInquiries }: ProspectosClientProps) {
         toast.success("Estado del prospecto actualizado")
       } else {
         toast.error(res.error || "No se pudo actualizar el estado")
-      }
-    })
-  }
-
-  function handleConvertToBooking(inquiryId: string) {
-    startTransition(async () => {
-      const res = await convertInquiryToBookingAction(inquiryId)
-      if (res.success && res.bookingId) {
-        setInquiries(prev => prev.map(item => item.id === inquiryId ? { ...item, status: "converted", convertedBookingId: res.bookingId } : item))
-        if (selectedInquiry?.id === inquiryId) {
-          setSelectedInquiry(prev => prev ? { ...prev, status: "converted", convertedBookingId: res.bookingId } : null)
-        }
-        toast.success(`Prospecto convertido a solicitud (Folio ${res.shortId})`)
-      } else {
-        toast.error(res.error || "Error al convertir prospecto")
       }
     })
   }

@@ -8,7 +8,7 @@ import { getValidMapsLink } from "./locations"
 import { saveUnifiedEventQuoteSchema } from "@/actions/events"
 import { contactSchema } from "@/actions/contact"
 import { createUnifiedQuote, convertQuoteToEvent } from "./quote-service"
-import { generateUniqueShortId, isValidShortIdFormat } from "./folios"
+import { isValidShortIdFormat } from "./folios"
 import { execSync } from "child_process"
 import fs from "fs"
 
