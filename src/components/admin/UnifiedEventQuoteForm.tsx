@@ -16,15 +16,12 @@ import { saveUnifiedEventQuoteAction } from "@/actions/events"
 import { toast } from "sonner"
 import { 
   Calendar, 
-  Clock, 
   Users, 
   Sparkles, 
   FileText, 
   Save, 
   Loader2, 
-  CheckCircle2, 
-  AlertCircle,
-  Music,
+  CheckCircle2,
   ArrowRight,
   ArrowLeft
 } from "lucide-react"
@@ -72,7 +69,7 @@ export interface StaffOption {
 interface UnifiedEventQuoteFormProps {
   mode?: "create" | "edit"
   targetId?: string // eventId or bookingId if editing
-  initialData?: any
+  initialData?: Record<string, unknown>
   clients: ClientData[]
   venues: VenueData[]
   packages: PackageOption[]
@@ -89,8 +86,7 @@ export function UnifiedEventQuoteForm({
   venues,
   packages,
   staff = [],
-  onSuccess,
-  onCancel
+  onSuccess
 }: UnifiedEventQuoteFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -352,8 +348,9 @@ export function UnifiedEventQuoteForm({
         } else {
           toast.error(res.error || "Ocurrió un error al guardar el registro")
         }
-      } catch (err: any) {
-        toast.error(err?.message || "Error inesperado al procesar el formulario")
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Error inesperado"
+        toast.error(message)
       }
     })
   }
@@ -606,6 +603,22 @@ export function UnifiedEventQuoteForm({
                       ))}
                     </select>
                   </div>
+
+                  {staff.length > 0 && (
+                    <div className="sm:col-span-2">
+                      <Label className="text-xs font-semibold text-muted-foreground">Ingeniero de Audio / Staff Asignado</Label>
+                      <select
+                        value={audioEngineer}
+                        onChange={e => setAudioEngineer(e.target.value)}
+                        className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">Sin ingeniero asignado</option>
+                        {staff.map(s => (
+                          <option key={s.id} value={s.name}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div>

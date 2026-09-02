@@ -1,6 +1,6 @@
 import { describe, it } from "node:test"
 import assert from "node:assert/strict"
-import { calculateQuoteTotals, roundCurrency } from "./pricing"
+import { calculateQuoteTotals } from "./pricing"
 
 describe("Validaciones de Negocio CRM (crm.test.ts)", () => {
   it("debe evitar montos negativos en subtotal cuando el descuento es mayor al precio base", () => {

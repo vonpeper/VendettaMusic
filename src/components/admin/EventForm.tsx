@@ -12,8 +12,7 @@ interface EventFormProps {
   locations: { id: string; name: string; address?: string; city?: string | null; state?: string | null; mapsLink?: string | null; phone?: string | null }[]
   packages: PackageOption[]
   staff?: StaffOption[]
-  allMusicians?: { id: string; name: string; instrument: string; isTitular: boolean }[]
-  initialData?: any
+  initialData?: Record<string, unknown>
 }
 
 export function EventForm({
@@ -22,7 +21,6 @@ export function EventForm({
   locations,
   packages,
   staff = [],
-  allMusicians = [],
   initialData
 }: EventFormProps) {
   const formattedClients: ClientData[] = clients.map(c => ({

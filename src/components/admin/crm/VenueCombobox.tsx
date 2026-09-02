@@ -40,7 +40,7 @@ export function VenueCombobox({
   const [newName, setNewName] = useState("")
   const [newAddress, setNewAddress] = useState("")
   const [newCity, setNewCity] = useState("Toluca")
-  const [newState, setNewState] = useState("México")
+  const [newState] = useState("México")
   const [newMapsLink, setNewMapsLink] = useState("")
 
   const selectedVenue = useMemo(() => {
@@ -248,7 +248,7 @@ export function VenueCombobox({
                     }}
                     className="block mx-auto mt-2 text-primary font-bold hover:underline"
                   >
-                    + Registrar "{searchTerm}" en el catálogo
+                    {`+ Registrar "${searchTerm}" en el catálogo`}
                   </button>
                 </div>
               ) : (

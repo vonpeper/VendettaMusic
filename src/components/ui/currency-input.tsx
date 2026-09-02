@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
@@ -21,52 +21,41 @@ export function CurrencyInput({
   disabled,
   ...props
 }: CurrencyInputProps) {
-  // Estado local para representar el texto mientras el usuario escribe
-  const [displayValue, setDisplayValue] = useState<string>("")
   const [isFocused, setIsFocused] = useState<boolean>(false)
+  const [editingText, setEditingText] = useState<string>("")
 
-  useEffect(() => {
-    if (!isFocused) {
-      if (value === null || value === undefined || value === "") {
-        setDisplayValue("")
-      } else {
-        const num = Number(value)
-        if (isNaN(num)) {
-          setDisplayValue("")
-        } else {
-          // Formateado al perder el foco
-          setDisplayValue(
-            num.toLocaleString("es-MX", {
-              minimumFractionDigits: num % 1 === 0 ? 0 : 2,
-              maximumFractionDigits: 2,
-            })
-          )
-        }
-      }
+  // Formateo cuando no tiene foco
+  let formattedDisplay = ""
+  if (value !== null && value !== undefined && value !== "") {
+    const num = Number(value)
+    if (!isNaN(num)) {
+      formattedDisplay = num.toLocaleString("es-MX", {
+        minimumFractionDigits: num % 1 === 0 ? 0 : 2,
+        maximumFractionDigits: 2,
+      })
     }
-  }, [value, isFocused])
+  }
+
+  const displayValue = isFocused ? editingText : formattedDisplay
 
   function handleFocus(e: React.FocusEvent<HTMLInputElement>) {
     setIsFocused(true)
     if (value !== null && value !== undefined && value !== "" && !isNaN(Number(value))) {
-      // Al hacer foco, mostrar el número plano sin comas para edición cómoda
       const num = Number(value)
-      setDisplayValue(num === 0 ? "" : String(num))
+      setEditingText(num === 0 ? "" : String(num))
     } else {
-      setDisplayValue("")
+      setEditingText("")
     }
     props.onFocus?.(e)
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     let raw = e.target.value
-
-    // Limpiar caracteres no numéricos excepto punto y guión (si allowNegative)
     raw = raw.replace(prefix, "").trim()
     if (!allowNegative) {
       raw = raw.replace(/-/g, "")
     }
-    // Permitir solo dígitos y un punto decimal
+
     const cleanChars: string[] = []
     let hasDot = false
 
@@ -83,26 +72,22 @@ export function CurrencyInput({
     }
 
     const cleaned = cleanChars.join("")
-    setDisplayValue(cleaned)
+    setEditingText(cleaned)
 
     if (cleaned === "" || cleaned === "-") {
       onChange(null)
     } else {
       const parsed = parseFloat(cleaned)
-      if (!isNaN(parsed)) {
-        onChange(parsed)
-      } else {
-        onChange(null)
-      }
+      onChange(!isNaN(parsed) ? parsed : null)
     }
   }
 
   function handleBlur(e: React.FocusEvent<HTMLInputElement>) {
     setIsFocused(false)
-    if (displayValue === "" || displayValue === "-") {
+    if (editingText === "" || editingText === "-") {
       onChange(null)
     } else {
-      const parsed = parseFloat(displayValue)
+      const parsed = parseFloat(editingText)
       if (!isNaN(parsed)) {
         const finalNum = allowNegative ? parsed : Math.max(0, parsed)
         onChange(finalNum)

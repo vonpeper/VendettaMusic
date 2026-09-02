@@ -1,6 +1,6 @@
 import { describe, it } from "node:test"
 import assert from "node:assert/strict"
-import { calculateQuoteTotals, roundCurrency, formatCurrencyMXN } from "./pricing"
+import { calculateQuoteTotals, roundCurrency } from "./pricing"
 
 describe("Motor Centralizado de Precios (pricing.ts)", () => {
   it("debe calcular subtotal y total sin adicionales ni factura", () => {

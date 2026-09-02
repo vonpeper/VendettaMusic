@@ -230,7 +230,7 @@ export function ClientCombobox({
                     }}
                     className="block mx-auto mt-2 text-primary font-bold hover:underline"
                   >
-                    + Crear "{searchTerm}" como nuevo cliente
+                    {`+ Crear "${searchTerm}" como nuevo cliente`}
                   </button>
                 </div>
               ) : (
