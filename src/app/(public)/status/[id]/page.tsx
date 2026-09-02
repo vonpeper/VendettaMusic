@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 import { notFound } from "next/navigation"
-import { CheckCircle2, Clock, XCircle, MapPin, Calendar, Package, Receipt, ArrowLeft, History } from "lucide-react"
+import { CheckCircle2, Clock, XCircle, MapPin, Calendar, Package, Receipt, ArrowLeft, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { RockBackground } from "@/components/funnel/RockBackground"
@@ -86,24 +86,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
     return notFound()
   }
 
-  // Si tenemos clientId, buscamos todo el historial
-  let otherBookings: any[] = []
-  let confirmedEvents: any[] = []
 
-  if (mainBooking.clientId) {
-    otherBookings = await db.bookingRequest.findMany({
-      where: { 
-        clientId: mainBooking.clientId,
-        id: { not: mainBooking.id } 
-      },
-      orderBy: { requestedDate: 'desc' }
-    })
-
-    confirmedEvents = await db.event.findMany({
-      where: { clientId: mainBooking.clientId },
-      orderBy: { date: 'desc' }
-    })
-  }
 
   const globalConfig = await db.globalConfig.findUnique({
     where: { id: "vendetta_config" }
@@ -273,55 +256,25 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
             )}
           </div>
 
-          {/* Columna Derecha: Mi Historial / Otros Eventos */}
+          {/* Columna Derecha: Información de la Reserva y Soporte */}
           <div className="space-y-6">
             <h3 className="text-xs font-black text-foreground uppercase tracking-[0.3em] flex items-center gap-2 pt-4">
-              <History className="w-4 h-4 text-primary" /> Historial de Cliente
+              <ShieldCheck className="w-4 h-4 text-primary" /> Información de Reserva
             </h3>
             
             <div className="space-y-4 p-6 rounded-3xl bg-foreground/[0.02] border border-border/40">
-               <div className="pb-4 border-b border-border/40">
-                 <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Cliente Registrado</div>
+               <div>
+                 <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Titular del Evento</div>
                  <div className="text-foreground font-black uppercase tracking-tight text-lg">{mainBooking.clientName}</div>
                </div>
-
-               {/* Eventos Confirmados */}
-               {confirmedEvents.length > 0 && (
-                 <div className="space-y-3">
-                    <div className="text-[10px] font-black text-primary uppercase tracking-widest">🎉 Mis Próximos Eventos</div>
-                    {confirmedEvents.map(evt => (
-                      <div key={evt.id} className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 group hover:bg-green-500/20 transition-all">
-                        <div className="text-foreground font-bold text-xs uppercase">{formatDateMX(evt.date, "dd MMM yyyy")}</div>
-                        <div className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">{evt.venueType ?? "Evento"} — Confirmado</div>
-                      </div>
-                    ))}
-                 </div>
-               )}
-
-               {/* Otras Solicitudes */}
-               {otherBookings.length > 0 && (
-                 <div className="space-y-3 pt-4 border-t border-border/40">
-                    <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">📋 Otras Solicitudes</div>
-                    {otherBookings.map(b => (
-                      <Link href={`/status/${b.shortId}`} key={b.id} className="block p-3 rounded-xl bg-foreground/5 border border-border/40 group hover:border-primary/50 transition-all">
-                        <div className="flex justify-between items-center">
-                          <span className="text-foreground font-bold text-xs uppercase">{formatDateMX(b.requestedDate, "dd MMM")}</span>
-                          <span className="text-[9px] text-primary font-black uppercase">{b.shortId}</span>
-                        </div>
-                        <div className="text-[9px] text-muted-foreground mt-1 uppercase font-bold">{b.packageName} — {b.status}</div>
-                      </Link>
-                    ))}
-                 </div>
-               )}
-
-               {otherBookings.length === 0 && confirmedEvents.length === 0 && (
-                 <p className="text-[10px] text-muted-foreground italic pb-4">No tienes otros eventos registrados con este usuario.</p>
-               )}
+               <div className="pt-3 border-t border-border/40 text-xs text-muted-foreground">
+                 <span className="font-semibold text-white">Folio Único:</span> {mainBooking.shortId}
+               </div>
             </div>
 
             <div className="p-6 rounded-3xl bg-primary/10 border border-primary/20 space-y-4">
-               <div className="text-sm font-black text-foreground uppercase tracking-tight">¿Alguna duda?</div>
-               <p className="text-[11px] text-muted-foreground leading-relaxed">Contáctanos vía WhatsApp para cualquier ajuste o duda sobre tu contrato.</p>
+               <div className="text-sm font-black text-foreground uppercase tracking-tight">¿Alguna duda o ajuste?</div>
+               <p className="text-[11px] text-muted-foreground leading-relaxed">Contáctanos por correo o WhatsApp oficial para cualquier consulta sobre tu reservación o contrato.</p>
                <a href={process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ? `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola, tengo una duda sobre mi folio ${mainBooking.shortId}`)}` : `mailto:rock.vendettamx@gmail.com?subject=${encodeURIComponent(`Duda sobre evento folio ${mainBooking.shortId}`)}`} className="block">
                  <Button className="w-full h-11 text-[10px] font-black uppercase tracking-widest rounded-xl">{process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ? "WhatsApp Directo" : "Contactar por Correo"}</Button>
                </a>

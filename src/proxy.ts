@@ -35,7 +35,6 @@ export default auth((req) => {
   if (isAuthRoute) {
     if (isLoggedIn) {
       if (role === "ADMIN" || role === "AGENTE") return NextResponse.redirect(new URL("/admin", nextUrl))
-      if (role === "CLIENT") return NextResponse.redirect(new URL("/cliente", nextUrl))
       if (role === "MUSICIAN") return NextResponse.redirect(new URL("/musico", nextUrl))
       return NextResponse.redirect(new URL("/", nextUrl))
     }
@@ -46,12 +45,6 @@ export default auth((req) => {
   if (nextUrl.pathname.startsWith("/admin")) {
     if (!isLoggedIn) return NextResponse.redirect(new URL("/auth/login", nextUrl))
     if (role !== "ADMIN" && role !== "AGENTE") return NextResponse.redirect(new URL("/", nextUrl))
-  }
-
-  // Rutas protegidas Cliente
-  if (nextUrl.pathname.startsWith("/cliente")) {
-    if (!isLoggedIn) return NextResponse.redirect(new URL("/auth/login", nextUrl))
-    if (role !== "CLIENT" && role !== "ADMIN") return NextResponse.redirect(new URL("/", nextUrl))
   }
 
   return NextResponse.next()

@@ -6,7 +6,7 @@ import { ProposalInteractive } from "@/components/funnel/ProposalInteractive"
 import { ContractSigner } from "@/components/funnel/ContractSigner"
 import { formatDateMX } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import crypto from "crypto"
+import { generateResourceToken } from "@/lib/security"
 
 export const dynamic = "force-dynamic"
 
@@ -98,11 +98,10 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
     where: { id: "vendetta_config" }
   })
 
-  // Generar tokens seguros para descargar PDFs desde ruta pública
-  const secret = process.env.AUTH_SECRET || "fallback_secret_vendetta_music_app_2026"
-  const pdfToken = crypto.createHmac("sha256", secret).update(booking.id).digest("hex")
-  const downloadQuoteUrl = `/api/admin/contract/${booking.id}?token=${pdfToken}&type=quote&t=${Date.now()}`
-  const downloadContractUrl = `/api/admin/contract/${booking.id}?token=${pdfToken}&t=${Date.now()}`
+  // Generar token seguro para descarga pública de cotización / contrato
+  const pdfToken = generateResourceToken(booking.id)
+  const downloadQuoteUrl = `/api/admin/contract/${booking.id}?token=${pdfToken}&type=quote`
+  const downloadContractUrl = `/api/admin/contract/${booking.id}?token=${pdfToken}`
 
   const hasAudio = !booking.clientProvidesAudio
   const base = Number(booking.baseAmount || 0)
