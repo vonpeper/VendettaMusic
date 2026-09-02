@@ -12,7 +12,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { 
-  Users, 
   Trash2, 
   Loader2, 
   CheckSquare, 
@@ -21,11 +20,7 @@ import {
   Mail,
   Phone,
   MapPin,
-  Calendar,
   Search,
-  ArrowUpDown,
-  Layers,
-  FileQuestion,
   Sparkles
 } from "lucide-react"
 import { toast } from "sonner"
@@ -61,7 +56,7 @@ interface ClientListItem {
     quotes: number
     bookings?: number
   }
-  events: { id: string; date: Date; contracts: any[] }[]
+  events: { id: string; date: Date; contracts: { id: string }[] }[]
 }
 
 interface ClientesTableClientProps {
@@ -76,17 +71,13 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
   const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "events_desc">("name_asc")
   const [previewDuplicateClient, setPreviewDuplicateClient] = useState<ClientListItem | null>(null)
 
-  // Mapa de duplicados por teléfono normalizado (últimos 10 dígitos)
-  const duplicatePhoneMap = useMemo(() => {
-    const map = new Map<string, string[]>()
-    for (const item of items) {
-      if (item.whatsapp) {
-        const last10 = item.whatsapp.replace(/\D/g, "").slice(-10)
-        if (last10.length === 10) {
-          const list = map.get(last10) || []
-          list.push(item.id)
-          map.set(last10, list)
-        }
+  // Detección en memoria de posibles duplicados (mismo teléfono o correo con diferente ID)
+  const duplicateAlertMap = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const c of items) {
+      const cleanPhone = c.whatsapp ? c.whatsapp.replace(/\D/g, "").slice(-10) : ""
+      if (cleanPhone && cleanPhone.length === 10) {
+        map.set(`phone:${cleanPhone}`, (map.get(`phone:${cleanPhone}`) || 0) + 1)
       }
     }
     return map
@@ -97,7 +88,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
     const term = searchTerm.trim().toLowerCase()
     const cleanTermPhone = term.replace(/\D/g, "")
 
-    let list = items.filter(c => {
+    const list = items.filter(c => {
       const name = c.user.name?.toLowerCase() || ""
       const email = c.user.email?.toLowerCase() || ""
       const phone = c.whatsapp ? c.whatsapp.replace(/\D/g, "") : ""
@@ -122,7 +113,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
         return (b.user.name || "").localeCompare(a.user.name || "")
       }
       if (sortBy === "events_desc") {
-        return (b._count.events + (b._count.bookings || 0)) - (a._count.events + (a._count.bookings || 0))
+        return b._count.events - a._count.events
       }
       return 0
     })
@@ -134,18 +125,22 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
     if (selectedIds.size === processedClients.length) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(processedClients.map(i => i.id)))
+      setSelectedIds(new Set(processedClients.map(c => c.id)))
     }
   }
 
-  const toggleSelect = (id: string) => {
+  const toggleSelectOne = (id: string) => {
     const next = new Set(selectedIds)
-    if (next.has(id)) next.delete(id)
-    else next.add(id)
+    if (next.has(id)) {
+      next.delete(id)
+    } else {
+      next.add(id)
+    }
     setSelectedIds(next)
   }
 
-  const handleBulkDelete = async () => {
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return
     setLoading(true)
     try {
       const result = await deleteClientesAction(Array.from(selectedIds))
@@ -156,7 +151,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
       } else {
         toast.error(result.message)
       }
-    } catch (err) {
+    } catch {
       toast.error("Ocurrió un error inesperado al eliminar.")
     } finally {
       setLoading(false)
@@ -180,9 +175,9 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
           <span className="text-xs text-muted-foreground font-semibold shrink-0">Ordenar:</span>
           <select
             value={sortBy}
-            onChange={e => setSortBy(e.target.value as any)}
+            onChange={e => setSortBy(e.target.value as "name_asc" | "name_desc" | "events_desc")}
             className="h-10 rounded-md border border-input bg-background px-3 py-1 text-xs font-semibold"
-          >
+          >     
             <option value="name_asc">Nombre (A - Z)</option>
             <option value="name_desc">Nombre (Z - A)</option>
             <option value="events_desc">Más Actividad (Eventos)</option>
@@ -352,7 +347,19 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                     </TableCell>
 
                     <TableCell className="text-right">
-                      <ClienteActions client={client as any} />
+                      <ClienteActions client={{
+                        profileId: client.id,
+                        name: client.user.name || "Sin nombre",
+                        email: client.user.email || "",
+                        phone: client.whatsapp,
+                        whatsapp: client.whatsapp,
+                        state: client.state,
+                        city: client.city,
+                        type: client.type,
+                        company: client.company,
+                        rfc: client.rfc,
+                        notes: client.notes
+                      }} />
                     </TableCell>
                   </TableRow>
                 )
