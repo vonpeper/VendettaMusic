@@ -9,7 +9,7 @@ function resolveDbUrl(): string {
     }
     return `file:${env}`
   }
-  return "file:./prisma/dev.db"
+  return "file:./prisma/prod.db"
 }
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
