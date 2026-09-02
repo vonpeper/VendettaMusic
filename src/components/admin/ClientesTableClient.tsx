@@ -71,13 +71,17 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
   const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "events_desc">("name_asc")
   const [previewDuplicateClient, setPreviewDuplicateClient] = useState<ClientListItem | null>(null)
 
-  // Detección en memoria de posibles duplicados (mismo teléfono o correo con diferente ID)
-  const duplicateAlertMap = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const c of items) {
-      const cleanPhone = c.whatsapp ? c.whatsapp.replace(/\D/g, "").slice(-10) : ""
-      if (cleanPhone && cleanPhone.length === 10) {
-        map.set(`phone:${cleanPhone}`, (map.get(`phone:${cleanPhone}`) || 0) + 1)
+  // Mapa de duplicados por teléfono normalizado (últimos 10 dígitos)
+  const duplicatePhoneMap = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const item of items) {
+      if (item.whatsapp) {
+        const last10 = item.whatsapp.replace(/\D/g, "").slice(-10)
+        if (last10.length === 10) {
+          const list = map.get(last10) || []
+          list.push(item.id)
+          map.set(last10, list)
+        }
       }
     }
     return map
@@ -129,7 +133,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
     }
   }
 
-  const toggleSelectOne = (id: string) => {
+  const toggleSelect = (id: string) => {
     const next = new Set(selectedIds)
     if (next.has(id)) {
       next.delete(id)
@@ -139,7 +143,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
     setSelectedIds(next)
   }
 
-  const handleDeleteSelected = async () => {
+  const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return
     setLoading(true)
     try {
