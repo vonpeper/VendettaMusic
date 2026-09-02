@@ -14,10 +14,11 @@ interface QuoteLineItemsProps {
 
 export function QuoteLineItems({ items, onChange }: QuoteLineItemsProps) {
   function handleAddItem() {
+    const newId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "item-" + Math.random().toString(36).substring(2, 9)
     onChange([
       ...items,
       {
-        id: "item-" + Math.random().toString(36).substring(2, 7),
+        id: newId,
         description: "",
         quantity: 1,
         unitCost: 0
@@ -76,8 +77,16 @@ export function QuoteLineItems({ items, onChange }: QuoteLineItemsProps) {
                 <Input
                   type="number"
                   min="1"
-                  value={item.quantity || 1}
-                  onChange={e => handleUpdateItem(idx, { quantity: parseInt(e.target.value) || 1 })}
+                  value={item.quantity || ""}
+                  onChange={e => {
+                    const raw = e.target.value
+                    if (raw === "") {
+                      handleUpdateItem(idx, { quantity: 0 })
+                    } else {
+                      const num = parseInt(raw, 10)
+                      handleUpdateItem(idx, { quantity: isNaN(num) ? 1 : num })
+                    }
+                  }}
                   placeholder="Cant."
                   className="h-9 text-xs text-center"
                 />
@@ -85,7 +94,7 @@ export function QuoteLineItems({ items, onChange }: QuoteLineItemsProps) {
               <div className="col-span-5 sm:col-span-3">
                 <CurrencyInput
                   value={item.unitCost}
-                  onChange={val => handleUpdateItem(idx, { unitCost: val || 0 })}
+                  onChange={val => handleUpdateItem(idx, { unitCost: val ?? 0 })}
                   placeholder="Precio Unitario"
                   className="h-9 text-xs"
                 />

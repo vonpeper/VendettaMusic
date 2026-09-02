@@ -39,8 +39,8 @@ export function VenueCombobox({
 
   const [newName, setNewName] = useState("")
   const [newAddress, setNewAddress] = useState("")
-  const [newCity, setNewCity] = useState("Toluca")
-  const [newState] = useState("México")
+  const [newCity, setNewCity] = useState("")
+  const [newState] = useState("")
   const [newMapsLink, setNewMapsLink] = useState("")
 
   const selectedVenue = useMemo(() => {

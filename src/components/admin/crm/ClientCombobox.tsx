@@ -37,7 +37,7 @@ export function ClientCombobox({
   const [newName, setNewName] = useState("")
   const [newPhone, setNewPhone] = useState("")
   const [newEmail, setNewEmail] = useState("")
-  const [newCity, setNewCity] = useState("Toluca / CDMX")
+  const [newCity, setNewCity] = useState("")
 
   const selectedClient = useMemo(() => {
     return clients.find(c => c.id === selectedClientId) || null

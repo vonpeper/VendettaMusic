@@ -107,15 +107,15 @@ export function UnifiedEventQuoteForm({
     initialData?.clientEmail || initialData?.client?.user?.email || ""
   )
   const [clientCity, setClientCity] = useState<string>(
-    initialData?.city || initialData?.client?.city || "Toluca / CDMX"
+    initialData?.city || initialData?.client?.city || ""
   )
 
   // 2. Estado Operativo del Evento
   const [customName, setCustomName] = useState<string>(
-    initialData?.customName || (initialData?.clientName ? `Boda ${initialData.clientName}` : "")
+    initialData?.customName || ""
   )
   const [ceremonyType, setCeremonyType] = useState<string>(
-    initialData?.ceremonyType || "boda"
+    initialData?.ceremonyType || ""
   )
   const [eventDate, setEventDate] = useState<string>(() => {
     if (initialData?.date) {
@@ -127,17 +127,17 @@ export function UnifiedEventQuoteForm({
     return ""
   })
   const [startTime, setStartTime] = useState<string>(
-    initialData?.startTime || initialData?.performanceStart || "21:00"
+    initialData?.startTime || initialData?.performanceStart || ""
   )
   const [endTime, setEndTime] = useState<string>(
-    initialData?.endTime || initialData?.performanceEnd || "23:00"
+    initialData?.endTime || initialData?.performanceEnd || ""
   )
-  const [arrivalTime, setArrivalTime] = useState<string>(initialData?.arrivalTime || "19:00")
-  const [setupTime, setSetupTime] = useState<string>(initialData?.setupTime || "17:00")
+  const [arrivalTime, setArrivalTime] = useState<string>(initialData?.arrivalTime || "")
+  const [setupTime, setSetupTime] = useState<string>(initialData?.setupTime || "")
   const [guestCount, setGuestCount] = useState<number | null>(
-    initialData?.guestCount !== undefined ? initialData.guestCount : null
+    initialData?.guestCount !== undefined && initialData?.guestCount !== null ? Number(initialData.guestCount) : null
   )
-  const [dressCode, setDressCode] = useState<string>(initialData?.dressCode || "formal")
+  const [dressCode, setDressCode] = useState<string>(initialData?.dressCode || "")
   const [status, setStatus] = useState<string>(
     initialData?.status === "scheduled" ? "agendado" : initialData?.status || "pendiente"
   )
@@ -148,6 +148,9 @@ export function UnifiedEventQuoteForm({
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(
     initialData?.locationId || initialData?.location?.id || null
   )
+  const [venueName, setVenueName] = useState<string>(
+    initialData?.location?.name || initialData?.venueName || ""
+  )
   const [venueAddress, setVenueAddress] = useState<string>(
     initialData?.address || initialData?.location?.address || ""
   )
@@ -155,7 +158,7 @@ export function UnifiedEventQuoteForm({
     initialData?.city || initialData?.location?.city || ""
   )
   const [venueState, setVenueState] = useState<string>(
-    initialData?.state || initialData?.location?.state || "México"
+    initialData?.state || initialData?.location?.state || ""
   )
   const [mapsLink, setMapsLink] = useState<string>(
     initialData?.mapsLink || initialData?.location?.mapsLink || ""
@@ -163,7 +166,7 @@ export function UnifiedEventQuoteForm({
 
   // 4. Estado Cotización y Paquete
   const [packageId, setPackageId] = useState<string>(
-    initialData?.packageId || (packages.length > 0 ? packages[0].id : "")
+    initialData?.packageId || ""
   )
   const selectedPackage = useMemo(() => {
     return packages.find(p => p.id === packageId) || null
@@ -178,7 +181,7 @@ export function UnifiedEventQuoteForm({
   const [basePrice, setBasePrice] = useState<number | null>(() => {
     if (initialData?.amount !== undefined && initialData?.amount !== null) return Number(initialData.amount)
     if (initialData?.baseAmount !== undefined && initialData?.baseAmount !== null) return Number(initialData.baseAmount)
-    return defaultPackagePrice
+    return null
   })
 
   const isPriceModified = useMemo(() => {
@@ -187,10 +190,10 @@ export function UnifiedEventQuoteForm({
   }, [basePrice, defaultPackagePrice, selectedPackage])
 
   const [viaticosAmount, setViaticosAmount] = useState<number | null>(
-    initialData?.viaticosAmount !== undefined ? Number(initialData.viaticosAmount) : null
+    initialData?.viaticosAmount !== undefined && initialData?.viaticosAmount !== null ? Number(initialData.viaticosAmount) : null
   )
   const [discountAmount, setDiscountAmount] = useState<number | null>(
-    initialData?.discountAmount !== undefined ? Number(initialData.discountAmount) : null
+    initialData?.discountAmount !== undefined && initialData?.discountAmount !== null ? Number(initialData.discountAmount) : null
   )
   const [invoice, setInvoice] = useState<boolean>(
     Boolean(initialData?.invoice)
@@ -201,7 +204,15 @@ export function UnifiedEventQuoteForm({
     return null
   })
   const [additionalItems, setAdditionalItems] = useState<AdditionalLineItem[]>(() => {
-    if (Array.isArray(initialData?.items)) return initialData.items
+    const raw = initialData?.lineItems || initialData?.items
+    if (Array.isArray(raw)) {
+      return raw.map((item: { id?: string; description?: string; quantity?: number; unitCost?: number }) => ({
+        id: item.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "item-" + Math.random().toString(36).substring(2, 9)),
+        description: item.description || "",
+        quantity: typeof item.quantity === "number" ? item.quantity : 1,
+        unitCost: typeof item.unitCost === "number" ? item.unitCost : 0,
+      }))
+    }
     return []
   })
 
@@ -217,51 +228,59 @@ export function UnifiedEventQuoteForm({
     })
   }, [basePrice, viaticosAmount, discountAmount, additionalItems, invoice, depositAmount])
 
-  // Handlers para Comboboxes
+  // Handlers para Comboboxes con limpieza absoluta de datos anteriores
   function handleSelectClient(client: ClientData | null) {
     if (client) {
       setSelectedClientId(client.id)
-      setClientName(client.name)
-      if (client.phone) setClientPhone(client.phone)
-      if (client.email) setClientEmail(client.email)
-      if (client.city) setClientCity(client.city)
+      setClientName(client.name ?? "")
+      setClientPhone(client.phone ?? "")
+      setClientEmail(client.email ?? "")
+      setClientCity(client.city ?? "")
     } else {
       setSelectedClientId(null)
+      setClientName("")
+      setClientPhone("")
+      setClientEmail("")
+      setClientCity("")
     }
   }
 
   function handleAddNewClient(newClient: Omit<ClientData, "id">) {
-    const tempId = "client-new-" + Math.random().toString(36).substring(2, 7)
+    const tempId = typeof crypto !== "undefined" && crypto.randomUUID ? "client-new-" + crypto.randomUUID() : "client-new-" + Math.random().toString(36).substring(2, 7)
     setSelectedClientId(tempId)
-    setClientName(newClient.name)
-    if (newClient.phone) setClientPhone(newClient.phone)
-    if (newClient.email) setClientEmail(newClient.email)
-    if (newClient.city) setClientCity(newClient.city)
+    setClientName(newClient.name ?? "")
+    setClientPhone(newClient.phone ?? "")
+    setClientEmail(newClient.email ?? "")
+    setClientCity(newClient.city ?? "")
     toast.success(`Cliente "${newClient.name}" asignado`)
   }
 
   function handleSelectVenue(venue: VenueData | null, pendingAddress?: string) {
     if (venue) {
       setSelectedVenueId(venue.id)
-      setVenueAddress(venue.address || venue.name)
-      if (venue.city) setVenueCity(venue.city)
-      if (venue.state) setVenueState(venue.state)
-      if (venue.mapsLink) setMapsLink(venue.mapsLink)
+      setVenueName(venue.name ?? "")
+      setVenueAddress(venue.address ?? "")
+      setVenueCity(venue.city ?? "")
+      setVenueState(venue.state ?? "")
+      setMapsLink(venue.mapsLink ?? "")
     } else {
       setSelectedVenueId(null)
-      if (pendingAddress !== undefined) {
-        setVenueAddress(pendingAddress)
-      }
+      setVenueName("")
+      setVenueAddress(pendingAddress ?? "")
+      setVenueCity("")
+      setVenueState("")
+      setMapsLink("")
     }
   }
 
   function handleAddNewVenue(newVenue: Omit<VenueData, "id">) {
-    const tempId = "venue-new-" + Math.random().toString(36).substring(2, 7)
+    const tempId = typeof crypto !== "undefined" && crypto.randomUUID ? "venue-new-" + crypto.randomUUID() : "venue-new-" + Math.random().toString(36).substring(2, 7)
     setSelectedVenueId(tempId)
-    setVenueAddress(newVenue.address || newVenue.name)
-    if (newVenue.city) setVenueCity(newVenue.city)
-    if (newVenue.state) setVenueState(newVenue.state)
-    if (newVenue.mapsLink) setMapsLink(newVenue.mapsLink)
+    setVenueName(newVenue.name ?? "")
+    setVenueAddress(newVenue.address ?? "")
+    setVenueCity(newVenue.city ?? "")
+    setVenueState(newVenue.state ?? "")
+    setMapsLink(newVenue.mapsLink ?? "")
     toast.success(`Locación "${newVenue.name}" asignada`)
   }
 
@@ -290,6 +309,22 @@ export function UnifiedEventQuoteForm({
       return
     }
 
+    if (totals.depositExceedsTotal) {
+      toast.error(totals.depositError || "El anticipo solicitado no puede superar el total de la cotización.")
+      setActiveStep(4)
+      return
+    }
+
+    const sanitizedItems = additionalItems
+      .filter(it => it.description && it.description.trim().length > 0)
+      .map((it, idx) => ({
+        id: it.id,
+        description: it.description.trim(),
+        quantity: typeof it.quantity === "number" && it.quantity > 0 ? it.quantity : 1,
+        unitCost: typeof it.unitCost === "number" && it.unitCost >= 0 ? it.unitCost : 0,
+        order: idx
+      }))
+
     startTransition(async () => {
       try {
         const payload = {
@@ -297,35 +332,36 @@ export function UnifiedEventQuoteForm({
           targetId,
           clientId: selectedClientId?.startsWith("client-new-") ? null : selectedClientId,
           clientName: clientName.trim(),
-          clientPhone: clientPhone.trim(),
+          clientPhone: clientPhone.trim() || null,
           clientEmail: clientEmail.trim().toLowerCase() || null,
-          clientCity: clientCity.trim(),
+          clientCity: clientCity.trim() || null,
           
-          customName: customName.trim() || `Evento ${clientName}`,
-          ceremonyType,
+          customName: customName.trim() || null,
+          ceremonyType: ceremonyType || null,
           eventDate,
-          startTime,
-          endTime,
-          arrivalTime,
-          setupTime,
-          guestCount: guestCount || 0,
-          dressCode,
+          startTime: startTime.trim() || null,
+          endTime: endTime.trim() || null,
+          arrivalTime: arrivalTime.trim() || null,
+          setupTime: setupTime.trim() || null,
+          guestCount: guestCount !== null ? guestCount : 0,
+          dressCode: dressCode || null,
           status,
           musicianNotes: musicianNotes.trim() || null,
           audioEngineer: audioEngineer || null,
 
           locationId: selectedVenueId?.startsWith("venue-new-") ? null : selectedVenueId,
-          venueAddress: venueAddress.trim() || "Por confirmar",
-          venueCity: venueCity.trim(),
-          venueState: venueState.trim(),
+          venueName: venueName.trim() || null,
+          venueAddress: venueAddress.trim() || null,
+          venueCity: venueCity.trim() || null,
+          venueState: venueState.trim() || null,
           mapsLink: mapsLink.trim() || null,
 
           packageId: packageId || null,
-          packageName: selectedPackage?.name || "Paquete Personalizado",
+          packageName: selectedPackage?.name || null,
           basePrice: totals.basePrice,
           viaticosAmount: totals.viaticosAmount,
           discountAmount: totals.discountAmount,
-          additionalItems,
+          additionalItems: sanitizedItems,
           invoice,
           depositAmount: totals.depositAmount,
           totalAmount: totals.totalAmount,
