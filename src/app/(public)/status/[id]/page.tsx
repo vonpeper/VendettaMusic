@@ -7,14 +7,24 @@ import { RockBackground } from "@/components/funnel/RockBackground"
 import { ContractSigner } from "@/components/funnel/ContractSigner"
 import { QuoteApprovalForm } from "@/components/funnel/QuoteApprovalForm"
 import { formatDateMX } from "@/lib/utils"
+import { isValidShortIdFormat } from "@/lib/folios"
 import type { Metadata } from "next"
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = await params
-  const booking = await db.bookingRequest.findUnique({
-    where: { shortId: id.toUpperCase() }
+  const lookupId = (id || "").trim().toUpperCase()
+
+  if (!isValidShortIdFormat(lookupId)) {
+    return { title: "No encontrado | Vendetta Live Music" }
+  }
+
+  const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(lookupId)
+  const booking = await db.bookingRequest.findFirst({
+    where: isUuid
+      ? { OR: [{ shortId: lookupId }, { id: id.trim() }] }
+      : { shortId: lookupId }
   })
 
   if (!booking) {
@@ -51,7 +61,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
           url: 'https://vendetta.mx/images/opengraph-evento.png',
           width: 1200,
           height: 630,
-          alt: isConfirmed ? 'Contrato Digital Vendetta Live Music' : 'Cotización Vendetta Live Music',
+          alt: 'Vendetta Live Music',
         },
       ],
       locale: 'es_MX',
@@ -70,10 +80,20 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", c
 
 export default async function StatusDetailPage({ params }: { params: { id: string } }) {
   const { id } = await params
-  const mainBooking = await db.bookingRequest.findUnique({
-    where: { shortId: id.toUpperCase() },
+  const lookupId = (id || "").trim().toUpperCase()
+
+  if (!isValidShortIdFormat(lookupId)) {
+    return notFound()
+  }
+
+  const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(lookupId)
+  const mainBooking = await db.bookingRequest.findFirst({
+    where: isUuid
+      ? { OR: [{ shortId: lookupId }, { id: id.trim() }] }
+      : { shortId: lookupId },
     include: { 
       client: true,
+      lineItems: { orderBy: { order: "asc" } },
       event: {
         include: {
           contracts: true
@@ -85,8 +105,6 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
   if (!mainBooking) {
     return notFound()
   }
-
-
 
   const globalConfig = await db.globalConfig.findUnique({
     where: { id: "vendetta_config" }

@@ -32,17 +32,22 @@ export function normalizeClientEmail(email?: string | null): string | null {
   return trimmed
 }
 
+import { Prisma, PrismaClient } from "@prisma/client"
+
 /**
  * Busca un cliente por email o teléfono con normalización estricta, o lo crea atómicamente si no existe.
  * Retorna el profileId (ClientProfile.id).
  */
-export async function findOrCreateClient(data: {
-  name: string
-  email?: string | null
-  whatsapp?: string | null
-  city?: string | null
-  state?: string | null
-}): Promise<string> {
+export async function findOrCreateClient(
+  data: {
+    name: string
+    email?: string | null
+    whatsapp?: string | null
+    city?: string | null
+    state?: string | null
+  },
+  prismaClient: PrismaClient | Prisma.TransactionClient = db
+): Promise<string> {
   const cleanName = data.name?.trim() || "Cliente"
   const cleanEmail = normalizeClientEmail(data.email)
   const cleanPhone = normalizeClientPhone(data.whatsapp)
@@ -53,7 +58,7 @@ export async function findOrCreateClient(data: {
 
   // 1. Buscar por email canónico
   if (cleanEmail) {
-    const user = await db.user.findUnique({
+    const user = await prismaClient.user.findUnique({
       where: { email: cleanEmail },
       include: { clientProfile: true }
     })
@@ -64,7 +69,7 @@ export async function findOrCreateClient(data: {
 
   // 2. Si no se encontró por email, buscar por teléfono normalizado de 10 dígitos
   if (!clientProfile && cleanPhone) {
-    clientProfile = await db.clientProfile.findFirst({
+    clientProfile = await prismaClient.clientProfile.findFirst({
       where: {
         OR: [
           { whatsapp: cleanPhone },
@@ -83,7 +88,7 @@ export async function findOrCreateClient(data: {
     if (cleanPhone && !clientProfile.whatsapp) profileUpdates.whatsapp = cleanPhone
 
     if (Object.keys(profileUpdates).length > 0) {
-      await db.clientProfile.update({
+      await prismaClient.clientProfile.update({
         where: { id: clientProfile.id },
         data: profileUpdates
       }).catch(() => null)
@@ -92,26 +97,24 @@ export async function findOrCreateClient(data: {
     return clientProfile.id
   }
 
-  // 4. Si no existe, crear usuario y perfil de forma atómica en transacción
-  return await db.$transaction(async (tx) => {
-    const newUser = await tx.user.create({
-      data: {
-        name: cleanName,
-        email: cleanEmail,
-        role: "CLIENT"
-      }
-    })
-
-    const newProfile = await tx.clientProfile.create({
-      data: {
-        userId: newUser.id,
-        whatsapp: cleanPhone,
-        city: cleanCity,
-        state: cleanState,
-        type: "social"
-      }
-    })
-
-    return newProfile.id
+  // 4. Si no existe, crear usuario y perfil
+  const newUser = await prismaClient.user.create({
+    data: {
+      name: cleanName,
+      email: cleanEmail,
+      role: "CLIENT"
+    }
   })
+
+  const newProfile = await prismaClient.clientProfile.create({
+    data: {
+      userId: newUser.id,
+      whatsapp: cleanPhone,
+      city: cleanCity,
+      state: cleanState,
+      type: "social"
+    }
+  })
+
+  return newProfile.id
 }

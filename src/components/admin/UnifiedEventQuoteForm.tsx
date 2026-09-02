@@ -366,6 +366,7 @@ export function UnifiedEventQuoteForm({
           depositAmount: totals.depositAmount,
           totalAmount: totals.totalAmount,
           balanceAmount: totals.balanceAmount,
+          originInquiryId: initialData?.originInquiryId || null,
         }
 
         const res = await saveUnifiedEventQuoteAction(payload)
@@ -376,8 +377,12 @@ export function UnifiedEventQuoteForm({
               ? "Registro actualizado exitosamente"
               : "Evento / Cotización creada exitosamente"
           )
+          const targetBookingId = "bookingId" in res ? res.bookingId : undefined
           if (onSuccess) {
             onSuccess()
+          } else if (targetBookingId) {
+            router.push(`/admin/ventas/${targetBookingId}`)
+            router.refresh()
           } else {
             router.push("/admin/ventas")
             router.refresh()

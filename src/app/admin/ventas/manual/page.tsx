@@ -5,7 +5,55 @@ import { ShieldCheck, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
-export default async function ManualBookingPage() {
+import { redirect } from "next/navigation"
+
+interface ManualBookingPageProps {
+  searchParams?: Promise<{
+    inquiryId?: string
+  }>
+}
+
+export default async function ManualBookingPage({ searchParams }: ManualBookingPageProps) {
+  const resolvedParams = searchParams ? await searchParams : undefined
+  const inquiryId = resolvedParams?.inquiryId
+
+  let prefillInquiry: {
+    clientName: string
+    clientPhone?: string
+    clientEmail?: string
+    clientId?: string
+    customName?: string
+    eventDate?: string
+    musicianNotes?: string
+    originInquiryId?: string
+    status?: string
+  } | undefined = undefined
+
+  if (inquiryId) {
+    const inquiry = await db.contactInquiry.findUnique({
+      where: { id: inquiryId }
+    })
+
+    if (inquiry) {
+      // Si ya fue convertido previamente, redirigir a la cotización existente
+      if (inquiry.convertedBookingId) {
+        redirect(`/admin/ventas/${inquiry.convertedBookingId}`)
+      }
+
+      prefillInquiry = {
+        clientName: inquiry.name,
+        clientPhone: inquiry.phone || "",
+        clientEmail: inquiry.email || "",
+        clientId: inquiry.matchedClientId || undefined,
+        customName: inquiry.eventType ? `Consulta: ${inquiry.eventType}` : "",
+        eventDate: inquiry.requestedDate ? inquiry.requestedDate.toISOString().split("T")[0] : "",
+        musicianNotes: inquiry.message ? `Solicitud Web (${inquiry.eventType || "General"}): ${inquiry.message}` : "",
+        originInquiryId: inquiry.id,
+        status: "pendiente"
+      }
+    }
+  }
+
   const [packages, clients, locations] = await Promise.all([
     db.package.findMany({
       orderBy: { baseCostPerHour: "asc" }
@@ -65,7 +113,9 @@ export default async function ManualBookingPage() {
                 <ShieldCheck className="text-primary w-7 h-7" /> Nueva Cotización / Evento Manual
               </h1>
               <p className="text-muted-foreground text-xs md:text-sm mt-0.5">
-                Formulario administrativo unificado con precarga de clientes, venues y conceptos adicionales.
+                {prefillInquiry 
+                  ? `Convirtiendo prospecto de contacto de ${prefillInquiry.clientName} a cotización formal.` 
+                  : "Formulario administrativo unificado con precarga de clientes, venues y conceptos adicionales."}
               </p>
             </div>
           </div>
@@ -74,6 +124,7 @@ export default async function ManualBookingPage() {
         {/* Formulario Unificado */}
         <UnifiedEventQuoteForm
           mode="create"
+          initialData={prefillInquiry}
           packages={formattedPackages}
           clients={formattedClients}
           venues={formattedVenues}

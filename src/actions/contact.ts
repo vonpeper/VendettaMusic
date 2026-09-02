@@ -97,8 +97,9 @@ export async function submitContactInquiry(formData: FormData) {
 }
 
 /**
- * Convierte un ContactInquiry en una solicitud / cotización formal (BookingRequest)
- * Acción administrativa explícita e idempotente.
+ * Consulta y valida un ContactInquiry para su conversión en cotización formal.
+ * No crea registros dummy; retorna la URL de redirección al formulario administrativo unificado
+ * o el ID de la cotización si ya fue convertida previamente.
  */
 export async function convertInquiryToBookingAction(inquiryId: string) {
   try {
@@ -121,54 +122,24 @@ export async function convertInquiryToBookingAction(inquiryId: string) {
         where: { id: inquiry.convertedBookingId }
       })
       if (existing) {
-        return { success: true, bookingId: existing.id, shortId: existing.shortId }
+        return { 
+          success: true, 
+          bookingId: existing.id, 
+          shortId: existing.shortId,
+          alreadyConverted: true,
+          redirectUrl: `/admin/ventas/${existing.id}`
+        }
       }
     }
 
-    const shortId = "VND-" + crypto.randomBytes(2).toString("hex").toUpperCase()
-
-    const booking = await db.$transaction(async (tx) => {
-      const newBooking = await tx.bookingRequest.create({
-        data: {
-          shortId,
-          clientName: inquiry.name,
-          clientPhone: inquiry.phone || "",
-          clientEmail: inquiry.email,
-          packageName: inquiry.eventType || "",
-          venueType: "",
-          address: "",
-          city: "",
-          state: "",
-          requestedDate: inquiry.requestedDate || new Date(0),
-          startTime: "",
-          endTime: "",
-          baseAmount: 0,
-          depositAmount: 0,
-          paymentMethod: "",
-          status: "pendiente",
-          source: "contacto",
-          adminNote: inquiry.message ? `Mensaje de contacto: ${inquiry.message}` : null,
-          clientId: inquiry.matchedClientId || null,
-          requiresManualQuote: true
-        }
-      })
-
-      await tx.contactInquiry.update({
-        where: { id: inquiryId },
-        data: {
-          status: "converted",
-          convertedBookingId: newBooking.id
-        }
-      })
-
-      return newBooking
-    })
-
-    revalidatePath("/admin/ventas")
-    revalidatePath("/admin/prospectos")
-    return { success: true, bookingId: booking.id, shortId: booking.shortId }
+    // Si aún no ha sido convertido, retornar la ruta al formulario administrativo de cotización con prellenado
+    return {
+      success: true,
+      alreadyConverted: false,
+      redirectUrl: `/admin/ventas/manual?inquiryId=${inquiry.id}`
+    }
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Error al convertir el prospecto"
+    const message = err instanceof Error ? err.message : "Error al procesar la conversión del prospecto"
     return { success: false, error: message }
   }
 }

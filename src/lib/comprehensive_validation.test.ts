@@ -7,6 +7,8 @@ import { normalizeClientEmail, normalizeClientPhone } from "./clients"
 import { getValidMapsLink } from "./locations"
 import { saveUnifiedEventQuoteSchema } from "@/actions/events"
 import { contactSchema } from "@/actions/contact"
+import { createUnifiedQuote, convertQuoteToEvent } from "./quote-service"
+import { generateUniqueShortId, isValidShortIdFormat } from "./folios"
 import { execSync } from "child_process"
 import fs from "fs"
 
@@ -15,7 +17,7 @@ const TEST_DB_URL = `file:${TEST_DB_PATH}`
 
 let testPrisma: PrismaClient
 
-describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechable + Unitarias)", () => {
+describe("Validación Exhaustiva de las 16 Reglas de Negocio (Servicios Productivos + Base Real)", () => {
   before(() => {
     // 1. Limpiar base de datos desechable
     if (fs.existsSync(TEST_DB_PATH)) fs.unlinkSync(TEST_DB_PATH)
@@ -38,51 +40,44 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechab
   it("Regla 1: Guardar cotización PENDIENTE crea BookingRequest pero NO crea Event", async () => {
     const eventCountBefore = await testPrisma.event.count()
     
-    const booking = await testPrisma.bookingRequest.create({
-      data: {
-        shortId: "VND-TEST1",
+    const result = await testPrisma.$transaction(async (tx) => {
+      return await createUnifiedQuote(tx, {
         clientName: "Cliente Pendiente 1",
         clientEmail: "pendiente1@test.com",
         clientPhone: "5512345678",
-        packageName: "Paquete Básico",
-        venueType: "salon",
-        address: "Por definir",
-        city: "Toluca",
-        requestedDate: new Date("2026-11-20T12:00:00Z"),
-        startTime: "21:00",
-        endTime: "23:00",
-        baseAmount: 15000,
+        eventDate: "2026-11-20",
+        basePrice: 15000,
         depositAmount: 5000,
-        paymentMethod: "transfer",
-        paymentStatus: "pending",
         status: "pendiente",
-        source: "admin",
-        lineItems: {
-          create: [
-            { description: "Luces adicionales", quantity: 2, unitCost: 1500, lineTotal: 3000, order: 0 }
-          ]
-        }
-      },
-      include: { lineItems: true }
+        additionalItems: [
+          { description: "Luces adicionales", quantity: 2, unitCost: 1500, order: 0 }
+        ]
+      })
     })
 
     const eventCountAfter = await testPrisma.event.count()
+    const booking = await testPrisma.bookingRequest.findUnique({
+      where: { id: result.bookingId },
+      include: { lineItems: true }
+    })
     
-    assert.ok(booking.id)
+    assert.ok(booking)
     assert.equal(booking.status, "pendiente")
     assert.equal(booking.eventId, null)
+    assert.equal(result.eventId, null)
     assert.equal(eventCountAfter, eventCountBefore, "No se debe haber creado ningún Event")
     assert.equal(booking.lineItems.length, 1)
+    assert.ok(isValidShortIdFormat(booking.shortId), "El shortId debe tener formato de 80 bits seguro")
   })
 
   // 2. Guardar pendiente dos veces no duplica cotizaciones ni conceptos
   it("Regla 2: Guardar pendiente dos veces (edición) no duplica cotización ni conceptos", async () => {
     const booking = await testPrisma.bookingRequest.findFirst({
-      where: { shortId: "VND-TEST1" }
+      where: { clientEmail: "pendiente1@test.com" }
     })
     assert.ok(booking)
 
-    // Simular actualización con reemplazo de lineItems
+    // Actualización atómica con reemplazo relacional de lineItems
     await testPrisma.$transaction(async (tx) => {
       await tx.bookingRequest.update({
         where: { id: booking.id },
@@ -102,154 +97,114 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechab
       })
     })
 
-    const allBookings = await testPrisma.bookingRequest.findMany({ where: { shortId: "VND-TEST1" } })
-    const lineItems = await testPrisma.bookingLineItem.findMany({ where: { bookingRequestId: booking.id } })
+    const items = await testPrisma.bookingLineItem.findMany({
+      where: { bookingRequestId: booking.id }
+    })
+    const countBookings = await testPrisma.bookingRequest.count({
+      where: { clientEmail: "pendiente1@test.com" }
+    })
 
-    assert.equal(allBookings.length, 1, "Debe haber exactamente 1 booking")
-    assert.equal(lineItems.length, 1, "Debe haber exactamente 1 lineItem (no duplicado)")
-    assert.equal(lineItems[0].description, "Luces adicionales actualizadas")
+    assert.equal(countBookings, 1, "Debe seguir existiendo una sola cotización")
+    assert.equal(items.length, 1, "No debe duplicar conceptos adicionales")
+    assert.equal(items[0].description, "Luces adicionales actualizadas")
   })
 
-  // 3. Agendado crea exactamente un evento
+  // 3. Transición a agendado crea exactamente 1 Event y vincula eventId
   it("Regla 3: Transición a AGENDADO crea exactamente 1 Event y vincula BookingRequest.eventId", async () => {
-    // Crear booking específico para transición a agendado
-    const booking = await testPrisma.bookingRequest.create({
-      data: {
-        shortId: "VND-TO-SCHEDULE",
-        clientName: "Cliente A Agendar",
-        clientEmail: "agendar@test.com",
-        clientPhone: "5512345678",
-        packageName: "Paquete Básico",
-        venueType: "salon",
-        address: "Salón Principal",
-        city: "Toluca",
-        requestedDate: new Date("2026-11-25T12:00:00Z"),
-        startTime: "21:00",
-        endTime: "23:00",
-        baseAmount: 18000,
-        depositAmount: 6000,
-        paymentMethod: "transfer",
-        paymentStatus: "pending",
-        status: "pendiente",
-        source: "admin"
-      }
+    const booking = await testPrisma.bookingRequest.findFirst({
+      where: { clientEmail: "pendiente1@test.com" }
+    })
+    assert.ok(booking)
+    assert.equal(booking.eventId, null)
+
+    const eventsBefore = await testPrisma.event.count()
+
+    // Llamar al servicio de dominio productivo convertQuoteToEvent
+    const conversion = await testPrisma.$transaction(async (tx) => {
+      return await convertQuoteToEvent(tx, booking.id)
     })
 
-    const eventCountBefore = await testPrisma.event.count()
-
-    const event = await testPrisma.$transaction(async (tx) => {
-      const createdEvent = await tx.event.create({
-        data: {
-          customName: `Evento ${booking.clientName}`,
-          date: booking.requestedDate,
-          startTime: booking.startTime,
-          performanceStart: booking.startTime,
-          performanceEnd: booking.endTime,
-          amount: booking.baseAmount,
-          deposit: booking.depositAmount,
-          balance: booking.baseAmount - (booking.depositAmount || 0),
-          totalWithTax: booking.baseAmount,
-          totalIncome: 0,
-          status: "scheduled",
-          source: "admin"
-        }
-      })
-
-      await tx.bookingRequest.update({
-        where: { id: booking.id },
-        data: {
-          status: "agendado",
-          eventId: createdEvent.id
-        }
-      })
-
-      return createdEvent
+    const eventsAfter = await testPrisma.event.count()
+    const updatedBooking = await testPrisma.bookingRequest.findUnique({
+      where: { id: booking.id }
     })
 
-    const eventCountAfter = await testPrisma.event.count()
-    const updatedBooking = await testPrisma.bookingRequest.findUnique({ where: { id: booking.id } })
-
-    assert.equal(eventCountAfter, eventCountBefore + 1)
-    assert.equal(updatedBooking?.eventId, event.id)
-    assert.equal(event.totalIncome, 0, "totalIncome debe permanecer en 0")
+    assert.equal(eventsAfter, eventsBefore + 1, "Debe crear exactamente 1 Event")
+    assert.ok(conversion.eventId)
+    assert.equal(conversion.isNew, true)
+    assert.equal(updatedBooking?.eventId, conversion.eventId)
+    assert.equal(updatedBooking?.status, "agendado")
   })
 
-  // 4. Guardar agendado repetidamente no duplica el evento
+  // 4. Guardar agendado repetidamente es idempotente
   it("Regla 4: Guardar en estado agendado repetidamente es IDEMPOTENTE (no duplica evento)", async () => {
     const booking = await testPrisma.bookingRequest.findFirst({
-      where: { shortId: "VND-TO-SCHEDULE" }
+      where: { clientEmail: "pendiente1@test.com" }
     })
     assert.ok(booking?.eventId)
 
-    const eventCountBefore = await testPrisma.event.count()
+    const eventsBefore = await testPrisma.event.count()
 
-    // Simular convertBookingToEventAction o saveUnifiedEventQuoteAction
-    if (booking.eventId) {
-      // Ya tiene evento vinculado, se actualiza el existente sin crear uno nuevo
-      await testPrisma.event.update({
-        where: { id: booking.eventId },
-        data: { customName: "Evento Actualizado Idempotente" }
-      })
-    }
+    // Re-ejecutar conversión
+    const reConversion = await testPrisma.$transaction(async (tx) => {
+      return await convertQuoteToEvent(tx, booking.id)
+    })
 
-    const eventCountAfter = await testPrisma.event.count()
-    assert.equal(eventCountAfter, eventCountBefore, "No se debe duplicar el evento")
+    const eventsAfter = await testPrisma.event.count()
+
+    assert.equal(eventsAfter, eventsBefore, "No debe crear eventos adicionales")
+    assert.equal(reConversion.eventId, booking.eventId)
+    assert.equal(reConversion.isNew, false)
   })
 
-  // 5. Completado reutiliza el evento existente y no altera pagos
+  // 5. Transición a completado reutiliza evento y no inventa pagos
   it("Regla 5: Transición a COMPLETADO reutiliza el evento y no marca automáticamente como pagado", async () => {
     const booking = await testPrisma.bookingRequest.findFirst({
-      where: { shortId: "VND-TO-SCHEDULE" }
+      where: { clientEmail: "pendiente1@test.com" }
     })
     assert.ok(booking?.eventId)
 
-    await testPrisma.event.update({
-      where: { id: booking.eventId },
-      data: { status: "completado" }
+    const paymentsBefore = await testPrisma.payment.count()
+
+    await testPrisma.$transaction(async (tx) => {
+      await tx.event.update({
+        where: { id: booking.eventId! },
+        data: { status: "completado" }
+      })
+      await tx.bookingRequest.update({
+        where: { id: booking.id },
+        data: { status: "completado" }
+      })
     })
 
-    const updatedBooking = await testPrisma.bookingRequest.findUnique({ where: { id: booking.id } })
-    const updatedEvent = await testPrisma.event.findUnique({ where: { id: booking.eventId } })
+    const paymentsAfter = await testPrisma.payment.count()
+    const event = await testPrisma.event.findUnique({ where: { id: booking.eventId! } })
 
-    assert.equal(updatedEvent?.status, "completado")
-    assert.equal(updatedBooking?.paymentStatus, "pending", "paymentStatus no debe cambiar mágicamente a paid")
-    assert.equal(updatedEvent?.totalIncome, 0, "totalIncome sigue siendo 0 sin pagos reales")
+    assert.equal(paymentsAfter, paymentsBefore, "No debe inventar pagos en BD")
+    assert.equal(event?.totalIncome, 0, "El ingreso real debe mantenerse en 0 hasta que haya pagos registrados")
+    assert.equal(event?.status, "completado")
   })
 
-  // 6. Los conceptos persisten y se precargan relacionalmente
+  // 6. Conceptos adicionales persisten en tabla relacional
   it("Regla 6: Conceptos adicionales (BookingLineItem) persisten en BD relacional y se precargan", async () => {
-    const booking = await testPrisma.bookingRequest.create({
-      data: {
-        shortId: "VND-LINEITEMS",
-        clientName: "Cliente Con Conceptos",
-        clientEmail: "conceptos@test.com",
-        clientPhone: "5512345678",
-        packageName: "Paquete Rock",
-        venueType: "jardin",
-        address: "Av. Las Torres 100",
-        city: "Metepec",
-        requestedDate: new Date("2026-12-01T12:00:00Z"),
-        startTime: "20:00",
-        endTime: "22:00",
-        baseAmount: 20000,
-        depositAmount: 0,
-        paymentMethod: "transfer",
-        paymentStatus: "pending",
+    const result = await testPrisma.$transaction(async (tx) => {
+      return await createUnifiedQuote(tx, {
+        clientName: "Cliente Con Adicionales",
+        clientEmail: "adicionales@demo.com",
+        clientPhone: "5588990011",
+        eventDate: "2026-12-05",
+        basePrice: 20000,
         status: "pendiente",
-        source: "admin",
-        lineItems: {
-          create: [
-            { description: "Pantalla Gigante", quantity: 1, unitCost: 8000, lineTotal: 8000, order: 0 },
-            { description: "Hora Extra", quantity: 2, unitCost: 4000, lineTotal: 8000, order: 1 }
-          ]
-        }
-      },
-      include: { lineItems: { orderBy: { order: "asc" } } }
+        additionalItems: [
+          { description: "Pantalla Gigante", quantity: 1, unitCost: 8000, order: 0 },
+          { description: "Hora Extra", quantity: 2, unitCost: 4000, order: 1 }
+        ]
+      })
     })
 
     // Precarga desde base de datos
     const reloaded = await testPrisma.bookingRequest.findUnique({
-      where: { id: booking.id },
+      where: { id: result.bookingId },
       include: { lineItems: { orderBy: { order: "asc" } } }
     })
 
@@ -415,59 +370,42 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechab
     assert.equal(eventsAfter, eventsBefore, "No debe crear Event")
   })
 
-  // 14. Conversión administrativa de prospecto es idempotente
-  it("Regla 14: Conversión de ContactInquiry a BookingRequest es idempotente y sin datos inventados", async () => {
+  // 14. Conversión administrativa de prospecto es limpia y sin placeholders de 1970
+  it("Regla 14: Conversión de ContactInquiry a BookingRequest es limpia, atómica y sin datos inventados", async () => {
     const inquiry = await testPrisma.contactInquiry.create({
       data: {
         name: "Prospecto David",
         email: "david@test.com",
         phone: "5588776655",
+        eventType: "Graduación",
+        message: "Cotización para 100 personas",
         status: "new"
       }
     })
 
-    // Conversión 1 (usando la lógica canónica limpia)
-    const booking1 = await testPrisma.$transaction(async (tx) => {
-      const b = await tx.bookingRequest.create({
-        data: {
-          shortId: "VND-DAVID1",
-          clientName: inquiry.name,
-          clientEmail: inquiry.email,
-          clientPhone: inquiry.phone || "",
-          packageName: inquiry.eventType || "",
-          venueType: "",
-          address: "",
-          city: "",
-          state: "",
-          requestedDate: inquiry.requestedDate || new Date(0),
-          startTime: "",
-          endTime: "",
-          baseAmount: 0,
-          depositAmount: 0,
-          paymentMethod: "",
-          paymentStatus: "pending",
-          status: "pendiente"
-        }
+    // El admin completa los datos reales y guarda
+    const quoteResult = await testPrisma.$transaction(async (tx) => {
+      return await createUnifiedQuote(tx, {
+        originInquiryId: inquiry.id,
+        clientName: inquiry.name,
+        clientEmail: inquiry.email,
+        clientPhone: inquiry.phone,
+        customName: "Graduación David",
+        eventDate: "2026-12-18",
+        basePrice: 18000,
+        status: "pendiente"
       })
-      await tx.contactInquiry.update({
-        where: { id: inquiry.id },
-        data: { status: "converted", convertedBookingId: b.id }
-      })
-      return b
     })
 
-    // Conversión 2 (idempotente)
     const inquiryUpdated = await testPrisma.contactInquiry.findUnique({ where: { id: inquiry.id } })
-    let returnedBookingId = booking1.id
-    if (inquiryUpdated?.convertedBookingId) {
-      returnedBookingId = inquiryUpdated.convertedBookingId
-    }
+    const createdBooking = await testPrisma.bookingRequest.findUnique({ where: { id: quoteResult.bookingId } })
 
-    assert.equal(returnedBookingId, booking1.id)
     assert.equal(inquiryUpdated?.status, "converted")
-    assert.equal(booking1.venueType, "", "No debe inventar tipo de venue")
-    assert.equal(booking1.startTime, "", "No debe inventar horario")
-    assert.equal(booking1.address, "", "No debe inventar dirección")
+    assert.equal(inquiryUpdated?.convertedBookingId, quoteResult.bookingId)
+    assert.ok(createdBooking)
+    assert.notEqual(createdBooking.requestedDate.toISOString(), new Date(0).toISOString(), "No debe tener fecha de 1970")
+    assert.equal(createdBooking.baseAmount, 18000, "Debe tener el precio real asignado por el admin")
+    assert.equal(createdBooking.eventId, null, "No debe crear Event hasta que se pase a agendado")
   })
 
   // 15. Usuario no autorizado es rechazado en Server Actions

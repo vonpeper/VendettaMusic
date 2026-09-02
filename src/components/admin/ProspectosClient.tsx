@@ -328,12 +328,13 @@ export function ProspectosClient({ initialInquiries }: ProspectosClientProps) {
                     </Button>
                   ) : (
                     <Button
-                      onClick={() => handleConvertToBooking(selectedInquiry.id)}
-                      disabled={isPending}
+                      asChild
                       className="w-full h-10 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold cursor-pointer"
                     >
-                      <RefreshCw className={`w-4 h-4 ${isPending ? "animate-spin" : ""}`} /> 
-                      Convertir a Cotización Formal
+                      <Link href={`/admin/ventas/manual?inquiryId=${selectedInquiry.id}`}>
+                        <ArrowRight className="w-4 h-4" /> 
+                        Convertir a Cotización Formal
+                      </Link>
                     </Button>
                   )}
 

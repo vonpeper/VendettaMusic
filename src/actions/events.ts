@@ -836,6 +836,8 @@ import { normalizeClientEmail, normalizeClientPhone } from "@/lib/clients"
 import { getValidMapsLink } from "@/lib/locations"
 import { auth } from "@/lib/auth"
 import { z } from "zod"
+import { createUnifiedQuote, convertQuoteToEvent } from "@/lib/quote-service"
+import { generateUniqueShortId } from "@/lib/folios"
 
 export const saveUnifiedEventQuoteSchema = z.object({
   mode: z.enum(["create", "edit"]).default("create"),
@@ -880,6 +882,7 @@ export const saveUnifiedEventQuoteSchema = z.object({
   })).default([]),
   invoice: z.boolean().default(false),
   depositAmount: z.number().min(0).nullable().optional(),
+  originInquiryId: z.string().nullable().optional(),
 })
 
 export type SaveUnifiedEventQuotePayload = z.infer<typeof saveUnifiedEventQuoteSchema>
@@ -1126,99 +1129,41 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
 
         return { id: val.targetId, bookingId, eventId }
       } else {
-        // D. Modo Creación
-        const shortId = "VND-" + crypto.randomBytes(2).toString("hex").toUpperCase()
-
-        let createdEventId: string | null = null
-
-        // REGLA FUNDAMENTAL: Sólo crear Event si el estatus es 'agendado' o 'completado'.
-        // Si el estatus es 'pendiente', NO se crea Event, ni agenda, ni asignaciones de músicos.
-        if (val.status === "agendado" || val.status === "completado") {
-          const newEvent = await tx.event.create({
-            data: {
-              customName: val.customName || `Evento ${val.clientName}`,
-              ceremonyType: val.ceremonyType || "boda",
-              date: dateObj,
-              startTime: val.startTime || "21:00",
-              performanceStart: val.startTime || "21:00",
-              performanceEnd: val.endTime || "23:00",
-              arrivalTime: val.arrivalTime || "19:00",
-              setupTime: val.setupTime || "17:00",
-              guestCount: val.guestCount || 0,
-              dressCode: val.dressCode || "formal",
-              musicianNotes: val.musicianNotes || null,
-              audioEngineer: val.audioEngineer || null,
-              package: val.packageId ? { connect: { id: val.packageId } } : undefined,
-              location: finalLocationId ? { connect: { id: finalLocationId } } : undefined,
-              client: finalClientId ? { connect: { id: finalClientId } } : undefined,
-              amount: totals.subtotal,
-              deposit: totals.depositAmount,
-              balance: totals.balanceAmount,
-              ivaAmount: totals.ivaAmount,
-              totalWithTax: totals.totalAmount,
-              totalIncome: 0,
-              invoice: Boolean(val.invoice),
-              status: val.status === "completado" ? "completado" : "scheduled",
-              mapsLink: val.mapsLink || null,
-              source: "admin"
-            }
-          })
-          createdEventId = newEvent.id
-        }
-
-        // Crear BookingRequest
-        const newBooking = await tx.bookingRequest.create({
-          data: {
-            shortId,
-            clientName: val.clientName,
-            clientPhone: val.clientPhone || "",
-            clientEmail: val.clientEmail || null,
-            clientId: finalClientId || null,
-            customName: val.customName || null,
-            ceremonyType: val.ceremonyType || "boda",
-            requestedDate: dateObj,
-            startTime: val.startTime || "21:00",
-            endTime: val.endTime || "23:00",
-            arrivalTime: val.arrivalTime || "19:00",
-            setupTime: val.setupTime || "17:00",
-            guestCount: val.guestCount || 0,
-            dressCode: val.dressCode || "formal",
-            musicianNotes: val.musicianNotes || null,
-            venueType: "salon",
-            packageId: val.packageId || null,
-            packageName: val.packageName || "Paquete Personalizado",
-            baseAmount: totals.basePrice,
-            viaticosAmount: totals.viaticosAmount,
-            discountAmount: totals.discountAmount,
-            invoice: Boolean(val.invoice),
-            depositAmount: totals.depositAmount,
-            paymentMethod: "transfer",
-            paymentStatus: "pending",
-            address: val.venueAddress || val.venueName || "Por confirmar",
-            city: val.venueCity || "Toluca",
-            state: val.venueState || "México",
-            mapsLink: val.mapsLink || null,
-            status: val.status,
-            eventId: createdEventId,
-            source: "admin"
-          }
+        // D. Modo Creación: Delegar al servicio de dominio canónico
+        return await createUnifiedQuote(tx, {
+          clientId: finalClientId,
+          clientName: val.clientName,
+          clientPhone: val.clientPhone,
+          clientEmail: val.clientEmail,
+          clientCity: val.clientCity,
+          customName: val.customName,
+          ceremonyType: val.ceremonyType,
+          eventDate: val.eventDate,
+          startTime: val.startTime,
+          endTime: val.endTime,
+          arrivalTime: val.arrivalTime,
+          setupTime: val.setupTime,
+          guestCount: val.guestCount,
+          dressCode: val.dressCode,
+          status: val.status,
+          musicianNotes: val.musicianNotes,
+          audioEngineer: val.audioEngineer,
+          locationId: finalLocationId,
+          venueName: val.venueName,
+          venueAddress: val.venueAddress,
+          venueCity: val.venueCity,
+          venueState: val.venueState,
+          mapsLink: val.mapsLink,
+          packageId: val.packageId,
+          packageName: val.packageName,
+          basePrice: val.basePrice,
+          viaticosAmount: val.viaticosAmount,
+          discountAmount: val.discountAmount,
+          additionalItems: val.additionalItems,
+          invoice: val.invoice,
+          depositAmount: val.depositAmount,
+          originInquiryId: val.originInquiryId,
         })
-
-        // Guardar conceptos adicionales en BookingLineItem
-        if (val.additionalItems.length > 0) {
-          await tx.bookingLineItem.createMany({
-            data: val.additionalItems.map((item, idx) => ({
-              bookingRequestId: newBooking.id,
-              description: item.description,
-              quantity: item.quantity,
-              unitCost: item.unitCost,
-              lineTotal: item.quantity * item.unitCost,
-              order: item.order ?? idx
-            }))
-          })
-        }
-
-        return { bookingId: newBooking.id, eventId: createdEventId, shortId }
       }
     })
 
@@ -1244,77 +1189,17 @@ export async function convertBookingToEventAction(bookingId: string) {
       return { success: false, error: "No autorizado. Se requiere sesión de administrador." }
     }
 
-    const booking = await db.bookingRequest.findUnique({
-      where: { id: bookingId },
-      include: { event: true, client: true, lineItems: true }
-    })
-
-    if (!booking) {
-      return { success: false, error: "Reservación no encontrada" }
-    }
-
-    // Idempotencia: Si ya tiene Evento creado, retornar el ID existente sin duplicar
-    if (booking.eventId && booking.event) {
-      return { success: true, eventId: booking.eventId, alreadyConverted: true }
-    }
-
-    const event = await db.$transaction(async (tx) => {
-      const totals = calculateQuoteTotals({
-        basePrice: booking.baseAmount,
-        viaticosAmount: booking.viaticosAmount,
-        discountAmount: booking.discountAmount,
-        additionalItems: booking.lineItems,
-        invoice: booking.invoice,
-        depositAmount: booking.depositAmount
-      })
-
-      const newEvent = await tx.event.create({
-        data: {
-          customName: booking.customName || `Evento ${booking.clientName}`,
-          ceremonyType: booking.ceremonyType || "boda",
-          date: booking.requestedDate,
-          startTime: booking.startTime,
-          performanceStart: booking.startTime,
-          performanceEnd: booking.endTime,
-          arrivalTime: booking.arrivalTime || "19:00",
-          setupTime: booking.setupTime || "17:00",
-          guestCount: booking.guestCount || 0,
-          dressCode: booking.dressCode || "formal",
-          musicianNotes: booking.musicianNotes || null,
-          packageId: booking.packageId,
-          clientId: booking.clientId,
-          amount: totals.subtotal,
-          deposit: totals.depositAmount,
-          balance: totals.balanceAmount,
-          ivaAmount: totals.ivaAmount,
-          totalWithTax: totals.totalAmount,
-          totalIncome: 0,
-          invoice: booking.invoice,
-          status: "scheduled",
-          mapsLink: booking.mapsLink,
-          source: booking.source || "admin"
-        }
-      })
-
-      await tx.bookingRequest.update({
-        where: { id: bookingId },
-        data: {
-          status: "agendado",
-          eventId: newEvent.id
-        }
-      })
-
-      return newEvent
+    const result = await db.$transaction(async (tx) => {
+      return await convertQuoteToEvent(tx, bookingId)
     })
 
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/ventas")
-    revalidatePath(`/admin/ventas/${bookingId}`)
     revalidatePath("/agenda")
 
-    return { success: true, eventId: event.id }
+    return { success: true, eventId: result.eventId, alreadyConverted: !result.isNew }
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Error al convertir a evento"
-    return { success: false, error: msg }
+    const message = err instanceof Error ? err.message : "Error al convertir cotización a evento"
+    return { success: false, error: message }
   }
 }
