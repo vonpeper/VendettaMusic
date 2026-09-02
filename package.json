@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 3006",
     "lint": "eslint",
-    "ts-check": "tsc --noEmit"
+    "ts-check": "tsc --noEmit",
+    "test": "tsx --test src/lib/*.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
