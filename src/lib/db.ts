@@ -22,7 +22,6 @@ const adapter = new PrismaLibSql({
 export const db: PrismaClient =
   globalForPrisma.prisma ??
   new PrismaClient({
-    // @ts-ignore - Prisma 7 adapter factory
     adapter,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   })

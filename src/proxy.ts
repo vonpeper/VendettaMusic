@@ -4,7 +4,6 @@ import { NextResponse } from "next/server"
 
 const { auth } = NextAuth(authConfig)
 
-const publicRoutes = ["/", "/nosotros", "/servicios", "/paquetes", "/repertorio", "/contacto"]
 const authRoutes = ["/auth/login", "/auth/registro"]
 
 // Bots de buscadores y previews que NO debemos geo-bloquear
@@ -27,7 +26,6 @@ export default auth((req) => {
   const role = req.auth?.user?.role as string | undefined
 
   const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth")
-  const isPublicRoute = publicRoutes.includes(nextUrl.pathname)
   const isAuthRoute = authRoutes.includes(nextUrl.pathname)
 
   if (isApiAuthRoute) return NextResponse.next()

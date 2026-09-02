@@ -1,5 +1,6 @@
-import { verifyResourceToken } from "@/lib/security"
 "use server"
+
+import { verifyResourceToken } from "@/lib/security"
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"

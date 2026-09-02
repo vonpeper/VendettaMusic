@@ -27,7 +27,7 @@ export function verifyResourceToken(resourceId: string, token?: string | null): 
     
     if (token.length !== expected.length) return false
     return crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected))
-  } catch (err) {
+  } catch {
     return false
   }
 }

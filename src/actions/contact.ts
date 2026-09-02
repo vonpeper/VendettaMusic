@@ -59,7 +59,8 @@ export async function submitContactInquiry(formData: FormData) {
     })
 
     return { success: true, shortId }
-  } catch (err: any) {
-    return { success: false, error: err?.message || "Error al procesar la solicitud" }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Error al procesar la solicitud"
+    return { success: false, error: message }
   }
 }
