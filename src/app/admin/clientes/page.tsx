@@ -12,7 +12,7 @@ export default async function AdminClientesPage() {
     include: {
       user: true,
       _count: {
-        select: { events: true, quotes: true }
+        select: { events: true, quotes: true, bookings: true }
       },
       events: {
         include: {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { 
   Table, 
   TableBody, 
@@ -10,6 +10,7 @@ import {
   TableRow 
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { 
   Users, 
   Trash2, 
@@ -18,12 +19,16 @@ import {
   Square,
   AlertTriangle,
   Mail,
-  MessageCircle,
+  Phone,
   MapPin,
-  Calendar
+  Calendar,
+  Search,
+  ArrowUpDown,
+  Layers,
+  FileQuestion,
+  Sparkles
 } from "lucide-react"
 import { toast } from "sonner"
-import { formatDateMX } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -48,13 +53,13 @@ interface ClientListItem {
   whatsapp: string | null
   city: string | null
   state: string | null
-
   company: string | null
   rfc: string | null
   notes: string | null
   _count: {
     events: number
     quotes: number
+    bookings?: number
   }
   events: { id: string; date: Date; contracts: any[] }[]
 }
@@ -67,14 +72,69 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "events_desc">("name_asc")
+  const [previewDuplicateClient, setPreviewDuplicateClient] = useState<ClientListItem | null>(null)
 
+  // Mapa de duplicados por teléfono normalizado (últimos 10 dígitos)
+  const duplicatePhoneMap = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const item of items) {
+      if (item.whatsapp) {
+        const last10 = item.whatsapp.replace(/\D/g, "").slice(-10)
+        if (last10.length === 10) {
+          const list = map.get(last10) || []
+          list.push(item.id)
+          map.set(last10, list)
+        }
+      }
+    }
+    return map
+  }, [items])
 
+  // Filtrado y ordenamiento de clientes
+  const processedClients = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+    const cleanTermPhone = term.replace(/\D/g, "")
+
+    let list = items.filter(c => {
+      const name = c.user.name?.toLowerCase() || ""
+      const email = c.user.email?.toLowerCase() || ""
+      const phone = c.whatsapp ? c.whatsapp.replace(/\D/g, "") : ""
+      const company = c.company?.toLowerCase() || ""
+      const city = c.city?.toLowerCase() || ""
+
+      const matchesSearch = !term || (
+        name.includes(term) ||
+        email.includes(term) ||
+        (cleanTermPhone && phone.includes(cleanTermPhone)) ||
+        company.includes(term) ||
+        city.includes(term)
+      )
+      return matchesSearch
+    })
+
+    list.sort((a, b) => {
+      if (sortBy === "name_asc") {
+        return (a.user.name || "").localeCompare(b.user.name || "")
+      }
+      if (sortBy === "name_desc") {
+        return (b.user.name || "").localeCompare(a.user.name || "")
+      }
+      if (sortBy === "events_desc") {
+        return (b._count.events + (b._count.bookings || 0)) - (a._count.events + (a._count.bookings || 0))
+      }
+      return 0
+    })
+
+    return list
+  }, [items, searchTerm, sortBy])
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === items.length) {
+    if (selectedIds.size === processedClients.length) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(items.map(i => i.id)))
+      setSelectedIds(new Set(processedClients.map(i => i.id)))
     }
   }
 
@@ -105,47 +165,57 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
 
   return (
     <div className="space-y-4">
-      {/* Barra de Acciones Masivas */}
+      {/* Controles de Búsqueda y Ordenamiento */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-border/40">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="Buscar por nombre, correo, teléfono o empresa..."
+            className="pl-9 bg-background text-sm h-10"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground font-semibold shrink-0">Ordenar:</span>
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value as any)}
+            className="h-10 rounded-md border border-input bg-background px-3 py-1 text-xs font-semibold"
+          >
+            <option value="name_asc">Nombre (A - Z)</option>
+            <option value="name_desc">Nombre (Z - A)</option>
+            <option value="events_desc">Más Actividad (Eventos)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Barra de Acciones por Lote */}
       {selectedIds.size > 0 && (
-        <div className="bg-primary/10 border border-primary/20 p-4 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-bold shadow-inner">
-              {selectedIds.size}
-            </div>
-            <div>
-              <p className="text-sm font-bold text-primary">Clientes seleccionados</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-tight">Listo para acción masiva</p>
-            </div>
-          </div>
-          
+        <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-xl flex items-center justify-between animate-in fade-in">
+          <span className="text-sm text-destructive font-bold flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            {selectedIds.size} cliente(s) seleccionado(s)
+          </span>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="destructive" className="gap-2 font-bold h-11 px-6 rounded-xl shadow-xl shadow-red-500/10 hover:scale-105 transition-transform text-white">
-                <Trash2 className="w-4 h-4" /> Eliminar permanentemente
+              <Button variant="destructive" size="sm" className="gap-2">
+                <Trash2 className="w-4 h-4" /> Eliminar seleccionados
               </Button>
             </DialogTrigger>
-            <DialogContent showCloseButton={false} className="bg-background border-border/20 backdrop-blur-2xl sm:max-w-[500px] text-foreground">
+            <DialogContent className="bg-card border-border">
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-red-500 text-xl font-black">
-                  <AlertTriangle className="w-6 h-6" /> ¿ESTÁS SEGURO?
-                </DialogTitle>
-                <DialogDescription className="text-gray-400 pt-4 text-base leading-relaxed">
-                  Estás por eliminar <strong>{selectedIds.size}</strong> perfiles de cliente definitivamente. 
-                  <span className="block mt-4 p-4 bg-red-950/40 border border-red-500/30 rounded-xl text-red-200 font-medium">
-                    Esto también borrará sus cuentas de usuario (email/password) y todo su historial de logs. No se podrán recuperar.
-                  </span>
+                <DialogTitle className="text-white">¿Confirmas la eliminación?</DialogTitle>
+                <DialogDescription>
+                  Se eliminarán permanentemente los {selectedIds.size} clientes seleccionados.
                 </DialogDescription>
               </DialogHeader>
-              <DialogFooter className="mt-8 gap-3">
-                <DialogClose render={<Button variant="ghost" className="rounded-xl border border-white/10 h-12 px-6 text-white hover:bg-white/10" />}>
-                  Cancelar operación
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="ghost">Cancelar</Button>
                 </DialogClose>
-                <Button 
-                  onClick={handleBulkDelete}
-                  disabled={loading}
-                  className="bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold h-12 px-8 shadow-lg shadow-red-600/20"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                <Button variant="destructive" onClick={handleBulkDelete} disabled={loading}>
+                  {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                   Confirmar Eliminación
                 </Button>
               </DialogFooter>
@@ -154,249 +224,187 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
         </div>
       )}
 
-      <div className="hidden md:block border border-border/40 rounded-2xl bg-card overflow-x-auto shadow-2xl">
-        <Table className="min-w-[900px]">
-          <TableHeader>
-            <TableRow className="border-border/40 hover:bg-transparent bg-white/[0.02]">
+      {/* Tabla de Clientes */}
+      <div className="rounded-2xl border border-border/40 bg-card overflow-hidden">
+        <Table>
+          <TableHeader className="bg-white/5">
+            <TableRow className="border-border/40 hover:bg-transparent">
               <TableHead className="w-12 text-center">
-                <button 
+                <button
+                  type="button"
                   onClick={toggleSelectAll}
-                  className="w-5 h-5 rounded-md border border-border/40 flex items-center justify-center hover:border-primary/50 transition-all mx-auto"
+                  className="text-muted-foreground hover:text-white"
                 >
-                  {selectedIds.size === items.length && items.length > 0 ? (
-                    <CheckSquare className="w-4 h-4 text-primary fill-primary/10" />
-                  ) : selectedIds.size > 0 ? (
-                    <div className="w-2.5 h-0.5 bg-primary" />
+                  {selectedIds.size === processedClients.length && processedClients.length > 0 ? (
+                    <CheckSquare className="w-4 h-4 text-primary" />
                   ) : (
-                    <Square className="w-4 h-4 text-gray-700" />
+                    <Square className="w-4 h-4" />
                   )}
                 </button>
               </TableHead>
-              <TableHead className="text-primary font-bold uppercase text-[10px] tracking-widest">Nombre del Cliente</TableHead>
-              <TableHead className="text-[10px] uppercase tracking-widest italic font-bold">Contacto</TableHead>
-              <TableHead className="text-[10px] uppercase tracking-widest italic font-bold">Ubicación</TableHead>
-              <TableHead className="text-center text-[10px] uppercase tracking-widest italic font-bold">Gigs</TableHead>
-              <TableHead className="text-[10px] uppercase tracking-widest italic font-bold">Historial</TableHead>
-              <TableHead className="text-right text-[10px] uppercase tracking-widest italic font-bold">Acciones</TableHead>
+              <TableHead className="font-bold text-white text-xs uppercase tracking-wider">Cliente / Empresa</TableHead>
+              <TableHead className="font-bold text-white text-xs uppercase tracking-wider">Contacto</TableHead>
+              <TableHead className="font-bold text-white text-xs uppercase tracking-wider">Ubicación</TableHead>
+              <TableHead className="font-bold text-white text-xs uppercase tracking-wider text-center">Actividad</TableHead>
+              <TableHead className="w-20 text-right"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.length === 0 ? (
+            {processedClients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
-                  <Users className="w-12 h-12 mx-auto mb-4 opacity-10" />
-                  <p className="font-medium">No hay registros de clientes.</p>
+                <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                  No se encontraron clientes registrados con ese criterio.
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((client) => (
-                <TableRow 
-                  key={client.id} 
-                  className={`border-border/40 align-top transition-all duration-300 ${
-                    selectedIds.has(client.id) 
-                    ? 'bg-primary/10 border-l-2 border-l-primary' 
-                    : 'hover:bg-white/[0.02]'
-                  }`}
-                >
-                  <TableCell className="py-6 text-center">
-                    <button 
-                      onClick={() => toggleSelect(client.id)}
-                      className="w-5 h-5 rounded-md border border-border/40 flex items-center justify-center hover:border-primary/50 transition-all mx-auto"
-                    >
-                      {selectedIds.has(client.id) ? (
-                        <CheckSquare className="w-4 h-4 text-primary fill-primary/10" />
-                      ) : (
-                        <Square className="w-4 h-4 text-gray-800" />
-                      )}
-                    </button>
-                  </TableCell>
-                  <TableCell className="py-6" onClick={() => toggleSelect(client.id)}>
-                    <div className="font-black text-foreground text-base leading-tight tracking-tight uppercase">{client.user.name}</div>
-                    {client.type === "corporate" ? (
-                      <Badge className="mt-2 bg-blue-900/30 text-blue-300 border-blue-200 hover:bg-blue-900/40 text-[9px] font-black tracking-widest">
-                        CORPORATIVO
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="mt-2 border-primary/20 text-primary text-[9px] font-black tracking-widest uppercase">
-                        SOCIAL / PRIVADO
-                      </Badge>
-                    )}
-                  </TableCell>
+              processedClients.map(client => {
+                const isSelected = selectedIds.has(client.id)
+                const cleanPhone = client.whatsapp ? client.whatsapp.replace(/\D/g, "").slice(-10) : ""
+                const duplicateCount = cleanPhone && cleanPhone.length === 10 ? (duplicatePhoneMap.get(cleanPhone)?.length || 0) - 1 : 0
+                const isInvalidPhone = client.whatsapp && client.whatsapp.replace(/\D/g, "").length < 10
 
-                  <TableCell className="py-6">
-                    <div className="space-y-2">
-                      {client.user.email && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-                          <Mail className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-                          <span className="truncate max-w-[140px] lowercase">{client.user.email}</span>
-                        </div>
-                      )}
-                      {client.whatsapp && (
-                        <div className="flex items-center gap-2 text-xs text-green-500/80 font-bold font-mono">
-                          <MessageCircle className="w-3.5 h-3.5 shrink-0" />
-                          <span>{client.whatsapp}</span>
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
+                return (
+                  <TableRow
+                    key={client.id}
+                    className={`border-border/40 hover:bg-white/[0.02] transition-colors ${isSelected ? "bg-primary/5" : ""}`}
+                  >
+                    <TableCell className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => toggleSelect(client.id)}
+                        className="text-muted-foreground hover:text-white"
+                      >
+                        {isSelected ? (
+                          <CheckSquare className="w-4 h-4 text-primary" />
+                        ) : (
+                          <Square className="w-4 h-4" />
+                        )}
+                      </button>
+                    </TableCell>
 
-                  <TableCell className="py-6">
-                    {client.state || client.city ? (
-                      <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                        <MapPin className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-0.5" />
-                        <div>
-                           {client.city && <div className="font-black text-muted-foreground">{client.city}</div>}
-                           {client.state && <div className="text-muted-foreground text-[10px] font-bold uppercase">{client.state}</div>}
-                        </div>
+                    <TableCell>
+                      <div className="font-bold text-sm text-white flex items-center gap-2">
+                        {client.user.name || "Sin nombre registrado"}
+                        {client.type === "corporate" && (
+                          <Badge variant="outline" className="text-[9px] bg-blue-500/10 text-blue-400 border-blue-500/30">
+                            Corporativo
+                          </Badge>
+                        )}
                       </div>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground italic font-mono opacity-30">S/U</span>
-                    )}
-                  </TableCell>
+                      {client.company && (
+                        <div className="text-xs text-muted-foreground mt-0.5">{client.company}</div>
+                      )}
+                      {duplicateCount > 0 && (
+                        <div className="mt-1">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDuplicateClient(client)}
+                            className="text-[10px] bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 hover:bg-yellow-500/20 cursor-pointer"
+                          >
+                            <AlertTriangle className="w-3 h-3" /> {duplicateCount} posible(s) duplicado(s)
+                          </button>
+                        </div>
+                      )}
+                    </TableCell>
 
-                  <TableCell className="text-center py-6">
-                    <div className="inline-flex flex-col items-center">
-                      <span className="text-2xl font-black text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.3)]">{client._count.events}</span>
-                      <span className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter opacity-50">Eventos</span>
-                    </div>
-                  </TableCell>
-
-                  <TableCell className="py-6">
-                    {client.events.length > 0 ? (
-                      <div className="space-y-2">
-                        {client.events.map(ev => (
-                          <div key={ev.id} className="flex items-center gap-2 text-[10px] font-bold px-2 py-1 bg-primary/10 rounded-md border border-border/40">
-                            <Calendar className="w-3 h-3 text-primary shrink-0" />
-                            <span className="text-muted-foreground group-hover:text-foreground transition-colors">
-                              {formatDateMX(ev.date, "dd MMM yyyy")}
+                    <TableCell>
+                      <div className="space-y-0.5 text-xs">
+                        {client.whatsapp ? (
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Phone className="w-3 h-3 text-primary shrink-0" />
+                            <span className={isInvalidPhone ? "text-yellow-400 font-semibold" : "text-white"}>
+                              {client.whatsapp}
                             </span>
+                            {isInvalidPhone && (
+                              <span className="text-[9px] text-yellow-500 bg-yellow-500/10 px-1 rounded">Incompleto</span>
+                            )}
                           </div>
-                        ))}
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground italic">Sin teléfono</span>
+                        )}
+                        {client.user.email && (
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Mail className="w-3 h-3 text-primary shrink-0" />
+                            <span>{client.user.email}</span>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground italic opacity-20">-</span>
-                    )}
-                  </TableCell>
+                    </TableCell>
 
+                    <TableCell>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <MapPin className="w-3 h-3 text-primary shrink-0" />
+                        <span>{client.city || "CDMX / Toluca"}{client.state ? `, ${client.state}` : ""}</span>
+                      </div>
+                    </TableCell>
 
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-xs px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-muted-foreground">
+                          {client._count.events} evento(s)
+                        </span>
+                        {(client._count.bookings || client._count.quotes) > 0 && (
+                          <span className="text-xs px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                            {(client._count.bookings || 0) + client._count.quotes} cotización(es)
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
 
-                  <TableCell className="py-6 text-right">
-                    <ClienteActions
-                      client={{
-                        profileId: client.id,
-                        name: client.user.name || "",
-                        email: client.user.email || "",
-
-                        whatsapp: client.whatsapp,
-                        state: client.state,
-                        city: client.city,
-                        type: client.type,
-                        company: client.company,
-                        rfc: client.rfc,
-                        notes: client.notes,
-                      }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
+                    <TableCell className="text-right">
+                      <ClienteActions client={client as any} />
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             )}
           </TableBody>
         </Table>
       </div>
 
-      {/* MOBILE CARDS */}
-      <div className="md:hidden grid grid-cols-1 gap-4">
-        {items.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground bg-card border border-border/40 rounded-2xl">
-            <Users className="w-8 h-8 mx-auto mb-2 opacity-20" />
-            <p className="text-sm font-medium">No hay registros de clientes.</p>
-          </div>
-        ) : (
-          items.map((client) => (
-            <div 
-              key={client.id} 
-              className={`bg-card border rounded-2xl p-4 flex flex-col gap-3 relative transition-all ${
-                selectedIds.has(client.id) ? 'border-primary shadow-md shadow-primary/10' : 'border-border/40 hover:border-border/80'
-              }`}
-            >
-              <div className="absolute top-4 right-4">
-                <button 
-                  onClick={() => toggleSelect(client.id)}
-                  className="w-6 h-6 rounded-md border border-border/40 flex items-center justify-center bg-background"
-                >
-                  {selectedIds.has(client.id) ? (
-                    <CheckSquare className="w-4 h-4 text-primary" />
-                  ) : (
-                    <Square className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </button>
-              </div>
-              
-              <div onClick={() => toggleSelect(client.id)}>
-                <h3 className="font-black text-foreground text-lg leading-tight uppercase pr-8">{client.user.name}</h3>
-                {client.type === "corporate" ? (
-                  <Badge className="mt-1 bg-blue-900/30 text-blue-300 border-blue-200 text-[10px] tracking-widest uppercase">
-                    Corp
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="mt-1 border-primary/20 text-primary text-[10px] tracking-widest uppercase">
-                    Social
-                  </Badge>
-                )}
+      {/* Modal de Previsualización de Duplicados (Solo Lectura) */}
+      {previewDuplicateClient && (
+        <Dialog open={!!previewDuplicateClient} onOpenChange={() => setPreviewDuplicateClient(null)}>
+          <DialogContent className="bg-card border-border max-w-xl">
+            <DialogHeader>
+              <DialogTitle className="text-white flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-yellow-400" /> Diagnóstico de Coincidencia (Solo Lectura)
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Se detectaron registros que comparten el mismo número de teléfono. No se realiza ninguna fusión automática.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-3">
+              <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                <div className="text-xs font-bold text-primary uppercase">Registro Seleccionado</div>
+                <div className="font-bold text-white text-sm mt-1">{previewDuplicateClient.user.name}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  ID: {previewDuplicateClient.id} • Teléfono: {previewDuplicateClient.whatsapp} • {previewDuplicateClient._count.events} eventos
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Contacto</span>
-                  {client.whatsapp ? (
-                    <div className="flex items-center gap-1.5 text-xs text-green-500 font-bold font-mono">
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      <span>{client.whatsapp}</span>
+              <div className="space-y-2">
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Registros Coincidentes</div>
+                {items
+                  .filter(c => c.id !== previewDuplicateClient.id && c.whatsapp && previewDuplicateClient.whatsapp && c.whatsapp.replace(/\D/g, "").slice(-10) === previewDuplicateClient.whatsapp.replace(/\D/g, "").slice(-10))
+                  .map(match => (
+                    <div key={match.id} className="p-3 rounded-xl bg-yellow-500/5 border border-yellow-500/20 text-xs">
+                      <div className="font-bold text-white">{match.user.name || "Sin nombre"}</div>
+                      <div className="text-muted-foreground mt-0.5">
+                        ID: {match.id} • Tel: {match.whatsapp} • Correo: {match.user.email || "N/A"} • Eventos: {match._count.events}
+                      </div>
                     </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground/50 italic">S/N</span>
-                  )}
-                  {client.user.email && (
-                    <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{client.user.email}</div>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Gigs ({client._count.events})</span>
-                  {client.events.length > 0 ? (
-                    <div className="text-xs font-medium text-foreground">
-                      Último: {formatDateMX(client.events[0].date, "dd MMM yy")}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground/50 italic">-</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between mt-2 pt-3 border-t border-border/40">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <MapPin className="w-3.5 h-3.5" />
-                  <span>{client.city || "S/U"}</span>
-                </div>
-                <ClienteActions
-                  client={{
-                    profileId: client.id,
-                    name: client.user.name || "",
-                    email: client.user.email || "",
-                    whatsapp: client.whatsapp,
-                    state: client.state,
-                    city: client.city,
-                    type: client.type,
-                    company: client.company,
-                    rfc: client.rfc,
-                    notes: client.notes,
-                  }}
-                />
+                  ))}
               </div>
             </div>
-          ))
-        )}
-      </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setPreviewDuplicateClient(null)}>
+                Cerrar Diagnóstico
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

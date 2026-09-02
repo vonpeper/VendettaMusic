@@ -53,7 +53,7 @@ export default function LocationsManager() {
   async function fetchLocations() {
     try {
       // FORCE CACHE BREAK with timestamp and no-store
-      const res = await fetch(`/api/admin/locations?t=${Date.now()}`, {
+      const res = await fetch(`/api/admin/locations`, {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
       })
