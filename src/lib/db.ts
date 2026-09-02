@@ -1,3 +1,4 @@
+import path from "path"
 import { PrismaClient } from "@prisma/client"
 import { PrismaLibSql } from "@prisma/adapter-libsql"
 
@@ -9,7 +10,8 @@ function resolveDbUrl(): string {
     }
     return `file:${env}`
   }
-  return "file:./prisma/prod.db"
+  const defaultPath = path.join(process.cwd(), "prisma", "prod.db")
+  return `file:${defaultPath}`
 }
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
