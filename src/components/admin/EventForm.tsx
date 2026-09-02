@@ -12,7 +12,9 @@ interface EventFormProps {
   locations: { id: string; name: string; address?: string; city?: string | null; state?: string | null; mapsLink?: string | null; phone?: string | null }[]
   packages: PackageOption[]
   staff?: StaffOption[]
-  initialData?: Record<string, unknown>
+  allMusicians?: unknown[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  initialData?: any
 }
 
 export function EventForm({
@@ -21,6 +23,8 @@ export function EventForm({
   locations,
   packages,
   staff = [],
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  allMusicians = [],
   initialData
 }: EventFormProps) {
   const formattedClients: ClientData[] = clients.map(c => ({

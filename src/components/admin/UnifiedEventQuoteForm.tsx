@@ -69,7 +69,8 @@ export interface StaffOption {
 interface UnifiedEventQuoteFormProps {
   mode?: "create" | "edit"
   targetId?: string // eventId or bookingId if editing
-  initialData?: Record<string, unknown>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  initialData?: any
   clients: ClientData[]
   venues: VenueData[]
   packages: PackageOption[]
