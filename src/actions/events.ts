@@ -837,7 +837,7 @@ import { getValidMapsLink } from "@/lib/locations"
 import { auth } from "@/lib/auth"
 import { z } from "zod"
 
-const saveUnifiedEventQuoteSchema = z.object({
+export const saveUnifiedEventQuoteSchema = z.object({
   mode: z.enum(["create", "edit"]).default("create"),
   targetId: z.string().optional(),
   clientId: z.string().nullable().optional(),

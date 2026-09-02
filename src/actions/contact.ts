@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import crypto from "crypto"
 
-const contactSchema = z.object({
+export const contactSchema = z.object({
   nombre: z.string().min(2, "El nombre es obligatorio").max(100),
   telefono: z.string().min(8, "Ingresa un teléfono válido").max(25),
   email: z.string().email("Ingresa un correo válido").max(100),
@@ -134,20 +134,21 @@ export async function convertInquiryToBookingAction(inquiryId: string) {
           clientName: inquiry.name,
           clientPhone: inquiry.phone || "",
           clientEmail: inquiry.email,
-          packageName: inquiry.eventType || "Consulta General",
-          venueType: "salon",
-          address: "Por definir",
-          city: "Toluca / CDMX",
-          requestedDate: inquiry.requestedDate || new Date(),
-          startTime: "21:00",
-          endTime: "23:00",
+          packageName: inquiry.eventType || "",
+          venueType: "",
+          address: "",
+          city: "",
+          state: "",
+          requestedDate: inquiry.requestedDate || new Date(0),
+          startTime: "",
+          endTime: "",
           baseAmount: 0,
           depositAmount: 0,
-          paymentMethod: "transfer",
+          paymentMethod: "",
           status: "pendiente",
           source: "contacto",
           adminNote: inquiry.message ? `Mensaje de contacto: ${inquiry.message}` : null,
-          clientId: inquiry.matchedClientId,
+          clientId: inquiry.matchedClientId || null,
           requiresManualQuote: true
         }
       })

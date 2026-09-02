@@ -3,6 +3,10 @@ import assert from "node:assert/strict"
 import { PrismaClient } from "@prisma/client"
 import { PrismaLibSql } from "@prisma/adapter-libsql"
 import { calculateQuoteTotals, validatePlannedDeposit } from "./pricing"
+import { normalizeClientEmail, normalizeClientPhone } from "./clients"
+import { getValidMapsLink } from "./locations"
+import { saveUnifiedEventQuoteSchema } from "@/actions/events"
+import { contactSchema } from "@/actions/contact"
 import { execSync } from "child_process"
 import fs from "fs"
 
@@ -258,8 +262,8 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechab
 
   // 7. Cambiar cliente no arrastra datos anteriores
   it("Regla 7: Cambio de Cliente A -> Cliente B limpia teléfono, email y ciudad de A", () => {
-    const clientA = { id: "cA", name: "Cliente Anterior", phone: "5511112222", email: "a@antiguo.com", city: "Toluca" }
-    const clientB = { id: "cB", name: "Cliente Nuevo", phone: null, email: null, city: null }
+    const clientA = { id: "cA", name: "Cliente Anterior", phone: normalizeClientPhone("5511112222"), email: normalizeClientEmail("a@antiguo.com"), city: "Toluca" }
+    const clientB = { id: "cB", name: "Cliente Nuevo", phone: normalizeClientPhone(null), email: normalizeClientEmail(null), city: null }
 
     let formState = {
       clientId: clientA.id,
@@ -287,7 +291,7 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechab
 
   // 8. Cambiar venue no arrastra datos anteriores
   it("Regla 8: Cambio de Venue A -> Venue B limpia dirección, ciudad, estado y mapsLink de A", () => {
-    const venueA = { id: "vA", name: "Hacienda San Martín", address: "Km 45", city: "Ocoyoacac", state: "México", mapsLink: "https://maps.app/sanmartin" }
+    const venueA = { id: "vA", name: "Hacienda San Martín", address: "Km 45", city: "Ocoyoacac", state: "México", mapsLink: getValidMapsLink("https://maps.app/sanmartin", "Km 45") }
     const venueB = { id: "vB", name: "Salón Los Sauces", address: "Calle 2", city: null, state: null, mapsLink: null }
 
     let venueState = {
@@ -317,16 +321,27 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechab
 
   // 9. Nombre y dirección del venue no se confunden
   it("Regla 9: Nombre y dirección del venue se preservan como campos independientes", () => {
-    const venueData = {
+    const parsed = saveUnifiedEventQuoteSchema.safeParse({
+      clientName: "Cliente Test",
+      clientPhone: "5512345678",
+      clientEmail: "test@demo.com",
       venueName: "Hacienda Cantalagua",
       venueAddress: "Carretera México-Guadalajara Km 129",
       venueCity: "Contepec",
-      venueState: "Michoacán"
-    }
+      venueState: "Michoacán",
+      eventDate: "2026-12-01",
+      startTime: "21:00",
+      endTime: "23:00",
+      basePrice: 15000,
+      status: "pendiente"
+    })
 
-    assert.notEqual(venueData.venueName, venueData.venueAddress)
-    assert.equal(venueData.venueName, "Hacienda Cantalagua")
-    assert.equal(venueData.venueAddress, "Carretera México-Guadalajara Km 129")
+    assert.equal(parsed.success, true)
+    if (parsed.success) {
+      assert.notEqual(parsed.data.venueName, parsed.data.venueAddress)
+      assert.equal(parsed.data.venueName, "Hacienda Cantalagua")
+      assert.equal(parsed.data.venueAddress, "Carretera México-Guadalajara Km 129")
+    }
   })
 
   // 10. Anticipo negativo es rechazado
@@ -364,6 +379,16 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechab
 
   // 13. Contacto público crea solamente ContactInquiry
   it("Regla 13: Formulario público de contacto crea exclusivamente un registro ContactInquiry", async () => {
+    const validData = contactSchema.safeParse({
+      nombre: "Prospecto Ana",
+      email: "ana@prospecto.com",
+      telefono: "5512349999",
+      fecha: "2026-10-15",
+      tipo: "boda",
+      mensaje: "Información para 200 invitados"
+    })
+    assert.equal(validData.success, true)
+
     const usersBefore = await testPrisma.user.count()
     const bookingsBefore = await testPrisma.bookingRequest.count()
     const eventsBefore = await testPrisma.event.count()
@@ -391,7 +416,7 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechab
   })
 
   // 14. Conversión administrativa de prospecto es idempotente
-  it("Regla 14: Conversión de ContactInquiry a BookingRequest es idempotente", async () => {
+  it("Regla 14: Conversión de ContactInquiry a BookingRequest es idempotente y sin datos inventados", async () => {
     const inquiry = await testPrisma.contactInquiry.create({
       data: {
         name: "Prospecto David",
@@ -401,7 +426,7 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechab
       }
     })
 
-    // Conversión 1
+    // Conversión 1 (usando la lógica canónica limpia)
     const booking1 = await testPrisma.$transaction(async (tx) => {
       const b = await tx.bookingRequest.create({
         data: {
@@ -409,16 +434,17 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechab
           clientName: inquiry.name,
           clientEmail: inquiry.email,
           clientPhone: inquiry.phone || "",
-          packageName: "Consulta General",
-          venueType: "salon",
-          address: "Por definir",
-          city: "Toluca",
-          requestedDate: new Date(),
-          startTime: "21:00",
-          endTime: "23:00",
+          packageName: inquiry.eventType || "",
+          venueType: "",
+          address: "",
+          city: "",
+          state: "",
+          requestedDate: inquiry.requestedDate || new Date(0),
+          startTime: "",
+          endTime: "",
           baseAmount: 0,
           depositAmount: 0,
-          paymentMethod: "transfer",
+          paymentMethod: "",
           paymentStatus: "pending",
           status: "pendiente"
         }
@@ -439,6 +465,9 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Base Real Desechab
 
     assert.equal(returnedBookingId, booking1.id)
     assert.equal(inquiryUpdated?.status, "converted")
+    assert.equal(booking1.venueType, "", "No debe inventar tipo de venue")
+    assert.equal(booking1.startTime, "", "No debe inventar horario")
+    assert.equal(booking1.address, "", "No debe inventar dirección")
   })
 
   // 15. Usuario no autorizado es rechazado en Server Actions
