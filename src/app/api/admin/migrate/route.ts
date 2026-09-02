@@ -11,6 +11,10 @@ import { auth } from "@/lib/auth"
  * rejected  -> cancelado
  */
 export async function GET() {
+  return NextResponse.json({ error: "Method Not Allowed. Use POST with admin authorization." }, { status: 405 })
+}
+
+export async function POST() {
   const session = await auth()
   if (!session?.user || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

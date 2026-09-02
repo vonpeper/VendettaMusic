@@ -1,9 +1,13 @@
+import { verifyResourceToken } from "@/lib/security"
 "use server"
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 
-export async function confirmAttendanceAction(musicianId: string, eventId: string) {
+export async function confirmAttendanceAction(musicianId: string, eventId: string, token?: string) {
+  if (token && !verifyResourceToken(`${musicianId}:${eventId}`, token)) {
+    return { success: false, error: "Token de confirmación inválido o expirado" }
+  }
   try {
     // Check if musician exists
     const musician = await db.musicianProfile.findUnique({ where: { id: musicianId } })
@@ -42,7 +46,10 @@ export async function confirmAttendanceAction(musicianId: string, eventId: strin
   }
 }
 
-export async function rejectAttendanceAction(musicianId: string, eventId: string) {
+export async function rejectAttendanceAction(musicianId: string, eventId: string, token?: string) {
+  if (token && !verifyResourceToken(`${musicianId}:${eventId}`, token)) {
+    return { success: false, error: "Token de confirmación inválido o expirado" }
+  }
   try {
     const [musician, event, config] = await Promise.all([
       db.musicianProfile.findUnique({ where: { id: musicianId }, include: { user: true } }),
