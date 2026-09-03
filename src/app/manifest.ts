@@ -2,15 +2,13 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Vendetta Agenda',
-    short_name: 'Agenda',
-    description: 'Agenda oficial de fechas, horarios, locaciones y notificaciones push para músicos de Vendetta.',
-    start_url: '/agenda',
-    scope: '/',
+    name: 'Vendetta Live Music',
+    short_name: 'Vendetta',
+    description: 'Grupo musical versátil de alto nivel para bodas, eventos corporativos y festivales en México.',
+    start_url: '/',
     display: 'standalone',
-    background_color: '#070709',
+    background_color: '#000000',
     theme_color: '#dc2626',
-    orientation: 'portrait',
     icons: [
       {
         src: '/favicon.ico',

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { AgendaEvent } from "@/actions/agenda"
 import { 
   Calendar as CalendarIcon, 
@@ -19,18 +19,13 @@ import {
   Info,
   Users,
   X,
-  CalendarCheck,
-  RefreshCw,
-  Navigation,
-  Copy
+  CalendarCheck
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { motion, AnimatePresence } from "framer-motion"
-import { toast } from "sonner"
 import { PushNotificationBanner } from "@/components/agenda/PushNotificationBanner"
-import { AgendaInstallPrompt } from "@/components/agenda/AgendaInstallPrompt"
 
 interface Props {
   events: AgendaEvent[]
@@ -103,60 +98,18 @@ function formatDateString(isoString: string): string {
 }
 
 export function AgendaCalendarView({ events }: Props) {
-  const [currentEvents, setCurrentEvents] = useState<AgendaEvent[]>(events)
-  const [isSyncing, setIsSyncing] = useState<boolean>(false)
-  const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date())
-
-  // Refresh function
-  const refreshAgenda = async (showLoading = false) => {
-    if (showLoading) setIsSyncing(true)
-    try {
-      const res = await fetch("/api/agenda", { cache: "no-store" })
-      if (res.ok) {
-        const data = await res.json()
-        if (data?.success && Array.isArray(data.events)) {
-          setCurrentEvents(data.events)
-          setLastSyncTime(new Date())
-        }
-      }
-    } catch (err) {
-      console.error("Live agenda sync error:", err)
-    } finally {
-      if (showLoading) setIsSyncing(false)
-    }
-  }
-
-  // Auto-refresh polling every 20 seconds and on window focus/visibilitychange
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (typeof document !== "undefined" && document.visibilityState === "visible") {
-        refreshAgenda(false)
-      }
-    }, 20000)
-
-    const handleFocus = () => refreshAgenda(false)
-    window.addEventListener("focus", handleFocus)
-    document.addEventListener("visibilitychange", handleFocus)
-
-    return () => {
-      clearInterval(interval)
-      window.removeEventListener("focus", handleFocus)
-      document.removeEventListener("visibilitychange", handleFocus)
-    }
-  }, [])
-
   const today = new Date()
   const todayISO = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
 
   // Default month: if there are upcoming events, select month of next upcoming event, otherwise today
   const defaultDate = useMemo(() => {
-    const upcoming = currentEvents.find(e => e.date >= todayISO && e.status !== "cancelado")
+    const upcoming = events.find(e => e.date >= todayISO && e.status !== "cancelado")
     if (upcoming) {
       const [y, m] = upcoming.date.split("-").map(Number)
       return { year: y, month: m - 1, selectedDate: upcoming.date }
     }
     return { year: today.getFullYear(), month: today.getMonth(), selectedDate: todayISO }
-  }, [currentEvents, todayISO])
+  }, [events, todayISO])
 
   const [viewYear, setViewYear] = useState<number>(defaultDate.year)
   const [viewMonth, setViewMonth] = useState<number>(defaultDate.month)
@@ -168,12 +121,12 @@ export function AgendaCalendarView({ events }: Props) {
   // Group all events by YYYY-MM-DD
   const eventsByDate = useMemo(() => {
     const map: Record<string, AgendaEvent[]> = {}
-    currentEvents.forEach(evt => {
+    events.forEach(evt => {
       if (!map[evt.date]) map[evt.date] = []
       map[evt.date].push(evt)
     })
     return map
-  }, [currentEvents])
+  }, [events])
 
   // Navigation handlers
   const prevMonth = () => {
@@ -213,7 +166,7 @@ export function AgendaCalendarView({ events }: Props) {
   // Filtered events of the month for quick summary
   const monthEvents = useMemo(() => {
     const monthPrefix = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-`
-    return currentEvents.filter(e => {
+    return events.filter(e => {
       if (!e.date.startsWith(monthPrefix)) return false
       if (statusFilter !== "todos" && e.status !== statusFilter) return false
       if (searchQuery.trim()) {
@@ -226,7 +179,7 @@ export function AgendaCalendarView({ events }: Props) {
       }
       return true
     })
-  }, [currentEvents, viewYear, viewMonth, statusFilter, searchQuery])
+  }, [events, viewYear, viewMonth, statusFilter, searchQuery])
 
   // Events of currently selected day
   const selectedDayEvents = useMemo(() => {
@@ -236,33 +189,21 @@ export function AgendaCalendarView({ events }: Props) {
   }, [eventsByDate, selectedDate, statusFilter])
 
   // Count stats
-  const totalUpcoming = currentEvents.filter(e => e.date >= todayISO && (e.status === "agendado" || e.status === "confirmed")).length
+  const totalUpcoming = events.filter(e => e.date >= todayISO && (e.status === "agendado" || e.status === "confirmed")).length
   const totalMonthEvents = monthEvents.length
 
   return (
     <div className="min-h-screen bg-[#070709] text-foreground pb-20">
       {/* Top Banner / Header */}
-      <header className="relative border-b border-white/10 bg-gradient-to-b from-black via-zinc-950 to-[#070709] pt-24 md:pt-32 pb-8 md:pb-12 overflow-hidden">
+      <header className="relative border-b border-white/10 bg-gradient-to-b from-black via-zinc-950 to-[#070709] pt-32 md:pt-36 pb-8 md:pb-12 overflow-hidden">
         {/* Glow FX */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 md:w-[600px] h-32 bg-primary/20 blur-[100px] pointer-events-none rounded-full" />
 
         <div className="container mx-auto px-4 max-w-6xl relative z-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary text-[11px] font-black uppercase tracking-[0.25em] shadow-sm">
-                  <Sparkles className="w-3.5 h-3.5" /> Agenda Oficial Vendetta
-                </div>
-                <button
-                  type="button"
-                  onClick={() => refreshAgenda(true)}
-                  title="Sincronizar en tiempo real"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-400 text-[11px] font-bold transition-all"
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>En vivo</span>
-                  <RefreshCw className={`w-3 h-3 ml-0.5 ${isSyncing ? "animate-spin" : ""}`} />
-                </button>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary text-[11px] font-black uppercase tracking-[0.25em] mb-3 shadow-sm">
+                <Sparkles className="w-3.5 h-3.5" /> Agenda Oficial Vendetta
               </div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-white uppercase tracking-tight">
                 Calendario de <span className="text-primary italic">Fechas</span>
@@ -300,9 +241,6 @@ export function AgendaCalendarView({ events }: Props) {
 
       {/* Main Container */}
       <main className="container mx-auto px-4 max-w-6xl mt-6 space-y-6">
-        {/* PWA Install helper for musicians on browser */}
-        <AgendaInstallPrompt />
-
         {/* Web Push Notification Banner for Musicians / Users */}
         <PushNotificationBanner />
 
@@ -662,86 +600,34 @@ export function AgendaCalendarView({ events }: Props) {
                           </div>
                         </div>
 
-                        {/* Location & GPS Navigation Options */}
-                        <div className="pl-2 space-y-3 bg-white/[0.02] border border-white/5 p-3.5 rounded-2xl">
+                        {/* Location */}
+                        <div className="pl-2 space-y-2.5">
                           <div className="flex items-start gap-2.5 text-sm">
                             <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                            <div className="flex-1">
+                            <div>
                               <div className="font-bold text-white leading-tight">
                                 {evt.locationName || "Lugar por confirmar"}
                               </div>
-                              {(evt.locationAddress || evt.city) && (
+                              {evt.city && (
                                 <div className="text-xs text-muted-foreground mt-0.5">
-                                  {evt.locationAddress || evt.city}
+                                  {evt.city}
                                 </div>
                               )}
                             </div>
                           </div>
 
-                          {/* GPS Action Buttons: Google Maps, Waze & Copy */}
-                          {(() => {
-                            const query = [evt.locationAddress, evt.locationName, evt.city].filter(Boolean).join(", ")
-                            const googleUrl = evt.mapsLink || (query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : null)
-                            const wazeUrl = query ? `https://waze.com/ul?q=${encodeURIComponent(query)}&navigate=yes` : null
-
-                            if (!googleUrl && !wazeUrl) return null
-
-                            return (
-                              <div className="flex flex-wrap items-center gap-2 pt-1">
-                                {googleUrl && (
-                                  <a
-                                    href={googleUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => {
-                                      // Ensure smooth external opening on mobile PWAs
-                                      if (typeof window !== "undefined" && (window.navigator as any).standalone) {
-                                        e.preventDefault()
-                                        window.location.href = googleUrl
-                                      }
-                                    }}
-                                    className="flex-1 min-w-[130px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-blue-600/90 hover:bg-blue-600 active:scale-95 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer"
-                                  >
-                                    <MapPin className="w-3.5 h-3.5" /> Google Maps
-                                    <ExternalLink className="w-3 h-3 ml-0.5 opacity-80" />
-                                  </a>
-                                )}
-
-                                {wazeUrl && (
-                                  <a
-                                    href={wazeUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => {
-                                      // Ensure smooth external opening on mobile PWAs
-                                      if (typeof window !== "undefined" && (window.navigator as any).standalone) {
-                                        e.preventDefault()
-                                        window.location.href = wazeUrl
-                                      }
-                                    }}
-                                    className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-cyan-600/90 hover:bg-cyan-600 active:scale-95 text-white text-xs font-bold transition-all shadow-md shadow-cyan-600/20 cursor-pointer"
-                                  >
-                                    <Navigation className="w-3.5 h-3.5" /> Waze
-                                    <ExternalLink className="w-3 h-3 ml-0.5 opacity-80" />
-                                  </a>
-                                )}
-
-                                {query && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(query)
-                                      toast.success("Dirección copiada al portapapeles")
-                                    }}
-                                    title="Copiar dirección"
-                                    className="inline-flex items-center justify-center p-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-gray-300 hover:text-white transition-all cursor-pointer"
-                                  >
-                                    <Copy className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                              </div>
-                            )
-                          })()}
+                          {/* Map Action Button */}
+                          {evt.mapsLink && (
+                            <a
+                              href={evt.mapsLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold transition-all shadow-md shadow-primary/20"
+                            >
+                              <MapPin className="w-3.5 h-3.5" /> Abrir en Google Maps / Waze
+                              <ExternalLink className="w-3.5 h-3.5 ml-0.5 opacity-80" />
+                            </a>
+                          )}
                         </div>
 
                         {/* Show Details */}

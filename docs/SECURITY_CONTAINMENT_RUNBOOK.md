@@ -129,9 +129,13 @@ Para eliminar definitivamente credenciales y secretos de commits antiguos antes 
 
 ## 7. Verificación de Integridad y Checklist de Despliegue
 
+> [!CAUTION]
+> **Estado de Despliegue:** El despliegue permanece bloqueado hasta verificar el esquema real del VPS y aprobar manualmente una migración limitada a Fase 2.
+
 Antes de entregar cambios o preparar releases:
 - [ ] `npm run ts-check` compila con 0 errores.
 - [ ] `npm run build` genera los artefactos de producción sin advertencias críticas.
 - [ ] Ausencia de credenciales hardcodeadas comprobada con búsqueda regex en `src/`.
 - [ ] `scripts/cleanup-inbound-whatsapp.ts` corre en simulación sin errores.
 - [ ] El renderizado de `/admin/ventas` no ejecuta mutaciones de base de datos.
+

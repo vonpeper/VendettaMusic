@@ -11,8 +11,9 @@ import { createUnifiedQuote, convertQuoteToEvent } from "./quote-service"
 import { isValidShortIdFormat } from "./folios"
 import { execSync } from "child_process"
 import fs from "fs"
+import path from "path"
 
-const TEST_DB_PATH = "/Users/ppbau/.gemini/antigravity/brain/3dfdba2c-7be1-44af-9aab-9f27a9504448/scratch/comprehensive_test.db"
+const TEST_DB_PATH = path.join(process.cwd(), "prisma", "test-comprehensive.db")
 const TEST_DB_URL = `file:${TEST_DB_PATH}`
 
 let testPrisma: PrismaClient
