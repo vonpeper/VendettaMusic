@@ -108,7 +108,8 @@ export async function convertInquiryToBookingAction(inquiryId: string) {
     }
 
     const inquiry = await db.contactInquiry.findUnique({
-      where: { id: inquiryId }
+      where: { id: inquiryId },
+      include: { convertedBooking: true }
     })
 
     if (!inquiry) {
@@ -116,18 +117,13 @@ export async function convertInquiryToBookingAction(inquiryId: string) {
     }
 
     // Idempotencia: Si ya fue convertido, retornar el ID existente
-    if (inquiry.convertedBookingId) {
-      const existing = await db.bookingRequest.findUnique({
-        where: { id: inquiry.convertedBookingId }
-      })
-      if (existing) {
-        return { 
-          success: true, 
-          bookingId: existing.id, 
-          shortId: existing.shortId,
-          alreadyConverted: true,
-          redirectUrl: `/admin/ventas/${existing.id}`
-        }
+    if (inquiry.convertedBooking) {
+      return {
+        success: true,
+        bookingId: inquiry.convertedBooking.id,
+        shortId: inquiry.convertedBooking.shortId,
+        alreadyConverted: true,
+        redirectUrl: `/admin/ventas/${inquiry.convertedBooking.id}`
       }
     }
 

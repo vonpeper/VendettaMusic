@@ -486,9 +486,11 @@ model BookingRequest {
   setupTime             String?
   dressCode             String?
   musicianNotes         String?
+  sourceInquiryId       String?           @unique
   lineItems             BookingLineItem[]
   event                 Event?            @relation(fields: [eventId], references: [id])
   client                ClientProfile?    @relation(fields: [clientId], references: [id])
+  sourceInquiry         ContactInquiry?   @relation(fields: [sourceInquiryId], references: [id], onDelete: SetNull)
   inboxItems            InboxItem[]
   payments              Payment[]
 
@@ -684,18 +686,18 @@ model BookingLineItem {
 }
 
 model ContactInquiry {
-  id                 String    @id @default(uuid())
-  name               String
-  phone              String?
-  email              String
-  requestedDate      DateTime?
-  eventType          String?
-  message            String?
-  status             String    @default("new") // "new", "reviewing", "converted", "closed"
-  matchedClientId    String?
-  convertedBookingId String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @default(now()) @updatedAt
+  id               String          @id @default(uuid())
+  name             String
+  phone            String?
+  email            String
+  requestedDate    DateTime?
+  eventType        String?
+  message          String?
+  status           String          @default("new") // "new", "reviewing", "converted", "closed"
+  matchedClientId  String?
+  convertedBooking BookingRequest?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @default(now()) @updatedAt
 
   @@index([status])
   @@index([email])

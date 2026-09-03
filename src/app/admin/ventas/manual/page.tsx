@@ -31,13 +31,14 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
 
   if (inquiryId) {
     const inquiry = await db.contactInquiry.findUnique({
-      where: { id: inquiryId }
+      where: { id: inquiryId },
+      include: { convertedBooking: true }
     })
 
     if (inquiry) {
       // Si ya fue convertido previamente, redirigir a la cotización existente
-      if (inquiry.convertedBookingId) {
-        redirect(`/admin/ventas/${inquiry.convertedBookingId}`)
+      if (inquiry.convertedBooking) {
+        redirect(`/admin/ventas/${inquiry.convertedBooking.id}`)
       }
 
       prefillInquiry = {

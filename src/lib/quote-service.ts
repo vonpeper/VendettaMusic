@@ -148,43 +148,84 @@ export async function createUnifiedQuote(
     createdEventId = newEvent.id
   }
 
-  // 6. Crear Registro de Cotización (BookingRequest)
-  const newBooking = await tx.bookingRequest.create({
-    data: {
-      shortId,
-      clientName: input.clientName,
-      clientPhone: input.clientPhone || "",
-      clientEmail: input.clientEmail || null,
-      clientId: finalClientId || null,
-      customName: input.customName || null,
-      ceremonyType: input.ceremonyType || "",
-      requestedDate: dateObj,
-      startTime: input.startTime || "",
-      endTime: input.endTime || "",
-      arrivalTime: input.arrivalTime || null,
-      setupTime: input.setupTime || null,
-      guestCount: input.guestCount || 0,
-      dressCode: input.dressCode || "",
-      musicianNotes: input.musicianNotes || null,
-      venueType: input.venueName ? "custom" : "",
-      packageId: input.packageId || null,
-      packageName: input.packageName || "",
-      baseAmount: totals.basePrice,
-      viaticosAmount: totals.viaticosAmount,
-      discountAmount: totals.discountAmount,
-      invoice: Boolean(input.invoice),
-      depositAmount: totals.depositAmount,
-      paymentMethod: input.paymentMethod || "",
-      paymentStatus: "pending",
-      address: input.venueAddress || input.venueName || "",
-      city: input.venueCity || "",
-      state: input.venueState || "",
-      mapsLink: input.mapsLink || null,
-      status: quoteStatus,
-      eventId: createdEventId,
-      source: input.originInquiryId ? "contacto" : "admin"
+  // Si proviene de un prospecto, verificar primero si ya fue convertido previamente
+  if (input.originInquiryId) {
+    const existingConverted = await tx.bookingRequest.findUnique({
+      where: { sourceInquiryId: input.originInquiryId }
+    })
+    if (existingConverted) {
+      return {
+        bookingId: existingConverted.id,
+        eventId: existingConverted.eventId,
+        shortId: existingConverted.shortId || "",
+        isNew: false
+      }
     }
-  })
+  }
+
+  // 6. Crear Registro de Cotización (BookingRequest)
+  let newBooking
+  try {
+    newBooking = await tx.bookingRequest.create({
+      data: {
+        shortId,
+        sourceInquiryId: input.originInquiryId || null,
+        clientName: input.clientName,
+        clientPhone: input.clientPhone || "",
+        clientEmail: input.clientEmail || null,
+        clientId: finalClientId || null,
+        customName: input.customName || null,
+        ceremonyType: input.ceremonyType || "",
+        requestedDate: dateObj,
+        startTime: input.startTime || "",
+        endTime: input.endTime || "",
+        arrivalTime: input.arrivalTime || null,
+        setupTime: input.setupTime || null,
+        guestCount: input.guestCount || 0,
+        dressCode: input.dressCode || "",
+        musicianNotes: input.musicianNotes || null,
+        venueType: input.venueName ? "custom" : "",
+        packageId: input.packageId || null,
+        packageName: input.packageName || "",
+        baseAmount: totals.basePrice,
+        viaticosAmount: totals.viaticosAmount,
+        discountAmount: totals.discountAmount,
+        invoice: Boolean(input.invoice),
+        depositAmount: totals.depositAmount,
+        paymentMethod: input.paymentMethod || "",
+        paymentStatus: "pending",
+        address: input.venueAddress || input.venueName || "",
+        city: input.venueCity || "",
+        state: input.venueState || "",
+        mapsLink: input.mapsLink || null,
+        status: quoteStatus,
+        eventId: createdEventId,
+        source: input.originInquiryId ? "contacto" : "admin"
+      }
+    })
+  } catch (err: unknown) {
+    // Manejo seguro ante colisión de concurrencia sobre sourceInquiryId (@unique)
+    if (
+      input.originInquiryId &&
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: string }).code === "P2002"
+    ) {
+      const concurrentExisting = await tx.bookingRequest.findUnique({
+        where: { sourceInquiryId: input.originInquiryId }
+      })
+      if (concurrentExisting) {
+        return {
+          bookingId: concurrentExisting.id,
+          eventId: concurrentExisting.eventId,
+          shortId: concurrentExisting.shortId || "",
+          isNew: false
+        }
+      }
+    }
+    throw err
+  }
 
   // 7. Guardar Conceptos Adicionales en BookingLineItem
   if (input.additionalItems && input.additionalItems.length > 0) {
@@ -200,21 +241,21 @@ export async function createUnifiedQuote(
     })
   }
 
-  // 8. Vincular ContactInquiry si proviene de una conversión
+  // 8. Marcar ContactInquiry como convertido
   if (input.originInquiryId) {
     await tx.contactInquiry.update({
       where: { id: input.originInquiryId },
       data: {
-        status: "converted",
-        convertedBookingId: newBooking.id
+        status: "converted"
       }
-    })
+    }).catch(() => null)
   }
 
   return {
     bookingId: newBooking.id,
     eventId: createdEventId,
-    shortId
+    shortId,
+    isNew: true
   }
 }
 

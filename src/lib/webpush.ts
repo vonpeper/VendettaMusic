@@ -12,7 +12,7 @@ export interface PushNotificationPayload {
   icon?: string
   badge?: string
   url?: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 }
 
 export interface WebSubscription {
@@ -60,11 +60,11 @@ function getVapidAuthHeader(endpoint: string): Record<string, string> {
     let offset = 2
     if (derSignature[offset] & 0x80) offset += (derSignature[offset] & 0x7f) + 1
     offset++
-    let rLen = derSignature[offset++]
+    const rLen = derSignature[offset++]
     let r = derSignature.slice(offset, offset + rLen)
     offset += rLen
     offset++
-    let sLen = derSignature[offset++]
+    const sLen = derSignature[offset++]
     let s = derSignature.slice(offset, offset + sLen)
     
     while (r.length > 32) r = r.slice(1)
@@ -129,9 +129,10 @@ export async function saveWebPushSubscription(sub: WebSubscription, userAgent?: 
       userAgent || "Unknown"
     )
     return { success: true, id }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Error desconocido"
     console.error("Error saving web push subscription:", error)
-    return { success: false, error: error.message }
+    return { success: false, error: msg }
   }
 }
 
@@ -152,7 +153,7 @@ export async function removeWebPushSubscription(endpoint: string) {
 export async function getWebPushSubscriptions(): Promise<Array<{ id: string; endpoint: string; p256dh: string; auth: string }>> {
   await ensureWebPushTable()
   try {
-    const rows = await db.$queryRawUnsafe<any[]>(`SELECT * FROM WebPushSubscription ORDER BY createdAt DESC`)
+    const rows = await db.$queryRawUnsafe<Array<{ id: string; endpoint: string; p256dh: string; auth: string }>>(`SELECT * FROM WebPushSubscription ORDER BY createdAt DESC`)
     return rows.map(r => ({
       id: r.id,
       endpoint: r.endpoint,
@@ -238,8 +239,8 @@ export async function sendWebPush(subscription: WebSubscription, payload: PushNo
     const payloadText = JSON.stringify({
       title: payload.title,
       body: payload.body,
-      icon: payload.icon || "/images/logo-icon.png",
-      badge: payload.badge || "/images/logo-icon.png",
+      icon: payload.icon || "/images/branding/logo-vendetta.png",
+      badge: payload.badge || "/images/branding/logo-vendetta.png",
       url: payload.url || "/agenda",
       data: payload.data || {}
     })
@@ -282,9 +283,10 @@ export async function sendWebPush(subscription: WebSubscription, payload: PushNo
     }
 
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Error desconocido"
     console.error("Error sending web push:", error)
-    return { success: false, error: error.message }
+    return { success: false, error: msg }
   }
 }
 

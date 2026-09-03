@@ -398,11 +398,15 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Servicios Producti
       })
     })
 
-    const inquiryUpdated = await testPrisma.contactInquiry.findUnique({ where: { id: inquiry.id } })
+    const inquiryUpdated = await testPrisma.contactInquiry.findUnique({
+      where: { id: inquiry.id },
+      include: { convertedBooking: true }
+    })
     const createdBooking = await testPrisma.bookingRequest.findUnique({ where: { id: quoteResult.bookingId } })
 
     assert.equal(inquiryUpdated?.status, "converted")
-    assert.equal(inquiryUpdated?.convertedBookingId, quoteResult.bookingId)
+    assert.equal(inquiryUpdated?.convertedBooking?.id, quoteResult.bookingId)
+    assert.equal(createdBooking?.sourceInquiryId, inquiry.id)
     assert.ok(createdBooking)
     assert.notEqual(createdBooking.requestedDate.toISOString(), new Date(0).toISOString(), "No debe tener fecha de 1970")
     assert.equal(createdBooking.baseAmount, 18000, "Debe tener el precio real asignado por el admin")

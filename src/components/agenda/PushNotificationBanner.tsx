@@ -7,14 +7,12 @@ import { toast } from "sonner"
 
 export function PushNotificationBanner() {
   const [isSupported, setIsSupported] = useState<boolean>(false)
-  const [permission, setPermission] = useState<NotificationPermission>("default")
   const [isSubscribing, setIsSubscribing] = useState<boolean>(false)
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false)
 
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator) {
       setIsSupported(true)
-      setPermission(Notification.permission)
 
       if (Notification.permission === "granted") {
         setIsSubscribed(true)
@@ -44,7 +42,6 @@ export function PushNotificationBanner() {
     try {
       // 1. Request permission
       const result = await Notification.requestPermission()
-      setPermission(result)
 
       if (result !== "granted") {
         toast.error("Permiso de notificaciones denegado. Habilítalo en los ajustes de tu navegador.")
@@ -88,19 +85,20 @@ export function PushNotificationBanner() {
 
       // 5. Show local confirmation notification
       if (reg.showNotification) {
-        reg.showNotification("⚡ VENDETTA MUSIC", {
+        await reg.showNotification("⚡ VENDETTA MUSIC", {
           body: "🔔 ¡Recordatorios activados! Te avisaremos el día de cada show con tus horarios y locación.",
-          icon: "/images/logo-icon.png",
-          badge: "/images/logo-icon.png",
+          icon: "/images/branding/logo-vendetta.png",
+          badge: "/images/branding/logo-vendetta.png",
           data: { url: "/agenda" }
-        } as any)
+        } as NotificationOptions)
       }
 
       setIsSubscribed(true)
       toast.success("¡Recordatorios de shows activados exitosamente!")
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Desconocido"
       console.error("Subscription error:", err)
-      toast.error(`Error al activar: ${err?.message || "Desconocido"}`)
+      toast.error(`Error al activar: ${msg}`)
     } finally {
       setIsSubscribing(false)
     }
@@ -136,7 +134,7 @@ export function PushNotificationBanner() {
           tag: "vendetta-show-demo",
           renotify: true,
           data: { url: "/agenda" }
-        } as any)
+        } as NotificationOptions)
         toast.success("¡Notificación de prueba enviada a tu pantalla!")
       } else {
         new Notification("⚡ VENDETTA | ¡HOY HAY SHOW!", {
@@ -145,9 +143,10 @@ export function PushNotificationBanner() {
         })
         toast.success("¡Notificación de prueba enviada!")
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Desconocido"
       console.error("Test notification error:", err)
-      toast.error(`Error al mostrar notificación: ${err?.message || "Desconocido"}`)
+      toast.error(`Error al mostrar notificación: ${msg}`)
     }
   }
 
