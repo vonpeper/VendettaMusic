@@ -154,7 +154,7 @@ export async function getWebPushSubscriptions(): Promise<Array<{ id: string; end
   await ensureWebPushTable()
   try {
     const rows = await db.$queryRawUnsafe<Array<{ id: string; endpoint: string; p256dh: string; auth: string }>>(`SELECT * FROM WebPushSubscription ORDER BY createdAt DESC`)
-    return rows.map(r => ({
+    return (rows || []).map((r: { id: string; endpoint: string; p256dh: string; auth: string }) => ({
       id: r.id,
       endpoint: r.endpoint,
       p256dh: r.p256dh,
