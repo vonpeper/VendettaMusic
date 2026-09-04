@@ -1,20 +1,49 @@
-name: Deploy to Dokploy
+name: Manual Deploy to VPS Dokploy (Manual Only)
+
+# ==============================================================================
+# WORKFLOW DE DESPLIEGUE MANUAL Y CONTROLADO
+# ==============================================================================
+# REQUISITOS OBLIGATORIOS ANTES DE EJECUTAR:
+# 1. Migración de base de datos verificada y aplicada previamente (o runbook listo).
+# 2. Respaldo consistente de SQLite (.backup) completado y verificado en el VPS.
+# 3. Imagen inmutable compilada con tag de commit/SHA específico.
+# 4. Autorización manual explícita del administrador.
+# ==============================================================================
 
 on:
-  workflow_run:
-    workflows: ["Build and push image"]
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      target_sha:
+        description: "SHA del commit a desplegar (debe coincidir con la imagen inmutable)"
+        required: true
+        type: string
+      confirmed_backup:
+        description: "Confirmo que existe respaldo de base de datos SQLite verificado"
+        required: true
+        type: boolean
+        default: false
+      confirmed_migrations:
+        description: "Confirmo que las migraciones correspondientes fueron ejecutadas/auditadas"
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
   deploy:
+    name: Trigger Manual Deployment
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
+      - name: Validate Manual Confirmations
+        run: |
+          if [ "${{ inputs.confirmed_backup }}" != "true" ] || [ "${{ inputs.confirmed_migrations }}" != "true" ]; then
+            echo "::error::El despliegue requiere confirmación explícita de respaldo y migraciones."
+            exit 1
+          fi
+          echo "Despliegue manual autorizado para commit SHA: ${{ inputs.target_sha }}"
+
       - name: Trigger Dokploy compose redeploy
         env:
           DOKPLOY_URL: ${{ vars.DOKPLOY_URL }}
@@ -26,7 +55,7 @@ jobs:
             echo "::error::Missing DOKPLOY_URL / DOKPLOY_TOKEN / DOKPLOY_COMPOSE_ID"
             exit 1
           fi
-          echo "Calling compose.deploy on $DOKPLOY_URL for compose $COMPOSE_ID"
+          echo "Calling compose.deploy on $DOKPLOY_URL for compose $COMPOSE_ID (SHA: ${{ inputs.target_sha }})"
           response=$(curl -sw "\n%{http_code}" -X POST \
             -H "x-api-key: $DOKPLOY_TOKEN" \
             -H "Content-Type: application/json" \
