@@ -34,42 +34,7 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", {
 }).format(v)
 
 export default async function AdminVentasPage() {
-  const now = new Date()
-  const expirationThreshold = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000)
-
-  // 1. Saneamiento automático
-  await db.bookingRequest.updateMany({
-    where: { status: "pendiente", createdAt: { lt: expirationThreshold } },
-    data: { status: "EXPIRED" }
-  })
-
-  // 2. Mover contratos agendados a completados si la fecha del evento ya pasó
-  const yesterday = new Date(now)
-  yesterday.setDate(yesterday.getDate() - 1)
-  yesterday.setHours(23, 59, 59, 999)
-
-  const toComplete = await db.bookingRequest.findMany({
-    where: { status: "agendado", requestedDate: { lt: yesterday } },
-    select: { id: true, eventId: true }
-  })
-
-  if (toComplete.length > 0) {
-    const ids = toComplete.map(b => b.id)
-    const eventIds = toComplete.map(b => b.eventId).filter(Boolean) as string[]
-
-    await db.$transaction([
-      db.bookingRequest.updateMany({
-        where: { id: { in: ids } },
-        data: { status: "completado", paymentStatus: "paid" }
-      }),
-      db.event.updateMany({
-        where: { id: { in: eventIds } },
-        data: { status: "completado" }
-      })
-    ])
-  }
-
-  // 3. Fetch de datos unificados
+  // Fetch de datos unificados (100% de solo lectura, sin efectos secundarios en render)
   const [bookings, quotes, expiredStats, config, clients, locations, packages, musicianProfiles] = await Promise.all([
     db.bookingRequest.findMany({ 
       orderBy: { createdAt: "desc" },

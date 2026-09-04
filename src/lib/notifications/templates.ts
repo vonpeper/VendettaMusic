@@ -70,41 +70,80 @@ Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/pri
       return config?.msgTemplateFollowUp || `Hola {{clientName}}, te escribo de *Vendetta Music* 🎸 para dar seguimiento a tu cotización. ¿Pudiste revisarla? Seguimos a tus órdenes.`
 
     case "CLIENT_REMINDER":
-      return config?.msgTemplateReminder || `¡Hola {{clientName}}! Estamos a solo unos días de tu gran evento el *{{date}}* 🎸.
-      
-Te escribimos para confirmar que todo está en orden. Si tienes alguna duda, estamos a tus órdenes.`
+      return config?.msgTemplateReminder || `¡Hola {{clientName}}! 🎸 Estamos a 7 días de tu fecha.
+
+Te compartimos el resumen de tu evento para verificar que todo esté en orden:
+
+🎉 *Evento:* {{ceremony}}
+📅 *Fecha:* {{date}}
+⏰ *Horario Show:* {{time}}
+📍 *Lugar:* {{location}}
+🏠 *Dirección:* {{address}}
+🗺️ *Google Maps:* {{mapsLink}}
+
+¿Tienes alguna actualización de logística, cambio de horario o detalle para la banda? 
+Puedes responder directamente a este mensaje o consultar el estatus de tu evento con tu folio *{{shortId}}* en:
+👉 https://vendetta.mx/status/{{shortId}}
+
+¡Todo listo para que sea una noche inolvidable! 🤘✨
+—
+*Vendetta Live Music* | _vendetta.mx_`
 
     case "CLIENT_CONFIRMED":
       const isBar = payload.isBarEvent === "true" || payload.ceremony?.toLowerCase().includes("bar") || payload.package?.toLowerCase().includes("bar");
       if (isBar) {
         return config?.msgTemplateBarClose || `¡Hola {{clientName}}! 🎉
 
-Tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.
+Tu fecha para el *{{date}}* ha quedado oficialmente confirmada y agendada con *Vendetta Live Music*.
 
-*Folio:* {{shortId}}
+📋 *Folio de Reservación:* {{shortId}}
 
-Puedes consultar el detalle de tu evento, *firmar tu contrato digital* y descargarlo aquí:
-{{bookingLink}}
+✍️ *FIRMA DE TU CONTRATO DIGITAL:*
+Para consultar el estatus de tu evento y **firmar tu contrato digital**, entra al siguiente enlace con tu folio:
+
+👉 https://vendetta.mx/status/{{shortId}}
+
+Al ingresar tu firma podrás descargar el contrato en formato PDF de inmediato.
 
 ¡Gracias por confiar en *Vendetta*! 🎸
-
 —
-Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`
+*Vendetta Live Music* | _vendetta.mx_`
       } else {
         return config?.msgTemplateEventClose || `¡Felicidades {{clientName}}! 🎉
 
-Hemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.
+Hemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente bloqueada y confirmada en nuestra agenda.
 
-*Folio:* {{shortId}}
+📋 *Folio de Reservación:* {{shortId}}
 
-Puedes consultar el detalle de tu evento, *firmar tu contrato digital* y descargarlo aquí:
-{{bookingLink}}
+✍️ *FIRMA DE TU CONTRATO DIGITAL:*
+Para consultar los detalles de tu evento y **firmar digitalmente tu contrato**, ingresa al siguiente enlace con tu folio:
 
-¡Gracias por confiar en *Vendetta* para este día tan especial! 🎸
+👉 https://vendetta.mx/status/{{shortId}}
 
+Al ingresar tu firma podrás descargar el contrato en formato PDF de inmediato.
+
+¡Gracias por confiar en *Vendetta Live Music* para este día tan especial! 🎸🤘
 —
-Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`
+*Vendetta Live Music* | _vendetta.mx_`
       }
+
+    case "MUSICIAN_REMINDER_3DAYS":
+      return config?.msgTemplateReminder3Days || `¡Hola {{musicianName}}! ⚠️ Recordatorio de *Vendetta Live Music*:
+
+Tienes una fecha programada en *3 días* y aún no has confirmado tu asistencia:
+
+📅 *Fecha:* {{date}}
+🎉 *Tipo:* {{ceremony}}
+📍 *Lugar:* {{location}}
+⏱️ *Montaje:* {{setupTime}}
+🚗 *Llegada Músicos:* {{arrivalTime}}
+
+👉 *Por favor confirma o rechaza tu asistencia hoy mismo aquí:*
+{{confirmLink}}
+
+_(Es indispensable confirmar hoy para coordinar un suplente a tiempo si no puedes asistir)._
+
+— Administración Vendetta`
 
     case "CLIENT_THANKS":
       return config?.msgTemplateThanks || `¡Hola {{clientName}}! 🎉 Todavía seguimos emocionados por lo de ayer.

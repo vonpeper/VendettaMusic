@@ -21,7 +21,7 @@ export async function createBandMemberAction(formData: FormData) {
       name: formData.get("name")?.toString() || "",
       role: formData.get("role")?.toString() || "",
       emoji: formData.get("emoji")?.toString() || "🎸",
-      img: formData.get("img")?.toString() || "/images/musicians/default.jpg",
+      img: formData.get("img")?.toString() || "/images/branding/logo-vendetta.png",
       shortBio: formData.get("shortBio")?.toString() || "",
       fullBio: formData.get("fullBio")?.toString() || "",
       ig: formData.get("ig")?.toString() || "",
@@ -34,7 +34,7 @@ export async function createBandMemberAction(formData: FormData) {
     revalidatePath("/")
     revalidatePath("/admin/media")
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err)
     return { error: "Failed to create band member" }
   }
@@ -46,7 +46,7 @@ export async function updateBandMemberAction(id: string, formData: FormData) {
       name: formData.get("name")?.toString() || "",
       role: formData.get("role")?.toString() || "",
       emoji: formData.get("emoji")?.toString() || "🎸",
-      img: formData.get("img")?.toString() || "/images/musicians/default.jpg",
+      img: formData.get("img")?.toString() || "/images/branding/logo-vendetta.png",
       shortBio: formData.get("shortBio")?.toString() || "",
       fullBio: formData.get("fullBio")?.toString() || "",
       ig: formData.get("ig")?.toString() || "",
@@ -59,7 +59,7 @@ export async function updateBandMemberAction(id: string, formData: FormData) {
     revalidatePath("/")
     revalidatePath("/admin/media")
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err)
     return { error: "Failed to update band member" }
   }
@@ -71,7 +71,7 @@ export async function deleteBandMemberAction(id: string) {
     revalidatePath("/")
     revalidatePath("/admin/media")
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err)
     return { error: "Failed to delete band member" }
   }

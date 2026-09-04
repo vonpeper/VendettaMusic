@@ -4,7 +4,6 @@ import { NextResponse } from "next/server"
 
 const { auth } = NextAuth(authConfig)
 
-const publicRoutes = ["/", "/nosotros", "/servicios", "/paquetes", "/repertorio", "/contacto"]
 const authRoutes = ["/auth/login", "/auth/registro"]
 
 // Bots de buscadores y previews que NO debemos geo-bloquear
@@ -27,7 +26,6 @@ export default auth((req) => {
   const role = req.auth?.user?.role as string | undefined
 
   const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth")
-  const isPublicRoute = publicRoutes.includes(nextUrl.pathname)
   const isAuthRoute = authRoutes.includes(nextUrl.pathname)
 
   if (isApiAuthRoute) return NextResponse.next()
@@ -35,7 +33,6 @@ export default auth((req) => {
   if (isAuthRoute) {
     if (isLoggedIn) {
       if (role === "ADMIN" || role === "AGENTE") return NextResponse.redirect(new URL("/admin", nextUrl))
-      if (role === "CLIENT") return NextResponse.redirect(new URL("/cliente", nextUrl))
       if (role === "MUSICIAN") return NextResponse.redirect(new URL("/musico", nextUrl))
       return NextResponse.redirect(new URL("/", nextUrl))
     }
@@ -46,12 +43,6 @@ export default auth((req) => {
   if (nextUrl.pathname.startsWith("/admin")) {
     if (!isLoggedIn) return NextResponse.redirect(new URL("/auth/login", nextUrl))
     if (role !== "ADMIN" && role !== "AGENTE") return NextResponse.redirect(new URL("/", nextUrl))
-  }
-
-  // Rutas protegidas Cliente
-  if (nextUrl.pathname.startsWith("/cliente")) {
-    if (!isLoggedIn) return NextResponse.redirect(new URL("/auth/login", nextUrl))
-    if (role !== "CLIENT" && role !== "ADMIN") return NextResponse.redirect(new URL("/", nextUrl))
   }
 
   return NextResponse.next()

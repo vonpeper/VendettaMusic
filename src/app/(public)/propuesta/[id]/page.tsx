@@ -6,7 +6,7 @@ import { ProposalInteractive } from "@/components/funnel/ProposalInteractive"
 import { ContractSigner } from "@/components/funnel/ContractSigner"
 import { formatDateMX } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import crypto from "crypto"
+import { generateResourceToken } from "@/lib/security"
 
 export const dynamic = "force-dynamic"
 
@@ -98,11 +98,10 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
     where: { id: "vendetta_config" }
   })
 
-  // Generar tokens seguros para descargar PDFs desde ruta pública
-  const secret = process.env.AUTH_SECRET || "fallback_secret_vendetta_music_app_2026"
-  const pdfToken = crypto.createHmac("sha256", secret).update(booking.id).digest("hex")
-  const downloadQuoteUrl = `/api/admin/contract/${booking.id}?token=${pdfToken}&type=quote&t=${Date.now()}`
-  const downloadContractUrl = `/api/admin/contract/${booking.id}?token=${pdfToken}&t=${Date.now()}`
+  // Generar token seguro para descarga pública de cotización / contrato
+  const pdfToken = generateResourceToken(booking.id)
+  const downloadQuoteUrl = `/api/admin/contract/${booking.id}?token=${pdfToken}&type=quote`
+  const downloadContractUrl = `/api/admin/contract/${booking.id}?token=${pdfToken}`
 
   const hasAudio = !booking.clientProvidesAudio
   const base = Number(booking.baseAmount || 0)
@@ -293,7 +292,7 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
                 Si requieres un ajuste específico que no figure en los opcionales o tienes dudas técnicas, contáctanos directamente por WhatsApp.
               </p>
               <a 
-                href={`https://wa.me/5215500000000?text=Hola,%20tengo%20una%20duda%20sobre%20mi%20propuesta%20folio%20${booking.shortId}`}
+                href={process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ? `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola, tengo una duda sobre mi propuesta folio ${booking.shortId}`)}` : `mailto:rock.vendettamx@gmail.com?subject=${encodeURIComponent(`Duda sobre propuesta folio ${booking.shortId}`)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="block"

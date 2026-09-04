@@ -126,7 +126,6 @@ const EVENT_MOTIVOS = [
 ]
 
 export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[]; viaticosConfig?: any }) {
-  const WHATSAPP_PHONE = "527222417045"
 
   // Estado del modal de cotización
   const [selectedPkg, setSelectedPkg] = useState<PackageData | null>(null)
@@ -190,12 +189,16 @@ Me gustaría cotizar el *Paquete ${pkgName}* para mi evento:
 
 ¿Tienen disponibilidad para esta fecha? ¡Muchas gracias!`
 
-    const waUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(waMessage)}`
-
-    toast.success("¡Redirigiendo a WhatsApp con los datos de tu evento!")
-    
-    // Abrir WhatsApp en nueva pestaña
-    window.open(waUrl, "_blank")
+    const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim()
+    if (rawNumber) {
+      const cleanPhone = rawNumber.replace(/\D/g, "")
+      const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`
+      toast.success("¡Redirigiendo a WhatsApp con los datos de tu evento!")
+      window.open(waUrl, "_blank")
+    } else {
+      toast.success("¡Redirigiendo al cotizador en línea!")
+      window.location.href = `/cotizar`
+    }
     handleCloseModal()
   }
 

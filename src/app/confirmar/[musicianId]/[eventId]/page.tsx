@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { confirmAttendanceAction } from "@/actions/confirmations"
+import { confirmAttendanceAction, rejectAttendanceAction } from "@/actions/confirmations"
 import { Button } from "@/components/ui/button"
 import { CheckCircle2, Calendar, MapPin, Clock } from "lucide-react"
 import Link from "next/link"
@@ -58,10 +58,10 @@ export default async function ConfirmationPage({
   searchParams,
 }: {
   params: Promise<{ musicianId: string; eventId: string }>;
-  searchParams: Promise<{ success?: string; rejected?: string }>;
+  searchParams: Promise<{ success?: string; rejected?: string; token?: string }>;
 }) {
   const { musicianId, eventId } = await params
-  const { success: successParam, rejected: rejectedParam } = await searchParams
+  const { success: successParam, rejected: rejectedParam, token } = await searchParams
   const success = successParam === "true"
   const rejected = rejectedParam === "true"
 
@@ -201,17 +201,23 @@ export default async function ConfirmationPage({
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-          <Link href={`/confirmar/${musicianId}/${eventId}/go`} className="block">
-             <Button className="w-full h-14 text-lg font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
-                ✅ SÍ, CONFIRMO
-             </Button>
-          </Link>
+          <form action={async () => {
+            "use server"
+            await confirmAttendanceAction(musicianId, eventId, token)
+          }}>
+            <Button type="submit" className="w-full h-14 text-lg font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform cursor-pointer">
+              ✅ SÍ, CONFIRMO
+            </Button>
+          </form>
           
-          <Link href={`/confirmar/${musicianId}/${eventId}/reject`} className="block">
-             <Button variant="outline" className="w-full h-12 text-sm font-bold rounded-xl border-red-500/30 text-red-400 hover:bg-red-500/10">
-                ❌ NO PUEDO IR
-             </Button>
-          </Link>
+          <form action={async () => {
+            "use server"
+            await rejectAttendanceAction(musicianId, eventId, token)
+          }}>
+            <Button type="submit" variant="outline" className="w-full h-12 text-sm font-bold rounded-xl border-red-500/30 text-red-400 hover:bg-red-500/10 cursor-pointer">
+              ❌ NO PUEDO IR
+            </Button>
+          </form>
         </div>
         
         <p className="text-[10px] text-muted-foreground text-center mt-6 uppercase tracking-widest">

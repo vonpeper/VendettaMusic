@@ -52,6 +52,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     where: { id: id },
     include: { 
       client: { include: { user: true } },
+      lineItems: { orderBy: { order: "asc" } },
       payments: { orderBy: { createdAt: "desc" } },
       event: { 
         include: { 
@@ -227,6 +228,9 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 setupTime: booking.setupTime,
                 dressCode: booking.dressCode,
                 musicianNotes: booking.musicianNotes,
+                viaticosAmount: booking.viaticosAmount,
+                discountAmount: booking.discountAmount,
+                lineItems: (booking as any).lineItems || [],
               }}
               clients={clientsMapped}
               locations={locations}

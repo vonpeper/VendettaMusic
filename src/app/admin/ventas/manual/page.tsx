@@ -1,27 +1,80 @@
 export const dynamic = "force-dynamic"
 import { db } from "@/lib/db"
-import { ManualQuoteForm } from "@/components/admin/ManualQuoteForm"
+import { UnifiedEventQuoteForm } from "@/components/admin/UnifiedEventQuoteForm"
 import { ShieldCheck, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
-export default async function ManualBookingPage() {
-  const [packages, clients] = await Promise.all([
+import { redirect } from "next/navigation"
+
+interface ManualBookingPageProps {
+  searchParams?: Promise<{
+    inquiryId?: string
+  }>
+}
+
+export default async function ManualBookingPage({ searchParams }: ManualBookingPageProps) {
+  const resolvedParams = searchParams ? await searchParams : undefined
+  const inquiryId = resolvedParams?.inquiryId
+
+  let prefillInquiry: {
+    clientName: string
+    clientPhone?: string
+    clientEmail?: string
+    clientId?: string
+    customName?: string
+    eventDate?: string
+    musicianNotes?: string
+    originInquiryId?: string
+    status?: string
+  } | undefined = undefined
+
+  if (inquiryId) {
+    const inquiry = await db.contactInquiry.findUnique({
+      where: { id: inquiryId },
+      include: { convertedBooking: true }
+    })
+
+    if (inquiry) {
+      // Si ya fue convertido previamente, redirigir a la cotización existente
+      if (inquiry.convertedBooking) {
+        redirect(`/admin/ventas/${inquiry.convertedBooking.id}`)
+      }
+
+      prefillInquiry = {
+        clientName: inquiry.name,
+        clientPhone: inquiry.phone || "",
+        clientEmail: inquiry.email || "",
+        clientId: inquiry.matchedClientId || undefined,
+        customName: inquiry.eventType ? `Consulta: ${inquiry.eventType}` : "",
+        eventDate: inquiry.requestedDate ? inquiry.requestedDate.toISOString().split("T")[0] : "",
+        musicianNotes: inquiry.message ? `Solicitud Web (${inquiry.eventType || "General"}): ${inquiry.message}` : "",
+        originInquiryId: inquiry.id,
+        status: "pendiente"
+      }
+    }
+  }
+
+  const [packages, clients, locations] = await Promise.all([
     db.package.findMany({
       orderBy: { baseCostPerHour: "asc" }
     }),
     db.clientProfile.findMany({
       include: { user: true },
       orderBy: { user: { name: "asc" } }
+    }),
+    db.location.findMany({
+      orderBy: { name: "asc" }
     })
   ])
 
-  // Mapeamos para que el componente reciba lo que espera
   const formattedPackages = packages.map(p => ({
     id: p.id,
     name: p.name,
     baseCostPerHour: p.baseCostPerHour,
-    minDuration: p.minDuration
+    minDuration: p.minDuration,
+    description: p.description,
+    includes: p.includes
   }))
 
   const formattedClients = clients
@@ -30,14 +83,26 @@ export default async function ManualBookingPage() {
       id: c.id,
       name: c.user.name || "Sin Nombre",
       phone: c.whatsapp || "",
-      email: c.user.email || ""
+      email: c.user.email || "",
+      city: c.city || "Toluca / CDMX",
+      state: c.state || "México"
     }))
 
+  const formattedVenues = locations.map(l => ({
+    id: l.id,
+    name: l.name,
+    address: l.address,
+    city: l.city,
+    state: l.state,
+    mapsLink: l.mapsLink,
+    phone: l.phone
+  }))
+
   return (
-    <div className="p-8 bg-background min-h-screen">
-      <div className="max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 bg-background min-h-screen">
+      <div className="max-w-6xl mx-auto">
         {/* Header con navegación */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-border/40">
           <div className="flex items-center gap-4">
             <Link href="/admin/ventas">
               <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10">
@@ -45,16 +110,26 @@ export default async function ManualBookingPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-heading font-black text-foreground flex items-center gap-3">
-                <ShieldCheck className="text-primary w-8 h-8" /> Cotización Manual
+              <h1 className="text-2xl md:text-3xl font-heading font-black text-foreground flex items-center gap-3">
+                <ShieldCheck className="text-primary w-7 h-7" /> Nueva Cotización / Evento Manual
               </h1>
-              <p className="text-muted-foreground text-sm">Registra un evento captado por fuera del sitio web.</p>
+              <p className="text-muted-foreground text-xs md:text-sm mt-0.5">
+                {prefillInquiry 
+                  ? `Convirtiendo prospecto de contacto de ${prefillInquiry.clientName} a cotización formal.` 
+                  : "Formulario administrativo unificado con precarga de clientes, venues y conceptos adicionales."}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Formulario */}
-        <ManualQuoteForm packages={formattedPackages} clients={formattedClients} />
+        {/* Formulario Unificado */}
+        <UnifiedEventQuoteForm
+          mode="create"
+          initialData={prefillInquiry}
+          packages={formattedPackages}
+          clients={formattedClients}
+          venues={formattedVenues}
+        />
       </div>
     </div>
   )

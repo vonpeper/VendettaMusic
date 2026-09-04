@@ -126,7 +126,7 @@ export function BandMembersManagerClient({ members }: { members: PublicBandMembe
                     <Input 
                       name="img" 
                       id="img-path-input"
-                      defaultValue={editing?.img || "/images/musicians/default.jpg"} 
+                      defaultValue={editing?.img || "/images/branding/logo-vendetta.png"}
                       required 
                       className="bg-primary/10 border-border/40" 
                     />

@@ -61,23 +61,30 @@ const PACKAGE_INCLUSIONS: Record<string, string[]> = {
   ]
 }
 
+export interface GenerateContractPdfOptions {
+  includeLegal?: boolean
+  clientSignature?: string
+  adminSignature?: string
+  signedAt?: string
+  contractLegalText?: string
+  contractType?: "standard" | "happening" | "custom"
+  bankName?: string | null
+  bankAccount?: string | null
+  bankClabe?: string | null
+  bankBeneficiary?: string | null
+  rfc?: string
+  fiscalAddress?: string
+  legalRepName?: string
+  legalRepRole?: string
+  legalRepPower?: string
+  notificationAddress?: string
+  billingData?: string
+}
+
 export async function generateContractPdf(
   data: FunnelData, 
   shortId: string, 
-  options: { 
-    includeLegal?: boolean, 
-    clientSignature?: string, 
-    adminSignature?: string,
-    signedAt?: string,
-    contractLegalText?: string,
-    rfc?: string,
-    fiscalAddress?: string,
-    legalRepName?: string,
-    legalRepRole?: string,
-    legalRepPower?: string,
-    notificationAddress?: string,
-    billingData?: string
-  } = { includeLegal: true }
+  options: GenerateContractPdfOptions = { includeLegal: true }
 ) {
   console.log(`[PDF Generator] Finalizing document. includeLegal=${!!options.includeLegal}`)
   
@@ -164,18 +171,14 @@ export async function generateContractPdf(
   const safeValue = (val: any, fallback = "N/A") => (val && val !== "undefined" && val !== "") ? String(val) : fallback
   const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(v || 0)
 
-  const isColegio = data.clientName?.toLowerCase().includes("colegio") || 
-                    shortId.toLowerCase().includes("colegio") || 
-                    data.packageName?.toLowerCase().includes("colegio") || 
-                    (data as any).shortId?.toLowerCase().includes("colegio") ||
-                    data.clientName?.toLowerCase().includes("anestesi");
+  const isHappening = options.contractType === "happening";
 
   const isEarlySoundcheck = (data as any).adminNote?.toLowerCase().includes("soundcheck") || false
   const extraSoundcheck = isEarlySoundcheck ? 2000 : 0
   // fullAddress se define abajo para evitar ReferenceError en algunos entornos de ejecución
   const baseTotal = data.packagePrice + (data.viaticosAmount || 0)
   const subtotal = baseTotal + extraSoundcheck
-  const ivaAmount = (isColegio || (data as any).invoice) ? Math.round(subtotal * 0.16 * 100) / 100 : ((data as any).ivaAmount || 0)
+  const ivaAmount = (isHappening || (data as any).invoice) ? Math.round(subtotal * 0.16 * 100) / 100 : ((data as any).ivaAmount || 0)
   const total = subtotal + ivaAmount
 
   const logoDims = logoImage ? logoImage.scale(0.16) : { width: 0, height: 0 }
@@ -207,7 +210,7 @@ export async function generateContractPdf(
 
   drawEventHeader(ctx, "DATOS DEL EVENTO", [
     { label: "CLIENTE:", value: safeValue(data.clientName, "CLIENTE") },
-    isColegio 
+    isHappening 
       ? { label: "TIPO EVENTO:", value: "Happening" }
       : { label: "TIPO VENUE:", value: capitalize(safeValue(data.venueType, "SALÓN")) },
     { label: "UBICACIÓN:", value: data.address || `${safeValue(data.street)} ${safeValue(data.houseNumber)}, ${safeValue(data.colonia)}, ${safeValue(data.municipio)}` },
@@ -261,10 +264,10 @@ export async function generateContractPdf(
     data.hasRobot ? "• Incluye Robot LED" : null
   ].filter(Boolean) as string[]
 
-  // isColegio already defined above
+  // isHappening already defined above
   
   let tableRows: any[] = [];
-  if (isColegio) {
+  if (isHappening) {
     tableRows.push({
       no: "1",
       desc: "Servicio Artístico: Presentación de Vendetta\n• Show musical de 2 horas con 30 minutos con formación de cinco músicos.\n• Incluye backline de la banda, ingeniero de audio de Vendetta y asistente técnico.\n• Preparación, coordinación artística, repertorio y producción musical.",
@@ -296,7 +299,7 @@ export async function generateContractPdf(
     if (data.viaticosAmount > 0) {
       tableRows.push({
         no: String(tableRows.length + 1),
-        desc: isColegio ? "Viáticos de traslado" : (data.viaticosLabel || "Viáticos y gastos logísticos"),
+        desc: isHappening ? "Viáticos de traslado" : (data.viaticosLabel || "Viáticos y gastos logísticos"),
         pu: MXN(data.viaticosAmount)
       });
     }
@@ -384,7 +387,7 @@ export async function generateContractPdf(
     page.drawText(decHeader, { x: (pageWidth - montserratBold.widthOfTextAtSize(decHeader, 10)) / 2, y: ctx.y, size: 10, font: montserratBold })
     ctx.y -= 20
     
-    if (isColegio) {
+    if (isHappening) {
       const decText = "DECLARACIONES DEL PRESTADOR\n" +
         "Primera.- El Prestador José Alberto Bautista Romero Paredes, declara bajo protesta de decir verdad que:\n" +
         "• Cuenta con la experiencia, capacidad técnica, conocimientos y recursos necesarios para prestar los servicios objeto de este documento.\n" +
@@ -422,12 +425,21 @@ export async function generateContractPdf(
     ctx.y -= 20
 
     const fullLegalAddress = data.address || [data.street, data.houseNumber, data.colonia, data.municipio, data.city, data.state].filter(Boolean).join(", ") || "Ubicación por confirmar"
-    console.log(`[PDF Generator] Generando contrato para: ${data.clientName}, Dirección: ${fullLegalAddress}`)
+    console.log("[PDF Generator] Generando documento PDF...")
 
     let clausesToDraw: { n: string, t: string }[] = []
 
-    if (isColegio) {
-      const bankDetails = "medio de transferencia electrónica a la cuenta CLABE: 072 180 01127840168 2 de Banco Banorte a nombre de ESTEFANY MONSERRAT VERDUZCO MERCADO"
+    if (isHappening) {
+      const formatBankText = () => {
+      const parts = []
+      if (options.bankName) parts.push(`Banco ${options.bankName}`)
+      if (options.bankAccount) parts.push(`Cuenta: ${options.bankAccount}`)
+      if (options.bankClabe) parts.push(`CLABE: ${options.bankClabe}`)
+      if (options.bankBeneficiary) parts.push(`a nombre de ${options.bankBeneficiary}`)
+      if (parts.length > 0) return `medio de ${parts.join(" ")}`
+      return "medio de transferencia electrónica o depósito bancario a los datos oficiales compartidos por canal seguro"
+    }
+    const bankDetails = formatBankText()
       clausesToDraw = [
         { n: "PRIMERA", t: "DECLARA Y ACEPTA “EL CLIENTE.” Conocer el trabajo que desempeña “VENDETTA” y estar de acuerdo en su modalidad de “BANDA DE MÚSICA EN VIVO”" },
         { n: "SEGUNDA", t: "DECLARA “VENDETTA” tener la capacidad y experiencia necesaria en términos musicales para cumplir con el compromiso motivo de este contrato de forma profesional." },
@@ -506,9 +518,25 @@ export async function generateContractPdf(
         { 
           n: "QUINTA", 
           t: (data.viaticosAmount || 0) > 0 
-            ? (pct > 0 ? `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; más la cantidad de: ${MXN(data.viaticosAmount || 0)} por concepto de viáticos foráneos, dando un total de ${MXN(total)} a liquidar. La cual “EL CLIENTE” se compromete a liquidar en 2 pagos: un anticipo del ${pct}% (${MXN(anticipo)}) por medio de depósito bancario a: Banco BBVA CUENTA 299 637 6576 A NOMBRE DE JOSÉ ALBERTO BAUTISTA ROMERO PAREDES O POR MEDIO DE TRANSFERENCIA ELECTRÓNICA A LA CUENTA CLABE: 012 700 02996376576 4; BBVA O POR MEDIO DE DEPÓSITO EN CUALQUIER ESTABLECIMIENTO, LA LIQUIDACIÓN DEL RESTANTE POR UN MONTO DE ${MXN(liquidacion)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO EN EL MOMENTO EN EL QUE “VENDETTA” LLEGUE A LA DIRECCIÓN MENCIONADA EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`
+            ? (pct > 0 ? `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; más la cantidad de: ${MXN(data.viaticosAmount || 0)} por concepto de viáticos foráneos, dando un total de ${MXN(total)} a liquidar. La cual “EL CLIENTE” se compromete a liquidar en 2 pagos: un anticipo del ${pct}% (${MXN(anticipo)}) ${(() => {
+    const parts = []
+    if (options.bankName) parts.push(`Banco ${options.bankName}`)
+    if (options.bankAccount) parts.push(`Cuenta: ${options.bankAccount}`)
+    if (options.bankClabe) parts.push(`CLABE: ${options.bankClabe}`)
+    if (options.bankBeneficiary) parts.push(`a nombre de ${options.bankBeneficiary}`)
+    if (parts.length > 0) return `por medio de depósito o transferencia a: ${parts.join(" ")}`
+    return "por medio de transferencia electrónica o depósito a los datos oficiales compartidos por canal seguro"
+  })()}, LA LIQUIDACIÓN DEL RESTANTE POR UN MONTO DE ${MXN(liquidacion)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO EN EL MOMENTO EN EL QUE “VENDETTA” LLEGUE A LA DIRECCIÓN MENCIONADA EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`
                        : `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; más la cantidad de: ${MXN(data.viaticosAmount || 0)} por concepto de viáticos foráneos, dando un total de ${MXN(total)} a liquidar. LA TOTALIDAD DEL MONTO POR ${MXN(total)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO EN EL MOMENTO EN EL QUE “VENDETTA” LLEGUE A LA DIRECCIÓN MENCIONADA EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`)
-            : (pct > 0 ? `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; la cual “EL CLIENTE” se compromete a liquidar en 2 pagos: un anticipo del ${pct}% (${MXN(anticipo)}) por medio de depósito bancario a: Banco BBVA CUENTA 299 637 6576 A NOMBRE DE JOSÉ ALBERTO BAUTISTA ROMERO PAREDES O POR MEDIO DE TRANSFERENCIA ELECTRÓNICA A LA CUENTA CLABE: 012 700 02996376576 4; BBVA O POR MEDIO DE DEPÓSITO EN CUALQUIER ESTABLECIMIENTO, LA LIQUIDACIÓN DEL RESTANTE POR UN MONTO DE ${MXN(liquidacion)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO EN EL MOMENTO EN EL QUE “VENDETTA” LLEGUE A LA DIRECCIÓN MENCIONADA EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`
+            : (pct > 0 ? `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; la cual “EL CLIENTE” se compromete a liquidar en 2 pagos: un anticipo del ${pct}% (${MXN(anticipo)}) ${(() => {
+    const parts = []
+    if (options.bankName) parts.push(`Banco ${options.bankName}`)
+    if (options.bankAccount) parts.push(`Cuenta: ${options.bankAccount}`)
+    if (options.bankClabe) parts.push(`CLABE: ${options.bankClabe}`)
+    if (options.bankBeneficiary) parts.push(`a nombre de ${options.bankBeneficiary}`)
+    if (parts.length > 0) return `por medio de depósito o transferencia a: ${parts.join(" ")}`
+    return "por medio de transferencia electrónica o depósito a los datos oficiales compartidos por canal seguro"
+  })()}, LA LIQUIDACIÓN DEL RESTANTE POR UN MONTO DE ${MXN(liquidacion)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO EN EL MOMENTO EN EL QUE “VENDETTA” LLEGUE A LA DIRECCIÓN MENCIONADA EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`
                        : `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; LA TOTALIDAD DEL MONTO POR ${MXN(total)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO EN EL MOMENTO EN EL QUE “VENDETTA” LLEGUE A LA DIRECCIÓN MENCIONADA EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`)
         },
         { n: "SEXTA", t: "En caso de alternar con otro grupo (musical, mariachis, disco, etc.), si dicho grupo no respeta el horario establecido entre ambos y llegara a ocupar más tiempo del establecido, “VENDETTA” no repondrá dicho tiempo y será sujeto a cumplir dentro del horario de inicio y final estipulado en el presente contrato. En caso de que el tiempo sea agotado no habrá opción de reembolso, VENDETTA cobrará el 100% del monto estipulado en este contrato y en caso de acordar seguir con el evento en un nuevo tiempo se tendrá que negociar un nuevo contrato." },

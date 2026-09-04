@@ -417,11 +417,11 @@ model Notification {
 }
 
 model BookingRequest {
-  id                    String         @id @default(uuid())
-  shortId               String?        @unique
+  id                    String            @id @default(uuid())
+  shortId               String?           @unique
   packageId             String?
   packageName           String
-  guestCount            Int            @default(0)
+  guestCount            Int               @default(0)
   venueType             String
   calle                 String?
   numero                String?
@@ -430,14 +430,14 @@ model BookingRequest {
   municipio             String?
   address               String
   city                  String
-  state                 String         @default("México")
-  isOutsideZone         Boolean        @default(false)
-  viaticosAmount        Float          @default(0)
+  state                 String            @default("México")
+  isOutsideZone         Boolean           @default(false)
+  viaticosAmount        Float             @default(0)
   distanceKm            Float?
   durationSec           Int?
   tollCost              Float?
   fuelCost              Float?
-  requiresManualQuote   Boolean        @default(false)
+  requiresManualQuote   Boolean           @default(false)
   mapsLink              String?
   requestedDate         DateTime
   startTime             String
@@ -445,49 +445,52 @@ model BookingRequest {
   baseAmount            Float
   depositAmount         Float
   paymentMethod         String
-  paymentStatus         String         @default("pending")
+  paymentStatus         String            @default("pending")
   paymentRef            String?
   clientName            String
   clientPhone           String
   clientEmail           String?
   clientUserId          String?
-  status                String         @default("pending")
+  status                String            @default("pending")
   adminNote             String?
-  notifiedAdmin         Boolean        @default(false)
-  notifiedMusicians     Boolean        @default(false)
-  eventId               String?        @unique
+  notifiedAdmin         Boolean           @default(false)
+  notifiedMusicians     Boolean           @default(false)
+  eventId               String?           @unique
   clientId              String?
-  isPublic              Boolean        @default(false)
-  clientProvidesAudio   Boolean        @default(false)
-  source                String         @default("web")
-  followUpCount         Int            @default(0)
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @default(now()) @updatedAt
-  bandHours             Int?           @default(0)
-  djHours               Int?           @default(0)
-  isDjWithTvs           Boolean?       @default(false)
-  hasTemplete           Boolean?       @default(false)
-  hasPista              Boolean?       @default(false)
-  hasRobot              Boolean?       @default(false)
-  hasPantalla           Boolean?       @default(false)
-  quoteVersion          Int            @default(1)
+  isPublic              Boolean           @default(false)
+  clientProvidesAudio   Boolean           @default(false)
+  source                String            @default("web")
+  followUpCount         Int               @default(0)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @default(now()) @updatedAt
+  bandHours             Int?              @default(0)
+  djHours               Int?              @default(0)
+  isDjWithTvs           Boolean?          @default(false)
+  hasTemplete           Boolean?          @default(false)
+  hasPista              Boolean?          @default(false)
+  hasRobot              Boolean?          @default(false)
+  hasPantalla           Boolean?          @default(false)
+  quoteVersion          Int               @default(1)
   stripePaymentIntentId String?
-  stripeSessionId       String?        @unique
+  stripeSessionId       String?           @unique
   adminSignature        String?
   clientSignature       String?
   signedAt              DateTime?
   signedIp              String?
-  discountAmount        Float?         @default(0)
-  originalPrice         Float?         @default(0)
-  invoice               Boolean        @default(false)
+  discountAmount        Float?            @default(0)
+  originalPrice         Float?            @default(0)
+  invoice               Boolean           @default(false)
   customName            String?
   ceremonyType          String?
   arrivalTime           String?
   setupTime             String?
   dressCode             String?
   musicianNotes         String?
-  event                 Event?         @relation(fields: [eventId], references: [id])
-  client                ClientProfile? @relation(fields: [clientId], references: [id])
+  sourceInquiryId       String?           @unique
+  lineItems             BookingLineItem[]
+  event                 Event?            @relation(fields: [eventId], references: [id])
+  client                ClientProfile?    @relation(fields: [clientId], references: [id])
+  sourceInquiry         ContactInquiry?   @relation(fields: [sourceInquiryId], references: [id], onDelete: SetNull)
   inboxItems            InboxItem[]
   payments              Payment[]
 
@@ -554,66 +557,66 @@ model EventMusician {
 }
 
 model GlobalConfig {
-  id                     String    @id @default("vendetta_config")
-  googleClientId         String?
-  googleClientSecret     String?
-  googleRefreshToken     String?
-  googleCalendarId       String?
-  lastCalendarSync       DateTime?
-  evolutionUrl           String?
-  evolutionApiKey        String?
-  evolutionInstance      String?   @default("vendetta_admin")
-  adminWhatsapp          String?
-  facebookUrl            String?
-  instagramUrl           String?
-  tiktokUrl              String?
-  whatsappUrl            String?
-  msgTemplateGig         String?
-  msgTemplateQuote       String?
-  msgTemplateEventClose  String?
-  msgTemplateBarClose    String?
-  zona2Rate              Float?    @default(1500.0)
-  zona3Rate              Float?    @default(3000.0)
-  zona2Cities            String?   @default("valle de bravo, avandaro, malinalco, ixtapan de la sal, tonatico, ciudad de mexico, cdmx, df, distrito federal, naucalpan, tlalnepantla, huixquilucan, interlomas, santa fe, cuajimalpa, alvaro obregon, coyoacan, tlalpan, tepotzotlan, atizapan, izcalli")
-  zona3Cities            String?   @default("cuernavaca, tepoztlan, jiutepec, morelos, queretaro, san juan del rio, juriquilla, puebla, cholula, atlixco, pachuca, hidalgo, tlaxcala")
-  bankName               String?
-  bankAccount            String?
-  bankClabe              String?
-  bankBeneficiary        String?
-  evolutionWebhookSecret String?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-  msgTemplateFollowUp    String?
-  autoFollowUpEnabled    Boolean   @default(true)
-  autoThanksEnabled      Boolean   @default(true)
-  msgTemplateExpiring    String?
-  msgExpiringActive      Boolean   @default(true)
-  msgTemplateReminder    String?
-  msgReminderActive      Boolean   @default(true)
-  msgTemplateThanks      String?
-  msgThanksActive        Boolean   @default(true)
-  adminSignature         String?
-  isSandbox              Boolean   @default(false)
-  logInboundActive       Boolean   @default(true)
-  ogTitle                String?
-  ogDescription          String?
-  ogImage                String?
-  contractLegalText      String?
-  contractBarLegalText   String?
-  payMercadoPagoActive   Boolean   @default(true)
-  payTransferenciaActive Boolean   @default(true)
-  payPersonalActive      Boolean   @default(true)
-  payStripeActive        Boolean   @default(false)
-  stripePublicKey        String?
-  stripeSecretKey        String?
-  stripeWebhookSecret    String?
-  mercadoPagoAccessToken String?
-  mercadoPagoPublicKey   String?
-  googleMapsApiKey       String?
-  viaticosLocalRadius       Float?    @default(50.0)
-  viaticosVehicleCount      Int?      @default(2)
-  msgTodayReminderActive    Boolean   @default(true)
-  msgTemplateTodayReminder  String?
+  id                       String    @id @default("vendetta_config")
+  googleClientId           String?
+  googleClientSecret       String?
+  googleRefreshToken       String?
+  googleCalendarId         String?
+  lastCalendarSync         DateTime?
+  evolutionUrl             String?
+  evolutionApiKey          String?
+  evolutionInstance        String?   @default("vendetta_admin")
+  adminWhatsapp            String?
+  facebookUrl              String?
+  instagramUrl             String?
+  tiktokUrl                String?
+  whatsappUrl              String?
+  msgTemplateGig           String?
+  msgTemplateQuote         String?
+  msgTemplateEventClose    String?
+  msgTemplateBarClose      String?
+  zona2Rate                Float?    @default(1500.0)
+  zona3Rate                Float?    @default(3000.0)
+  zona2Cities              String?   @default("valle de bravo, avandaro, malinalco, ixtapan de la sal, tonatico, ciudad de mexico, cdmx, df, distrito federal, naucalpan, tlalnepantla, huixquilucan, interlomas, santa fe, cuajimalpa, alvaro obregon, coyoacan, tlalpan, tepotzotlan, atizapan, izcalli")
+  zona3Cities              String?   @default("cuernavaca, tepoztlan, jiutepec, morelos, queretaro, san juan del rio, juriquilla, puebla, cholula, atlixco, pachuca, hidalgo, tlaxcala")
+  bankName                 String?
+  bankAccount              String?
+  bankClabe                String?
+  bankBeneficiary          String?
+  evolutionWebhookSecret   String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  msgTemplateFollowUp      String?
+  autoFollowUpEnabled      Boolean   @default(true)
+  autoThanksEnabled        Boolean   @default(true)
+  msgTemplateExpiring      String?
+  msgExpiringActive        Boolean   @default(true)
+  msgTemplateReminder      String?
+  msgReminderActive        Boolean   @default(true)
+  msgTemplateThanks        String?
+  msgThanksActive          Boolean   @default(true)
+  adminSignature           String?
+  isSandbox                Boolean   @default(false)
+  logInboundActive         Boolean   @default(true)
+  ogTitle                  String?
+  ogDescription            String?
+  ogImage                  String?
+  contractLegalText        String?
+  contractBarLegalText     String?
+  payMercadoPagoActive     Boolean   @default(true)
+  payTransferenciaActive   Boolean   @default(true)
+  payPersonalActive        Boolean   @default(true)
+  payStripeActive          Boolean   @default(false)
+  stripePublicKey          String?
+  stripeSecretKey          String?
+  stripeWebhookSecret      String?
+  mercadoPagoAccessToken   String?
+  mercadoPagoPublicKey     String?
+  googleMapsApiKey         String?
+  viaticosLocalRadius      Float?    @default(50.0)
+  viaticosVehicleCount     Int?      @default(2)
+  msgTodayReminderActive   Boolean   @default(true)
+  msgTemplateTodayReminder String?
 }
 
 model InboxItem {
@@ -665,4 +668,37 @@ model SongSuggestion {
 
   @@index([suggestedById])
   @@index([status])
+}
+
+model BookingLineItem {
+  id               String         @id @default(uuid())
+  bookingRequestId String
+  description      String
+  quantity         Int            @default(1)
+  unitCost         Float          @default(0)
+  lineTotal        Float          @default(0)
+  order            Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
+  bookingRequest   BookingRequest @relation(fields: [bookingRequestId], references: [id], onDelete: Cascade)
+
+  @@index([bookingRequestId])
+}
+
+model ContactInquiry {
+  id               String          @id @default(uuid())
+  name             String
+  phone            String?
+  email            String
+  requestedDate    DateTime?
+  eventType        String?
+  message          String?
+  status           String          @default("new") // "new", "reviewing", "converted", "closed"
+  matchedClientId  String?
+  convertedBooking BookingRequest?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @default(now()) @updatedAt
+
+  @@index([status])
+  @@index([email])
 }

@@ -93,6 +93,7 @@ export async function dispatchNotification({
         fullDate: formatDateMX(booking.requestedDate, "EEEE, d 'de' MMMM"),
         time: booking.startTime || "Por confirmar",
         location: booking.event?.location?.name || booking.address || "Por confirmar",
+        address: booking.event?.location?.address || booking.address || "Por confirmar",
         package: booking.event?.package?.name || booking.packageName || "Personalizado",
         ceremony: booking.venueType || booking.event?.ceremonyType || "Show",
         isBarEvent: [

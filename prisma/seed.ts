@@ -1,114 +1,86 @@
-import { PrismaClient } from '@prisma/client'
-import { hash } from 'bcryptjs'
-import { PrismaLibSql } from '@prisma/adapter-libsql'
+import { PrismaClient } from "@prisma/client"
+import { hash } from "bcryptjs"
+import { PrismaLibSql } from "@prisma/adapter-libsql"
 import "dotenv/config"
+import crypto from "crypto"
+
+// SEGURIDAD: Prevenir ejecución accidental en producción
+if (process.env.NODE_ENV === "production" || process.env.ALLOW_DEV_SEED !== "true") {
+  console.error("🛑 [SEGURIDAD] El seed de base de datos está estrictamente bloqueado.")
+  console.error("Para ejecutar en desarrollo local debe definir:")
+  console.error("  ALLOW_DEV_SEED=true npx prisma db seed")
+  process.exit(1)
+}
+
+if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.startsWith("file:")) {
+  console.error("🛑 [SEGURIDAD] El seed solo puede ejecutarse contra una base de datos local SQLite (file:...).")
+  process.exit(1)
+}
 
 const adapter = new PrismaLibSql({
-  url: process.env.DATABASE_URL || 'file:./dev.db',
+  url: process.env.DATABASE_URL,
 })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  console.log('Seeding Database...')
+  console.log("Iniciando seed de desarrollo local seguro...")
 
-  // Clean DB (avoid in prod, but safe in dev)
-  await prisma.user.deleteMany()
-  await prisma.package.deleteMany()
+  const devAdminPass = process.env.DEV_SEED_ADMIN_PASSWORD || crypto.randomBytes(16).toString("hex")
+  const passwordHash = await hash(devAdminPass, 12)
 
-  const passwordHash = await hash('password123', 10)
-
-  // 1. Create Admin
-  const admin = await prisma.user.create({
-    data: {
-      name: 'Admin Vendetta',
-      email: 'admin@vendetta.com',
+  // 1. Crear usuario Admin de desarrollo
+  const admin = await prisma.user.upsert({
+    where: { email: "admin@vendetta.local" },
+    update: {},
+    create: {
+      name: "Admin Dev",
+      email: "admin@vendetta.local",
       password: passwordHash,
-      role: 'ADMIN'
+      role: "ADMIN"
     }
   })
-  console.log('Created Admin:', admin.email)
+  console.log("Usuario de desarrollo creado: admin@vendetta.local")
 
-  // 2. Create sample Client
-  const client = await prisma.user.create({
-    data: {
-      name: 'Cliente Demo',
-      email: 'cliente@ejemplo.com',
-      password: passwordHash,
-      role: 'CLIENT',
-      clientProfile: {
-        create: {
-          phone: '5551234567',
-          type: 'private'
-        }
+  // 2. Crear configuración inicial
+  await prisma.globalConfig.upsert({
+    where: { id: "vendetta_config" },
+    update: {},
+    create: {
+      id: "vendetta_config",
+      autoFollowUpEnabled: true,
+      logInboundActive: false
+    }
+  })
+
+  // 3. Crear catálogo de paquetes base
+  const countPkgs = await prisma.package.count()
+  if (countPkgs === 0) {
+    await prisma.package.create({
+      data: {
+        name: "Vendetta Essential",
+        baseCostPerHour: 5000,
+        minDuration: 3,
+        description: "Paquete base para eventos sociales.",
+        includes: "Quinteto base, audio estándar, staff básico.",
       }
-    }
-  })
-  console.log('Created Client:', client.email)
-
-  // 3. Create Sample Musician
-  const musician = await prisma.user.create({
-    data: {
-      name: 'Guitarrista Vendetta',
-      email: 'guitarra@vendetta.com',
-      password: passwordHash,
-      role: 'MUSICIAN',
-      musicianProfile: {
-        create: {
-          instrument: 'Guitarra Eléctrica'
-        }
+    })
+    await prisma.package.create({
+      data: {
+        name: "Vendetta Premium",
+        baseCostPerHour: 8000,
+        minDuration: 5,
+        description: "Producción completa para bodas y corporativos.",
+        includes: "Septeto con metales, escenario, iluminación robótica, ingeniero de sala.",
       }
-    }
-  })
+    })
+  }
 
-  // 4. Create Sample Packages
-  const pkg1 = await prisma.package.create({
-    data: {
-      name: 'Vendetta Essential',
-      baseCostPerHour: 5000,
-      minDuration: 3,
-      description: 'El paquete base para eventos sociales pequeños.',
-      includes: 'Quinteto base, audio estándar, staff básico.',
-      services: {
-        create: [
-          { name: 'Hora Extra', hourlyCost: 5000 },
-          { name: 'Luces Arquitectónicas', setupCost: 3500 }
-        ]
-      }
-    }
-  })
-  
-  const pkg2 = await prisma.package.create({
-    data: {
-      name: 'Vendetta Premium',
-      baseCostPerHour: 8000,
-      minDuration: 5,
-      description: 'Producción completa para bodas y corporativos.',
-      includes: 'Septeto con metales, escenario, iluminación robótica, ingeniero de sala.',
-      services: {
-        create: [
-          { name: 'Hora Extra', hourlyCost: 8000 },
-          { name: 'Pantalla LED P3', setupCost: 15000 }
-        ]
-      }
-    }
-  })
-
-  // 5. Sample Repertoires
-  await prisma.song.createMany({
-    data: [
-      { title: 'Treasure', artist: 'Bruno Mars', language: 'English', genre: 'Pop/Funk' },
-      { title: 'La Incondicional', artist: 'Luis Miguel', language: 'Spanish', genre: 'Balada' },
-      { title: 'Don\'t Stop Believin\'', artist: 'Journey', language: 'English', genre: 'Rock' },
-      { title: 'Danza Kuduro', artist: 'Don Omar', language: 'Spanish', genre: 'Urbano/Latino' }
-    ]
-  })
-
-  console.log('Seed Complete.')
+  console.log("Seed de desarrollo completado exitosamente.")
 }
 
 main()
   .catch((e) => {
-    console.error(e)
+    console.error("Error en seed:", e)
     process.exit(1)
   })
   .finally(async () => {

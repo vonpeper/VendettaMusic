@@ -48,17 +48,17 @@ export default function FunnelSuccess({ data }: { data: FunnelData }) {
     ? formatDateMX(data.requestedDate, "PPPP")
     : "Por confirmar"
 
-  const whatsappNumber = "527222417045"
+  const rawWa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim()
+  const cleanWa = rawWa ? rawWa.replace(/\D/g, "") : null
   const message = `¡Hola Vendetta! Acabo de realizar mi reserva 🎸\n\n` +
     `Folio: ${data.shortId}\n` +
     `Cliente: ${data.clientName}\n` +
     `Evento: ${data.packageName}\n` +
     `Fecha: ${eventDate}\n` +
-    `Ubicación: ${data.street} ${data.houseNumber}, ${data.colonia}\n` +
     `Total: ${MXN(total)}\n` +
     `Anticipo: ${MXN(deposit)}`
 
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+  const whatsappUrl = cleanWa ? `https://wa.me/${cleanWa}?text=${encodeURIComponent(message)}` : null
 
   const handleDownload = async () => {
     const filename = `Contrato_Vendetta_${data.shortId}_${data.clientName.replace(/\s+/g, '_')}.pdf`
@@ -135,11 +135,19 @@ export default function FunnelSuccess({ data }: { data: FunnelData }) {
             <Download className="w-5 h-5" /> Descargar Contrato
           </Button>
 
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-            <Button className="w-full h-14 bg-[#25D366] hover:bg-[#128C7E] border-none font-black rounded-2xl gap-2 shadow-xl">
-              <Share2 className="w-5 h-5" /> Ir a WhatsApp
-            </Button>
-          </a>
+          {whatsappUrl ? (
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+              <Button className="w-full h-14 bg-[#25D366] hover:bg-[#128C7E] border-none font-black rounded-2xl gap-2 shadow-xl">
+                <Share2 className="w-5 h-5" /> Ir a WhatsApp
+              </Button>
+            </a>
+          ) : (
+            <Link href={`/status/${data.shortId}`}>
+              <Button className="w-full h-14 bg-primary hover:bg-primary/90 border-none font-black rounded-2xl gap-2 shadow-xl text-white">
+                <Info className="w-5 h-5" /> Ver Estatus Online
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 

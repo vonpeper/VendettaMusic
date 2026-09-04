@@ -5,11 +5,15 @@ import { broadcastWebPush } from "@/lib/webpush"
 
 export async function sendTodayShowReminderAction() {
   try {
-    const today = new Date()
-    const todayISO = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+    const cdmxDateStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Mexico_City",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(new Date())
 
-    const todayStart = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0))
-    const todayEnd = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999))
+    const todayStart = new Date(`${cdmxDateStr}T00:00:00.000Z`)
+    const todayEnd = new Date(`${cdmxDateStr}T23:59:59.999Z`)
 
     // Check today's events
     const todayEvents = await db.event.findMany({
@@ -20,16 +24,20 @@ export async function sendTodayShowReminderAction() {
       include: { location: true }
     })
 
+    console.log(`[sendTodayShowReminder] Found ${todayEvents.length} events for ${cdmxDateStr}`)
+
     if (todayEvents.length > 0) {
       for (const evt of todayEvents) {
         const title = evt.customName || "Show Vendetta"
-        const time = evt.performanceStart || "21:00"
+        const time = evt.performanceStart || "20:00"
         const location = evt.location?.name || "Lugar confirmado"
         const arrival = evt.arrivalTime || evt.setupTime ? ` (Llegada: ${evt.arrivalTime || evt.setupTime})` : ""
 
         await broadcastWebPush({
           title: "⚡ VENDETTA | ¡HOY HAY SHOW!",
-          body: `🎸 ${title} a las ${time} hrs en ${location}${arrival}. Toca para abrir la agenda completa.`,
+          body: `🎸 ${title} — ${time} hrs en ${location}${arrival}. Toca para ver la agenda.`,
+          icon: "/images/branding/logo-vendetta.png",
+          badge: "/images/branding/logo-vendetta.png",
           url: "/agenda",
           data: { eventId: evt.id }
         })

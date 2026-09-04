@@ -8,7 +8,7 @@ services:
     environment:
       - DOCKER_RESTART_POLICY=always
       - AUTHENTICATION_TYPE=apikey
-      - AUTHENTICATION_API_KEY=vendetta_secure_key_2026
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
       - DATABASE_ENABLED=false
       - CACHE_REDIS_ENABLED=false
       - CACHE_LOCAL_ENABLED=true

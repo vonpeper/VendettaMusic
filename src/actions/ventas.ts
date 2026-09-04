@@ -566,12 +566,21 @@ export async function confirmDepositPaidAction(bookingId: string) {
     
     if (!booking) return { success: false, error: "Reserva no encontrada" }
 
+    // Si aún no estaba agendado, cambiar a agendado para crear el evento y disparar CLIENT_CONFIRMED con la firma de contrato
+    if (booking.status !== "agendado") {
+      const updateRes = await updateBookingStatusAction(bookingId, "agendado")
+      if (!updateRes.success) return updateRes
+    }
+
     await db.bookingRequest.update({
       where: { id: bookingId },
       data: { paymentStatus: "paid" } // Lo marcamos como pagado (el anticipo)
     })
 
-    if (booking.eventId) {
+    const updatedBooking = await db.bookingRequest.findUnique({ where: { id: bookingId } })
+    const eventId = updatedBooking?.eventId || booking.eventId
+
+    if (eventId) {
       // Crear registro de pago
       const existingPayments = await db.payment.findMany({
         where: { bookingRequestId: booking.id, status: { in: ["completed", "paid"] } }
@@ -580,7 +589,7 @@ export async function confirmDepositPaidAction(bookingId: string) {
       if (existingPayments.length === 0) {
         await db.payment.create({
           data: {
-            eventId: booking.eventId,
+            eventId: eventId,
             bookingRequestId: booking.id,
             amount: booking.depositAmount || 0,
             method: "TRANSFER",
@@ -592,7 +601,7 @@ export async function confirmDepositPaidAction(bookingId: string) {
 
       // Al confirmar anticipo, actualizamos el balance del evento
       await db.event.update({
-        where: { id: booking.eventId },
+        where: { id: eventId },
         data: { 
           deposit: booking.depositAmount,
           balance: booking.baseAmount - booking.depositAmount
@@ -732,6 +741,28 @@ export async function reportDepositAction(bookingId: string, paymentRef: string)
         paymentRef: paymentRef || "Reportado por Cliente"
       }
     })
+
+    // 1. Alerta inmediata al Administrador por WhatsApp
+    try {
+      const { dispatchAdminAlert } = await import("@/lib/notifications")
+      const { getAppUrl } = await import("@/lib/url")
+      const { formatDateMX } = await import("@/lib/utils")
+      const baseUrl = getAppUrl()
+      const dateStr = formatDateMX(booking.requestedDate, "d 'de' MMMM")
+      
+      await dispatchAdminAlert(
+        `🎉 *COTIZACIÓN APROBADA — VENDETTA*\n\n` +
+        `El cliente *${booking.clientName}* ha aprobado su cotización y reportó su anticipo.\n\n` +
+        `📋 *Folio:* ${booking.shortId}\n` +
+        `📅 *Fecha:* ${dateStr}\n` +
+        `💰 *Monto Anticipo:* $${(booking.depositAmount || 0).toLocaleString("es-MX")}\n` +
+        `🔢 *Referencia:* ${paymentRef || "Reportado en web"}\n` +
+        `📞 *Teléfono:* ${booking.clientPhone || "No registrado"}\n\n` +
+        `👉 *Revisar y Validar en:* ${baseUrl}/admin/ventas/${booking.id}`
+      )
+    } catch (alertErr) {
+      console.error("Error sending admin alert on quote approval:", alertErr)
+    }
 
     revalidatePath("/admin/ventas")
     revalidatePath(`/admin/ventas/${bookingId}`)

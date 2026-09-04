@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { PaquetesSection } from "@/components/public/PaquetesSection"
 import {
@@ -90,47 +91,58 @@ export default async function HomePage() {
       <WhatsAppButton />
 
       {/* -- HERO ---------------------------------------------------------- */}
-      <section id="inicio" className="relative min-h-screen lg:h-screen flex items-center justify-start overflow-hidden bg-black py-20 lg:py-0">
-        {/* Background Image Container - contains the full band image on the right on desktop, covers screen on mobile */}
-        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[72%] xl:w-[68%] 2xl:w-[64%] z-0 select-none pointer-events-none bg-black animate-hero-bg">
+      <section id="inicio" className="relative min-h-screen lg:h-screen flex items-center justify-start overflow-hidden bg-black pt-24 pb-12 lg:py-0">
+        {/* Background Image Container - Desktop (>=lg) */}
+        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[60%] xl:w-[63%] 2xl:w-[66%] z-0 select-none pointer-events-none bg-black animate-hero-bg hidden lg:block">
           <Image
             src="/images/vendetta-web-assets/vendetta-hero.jpg"
             alt="Grupo musical Vendetta en vivo para eventos sociales y bodas"
             fill
             priority
             unoptimized
-            className="opacity-95 object-cover object-[75%_center] lg:object-contain lg:object-bottom-right"
+            className="opacity-95 object-contain object-bottom-right"
           />
-          {/* Subtle horizontal gradient to blend image seamlessly with black background on desktop protecting text zone */}
-          <div className="absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-black via-black/85 to-transparent z-10 hidden lg:block" />
-          {/* Top-to-bottom gradient to blend image with black background on mobile */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/95 via-black/50 to-black z-10 lg:hidden" />
+          {/* Subtle horizontal gradient to blend image seamlessly with black background on desktop */}
+          <div className="absolute inset-y-0 left-0 w-36 bg-gradient-to-r from-black via-black/80 to-transparent z-10" />
         </div>
 
         {/* Top gradient for header contrast on desktop */}
         <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/90 to-transparent z-10 hidden lg:block" />
-        {/* Bottom gradient to smoothly fade out the very bottom edge of the image */}
-        <div className="absolute inset-x-0 bottom-0 h-16 sm:h-20 lg:h-24 bg-gradient-to-t from-black to-transparent z-10" />
+        {/* Bottom gradient to smoothly fade out the very bottom edge of the image on desktop */}
+        <div className="absolute inset-x-0 bottom-0 h-16 sm:h-20 lg:h-24 bg-gradient-to-t from-black to-transparent z-10 hidden lg:block" />
 
         <div className="container relative z-20 px-4 md:px-8 lg:px-16 mx-auto flex items-center w-full">
-          <div className="w-full lg:max-w-[580px] xl:max-w-[650px] 2xl:max-w-[720px] text-left flex flex-col items-start pt-20 lg:pt-0">
+          <div className="w-full lg:max-w-[460px] xl:max-w-[520px] 2xl:max-w-[580px] text-left flex flex-col items-start pt-6 lg:pt-0">
             <span className="text-primary font-sans font-bold text-xs md:text-sm tracking-[0.25em] uppercase mb-3 block animate-hero-line-1">
               VENDETTA LIVE MUSIC
             </span>
             
-            <h1 className="font-heading font-black uppercase text-left tracking-tight leading-[1.04] text-[clamp(1.85rem,4.2vw,3.5rem)] mb-6 select-none drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+            <h1 className="font-heading font-black uppercase text-left tracking-tight leading-[0.92] text-[clamp(2.1rem,4.8vw,3.8rem)] mb-6 select-none drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
               <span className="block animate-hero-line-1 whitespace-nowrap">
                 <span className="text-white">EL </span>
-                <span className="text-primary bg-gradient-to-r from-primary via-rose-500 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(225,29,72,0.55)]">SOUNDTRACK</span>
+                <span className="text-primary bg-gradient-to-r from-primary via-rose-500 to-red-500 bg-clip-text text-transparent">SOUNDTRACK</span>
               </span>
-              <span className="block text-white mt-1.5 sm:mt-2.5 animate-hero-line-2 lg:whitespace-nowrap">
+              <span className="block text-white mt-1.5 sm:mt-2 animate-hero-line-2 lg:whitespace-nowrap">
                 <span className="block lg:inline">DE TU MEJOR </span>
                 <span className="block lg:inline">NOCHE</span>
               </span>
             </h1>
 
+            {/* Dedicated mobile photo: HD framing with ALL 5 band members completely visible */}
+            <div className="w-full relative my-5 rounded-2xl overflow-hidden aspect-[195/144] border border-white/10 shadow-2xl lg:hidden animate-hero-bg">
+              <Image
+                src="/images/vendetta-web-assets/vendetta-hero-mobile.jpg"
+                alt="Grupo musical Vendetta en vivo para eventos sociales y bodas"
+                fill
+                priority
+                unoptimized
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
+            </div>
+
             <div className="animate-hero-cta flex flex-col items-start w-full">
-              <p className="text-sm md:text-base text-gray-400 max-w-sm mb-8 md:mb-10 font-sans font-medium leading-relaxed text-left">
+              <p className="text-sm md:text-base text-gray-400 max-w-sm mb-6 md:mb-10 font-sans font-medium leading-relaxed text-left">
                 Pop y rock en vivo para bodas, eventos corporativos y celebraciones inolvidables.
               </p>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
@@ -154,7 +166,7 @@ export default async function HomePage() {
                 </a>
               </div>
               
-              <div className="flex items-center gap-2.5 mt-10 md:mt-14 text-[10px] md:text-xs font-sans font-semibold uppercase tracking-[0.2em] text-white/80">
+              <div className="flex items-center gap-2.5 mt-8 md:mt-14 text-[10px] md:text-xs font-sans font-semibold uppercase tracking-[0.2em] text-white/80">
                 <MapPin className="w-4 h-4 text-primary fill-primary/10 shrink-0" />
                 <span>TOLUCA</span>
                 <span className="text-primary font-bold">•</span>
@@ -206,11 +218,11 @@ export default async function HomePage() {
                <p className="text-gray-400 text-lg mb-8 leading-relaxed max-w-xl italic">
                   Revive la época dorada del pop en español con nuestro show homenaje a "Mentiras". Un concierto en vivo que pondrá a todos a cantar.
                </p>
-               <a href="https://wa.me/527222417045?text=Hola!%20Me%20interesa%20contratar%20el%20Tributo%20Mentiras" target="_blank" rel="noopener noreferrer">
+               <Link href="/cotizar">
                   <Button size="lg" className="h-14 px-8 font-black gap-2 text-base">
                      Contratar Tributo <ChevronRight className="w-5 h-5" />
                   </Button>
-               </a>
+               </Link>
             </div>
          </div>
       </section>

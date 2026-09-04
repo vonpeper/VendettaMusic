@@ -17,76 +17,60 @@ export function getValidMapsLink(mapsLink?: string | null, address?: string | nu
   return "https://www.vendetta.mx"
 }
 
+import { Prisma, PrismaClient } from "@prisma/client"
+
 /**
- * Busca un lugar por nombre o dirección, o lo crea si no existe.
- * Retorna el locationId (Location.id).
+ * Busca un lugar real por nombre o dirección, o lo crea si no existe.
+ * Retorna el locationId (Location.id) o null si es una dirección genérica.
  */
-export async function findOrCreateLocation(data: {
-  name: string
-  address?: string | null
-  city?: string | null
-  state?: string | null
-  colonia?: string | null
-  municipio?: string | null
-  mapsLink?: string | null
-}) {
-  const { name, address, city, state, colonia, municipio, mapsLink } = data
-  const normalizedName = name?.trim() || "Sin Nombre"
+export async function findOrCreateLocation(
+  data: {
+    name: string
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    colonia?: string | null
+    municipio?: string | null
+    mapsLink?: string | null
+  },
+  prismaClient: PrismaClient | Prisma.TransactionClient = db
+): Promise<string> {
+  const cleanName = data.name?.trim() || "Ubicación Particular"
+  const cleanAddress = data.address?.trim() || "No especificada"
+  const cleanCity = data.city?.trim() || data.municipio?.trim() || null
+  const cleanState = data.state?.trim() || "México"
+  const validMapsLink = getValidMapsLink(data.mapsLink, cleanAddress)
 
-  // Normalizar marcadores de posición a "Show - [Nombre]" para que se filtren del catálogo
-  let finalName = normalizedName
-  const cleanNameLower = normalizedName.toLowerCase()
-  const isPlaceholder = [
-    "essential", "festival premium", "experience", "premium", "show",
-    "sin nombre", "por definir", "no especificada", "no especificado",
-    "paquete", "personalizado"
-  ].includes(cleanNameLower)
-
-  if (isPlaceholder || (cleanNameLower.startsWith("show") && !cleanNameLower.startsWith("show -"))) {
-    finalName = cleanNameLower.startsWith("show") 
-      ? `Show - ${normalizedName.substring(4).trim()}` 
-      : `Show - ${normalizedName}`
-  }
-
-  const cleanName = finalName.trim()
-
-  // 1. Búsqueda rigurosa para evitar duplicados
-  const existing = await db.location.findFirst({
+  // 1. Buscar coincidencia exacta por nombre en la misma ciudad
+  const existing = await prismaClient.location.findFirst({
     where: {
-      OR: [
-        // Coincidencia exacta de nombre en la misma ciudad
-        { 
-          AND: [
-            { name: { equals: cleanName } },
-            { city: { equals: city || municipio || "---" } }
-          ]
-        },
-        // O dirección exacta
-        { address: { equals: address?.trim() || "---" } }
+      AND: [
+        { name: { equals: cleanName } },
+        ...(cleanCity ? [{ city: { equals: cleanCity } }] : [])
       ]
     }
   })
 
   if (existing) {
-    // Actualizar mapsLink si no lo tenía o era inválido
-    const validLink = getValidMapsLink(mapsLink, address || existing.address)
-    if (validLink && (!existing.mapsLink || existing.mapsLink === "No registrado" || existing.mapsLink.startsWith("essential"))) {
-      await db.location.update({
+    // Si no tenía link de maps y ahora sí, actualizar
+    if (validMapsLink && (!existing.mapsLink || existing.mapsLink === "https://www.vendetta.mx")) {
+      await prismaClient.location.update({
         where: { id: existing.id },
-        data: { mapsLink: validLink }
-      })
+        data: { mapsLink: validMapsLink }
+      }).catch(() => null)
     }
     return existing.id
   }
 
-  // 2. Si no existe, crear
-  const newLocation = await db.location.create({
+  // 2. Si no existe, crear nueva locación en el catálogo
+  const newLocation = await prismaClient.location.create({
     data: {
       name: cleanName,
-      address: address?.trim() || "No especificada",
-      city: city || municipio || "No especificada",
-      state: state || "México",
-      mapsLink: getValidMapsLink(mapsLink, address)
+      address: cleanAddress,
+      city: cleanCity,
+      state: cleanState,
+      mapsLink: validMapsLink,
+      active: true
     }
   })
 

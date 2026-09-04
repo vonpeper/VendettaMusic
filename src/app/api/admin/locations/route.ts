@@ -1,136 +1,119 @@
 import { db } from "@/lib/db"
-import { NextRequest } from "next/server"
-import fs from "fs"
-import path from "path"
+import { NextRequest, NextResponse } from "next/server"
 import { requireAdminApi as requireAdmin } from "@/lib/auth-guards"
+import { z } from "zod"
 
 export const dynamic = "force-dynamic"
 
-const DEBUG_FILE = path.join(process.cwd(), "debug_crash.log")
+const locationCreateSchema = z.object({
+  name: z.string().min(1, "El nombre es obligatorio"),
+  address: z.string().optional().default("No especificada"),
+  mapsLink: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().default("México"),
+})
 
-function logError(context: string, error: any) {
-  const timestamp = new Date().toISOString()
-  const message = `[${timestamp}] ERROR in ${context}:\n${error instanceof Error ? error.stack : String(error)}\n\n`
-  try {
-    fs.appendFileSync(DEBUG_FILE, message)
-  } catch (e) {
-    console.error("Failed to write to debug log:", e)
-  }
-}
+const locationUpdateSchema = locationCreateSchema.extend({
+  id: z.string().min(1, "El ID es obligatorio"),
+})
 
 export async function GET() {
   const unauthorized = await requireAdmin()
   if (unauthorized) return unauthorized
-  try {
-    const locations = await db.$queryRawUnsafe(`SELECT * FROM Location WHERE active = 1 ORDER BY name ASC`)
 
-    return new Response(JSON.stringify(Array.isArray(locations) ? locations : []), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-store, max-age=0, must-revalidate'
-      }
+  try {
+    const locations = await db.location.findMany({
+      where: { active: true },
+      orderBy: { name: "asc" }
     })
-  } catch (error) {
-    logError("GET /api/admin/locations (RAW SQL)", error)
-    return new Response(JSON.stringify({ 
-      error: "Error crítico en base de datos (SQL Fallback)",
-      details: error instanceof Error ? error.message : String(error) 
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+
+    return NextResponse.json(locations)
+  } catch (error: any) {
+    console.error("GET /api/admin/locations error:", error?.message || error)
+    return NextResponse.json({ error: "Error al consultar ubicaciones" }, { status: 500 })
   }
 }
 
 export async function POST(req: NextRequest) {
   const unauthorized = await requireAdmin()
   if (unauthorized) return unauthorized
-  try {
-    const data = await req.json()
-    
-    // Using Raw SQL for creation to avoid Prisma client validation
-    await db.$executeRawUnsafe(
-      `INSERT INTO Location (id, name, address, mapsLink, phone, city, state, active) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      crypto.randomUUID(),
-      data.name,
-      data.address,
-      data.mapsLink || null,
-      data.phone || null,
-      data.city || null,
-      data.state || "México",
-      1 // active = true
-    )
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
+  try {
+    const rawData = await req.json()
+    const validated = locationCreateSchema.parse(rawData)
+
+    const newLoc = await db.location.create({
+      data: {
+        name: validated.name.trim(),
+        address: validated.address.trim(),
+        mapsLink: validated.mapsLink?.trim() || null,
+        phone: validated.phone?.trim() || null,
+        city: validated.city?.trim() || null,
+        state: validated.state?.trim() || "México",
+        active: true
+      }
     })
-  } catch (error) {
-    logError("POST /api/admin/locations (RAW SQL)", error)
-    return new Response(JSON.stringify({ 
-      error: "No se pudo crear el lugar (SQL Fallback)",
-      details: error instanceof Error ? error.message : String(error)
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+
+    return NextResponse.json({ success: true, location: newLoc })
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Datos inválidos", details: error.flatten() }, { status: 400 })
+    }
+    console.error("POST /api/admin/locations error:", error?.message || error)
+    return NextResponse.json({ error: "Error al crear ubicación" }, { status: 500 })
   }
 }
 
 export async function PUT(req: NextRequest) {
   const unauthorized = await requireAdmin()
   if (unauthorized) return unauthorized
+
   try {
-    const data = await req.json()
-    const { id, name, address, mapsLink, phone, city, state } = data
+    const rawData = await req.json()
+    const validated = locationUpdateSchema.parse(rawData)
 
-    await db.$executeRawUnsafe(
-      `UPDATE Location SET name = ?, address = ?, mapsLink = ?, phone = ?, city = ?, state = ? WHERE id = ?`,
-      name, address, mapsLink || null, phone || null, city || null, state || "México", id
-    )
+    const updated = await db.location.update({
+      where: { id: validated.id },
+      data: {
+        name: validated.name.trim(),
+        address: validated.address.trim(),
+        mapsLink: validated.mapsLink?.trim() || null,
+        phone: validated.phone?.trim() || null,
+        city: validated.city?.trim() || null,
+        state: validated.state?.trim() || "México"
+      }
+    })
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    })
-  } catch (error) {
-    logError("PUT /api/admin/locations (RAW SQL)", error)
-    return new Response(JSON.stringify({ 
-      error: "No se pudo actualizar el lugar (SQL Fallback)",
-      details: error instanceof Error ? error.message : String(error)
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return NextResponse.json({ success: true, location: updated })
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Datos inválidos", details: error.flatten() }, { status: 400 })
+    }
+    console.error("PUT /api/admin/locations error:", error?.message || error)
+    return NextResponse.json({ error: "Error al actualizar ubicación" }, { status: 500 })
   }
 }
 
 export async function DELETE(req: NextRequest) {
   const unauthorized = await requireAdmin()
   if (unauthorized) return unauthorized
+
   try {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get("id")
-    if (!id) return new Response(JSON.stringify({ error: "ID requerido" }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+    if (!id) {
+      return NextResponse.json({ error: "ID requerido" }, { status: 400 })
+    }
 
-    await db.$executeRawUnsafe(`UPDATE Location SET active = 0 WHERE id = ?`, id)
+    await db.location.update({
+      where: { id },
+      data: { active: false }
+    })
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    })
-  } catch (error) {
-    logError("DELETE /api/admin/locations (RAW SQL)", error)
-    return new Response(JSON.stringify({ 
-      error: "No se pudo eliminar el lugar (SQL Fallback)",
-      details: error instanceof Error ? error.message : String(error)
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error("DELETE /api/admin/locations error:", error?.message || error)
+    return NextResponse.json({ error: "Error al desactivar ubicación" }, { status: 500 })
   }
 }
-
-

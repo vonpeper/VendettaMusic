@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 import { generateContractPdf } from "@/lib/pdf/contract-generator"
+import { verifyResourceToken } from "@/lib/security"
 import { FunnelData } from "@/components/funnel/FunnelWizard"
 import { auth } from "@/lib/auth"
 
@@ -66,11 +67,10 @@ export async function GET(
     }
 
     if (!isAuthorized) {
-      const crypto = await import("crypto")
-      const secret = process.env.AUTH_SECRET || "fallback_secret_vendetta_music_app_2026"
-      const expectedToken = crypto.createHmac("sha256", secret).update(id).digest("hex")
       const token = req.nextUrl.searchParams.get("token")
-      if (token === expectedToken) isAuthorized = true
+      if (verifyResourceToken(id, token)) {
+        isAuthorized = true
+      }
     }
 
     if (!isAuthorized) {
@@ -154,7 +154,11 @@ export async function GET(
       legalRepRole: booking.client?.legalRepRole || undefined,
       legalRepPower: booking.client?.legalRepPower || undefined,
       notificationAddress: booking.client?.notificationAddress || undefined,
-      billingData: booking.client?.billingData || undefined
+      billingData: booking.client?.billingData || undefined,
+      bankName: globalConfig?.bankName || undefined,
+      bankAccount: globalConfig?.bankAccount || undefined,
+      bankClabe: globalConfig?.bankClabe || undefined,
+      bankBeneficiary: globalConfig?.bankBeneficiary || undefined
     })
 
     // Crear la respuesta con el PDF

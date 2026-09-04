@@ -2,20 +2,25 @@ import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/notifications"
 import { subDays, addDays, startOfDay, endOfDay } from "date-fns"
+import { formatDateMX } from "@/lib/utils"
+import { getAppUrl } from "@/lib/url"
 
-// GET /api/cron/daily?token=SECRET
-// Revisa clientes sin respuesta a los 5 y 10 días, y eventos próximos a 7 días.
-export const dynamic = 'force-dynamic' // Force dynamic route
+export const dynamic = "force-dynamic"
 
-export async function GET(request: Request) {
+export async function GET() {
+  return NextResponse.json(
+    { error: "Method Not Allowed. Use POST with Authorization: Bearer <CRON_SECRET> header." },
+    { status: 405 }
+  )
+}
+
+export async function POST(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const token = searchParams.get("token")
-    
-    // Hardcoded secret for now, can be moved to env.
-    const CRON_SECRET = process.env.CRON_SECRET || "vendetta_cron_2024"
-    
-    if (token !== CRON_SECRET) {
+    const authHeader = request.headers.get("authorization") || ""
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null
+    const CRON_SECRET = process.env.CRON_SECRET?.trim()
+
+    if (!CRON_SECRET || !token || token !== CRON_SECRET) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -24,6 +29,7 @@ export async function GET(request: Request) {
       followups5Days: 0,
       followups10Days: 0,
       vipReminders: 0,
+      musicianReminders3Days: 0,
       musicianReminders: 0,
       postEventThanks: 0,
       errors: [] as string[]
@@ -72,7 +78,7 @@ export async function GET(request: Request) {
           .filter(Boolean)
       )
 
-      // 1. Follow-ups (5 días)
+      // 1. Follow-ups (5 días) - Solo para eventos con fecha futura
       const fiveDaysAgo = startOfDay(subDays(now, 5))
       const fiveDaysAgoEnd = endOfDay(subDays(now, 5))
       
@@ -80,6 +86,7 @@ export async function GET(request: Request) {
         where: {
           status: "pendiente",
           followUpCount: 0,
+          requestedDate: { gte: now }, // Evitar enviar seguimientos si la fecha del evento ya pasó
           createdAt: {
             gte: fiveDaysAgo,
             lte: fiveDaysAgoEnd
@@ -124,7 +131,7 @@ export async function GET(request: Request) {
         }
       }
 
-      // 2. Follow-ups (10 días)
+      // 2. Follow-ups (10 días) - Solo para eventos con fecha futura
       const tenDaysAgo = startOfDay(subDays(now, 10))
       const tenDaysAgoEnd = endOfDay(subDays(now, 10))
       
@@ -132,6 +139,7 @@ export async function GET(request: Request) {
         where: {
           status: "pendiente",
           followUpCount: 1, // Already had the first follow-up
+          requestedDate: { gte: now }, // Evitar enviar seguimientos si la fecha del evento ya pasó
           createdAt: {
             gte: tenDaysAgo,
             lte: tenDaysAgoEnd
@@ -211,14 +219,84 @@ export async function GET(request: Request) {
       }
     }
 
+    // 3.3. Recordatorio a Músicos a 3 días del show si siguen en estatus 'pending' (para suplencias)
+    try {
+      const threeDaysFromNow = startOfDay(addDays(now, 3))
+      const threeDaysFromNowEnd = endOfDay(addDays(now, 3))
+
+      const eventsIn3Days = await db.event.findMany({
+        where: {
+          status: { in: ["agendado", "confirmed"] },
+          date: {
+            gte: threeDaysFromNow,
+            lte: threeDaysFromNowEnd
+          }
+        },
+        include: {
+          location: true,
+          musicians: {
+            where: {
+              status: "pending" // Solo los que no han confirmado ni rechazado
+            },
+            include: {
+              musician: {
+                include: { user: true }
+              }
+            }
+          }
+        }
+      })
+
+      const baseUrl = getAppUrl()
+
+      for (const event of eventsIn3Days) {
+        for (const em of event.musicians) {
+          const musician = em.musician
+          if (musician.status !== "active" || !musician.whatsapp) continue
+
+          try {
+            const dateStr = formatDateMX(event.date, "EEEE, d 'de' MMMM")
+            const confirmLink = `${baseUrl}/confirmar/${musician.id}/${event.id}`
+
+            await dispatchNotification({
+              type: "MUSICIAN_REMINDER_3DAYS",
+              to: musician.whatsapp,
+              eventId: event.id,
+              customData: {
+                musicianName: musician.user?.name || "Músico",
+                date: dateStr,
+                ceremony: event.ceremonyType || "Show Musical",
+                location: event.location?.name || "Lugar confirmado",
+                setupTime: event.setupTime || "Por definir",
+                arrivalTime: event.arrivalTime || "Por definir",
+                confirmLink
+              }
+            })
+            results.musicianReminders3Days++
+          } catch (m3Err: any) {
+            results.errors.push(`Error in 3-day reminder for event ${event.id} musician ${musician.id}: ${m3Err.message}`)
+          }
+        }
+      }
+    } catch (cron3DErr: any) {
+      results.errors.push(`Error querying 3-day events: ${cron3DErr.message}`)
+    }
+
     // 3.4. Reminders for musicians on the day of the event (Hoy)
     // Respeta el toggle msgTodayReminderActive del panel de notificaciones
     const msgTodayReminderActive = config?.msgTodayReminderActive ?? true
 
     if (msgTodayReminderActive) {
       try {
-        const startOfToday = startOfDay(now)
-        const endOfToday = endOfDay(now)
+        const cdmxDateStr = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Mexico_City",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        }).format(new Date())
+
+        const startOfToday = new Date(`${cdmxDateStr}T00:00:00.000Z`)
+        const endOfToday = new Date(`${cdmxDateStr}T23:59:59.999Z`)
 
         const todayEvents = await db.event.findMany({
           where: {
@@ -287,20 +365,17 @@ export async function GET(request: Request) {
     }
 
 
-    // 3.5. Post-Event Thanks (El día después del evento)
-    const yesterday = startOfDay(subDays(now, 1))
-    const yesterdayEnd = endOfDay(subDays(now, 1))
-    
-    // Check if the thank you message feature is active
-    const msgThanksActive = config?.msgThanksActive ?? false
+    // 3.5. Post-Event Thanks (Eventos recientes concluidos en los últimos 3 días sin mensaje previo)
+    const recentEventsWindow = startOfDay(subDays(now, 3))
+    const msgThanksActive = config?.msgThanksActive ?? true
 
     if (msgThanksActive) {
       const pastEvents = await db.bookingRequest.findMany({
         where: {
           status: { in: ["agendado", "completado"] },
           requestedDate: {
-            gte: yesterday,
-            lte: yesterdayEnd
+            gte: recentEventsWindow,
+            lte: endOfDay(now)
           }
         }
       })

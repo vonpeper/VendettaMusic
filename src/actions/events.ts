@@ -6,7 +6,7 @@ import { notifyMusicians, notifyEventCancellation } from "@/lib/notifications"
 import { assignDefaultMusicians } from "@/lib/musicians"
 import crypto from "crypto"
 
-export async function updateEventAction(id: string, _prev: any, formData: FormData) {
+export async function updateEventAction(id: string, _prev: unknown, formData: FormData) {
   try {
     const data = Object.fromEntries(formData.entries())
     const amount = parseFloat(data.amount as string || "0")
@@ -25,13 +25,14 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
     let finalLocationId = data.locationId as string
 
     // Si hay texto libre, usamos la nueva utilidad de consolidación
+    const locationFreeName = data.locationFreeName as string
     const locationFree = data.locationFree as string
     const locationFreeCity = data.locationFreeCity as string
-    if (locationFree) {
+    if (locationFree || locationFreeName) {
       const { findOrCreateLocation } = await import("@/lib/locations")
       const locId = await findOrCreateLocation({
-        name: locationFree,
-        address: locationFree,
+        name: locationFreeName || locationFree,
+        address: locationFree || locationFreeName,
         city: locationFreeCity || null,
         mapsLink: data.mapsLink as string || null
       })
@@ -86,12 +87,16 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
 
 
     if (updatedEvent?.quoteId) {
-      await db.quote.update({
-        where: { id: updatedEvent.quoteId },
-        data: { 
-          status: (data.status as string) || "scheduled"
-        }
-      })
+      try {
+        await db.quote.updateMany({
+          where: { id: updatedEvent.quoteId },
+          data: { 
+            status: (data.status as string) || "scheduled"
+          }
+        })
+      } catch (quoteErr) {
+        console.warn("Could not sync legacy quote:", quoteErr)
+      }
     }
 
     // Sincronizar con BookingRequest (Nuevo Funnel)
@@ -288,9 +293,10 @@ export async function updateEventAction(id: string, _prev: any, formData: FormDa
       message: "Evento actualizado correctamente",
       gigMessage: shouldNotify ? "Mensaje de convocatoria enviado por WhatsApp." : undefined
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating event:", error)
-    return { success: false, message: `Error al actualizar: ${error?.message || "Error desconocido"}` }
+    const msg = error instanceof Error ? error.message : "Error desconocido"
+    return { success: false, message: `Error al actualizar: ${msg}` }
   }
 }
 
@@ -313,7 +319,7 @@ export async function deleteEventAction(id: string) {
   }
 }
 
-export async function createEventAction(_prev: any, formData: FormData) {
+export async function createEventAction(_prev: unknown, formData: FormData) {
   try {
     const data = Object.fromEntries(formData.entries())
     const amount = parseFloat(data.amount as string || "0")
@@ -323,13 +329,14 @@ export async function createEventAction(_prev: any, formData: FormData) {
     let finalLocationId = data.locationId as string
 
     // Automación de catálogo de ubicaciones con nueva utilidad
+    const locationFreeName = data.locationFreeName as string
     const locationFree = data.locationFree as string
     const locationFreeCity = data.locationFreeCity as string
-    if (locationFree) {
+    if (locationFree || locationFreeName) {
       const { findOrCreateLocation } = await import("@/lib/locations")
       const locId = await findOrCreateLocation({
-        name: locationFree,
-        address: locationFree,
+        name: locationFreeName || locationFree,
+        address: locationFree || locationFreeName,
         city: locationFreeCity || null,
         mapsLink: data.mapsLink as string || null
       })
@@ -643,9 +650,10 @@ export async function createEventAction(_prev: any, formData: FormData) {
       eventId: event.id,
       gigMessage: shouldNotify ? "Mensaje de convocatoria enviado por WhatsApp." : undefined
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating event:", error)
-    return { success: false, message: `Error al crear el evento: ${error?.message || "Error desconocido"}` }
+    const msg = error instanceof Error ? error.message : "Error desconocido"
+    return { success: false, message: `Error al crear el evento: ${msg}` }
   }
 }
 
@@ -820,5 +828,377 @@ export async function notifySingleMusicianAction(eventId: string, musicianId: st
   } catch (error) {
     console.error("Error notifying musician:", error)
     return { success: false, error: "Error al enviar notificación" }
+  }
+}
+
+import { calculateQuoteTotals, AdditionalLineItem } from "@/lib/pricing"
+import { normalizeClientEmail, normalizeClientPhone } from "@/lib/clients"
+import { getValidMapsLink } from "@/lib/locations"
+import { auth } from "@/lib/auth"
+import { z } from "zod"
+import { createUnifiedQuote, convertQuoteToEvent } from "@/lib/quote-service"
+
+export const saveUnifiedEventQuoteSchema = z.object({
+  mode: z.enum(["create", "edit"]).default("create"),
+  targetId: z.string().optional(),
+  clientId: z.string().nullable().optional(),
+  clientName: z.string().min(2, "El nombre del cliente debe tener al menos 2 caracteres").max(100),
+  clientPhone: z.string().nullable().optional(),
+  clientEmail: z.string().email("Correo electrónico inválido").nullable().optional().or(z.literal("")),
+  clientCity: z.string().nullable().optional(),
+
+  customName: z.string().nullable().optional(),
+  ceremonyType: z.string().nullable().optional(),
+  eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida (YYYY-MM-DD)"),
+  startTime: z.string().nullable().optional(),
+  endTime: z.string().nullable().optional(),
+  arrivalTime: z.string().nullable().optional(),
+  setupTime: z.string().nullable().optional(),
+  guestCount: z.number().int().min(0).default(0),
+  dressCode: z.string().nullable().optional(),
+  status: z.enum(["pendiente", "agendado", "completado", "cancelado"]).default("pendiente"),
+  musicianNotes: z.string().nullable().optional(),
+  audioEngineer: z.string().nullable().optional(),
+
+  locationId: z.string().nullable().optional(),
+  venueName: z.string().nullable().optional(),
+  venueAddress: z.string().nullable().optional(),
+  venueCity: z.string().nullable().optional(),
+  venueState: z.string().nullable().optional(),
+  mapsLink: z.string().nullable().optional(),
+
+  packageId: z.string().nullable().optional(),
+  packageName: z.string().nullable().optional(),
+  basePrice: z.number().min(0, "El precio base no puede ser negativo"),
+  viaticosAmount: z.number().min(0).nullable().optional(),
+  discountAmount: z.number().min(0).nullable().optional(),
+  additionalItems: z.array(z.object({
+    id: z.string().optional(),
+    description: z.string().min(1, "La descripción del concepto adicional es requerida"),
+    quantity: z.number().int().min(1).default(1),
+    unitCost: z.number().min(0).default(0),
+    order: z.number().int().default(0)
+  })).default([]),
+  invoice: z.boolean().default(false),
+  depositAmount: z.number().min(0).nullable().optional(),
+  originInquiryId: z.string().nullable().optional(),
+})
+
+export type SaveUnifiedEventQuotePayload = z.infer<typeof saveUnifiedEventQuoteSchema>
+
+export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
+  try {
+    // 1. Autorización administrativa estricta
+    const session = await auth()
+    if (!session || session.user?.role !== "ADMIN") {
+      return { success: false, error: "No autorizado. Se requiere sesión de administrador." }
+    }
+
+    // 2. Validación en runtime con Zod
+    const parsed = saveUnifiedEventQuoteSchema.safeParse(rawPayload)
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0]?.message || "Datos del formulario inválidos"
+      return { success: false, error: issue }
+    }
+
+    const val = parsed.data
+    const dateObj = new Date(`${val.eventDate}T12:00:00`)
+    if (isNaN(dateObj.getTime())) {
+      return { success: false, error: "Fecha del evento inválida" }
+    }
+
+    // 3. Cálculo canónico y validación de anticipo solicitado
+    const totals = calculateQuoteTotals({
+      basePrice: val.basePrice,
+      viaticosAmount: val.viaticosAmount,
+      discountAmount: val.discountAmount,
+      additionalItems: val.additionalItems as AdditionalLineItem[],
+      invoice: val.invoice,
+      depositAmount: val.depositAmount
+    })
+
+    if (totals.depositExceedsTotal) {
+      return {
+        success: false,
+        error: totals.depositError || `El anticipo solicitado ($${totals.depositAmount}) no puede superar el total ($${totals.totalAmount})`
+      }
+    }
+
+    // 4. Ejecución 100% atómica dentro de db.$transaction
+    const result = await db.$transaction(async (tx) => {
+      // A. Resolución / creación de Cliente dentro de la transacción
+      let finalClientId = val.clientId
+      if (!finalClientId && val.clientName) {
+        const cleanEmail = normalizeClientEmail(val.clientEmail)
+        const cleanPhone = normalizeClientPhone(val.clientPhone)
+
+        if (cleanEmail) {
+          const u = await tx.user.findUnique({
+            where: { email: cleanEmail },
+            include: { clientProfile: true }
+          })
+          if (u?.clientProfile) finalClientId = u.clientProfile.id
+        }
+
+        if (!finalClientId && cleanPhone) {
+          const cp = await tx.clientProfile.findFirst({
+            where: { whatsapp: { contains: cleanPhone } }
+          })
+          if (cp) finalClientId = cp.id
+        }
+
+        if (!finalClientId) {
+          const newUser = await tx.user.create({
+            data: {
+              name: val.clientName,
+              email: cleanEmail || null,
+              role: "CLIENT",
+              clientProfile: {
+                create: {
+                  whatsapp: cleanPhone || val.clientPhone || null,
+                  city: val.clientCity || null,
+                  state: "México",
+                  type: "private"
+                }
+              }
+            },
+            include: { clientProfile: true }
+          })
+          finalClientId = newUser.clientProfile?.id || null
+        }
+      }
+
+      // B. Resolución / creación de Locación dentro de la transacción
+      let finalLocationId = val.locationId
+      const cleanVenueName = val.venueName?.trim()
+      const isPendingVenue = !cleanVenueName || cleanVenueName === "Lugar por confirmar" || cleanVenueName === "Por confirmar" || cleanVenueName === "No especificada" || cleanVenueName === "Lugar aún no definido"
+
+      if (!finalLocationId && !isPendingVenue && cleanVenueName) {
+        const existingLoc = await tx.location.findFirst({
+          where: { name: { equals: cleanVenueName } }
+        })
+
+        if (existingLoc) {
+          finalLocationId = existingLoc.id
+        } else {
+          const newLoc = await tx.location.create({
+            data: {
+              name: cleanVenueName,
+              address: val.venueAddress?.trim() || cleanVenueName,
+              city: val.venueCity?.trim() || null,
+              state: val.venueState?.trim() || "México",
+              mapsLink: getValidMapsLink(val.mapsLink, val.venueAddress)
+            }
+          })
+          finalLocationId = newLoc.id
+        }
+      }
+
+      // C. Modo Edición
+      if (val.mode === "edit" && val.targetId) {
+        const existingBooking = await tx.bookingRequest.findUnique({
+          where: { id: val.targetId },
+          include: { event: true, lineItems: true }
+        })
+
+        const existingEvent = !existingBooking
+          ? await tx.event.findUnique({ where: { id: val.targetId }, include: { bookingRequest: true } })
+          : null
+
+        const bookingId = existingBooking?.id || existingEvent?.bookingRequest?.id
+        const eventId = existingBooking?.eventId || existingEvent?.id
+
+        if (bookingId) {
+          // Actualizar BookingRequest
+          await tx.bookingRequest.update({
+            where: { id: bookingId },
+            data: {
+              clientName: val.clientName,
+              clientPhone: val.clientPhone || "",
+              clientEmail: val.clientEmail || null,
+              clientId: finalClientId || null,
+              customName: val.customName || null,
+              ceremonyType: val.ceremonyType || "boda",
+              requestedDate: dateObj,
+              startTime: val.startTime || "21:00",
+              endTime: val.endTime || "23:00",
+              arrivalTime: val.arrivalTime || "19:00",
+              setupTime: val.setupTime || "17:00",
+              guestCount: val.guestCount || 0,
+              dressCode: val.dressCode || "formal",
+              musicianNotes: val.musicianNotes || null,
+              packageId: val.packageId || null,
+              packageName: val.packageName || "Paquete Personalizado",
+              baseAmount: totals.basePrice,
+              viaticosAmount: totals.viaticosAmount,
+              discountAmount: totals.discountAmount,
+              invoice: Boolean(val.invoice),
+              depositAmount: totals.depositAmount,
+              address: val.venueAddress || val.venueName || "Por confirmar",
+              city: val.venueCity || "Toluca",
+              state: val.venueState || "México",
+              mapsLink: val.mapsLink || null,
+              status: val.status
+            }
+          })
+
+          // Sincronizar BookingLineItem
+          await tx.bookingLineItem.deleteMany({ where: { bookingRequestId: bookingId } })
+          if (val.additionalItems.length > 0) {
+            await tx.bookingLineItem.createMany({
+              data: val.additionalItems.map((item, idx) => ({
+                bookingRequestId: bookingId,
+                description: item.description,
+                quantity: item.quantity,
+                unitCost: item.unitCost,
+                lineTotal: item.quantity * item.unitCost,
+                order: item.order ?? idx
+              }))
+            })
+          }
+        }
+
+        // Si ya existe un evento vinculado o el estatus cambia a agendado/completado
+        if (eventId) {
+          await tx.event.update({
+            where: { id: eventId },
+            data: {
+              customName: val.customName || `Evento ${val.clientName}`,
+              ceremonyType: val.ceremonyType || "boda",
+              date: dateObj,
+              startTime: val.startTime || "21:00",
+              performanceStart: val.startTime || "21:00",
+              performanceEnd: val.endTime || "23:00",
+              arrivalTime: val.arrivalTime || "19:00",
+              setupTime: val.setupTime || "17:00",
+              guestCount: val.guestCount || 0,
+              dressCode: val.dressCode || "formal",
+              musicianNotes: val.musicianNotes || null,
+              audioEngineer: val.audioEngineer || null,
+              package: val.packageId ? { connect: { id: val.packageId } } : { disconnect: true },
+              location: finalLocationId ? { connect: { id: finalLocationId } } : { disconnect: true },
+              client: finalClientId ? { connect: { id: finalClientId } } : undefined,
+              amount: totals.subtotal,
+              deposit: totals.depositAmount,
+              balance: totals.balanceAmount,
+              ivaAmount: totals.ivaAmount,
+              totalWithTax: totals.totalAmount,
+              invoice: Boolean(val.invoice),
+              status: val.status === "completado" ? "completado" : val.status === "cancelado" ? "cancelado" : "scheduled",
+              mapsLink: val.mapsLink || null
+            }
+          })
+        } else if ((val.status === "agendado" || val.status === "completado") && bookingId) {
+          // Crear el Event por primera vez al pasar de pendiente a agendado
+          const createdEvt = await tx.event.create({
+            data: {
+              customName: val.customName || `Evento ${val.clientName}`,
+              ceremonyType: val.ceremonyType || "boda",
+              date: dateObj,
+              startTime: val.startTime || "21:00",
+              performanceStart: val.startTime || "21:00",
+              performanceEnd: val.endTime || "23:00",
+              arrivalTime: val.arrivalTime || "19:00",
+              setupTime: val.setupTime || "17:00",
+              guestCount: val.guestCount || 0,
+              dressCode: val.dressCode || "formal",
+              musicianNotes: val.musicianNotes || null,
+              audioEngineer: val.audioEngineer || null,
+              package: val.packageId ? { connect: { id: val.packageId } } : undefined,
+              location: finalLocationId ? { connect: { id: finalLocationId } } : undefined,
+              client: finalClientId ? { connect: { id: finalClientId } } : undefined,
+              amount: totals.subtotal,
+              deposit: totals.depositAmount,
+              balance: totals.balanceAmount,
+              ivaAmount: totals.ivaAmount,
+              totalWithTax: totals.totalAmount,
+              totalIncome: 0,
+              invoice: Boolean(val.invoice),
+              status: val.status === "completado" ? "completado" : "scheduled",
+              mapsLink: val.mapsLink || null,
+              source: "admin"
+            }
+          })
+
+          await tx.bookingRequest.update({
+            where: { id: bookingId },
+            data: { eventId: createdEvt.id }
+          })
+        }
+
+        return { id: val.targetId, bookingId, eventId }
+      } else {
+        // D. Modo Creación: Delegar al servicio de dominio canónico
+        return await createUnifiedQuote(tx, {
+          clientId: finalClientId,
+          clientName: val.clientName,
+          clientPhone: val.clientPhone,
+          clientEmail: val.clientEmail,
+          clientCity: val.clientCity,
+          customName: val.customName,
+          ceremonyType: val.ceremonyType,
+          eventDate: val.eventDate,
+          startTime: val.startTime,
+          endTime: val.endTime,
+          arrivalTime: val.arrivalTime,
+          setupTime: val.setupTime,
+          guestCount: val.guestCount,
+          dressCode: val.dressCode,
+          status: val.status,
+          musicianNotes: val.musicianNotes,
+          audioEngineer: val.audioEngineer,
+          locationId: finalLocationId,
+          venueName: val.venueName,
+          venueAddress: val.venueAddress,
+          venueCity: val.venueCity,
+          venueState: val.venueState,
+          mapsLink: val.mapsLink,
+          packageId: val.packageId,
+          packageName: val.packageName,
+          basePrice: val.basePrice,
+          viaticosAmount: val.viaticosAmount,
+          discountAmount: val.discountAmount,
+          additionalItems: val.additionalItems,
+          invoice: val.invoice,
+          depositAmount: val.depositAmount,
+          originInquiryId: val.originInquiryId,
+        })
+      }
+    })
+
+    revalidatePath("/admin/eventos")
+    revalidatePath("/admin/ventas")
+    revalidatePath("/agenda")
+
+    return { success: true, ...result }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Error al guardar el registro"
+    return { success: false, error: msg }
+  }
+}
+
+/**
+ * Convierte explícitamente una cotización / reservación pendiente a Evento confirmado
+ * Acción administrativa atómica e idempotente.
+ */
+export async function convertBookingToEventAction(bookingId: string) {
+  try {
+    const session = await auth()
+    if (!session || session.user?.role !== "ADMIN") {
+      return { success: false, error: "No autorizado. Se requiere sesión de administrador." }
+    }
+
+    const result = await db.$transaction(async (tx) => {
+      return await convertQuoteToEvent(tx, bookingId)
+    })
+
+    revalidatePath("/admin/eventos")
+    revalidatePath("/admin/ventas")
+    revalidatePath("/agenda")
+
+    return { success: true, eventId: result.eventId, alreadyConverted: !result.isNew }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Error al convertir cotización a evento"
+    return { success: false, error: message }
   }
 }

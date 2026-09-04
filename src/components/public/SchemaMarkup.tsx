@@ -36,7 +36,6 @@ export async function SchemaMarkup() {
     "logo": logo,
     "image": "https://vendetta.mx/images/shows/arma-tu-show.jpg",
     "description": "Grupo musical versátil de alto nivel para bodas, eventos corporativos y festivales en México.",
-    "telephone": "+527222417045",
     "email": "rock.vendettamx@gmail.com",
     "sameAs": sameAs,
     "areaServed": [

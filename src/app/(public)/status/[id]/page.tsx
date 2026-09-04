@@ -1,20 +1,30 @@
 import { db } from "@/lib/db"
 import { notFound } from "next/navigation"
-import { CheckCircle2, Clock, XCircle, MapPin, Calendar, Package, Receipt, ArrowLeft, History } from "lucide-react"
+import { CheckCircle2, Clock, XCircle, MapPin, Calendar, Package, Receipt, ArrowLeft, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { RockBackground } from "@/components/funnel/RockBackground"
 import { ContractSigner } from "@/components/funnel/ContractSigner"
 import { QuoteApprovalForm } from "@/components/funnel/QuoteApprovalForm"
 import { formatDateMX } from "@/lib/utils"
+import { isValidShortIdFormat } from "@/lib/folios"
 import type { Metadata } from "next"
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = await params
-  const booking = await db.bookingRequest.findUnique({
-    where: { shortId: id.toUpperCase() }
+  const lookupId = (id || "").trim().toUpperCase()
+
+  if (!isValidShortIdFormat(lookupId)) {
+    return { title: "No encontrado | Vendetta Live Music" }
+  }
+
+  const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(lookupId)
+  const booking = await db.bookingRequest.findFirst({
+    where: isUuid
+      ? { OR: [{ shortId: lookupId }, { id: id.trim() }] }
+      : { shortId: lookupId }
   })
 
   if (!booking) {
@@ -24,16 +34,25 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 
   const isConfirmed = booking.status === "agendado" || booking.status === "completado"
+  const dateStr = booking.requestedDate ? formatDateMX(booking.requestedDate, "d 'de' MMMM") : ""
+  
   const title = isConfirmed 
-    ? `Contrato & Estatus de Evento ${booking.shortId} | Vendetta Live Music`
-    : `Propuesta de Evento ${booking.shortId} | Vendetta Live Music`
-  const description = `Estatus de reserva para el evento de ${booking.clientName}. Revisa tu cotización, pagos y firma tu contrato digital.`
+    ? `✍️ Firma de Contrato & Estatus (${booking.shortId}) | Vendetta Live Music`
+    : `🎸 Cotización & Propuesta Exclusiva (${booking.shortId}) | Vendetta Live Music`
+    
+  const ogTitle = isConfirmed
+    ? `✍️ Contrato Digital & Confirmación de Show (${booking.shortId})`
+    : `🎸 Cotización de Show: ${booking.clientName} (${booking.shortId})`
+
+  const description = isConfirmed
+    ? `¡Fecha confirmada para ${booking.clientName} el ${dateStr}! Entra para consultar la ficha técnica y firmar digitalmente tu contrato de prestación de servicios.`
+    : `Hola ${booking.clientName}, te compartimos la cotización exclusiva para tu evento el ${dateStr}. Revisa tu propuesta y aprueba tu fecha en línea.`
 
   return {
     title,
     description,
     openGraph: {
-      title,
+      title: ogTitle,
       description,
       url: `https://vendetta.mx/status/${booking.shortId}`,
       siteName: 'Vendetta Live Music',
@@ -42,7 +61,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
           url: 'https://vendetta.mx/images/opengraph-evento.png',
           width: 1200,
           height: 630,
-          alt: 'Evento Vendetta Live Music',
+          alt: 'Vendetta Live Music',
         },
       ],
       locale: 'es_MX',
@@ -50,7 +69,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     },
     twitter: {
       card: 'summary_large_image',
-      title,
+      title: ogTitle,
       description,
       images: ['https://vendetta.mx/images/opengraph-evento.png'],
     },
@@ -61,10 +80,20 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", c
 
 export default async function StatusDetailPage({ params }: { params: { id: string } }) {
   const { id } = await params
-  const mainBooking = await db.bookingRequest.findUnique({
-    where: { shortId: id.toUpperCase() },
+  const lookupId = (id || "").trim().toUpperCase()
+
+  if (!isValidShortIdFormat(lookupId)) {
+    return notFound()
+  }
+
+  const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(lookupId)
+  const mainBooking = await db.bookingRequest.findFirst({
+    where: isUuid
+      ? { OR: [{ shortId: lookupId }, { id: id.trim() }] }
+      : { shortId: lookupId },
     include: { 
       client: true,
+      lineItems: { orderBy: { order: "asc" } },
       event: {
         include: {
           contracts: true
@@ -77,30 +106,11 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
     return notFound()
   }
 
-  // Si tenemos clientId, buscamos todo el historial
-  let otherBookings: any[] = []
-  let confirmedEvents: any[] = []
-
-  if (mainBooking.clientId) {
-    otherBookings = await db.bookingRequest.findMany({
-      where: { 
-        clientId: mainBooking.clientId,
-        id: { not: mainBooking.id } 
-      },
-      orderBy: { requestedDate: 'desc' }
-    })
-
-    confirmedEvents = await db.event.findMany({
-      where: { clientId: mainBooking.clientId },
-      orderBy: { date: 'desc' }
-    })
-  }
-
   const globalConfig = await db.globalConfig.findUnique({
     where: { id: "vendetta_config" }
   })
 
-  const statusMap: Record<string, { label: string, color: string, icon: any }> = {
+  const statusMap: Record<string, { label: string, color: string, icon: React.ComponentType<{ className?: string }> }> = {
     pendiente: { label: "Pendiente de Revisión", color: "text-yellow-500", icon: Clock },
     agendado:  { label: "Evento Confirmado",    color: "text-green-500",  icon: CheckCircle2 },
     cancelado: { label: "Solicitud Cancelada",  color: "text-red-500",    icon: XCircle },
@@ -156,7 +166,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                       subValue={`${mainBooking.startTime} - ${mainBooking.endTime} hrs`}
                     />
                     {(() => {
-                      const cleanParts = (parts: any[]) => parts.filter(p => p && p !== "null" && p !== "undefined" && String(p).trim() !== "")
+                      const cleanParts = (parts: (string | null | undefined)[]) => parts.filter((p): p is string => Boolean(p && p !== "null" && p !== "undefined" && String(p).trim() !== ""))
                       const addressLine1 = cleanParts([mainBooking.calle, mainBooking.numero]).join(" ").trim()
                       const addressLine2 = cleanParts([mainBooking.colonia, mainBooking.municipio, mainBooking.state]).join(", ").trim()
                       
@@ -230,13 +240,13 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
                 bookingId={mainBooking.id}
                 clientName={mainBooking.clientName}
                 shortId={mainBooking.shortId || ""}
-                isSigned={!!mainBooking.clientSignature || (mainBooking as any).event?.contracts?.some((c: any) => c.status === "signed")}
-                signedAt={mainBooking.signedAt || (mainBooking as any).event?.contracts?.find((c: any) => c.status === "signed")?.signedAt}
+                isSigned={!!mainBooking.clientSignature || (mainBooking.event?.contracts?.some((c: { status: string }) => c.status === "signed") ?? false)}
+                signedAt={mainBooking.signedAt || (mainBooking.event?.contracts?.find((c: { status: string, signedAt?: Date | null }) => c.status === "signed")?.signedAt)}
                 clientSignature={mainBooking.clientSignature}
                 adminSignature={mainBooking.adminSignature}
                 contractLegalText={
-                  ((mainBooking as any).event?.venueType?.toLowerCase() === "bar" || mainBooking.venueType?.toLowerCase() === "bar") 
-                    ? ((globalConfig as any)?.contractBarLegalText || undefined)
+                  (mainBooking.event?.venueType?.toLowerCase() === "bar" || mainBooking.venueType?.toLowerCase() === "bar") 
+                    ? (globalConfig?.contractBarLegalText || undefined)
                     : (globalConfig?.contractLegalText || undefined)
                 }
                 eventDate={mainBooking.requestedDate}
@@ -264,57 +274,27 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
             )}
           </div>
 
-          {/* Columna Derecha: Mi Historial / Otros Eventos */}
+          {/* Columna Derecha: Información de la Reserva y Soporte */}
           <div className="space-y-6">
             <h3 className="text-xs font-black text-foreground uppercase tracking-[0.3em] flex items-center gap-2 pt-4">
-              <History className="w-4 h-4 text-primary" /> Historial de Cliente
+              <ShieldCheck className="w-4 h-4 text-primary" /> Información de Reserva
             </h3>
             
             <div className="space-y-4 p-6 rounded-3xl bg-foreground/[0.02] border border-border/40">
-               <div className="pb-4 border-b border-border/40">
-                 <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Cliente Registrado</div>
+               <div>
+                 <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Titular del Evento</div>
                  <div className="text-foreground font-black uppercase tracking-tight text-lg">{mainBooking.clientName}</div>
                </div>
-
-               {/* Eventos Confirmados */}
-               {confirmedEvents.length > 0 && (
-                 <div className="space-y-3">
-                    <div className="text-[10px] font-black text-primary uppercase tracking-widest">🎉 Mis Próximos Eventos</div>
-                    {confirmedEvents.map(evt => (
-                      <div key={evt.id} className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 group hover:bg-green-500/20 transition-all">
-                        <div className="text-foreground font-bold text-xs uppercase">{formatDateMX(evt.date, "dd MMM yyyy")}</div>
-                        <div className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">{evt.venueType ?? "Evento"} — Confirmado</div>
-                      </div>
-                    ))}
-                 </div>
-               )}
-
-               {/* Otras Solicitudes */}
-               {otherBookings.length > 0 && (
-                 <div className="space-y-3 pt-4 border-t border-border/40">
-                    <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">📋 Otras Solicitudes</div>
-                    {otherBookings.map(b => (
-                      <Link href={`/status/${b.shortId}`} key={b.id} className="block p-3 rounded-xl bg-foreground/5 border border-border/40 group hover:border-primary/50 transition-all">
-                        <div className="flex justify-between items-center">
-                          <span className="text-foreground font-bold text-xs uppercase">{formatDateMX(b.requestedDate, "dd MMM")}</span>
-                          <span className="text-[9px] text-primary font-black uppercase">{b.shortId}</span>
-                        </div>
-                        <div className="text-[9px] text-muted-foreground mt-1 uppercase font-bold">{b.packageName} — {b.status}</div>
-                      </Link>
-                    ))}
-                 </div>
-               )}
-
-               {otherBookings.length === 0 && confirmedEvents.length === 0 && (
-                 <p className="text-[10px] text-muted-foreground italic pb-4">No tienes otros eventos registrados con este usuario.</p>
-               )}
+               <div className="pt-3 border-t border-border/40 text-xs text-muted-foreground">
+                 <span className="font-semibold text-white">Folio Único:</span> {mainBooking.shortId}
+               </div>
             </div>
 
             <div className="p-6 rounded-3xl bg-primary/10 border border-primary/20 space-y-4">
-               <div className="text-sm font-black text-foreground uppercase tracking-tight">¿Alguna duda?</div>
-               <p className="text-[11px] text-muted-foreground leading-relaxed">Contáctanos vía WhatsApp para cualquier ajuste o duda sobre tu contrato.</p>
-               <a href={`https://wa.me/5215500000000?text=Hola, soy ${mainBooking.clientName}, tengo una duda sobre mi folio ${mainBooking.shortId}`} className="block">
-                 <Button className="w-full h-11 text-[10px] font-black uppercase tracking-widest rounded-xl">WhatsApp Directo</Button>
+               <div className="text-sm font-black text-foreground uppercase tracking-tight">¿Alguna duda o ajuste?</div>
+               <p className="text-[11px] text-muted-foreground leading-relaxed">Contáctanos por correo o WhatsApp oficial para cualquier consulta sobre tu reservación o contrato.</p>
+               <a href={process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ? `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola, tengo una duda sobre mi folio ${mainBooking.shortId}`)}` : `mailto:rock.vendettamx@gmail.com?subject=${encodeURIComponent(`Duda sobre evento folio ${mainBooking.shortId}`)}`} className="block">
+                 <Button className="w-full h-11 text-[10px] font-black uppercase tracking-widest rounded-xl">{process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ? "WhatsApp Directo" : "Contactar por Correo"}</Button>
                </a>
             </div>
           </div>
@@ -325,7 +305,7 @@ export default async function StatusDetailPage({ params }: { params: { id: strin
   )
 }
 
-function DetailItem({ icon: Icon, label, value, subValue }: { icon: any, label: string, value: string, subValue?: string }) {
+function DetailItem({ icon: Icon, label, value, subValue }: { icon: React.ComponentType<{ className?: string }>, label: string, value: string, subValue?: string }) {
   return (
     <div className="flex gap-4">
       <div className="w-10 h-10 rounded-xl bg-foreground/5 border border-border/40 flex items-center justify-center shrink-0">
