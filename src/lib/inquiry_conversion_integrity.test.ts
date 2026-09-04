@@ -5,8 +5,9 @@ import { PrismaLibSql } from "@prisma/adapter-libsql"
 import { createUnifiedQuote } from "./quote-service"
 import { execSync } from "child_process"
 import fs from "fs"
+import path from "path"
 
-const TEST_DB_PATH = "/Users/ppbau/.gemini/antigravity/brain/3dfdba2c-7be1-44af-9aab-9f27a9504448/scratch/conversion_integrity_test.db"
+const TEST_DB_PATH = path.join(process.cwd(), "prisma", "test-conversion-integrity.db")
 const TEST_DB_URL = `file:${TEST_DB_PATH}`
 
 let prisma: PrismaClient
