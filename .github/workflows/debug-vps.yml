@@ -1,8 +1,6 @@
-name: Debug VPS Dokploy
+name: Debug VPS Dokploy (Manual Only)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
