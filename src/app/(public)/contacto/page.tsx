@@ -69,10 +69,10 @@ export default function ContactoPage() {
               
               <div className="bg-white/5 p-8 rounded-2xl border border-white/10">
                 <h3 className="font-bold text-white mb-2">¿Quieres cotizar inmediatamente?</h3>
-                <p className="text-sm text-gray-400 mb-6">Usa nuestro cotizador interactivo en línea para ver paquetes, opciones y apartar tu fecha en 2 minutos.</p>
-                <Link href="/cotizar">
-                  <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold gap-2">
-                    <span>Ir al Cotizador en Línea</span>
+                <p className="text-sm text-gray-400 mb-6">Elige el paquete de tu interés y genera tu cotización formal con disponibilidad inmediata por WhatsApp.</p>
+                <Link href="/#paquetes">
+                  <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold gap-2 cursor-pointer">
+                    <span>Ver Paquetes y Cotizar</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
