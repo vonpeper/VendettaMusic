@@ -131,7 +131,13 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     status:     m.status,
   }))
 
-  const clientsMapped = clients.map(c => ({ id: c.id, name: c.user.name ?? c.user.email ?? "Sin nombre" }))
+  const clientsMapped = clients.map(c => ({
+    id: c.id,
+    name: c.user.name ?? c.user.email ?? "Sin nombre",
+    phone: c.whatsapp || null,
+    email: c.user.email || null,
+    city: c.city || null
+  }))
   
   const staffMapped = musicianProfiles
     .filter(p => 

@@ -714,60 +714,75 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
       data: { status: newStatus }
     })
 
-    // Sincronizar con Quote (Legacy) si existe
+    // Sincronizar con Quote (Legacy) si existe de forma segura
     if (event.quoteId) {
-       await db.quote.update({
-         where: { id: event.quoteId },
-         data: { status: newStatus }
-       })
+      try {
+        await db.quote.updateMany({
+          where: { id: event.quoteId },
+          data: { status: newStatus }
+        })
+      } catch (quoteErr) {
+        console.warn("Could not sync legacy quote status:", quoteErr)
+      }
     }
 
     // Sincronizar con BookingRequest (Nuevo Funnel)
-    const existingBooking = await db.bookingRequest.findUnique({ where: { eventId: id } })
-    
-    if (existingBooking) {
-      await db.bookingRequest.update({
-        where: { eventId: id },
-        data: { 
-          status: newStatus,
-          ...(newStatus === "completado" ? { paymentStatus: "paid" } : {})
-        }
-      })
-    } else {
-      // Si no existe, lo creamos (Self-healing)
-      const randomHex = crypto.randomBytes(2).toString('hex').toUpperCase()
-      const shortId = `VND-${randomHex}`
+    try {
+      const existingBooking = await db.bookingRequest.findUnique({ where: { eventId: id } })
       
-      const evt = await db.event.findUnique({ 
-        where: { id },
-        include: { location: true, package: true, client: { include: { user: true } } }
-      })
-
-      if (evt) {
-        await db.bookingRequest.create({
-          data: {
-            shortId,
-            eventId: id,
-            clientId: evt.clientId,
-            clientName: evt.customName || evt.client?.user?.name || "Sin Nombre",
-            clientPhone: evt.client?.whatsapp || "",
-            clientEmail: evt.client?.user?.email || "",
-            requestedDate: evt.date,
-            startTime: evt.performanceStart || "21:00",
-            endTime: evt.performanceEnd || "23:00",
-            packageName: evt.package?.name || "Paquete Personalizado",
-            packageId: evt.packageId,
-            baseAmount: evt.amount,
-            depositAmount: evt.deposit,
-            paymentMethod: evt.paymentMethod || "transfer",
+      if (existingBooking) {
+        await db.bookingRequest.update({
+          where: { id: existingBooking.id },
+          data: { 
             status: newStatus,
-            source: "manual",
-            venueType: evt.ceremonyType || "salon",
-            address: evt.location?.name || "Dirección manual",
-            city: evt.location?.city || "CDMX",
+            ...(newStatus === "completado" ? { paymentStatus: "paid" } : {})
           }
         })
+      } else {
+        // Si no existe, comprobamos si podemos crear un BookingRequest vinculado (Self-healing)
+        const evt = await db.event.findUnique({ 
+          where: { id },
+          include: { location: true, package: true, client: { include: { user: true } } }
+        })
+
+        if (evt) {
+          const randomHex = crypto.randomBytes(3).toString('hex').toUpperCase()
+          const shortId = `VND-${randomHex}`
+          
+          let validClientId: string | null = null
+          if (evt.clientId) {
+            const clientExists = await db.clientProfile.findUnique({ where: { id: evt.clientId } })
+            if (clientExists) validClientId = evt.clientId
+          }
+
+          await db.bookingRequest.create({
+            data: {
+              shortId,
+              eventId: id,
+              clientId: validClientId,
+              clientName: evt.customName || evt.client?.user?.name || "Sin Nombre",
+              clientPhone: evt.client?.whatsapp || "",
+              clientEmail: evt.client?.user?.email || "",
+              requestedDate: evt.date,
+              startTime: evt.performanceStart || "21:00",
+              endTime: evt.performanceEnd || "23:00",
+              packageName: evt.package?.name || "Paquete Personalizado",
+              packageId: evt.packageId,
+              baseAmount: evt.amount,
+              depositAmount: evt.deposit,
+              paymentMethod: evt.paymentMethod || "transfer",
+              paymentStatus: newStatus === "completado" ? "paid" : "pending",
+              status: newStatus,
+              source: "manual",
+              venueType: evt.ceremonyType || "salon",
+              address: evt.location?.name || "Dirección manual",
+              city: evt.location?.city || "CDMX",
+            }
+          })
+        }
       }
+    } catch (bookingErr) {
+      console.warn("Could not sync booking request status:", bookingErr)
     }
 
     if (newStatus === "agendado") {
@@ -782,15 +797,23 @@ export async function updateEventStatusAction(id: string, newStatus: string) {
 
     revalidatePath("/admin/eventualidades")
     revalidatePath("/admin/eventos")
+    revalidatePath("/admin/ventas")
+    revalidatePath("/admin")
+    revalidatePath("/agenda")
     revalidatePath("/")
+
     // Sincronizar con Google Calendar de forma asíncrona
-    const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
-    syncEventToGoogleCalendar(id).catch(e => console.error("Error syncing to Google Calendar:", e))
+    try {
+      const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
+      syncEventToGoogleCalendar(id).catch(e => console.error("Error syncing to Google Calendar:", e))
+    } catch (calErr) {
+      console.warn("Calendar sync trigger warning:", calErr)
+    }
     
     return { success: true }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating event status:", error)
-    return { success: false, error: "No se pudo actualizar el estatus" }
+    return { success: false, error: error?.message || "No se pudo actualizar el estatus" }
   }
 }
 export async function notifySingleMusicianAction(eventId: string, musicianId: string) {
@@ -1038,7 +1061,8 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               city: val.venueCity || "Toluca",
               state: val.venueState || "México",
               mapsLink: val.mapsLink || null,
-              status: val.status
+              status: val.status,
+              ...(val.status === "completado" ? { paymentStatus: "paid" } : {})
             }
           })
 
@@ -1059,6 +1083,10 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
         }
 
         // Si ya existe un evento vinculado o el estatus cambia a agendado/completado
+        const validPackage = val.packageId ? await tx.package.findUnique({ where: { id: val.packageId } }) : null
+        const validLocation = finalLocationId ? await tx.location.findUnique({ where: { id: finalLocationId } }) : null
+        const validClient = finalClientId ? await tx.clientProfile.findUnique({ where: { id: finalClientId } }) : null
+
         if (eventId) {
           await tx.event.update({
             where: { id: eventId },
@@ -1075,9 +1103,9 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               dressCode: val.dressCode || "formal",
               musicianNotes: val.musicianNotes || null,
               audioEngineer: val.audioEngineer || null,
-              package: val.packageId ? { connect: { id: val.packageId } } : { disconnect: true },
-              location: finalLocationId ? { connect: { id: finalLocationId } } : { disconnect: true },
-              client: finalClientId ? { connect: { id: finalClientId } } : undefined,
+              packageId: validPackage ? validPackage.id : null,
+              locationId: validLocation ? validLocation.id : null,
+              clientId: validClient ? validClient.id : null,
               amount: totals.subtotal,
               deposit: totals.depositAmount,
               balance: totals.balanceAmount,
@@ -1104,9 +1132,9 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               dressCode: val.dressCode || "formal",
               musicianNotes: val.musicianNotes || null,
               audioEngineer: val.audioEngineer || null,
-              package: val.packageId ? { connect: { id: val.packageId } } : undefined,
-              location: finalLocationId ? { connect: { id: finalLocationId } } : undefined,
-              client: finalClientId ? { connect: { id: finalClientId } } : undefined,
+              packageId: validPackage ? validPackage.id : null,
+              locationId: validLocation ? validLocation.id : null,
+              clientId: validClient ? validClient.id : null,
               amount: totals.subtotal,
               deposit: totals.depositAmount,
               balance: totals.balanceAmount,

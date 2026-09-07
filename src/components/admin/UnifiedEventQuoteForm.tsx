@@ -400,12 +400,12 @@ export function UnifiedEventQuoteForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-6xl mx-auto">
       {/* Navegación por Pasos / Pestañas */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-card p-1.5 rounded-2xl border border-border/40 text-xs font-bold">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-muted/40 p-1.5 rounded-2xl border border-border text-xs font-bold">
         <button
           type="button"
           onClick={() => setActiveStep(1)}
           className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-            activeStep === 1 ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
+            activeStep === 1 ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
           }`}
         >
           <span>1. Cliente</span>
@@ -414,7 +414,7 @@ export function UnifiedEventQuoteForm({
           type="button"
           onClick={() => setActiveStep(2)}
           className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-            activeStep === 2 ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
+            activeStep === 2 ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
           }`}
         >
           <span>2. Evento</span>
@@ -423,7 +423,7 @@ export function UnifiedEventQuoteForm({
           type="button"
           onClick={() => setActiveStep(3)}
           className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-            activeStep === 3 ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
+            activeStep === 3 ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
           }`}
         >
           <span>3. Venue</span>
@@ -432,7 +432,7 @@ export function UnifiedEventQuoteForm({
           type="button"
           onClick={() => setActiveStep(4)}
           className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-            activeStep === 4 ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
+            activeStep === 4 ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
           }`}
         >
           <span>4. Cotización</span>
@@ -441,7 +441,7 @@ export function UnifiedEventQuoteForm({
           type="button"
           onClick={() => setActiveStep(5)}
           className={`col-span-2 sm:col-span-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-            activeStep === 5 ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
+            activeStep === 5 ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
           }`}
         >
           <span>5. Confirmar</span>
@@ -456,7 +456,7 @@ export function UnifiedEventQuoteForm({
           {activeStep === 1 && (
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
                   <Users className="w-5 h-5 text-primary" /> Datos del Cliente
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -525,7 +525,7 @@ export function UnifiedEventQuoteForm({
           {activeStep === 2 && (
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" /> Datos Operativos del Evento
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -689,7 +689,7 @@ export function UnifiedEventQuoteForm({
           {activeStep === 3 && (
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-primary" /> Locación y Dirección
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -760,7 +760,7 @@ export function UnifiedEventQuoteForm({
           {activeStep === 4 && (
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
                   <FileText className="w-5 h-5 text-primary" /> Paquete Musical y Cotización
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -834,9 +834,9 @@ export function UnifiedEventQuoteForm({
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-muted/40 border border-border flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-bold text-white cursor-pointer" htmlFor="invoice-toggle">
+                    <Label className="text-xs font-bold text-foreground cursor-pointer" htmlFor="invoice-toggle">
                       ¿Requiere Factura Fiscal?
                     </Label>
                     <p className="text-[11px] text-muted-foreground">Calcula automáticamente el 16% de IVA sobre el subtotal.</p>
@@ -872,7 +872,7 @@ export function UnifiedEventQuoteForm({
           {activeStep === 5 && (
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-primary" /> Confirmación y Guardado
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -880,20 +880,20 @@ export function UnifiedEventQuoteForm({
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/10 text-xs space-y-2 sm:space-y-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-muted/30 border border-border text-xs space-y-2 sm:space-y-0">
                   <div>
                     <span className="text-muted-foreground block">Titular:</span>
-                    <span className="font-bold text-white text-sm">{clientName || "Sin cliente"}</span>
+                    <span className="font-bold text-foreground text-sm">{clientName || "Sin cliente"}</span>
                     <span className="text-muted-foreground block mt-1">{clientPhone} • {clientEmail}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground block">Evento y Fecha:</span>
-                    <span className="font-bold text-white text-sm">{customName || "Show Vendetta"}</span>
+                    <span className="font-bold text-foreground text-sm">{customName || "Show Vendetta"}</span>
                     <span className="text-muted-foreground block mt-1">📅 {eventDate || "Sin fecha"} ({startTime} - {endTime} hrs)</span>
                   </div>
-                  <div className="sm:col-span-2 pt-2 border-t border-white/5">
+                  <div className="sm:col-span-2 pt-2 border-t border-border/40">
                     <span className="text-muted-foreground block">Locación:</span>
-                    <span className="font-semibold text-white">{venueAddress || "Lugar por confirmar"} {venueCity ? `(${venueCity})` : ""}</span>
+                    <span className="font-semibold text-foreground">{venueAddress || "Lugar por confirmar"} {venueCity ? `(${venueCity})` : ""}</span>
                   </div>
                 </div>
 
@@ -905,7 +905,7 @@ export function UnifiedEventQuoteForm({
                     type="submit"
                     disabled={isPending}
                     size="lg"
-                    className="gap-2 font-bold px-8 cursor-pointer bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20"
+                    className="gap-2 font-bold px-8 cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20"
                   >
                     {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                     {mode === "edit" ? "Guardar Cambios" : "Crear Evento / Cotización"}

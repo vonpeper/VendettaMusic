@@ -119,18 +119,27 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
     "nocturno": "🌙 Concierto Nocturno"
   }
 
-  // Enviar Notificación Push Batch a la App Móvil
+  // Enviar Notificación Push Batch a la App Móvil y WebPush a la banda
   try {
+    const eventName = gigDetails.clientName || gigDetails.eventName || "Evento Vendetta"
     const userIds = allRecipients.map((r: any) => r.userId).filter(Boolean)
     if (userIds.length > 0) {
-      const eventName = gigDetails.clientName || gigDetails.eventName || "Evento Vendetta"
       const { sendPushNotificationToUsers } = await import("../push-notifications")
       await sendPushNotificationToUsers(userIds, {
-        title: "Nueva Convocatoria 🎸",
-        body: `Has sido convocado para el show "${eventName}" el ${eventDate}. ¡Ingresa a la app para ver la logística!`,
+        title: "⚡ VENDETTA | ¡Nuevo Show Confirmado!",
+        body: `🎸 Fecha confirmada para "${eventName}" el ${eventDate}. ¡Revisa tus horarios en la app!`,
         data: { eventId }
       })
     }
+
+    // WebPush a todos los miembros de la banda suscritos en navegador/PWA
+    const { broadcastWebPush } = await import("../webpush")
+    await broadcastWebPush({
+      title: "⚡ VENDETTA | ¡Nuevo Show Confirmado!",
+      body: `🎸 Show "${eventName}" confirmado para el ${eventDate}. ¡Toca para consultar los detalles en la agenda!`,
+      url: "/agenda",
+      data: { eventId }
+    }).catch(e => console.error("⚠️ Error enviando WebPush a la banda:", e))
   } catch (pushErr) {
     console.error("⚠️ Error enviando push notifications en batch:", pushErr)
   }

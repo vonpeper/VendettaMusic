@@ -15,24 +15,23 @@ export async function markBookingAsCompleted(bookingId: string) {
       }
     })
     
-    // Sincronizar con Event y Quote si existen
+    // Sincronizar con Event de forma segura
     const br = await db.bookingRequest.findUnique({ where: { id: bookingId } })
-    if (br) {
-      if (br.eventId) {
-        await db.event.update({
-          where: { id: br.eventId },
-          data: { status: "completado" }
-        })
-      }
-      // Si es legacy y tiene quoteId (asumiendo que podría existir una relación indirecta o si bookingRequest se convirtió de Quote)
-      // Pero usualmente BookingRequest e Event son la pareja principal ahora.
+    if (br?.eventId) {
+      await db.event.updateMany({
+        where: { id: br.eventId },
+        data: { status: "completado" }
+      })
     }
 
     revalidatePath("/admin/ventas")
+    revalidatePath("/admin/eventos")
+    revalidatePath("/admin")
+    revalidatePath("/agenda")
     return { success: true }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error marking booking as completed:", error)
-    return { success: false, error: "Error al completar el contrato." }
+    return { success: false, error: error?.message || "Error al completar el contrato." }
   }
 }
 
@@ -259,9 +258,9 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
       }
     })
 
-    if (br?.eventId && br.event) {
+    if (br?.eventId) {
       if (newStatus !== "agendado") {
-        await db.event.update({
+        await db.event.updateMany({
           where: { id: br.eventId },
           data: { status: newStatus }
         })
@@ -293,6 +292,8 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
 
     revalidatePath("/admin/ventas")
     revalidatePath("/admin/eventos")
+    revalidatePath("/admin")
+    revalidatePath("/agenda")
 
     if (br?.eventId) {
       const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
@@ -300,9 +301,9 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
     }
 
     return { success: true }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating booking status:", error)
-    return { success: false, error: "Error al actualizar el estado." }
+    return { success: false, error: error?.message || "Error al actualizar el estado." }
   }
 }
 

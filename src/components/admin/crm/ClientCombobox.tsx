@@ -89,7 +89,7 @@ export function ClientCombobox({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-bold text-white flex items-center gap-2">
+        <Label className="text-sm font-bold text-foreground flex items-center gap-2">
           <User className="w-4 h-4 text-primary" /> Titular / Cliente
         </Label>
         {!isCreatingNew && (
@@ -105,9 +105,9 @@ export function ClientCombobox({
 
       {isCreatingNew ? (
         <div className="p-4 rounded-xl bg-card border border-primary/40 space-y-3">
-          <div className="flex justify-between items-center pb-2 border-b border-white/10">
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
             <span className="text-xs font-bold uppercase tracking-wider text-primary">Registrar Nuevo Cliente</span>
-            <button type="button" onClick={() => setIsCreatingNew(false)} className="text-muted-foreground hover:text-white">
+            <button type="button" onClick={() => setIsCreatingNew(false)} className="text-muted-foreground hover:text-foreground">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -163,7 +163,7 @@ export function ClientCombobox({
       ) : selectedClient ? (
         <div className="p-4 rounded-xl bg-card border border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <div className="font-bold text-white text-base flex items-center gap-2">
+            <div className="font-bold text-foreground text-base flex items-center gap-2">
               {selectedClient.name}
               <span className="text-[10px] bg-primary/20 text-primary font-mono px-2 py-0.5 rounded-md">
                 ID: {selectedClient.id.slice(0, 8)}
@@ -246,7 +246,7 @@ export function ClientCombobox({
                     className="w-full text-left p-2.5 rounded-lg hover:bg-primary/10 transition-colors flex items-center justify-between group cursor-pointer"
                   >
                     <div>
-                      <div className="font-semibold text-sm text-white group-hover:text-primary transition-colors">
+                      <div className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
                         {c.name}
                       </div>
                       <div className="text-xs text-muted-foreground flex items-center gap-3 mt-0.5">

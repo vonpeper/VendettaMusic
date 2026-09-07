@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { createRehearsalAction, deleteRehearsalAction, updateRehearsalAction } from "@/actions/rehearsals"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -58,6 +59,10 @@ export function EditRehearsalButton({ rehearsal, locations, musicians, songs }: 
 }
 
 function RehearsalForm({ onClose, locations, musicians, songs, initialData }: any) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const [loading, setLoading] = useState(false)
   const [newSongs, setNewSongs] = useState<{ id: number }[]>([])
 
@@ -88,14 +93,16 @@ function RehearsalForm({ onClose, locations, musicians, songs, initialData }: an
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-card backdrop-blur-sm p-4">
+  if (!mounted) return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-card border border-border/40 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[94vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-border/40 sticky top-0 bg-card z-10">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Calendar className="w-5 h-5 text-primary" /> {isEdit ? "Editar Ensayo" : "Agendar Ensayo"}
           </h2>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground">
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -220,7 +227,8 @@ function RehearsalForm({ onClose, locations, musicians, songs, initialData }: an
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

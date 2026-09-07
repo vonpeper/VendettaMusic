@@ -47,7 +47,13 @@ export default async function AdminEventosPage() {
     }),
   ])
 
-  const clientsMapped = clients.map(c => ({ id: c.id, name: c.user.name ?? c.user.email ?? "Sin nombre" }))
+  const clientsMapped = clients.map(c => ({
+    id: c.id,
+    name: c.user.name ?? c.user.email ?? "Sin nombre",
+    phone: c.whatsapp || null,
+    email: c.user.email || null,
+    city: c.city || null
+  }))
   
   // Filtrar solo Ingenieros y Staff para el campo de Audio Engineer
   const staffMapped = musicianProfiles

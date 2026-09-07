@@ -55,7 +55,7 @@ export function QuoteLineItems({ items, onChange }: QuoteLineItemsProps) {
       </div>
 
       {items.length === 0 ? (
-        <div className="p-4 rounded-xl bg-white/[0.02] border border-dashed border-white/10 text-center text-xs text-muted-foreground">
+        <div className="p-4 rounded-xl bg-muted/30 border border-dashed border-border text-center text-xs text-muted-foreground">
           Sin conceptos adicionales agregados. Presiona &quot;Agregar Concepto&quot; para sumar horas extras, iluminación robótica, pantallas o audio extendido.
         </div>
       ) : (

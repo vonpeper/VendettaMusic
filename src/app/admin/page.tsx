@@ -117,7 +117,10 @@ export default async function AdminDashboardPage() {
 
   const clientsMapped = allClients.map(c => ({
     id: c.id,
-    name: c.user?.name || "Sin nombre"
+    name: c.user?.name || "Sin nombre",
+    phone: c.whatsapp || null,
+    email: c.user?.email || null,
+    city: c.city || null
   }))
 
 

@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       vipReminders: 0,
       musicianReminders3Days: 0,
       musicianReminders: 0,
+      weekendReminders: 0,
       postEventThanks: 0,
       errors: [] as string[]
     }
@@ -364,6 +365,50 @@ export async function POST(request: Request) {
       }
     }
 
+    // 3.4.1. Recordatorio de Lunes para Músicos (Shows del próximo fin de semana: Viernes a Domingo)
+    // Se ejecuta los lunes hora CDMX para preparar la semana
+    const cdmxDayOfWeek = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Mexico_City",
+      weekday: "short"
+    }).format(now)
+
+    if (cdmxDayOfWeek === "Mon") {
+      try {
+        const upcomingFriday = startOfDay(addDays(now, 4))
+        const upcomingSunday = endOfDay(addDays(now, 6))
+
+        const weekendEvents = await db.event.findMany({
+          where: {
+            status: { in: ["agendado", "confirmed"] },
+            date: {
+              gte: upcomingFriday,
+              lte: upcomingSunday
+            }
+          },
+          include: { location: true },
+          orderBy: { date: "asc" }
+        })
+
+        if (weekendEvents.length > 0) {
+          const { broadcastWebPush } = await import("@/lib/webpush")
+          const eventsList = weekendEvents.map(e => {
+            const dayName = new Intl.DateTimeFormat("es-MX", { timeZone: "America/Mexico_City", weekday: "short", day: "numeric" }).format(e.date)
+            return `${dayName}: ${e.customName || "Show Vendetta"}`
+          }).join(" | ")
+
+          await broadcastWebPush({
+            title: "📅 VENDETTA | Shows de este Fin de Semana",
+            body: `🎸 Esta semana tenemos ${weekendEvents.length} show(s): ${eventsList}. ¡Revisa tus horarios en la agenda!`,
+            url: "/agenda",
+            data: { type: "weekend_reminder" }
+          }).catch(e => console.error("WebPush weekend reminder error:", e))
+
+          results.weekendReminders = weekendEvents.length
+        }
+      } catch (weekendErr: any) {
+        results.errors.push(`Error in Monday weekend reminders: ${weekendErr.message}`)
+      }
+    }
 
     // 3.5. Post-Event Thanks (Eventos recientes concluidos en los últimos 3 días sin mensaje previo)
     const recentEventsWindow = startOfDay(subDays(now, 3))

@@ -262,6 +262,7 @@ export async function sendWebPush(subscription: WebSubscription, payload: PushNo
 
     if (vapidHeaders.Authorization) {
       headers["Authorization"] = vapidHeaders.Authorization
+      headers["Crypto-Key"] = `p256ecdsa=${VAPID_PUBLIC_KEY}`
     }
 
     const response = await fetch(subscription.endpoint, {

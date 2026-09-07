@@ -1,6 +1,7 @@
 "use client"
 
-import React from "react"
+import React, { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { UnifiedEventQuoteForm, PackageOption, StaffOption } from "@/components/admin/UnifiedEventQuoteForm"
 import { ClientData } from "@/components/admin/crm/ClientCombobox"
 import { VenueData } from "@/components/admin/crm/VenueCombobox"
@@ -27,6 +28,11 @@ export function EventForm({
   allMusicians = [],
   initialData
 }: EventFormProps) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const formattedClients: ClientData[] = clients.map(c => ({
     id: c.id,
     name: c.name,
@@ -45,19 +51,21 @@ export function EventForm({
     phone: l.phone || null
   }))
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+  if (!mounted) return null
+
+  return createPortal(
+    <div className="admin-theme fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="relative w-full max-w-5xl bg-background border border-border rounded-3xl p-6 md:p-8 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 text-muted-foreground hover:text-white rounded-full hover:bg-white/10 transition-colors z-10 cursor-pointer"
+          className="absolute top-6 right-6 p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors z-10 cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="mb-6 pb-4 border-b border-border/40">
-          <h2 className="text-xl font-bold font-heading text-white">
+          <h2 className="text-xl font-bold font-heading text-foreground">
             {initialData?.id ? "Editar Evento / Cotización" : "Nuevo Evento Maestro"}
           </h2>
           <p className="text-xs text-muted-foreground mt-1">
@@ -77,6 +85,7 @@ export function EventForm({
           onCancel={onClose}
         />
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
