@@ -87,7 +87,14 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
       lineItems: { orderBy: { order: "asc" } },
       event: {
         include: {
-          contracts: true
+          contracts: true,
+          musicians: {
+            include: {
+              musician: {
+                include: { user: true }
+              }
+            }
+          }
         }
       }
     }

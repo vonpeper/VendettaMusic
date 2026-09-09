@@ -165,6 +165,56 @@ export function PremiumClientQuoteView({
     ? `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER.replace(/\D/g, "")}?text=${whatsappMessage}`
     : `https://wa.me/5217222417045?text=${whatsappMessage}`
 
+  // -------------------------------------------------------------
+  // MÚSICOS & ALINEACIÓN EN ESCENA (Basado en convocatoria real)
+  // -------------------------------------------------------------
+  const convokedMusicians = (booking.event?.musicians || [])
+    .filter((em: any) => em.status !== "rejected" && em.musician?.instrument)
+  
+  const convokedInstruments = Array.from(new Set(
+    convokedMusicians.map((em: any) => em.musician?.instrument?.trim()).filter(Boolean)
+  )) as string[]
+
+  const hasConvocation = convokedInstruments.length > 0
+
+  // Verificar si teclado/piano está explícitamente convocado o en adicionales
+  const hasKeyboardConvoked = convokedInstruments.some(inst => 
+    inst.toLowerCase().includes("piano") || inst.toLowerCase().includes("teclado")
+  )
+  const hasKeyboardInLines = lineItems.some(item => 
+    item.description.toLowerCase().includes("teclado") || item.description.toLowerCase().includes("piano")
+  )
+  const includesKeyboard = hasKeyboardConvoked || hasKeyboardInLines
+
+  let musiciansLineupText = ""
+  if (hasConvocation) {
+    musiciansLineupText = `Alineación confirmada en escena: ${convokedInstruments.join(", ")}.`
+  } else if (includesKeyboard) {
+    musiciansLineupText = "Alineación en escena: Formación profesional de rock en vivo (Voz líder, guitarras, bajo, batería acústica, teclados y coros)."
+  } else {
+    musiciansLineupText = "Alineación en escena: Formación profesional de rock en vivo según la convocatoria asignada al evento (Voz líder, guitarras, bajo, batería acústica y coros)."
+  }
+
+  // -------------------------------------------------------------
+  // RIDER TÉCNICO & PRODUCCIÓN (Sin sobrepromesas de equipo)
+  // -------------------------------------------------------------
+  const isFestivalPkg = Boolean(
+    booking.packageName?.toLowerCase().includes("festival") || 
+    booking.packageName?.toLowerCase().includes("premium")
+  )
+  const hasLargeAudio = isFestivalPkg || 
+                        (booking.guestCount && booking.guestCount > 300) || 
+                        lineItems.some(i => i.description.toLowerCase().includes("line array") || i.description.toLowerCase().includes("audio masivo"))
+  
+  const hasRobotics = isFestivalPkg || 
+                      Boolean(booking.hasRobot) || 
+                      lineItems.some(i => i.description.toLowerCase().includes("robótica") || i.description.toLowerCase().includes("robotica"))
+
+  const hasTemplete = Boolean(booking.hasTemplete) || lineItems.some(i => i.description.toLowerCase().includes("templete") || i.description.toLowerCase().includes("escenario"))
+  const hasPantalla = Boolean(booking.hasPantalla) || lineItems.some(i => i.description.toLowerCase().includes("pantalla"))
+  const hasPista = Boolean(booking.hasPista) || lineItems.some(i => i.description.toLowerCase().includes("pista"))
+  const hasRobotLed = Boolean(booking.hasRobot) || lineItems.some(i => i.description.toLowerCase().includes("robot") || i.description.toLowerCase().includes("batucada"))
+
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-slate-100 relative overflow-hidden py-12 md:py-20 font-sans selection:bg-red-600 selection:text-white">
       <RockBackground />
@@ -365,7 +415,7 @@ export function PremiumClientQuoteView({
                   Alcance Artístico & Rider de Producción
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Todo lo necesario para garantizar una experiencia musical de primer nivel en tu evento.
+                  Especificaciones claras y transparentes de los servicios incluidos para tu evento.
                 </p>
               </div>
             </div>
@@ -380,15 +430,15 @@ export function PremiumClientQuoteView({
               <ul className="space-y-2 text-xs text-slate-300 leading-relaxed">
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Alineación de músicos titulares en vivo:</strong> Vocalista líder, guitarra eléctrica, bajo, batería acústica, teclados y coros.</span>
+                  <span><strong>Músicos en escena:</strong> {musiciansLineupText}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Repertorio explosivo y bilingüe:</strong> Los himnos más representativos del rock y pop en inglés y español (Queen, Journey, Soda Stereo, Bon Jovi, Caifanes, The Killers, Enanitos Verdes y más).</span>
+                  <span><strong>Repertorio en vivo:</strong> Clásicos del rock y pop en inglés y español (Queen, Journey, Soda Stereo, Bon Jovi, Caifanes, The Killers y más).</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Backline profesional completo:</strong> Amplificadores de gira, set de batería profesional y pedaleras digitales de alta fidelidad.</span>
+                  <span><strong>Backline profesional:</strong> Batería acústica profesional, amplificación de instrumentos y pedaleras de alta fidelidad para ejecución en escena.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
@@ -406,31 +456,72 @@ export function PremiumClientQuoteView({
                 <ul className="space-y-2 text-xs text-slate-300 leading-relaxed">
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>Sistema de Audio Line Array / Electroacústico:</strong> Diseñado y calibrado específicamente para la acústica y aforo de tu locación.</span>
+                    <span>
+                      <strong>Sistema de Audio:</strong>{" "}
+                      {hasLargeAudio 
+                        ? "Sistema de audio de alta potencia y refuerzo sonoro calibrado para la cobertura y aforo del evento."
+                        : "Sistema de audio profesional Electro-Voice / PA calibrado para cobertura clara y balanceada en el espacio del evento."}
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>Microfonía inalámbrica & Monitoreo In-Ear:</strong> Shure PSM900/300 para asegurar nitidez cristalina en vivo y cero acoples.</span>
+                    <span><strong>Microfonía & Monitoreo:</strong> Microfonía profesional para voces e instrumentación completa con monitoreo de escenario para nitidez acústica en vivo.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>Iluminación Robótica & Wash LED:</strong> Efectos dinámicos sincronizados con el ritmo de la música y ambientación de escenario.</span>
+                    <span>
+                      <strong>Iluminación Escénica:</strong>{" "}
+                      {hasRobotics 
+                        ? "Iluminación escénica y efectos dinámicos sincronizados con el espectáculo."
+                        : "Iluminación escénica LED para ambientación visual del área de la banda."}
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>Ingeniería FOH & Staff Técnico:</strong> Ingeniero de audio en sala y técnicos de escenario operando durante toda la velada.</span>
+                    <span><strong>Operación Técnica:</strong> Control y balance sonoro continuo durante la presentación musical.</span>
                   </li>
                 </ul>
               ) : (
                 <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200/90 leading-relaxed">
                   <strong>Producción Técnica Provista por el Venue / Cliente:</strong>
                   <p className="mt-1">
-                    La banda llegará con sus instrumentos, pedaleras y microfonía personal, conectándose directamente a la consola y sistema de sonido proporcionado por el recinto o tu proveedor de audio.
+                    La banda acude con sus instrumentos personales, pedaleras y microfonía, conectándose directamente a la consola y sistema de sonido provisto por el recinto o proveedor del evento.
                   </p>
                 </div>
               )}
             </div>
           </div>
+
+          {/* Servicios de producción adicionales si fueron efectivamente contratados */}
+          {(hasTemplete || hasPantalla || hasPista || hasRobotLed) && (
+            <div className="mt-6 pt-5 border-t border-white/10">
+              <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-3">
+                Producción Adicional Incluida en esta Cotización:
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {hasTemplete && (
+                  <Badge variant="outline" className="bg-white/5 border-white/20 text-slate-200 text-xs py-1 px-3">
+                    <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-400" /> Escenario / Templete Profesional
+                  </Badge>
+                )}
+                {hasPantalla && (
+                  <Badge variant="outline" className="bg-white/5 border-white/20 text-slate-200 text-xs py-1 px-3">
+                    <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-400" /> Pantalla LED de Alta Definición
+                  </Badge>
+                )}
+                {hasPista && (
+                  <Badge variant="outline" className="bg-white/5 border-white/20 text-slate-200 text-xs py-1 px-3">
+                    <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-400" /> Pista de Baile Iluminada
+                  </Badge>
+                )}
+                {hasRobotLed && (
+                  <Badge variant="outline" className="bg-white/5 border-white/20 text-slate-200 text-xs py-1 px-3">
+                    <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-400" /> Show de Robot LED / Batucada
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* ============================================================ */}

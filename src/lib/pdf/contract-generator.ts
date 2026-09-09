@@ -270,29 +270,29 @@ export async function generateContractPdf(
   if (isHappening) {
     tableRows.push({
       no: "1",
-      desc: "Servicio Artístico: Presentación de Vendetta\n• Show musical de 2 horas con 30 minutos con formación de cinco músicos.\n• Incluye backline de la banda, ingeniero de audio de Vendetta y asistente técnico.\n• Preparación, coordinación artística, repertorio y producción musical.",
-      pu: MXN(35000)
+      desc: `Servicio Artístico: Presentación de Vendetta en Vivo\n• Show musical de ${bandHours} horas con formación profesional en escena.\n• Incluye backline de la banda e ingeniería de sonido.\n• Preparación, coordinación artística, repertorio y producción musical.`,
+      pu: MXN(data.packagePrice)
     });
     if (!data.clientProvidesAudio) {
       tableRows.push({
         no: String(tableRows.length + 1),
-        desc: "Producción Técnica Integral de Audio e Iluminación\n• Sistema de audio principal line array para cobertura del Salón Tolteca (Yamaha/DM3).\n• Microfonía, instrumentación completa y sistemas de monitoreo in-ear Shure (PSM900/PSM300).\n• Iluminación robótica y wash LED, truss de aluminio y consola profesional.\n• Personal de montaje, desmontaje, operación e ingeniería de iluminación/audio.",
-        pu: MXN(43770)
+        desc: "Producción Técnica Integral de Audio e Iluminación\n• Sistema de audio profesional calibrado según la acústica y aforo del evento.\n• Microfonía profesional e instrumentación completa con monitoreo de escenario.\n• Iluminación escénica para el área de la banda.\n• Personal para montaje, desmontaje y operación técnica sonora.",
+        pu: "INCLUIDO"
       });
     }
 
     if ((data as any).hasPantalla) {
       tableRows.push({
         no: String(tableRows.length + 1),
-        desc: "Servicio Opcional: Pantalla LED 6 × 4 metros\n• Pantalla LED pitch 2.6 mm (24 metros cuadrados total) con procesador de video.\n• Estructura trasera de soporte con truss y placas de acero.\n• Laptop con software de reproducción, cableado de video y datos.\n• Dos técnicos de video, transporte, montaje, operación y desmontaje.",
-        pu: MXN(36250)
+        desc: "Servicio Opcional: Pantalla LED de Alta Definición\n• Pantalla LED con procesador de video, soporte estructural y cableado.\n• Personal técnico para montaje, operación y desmontaje.",
+        pu: "INCLUIDO"
       });
     }
     if ((data as any).hasTemplete) {
       tableRows.push({
         no: String(tableRows.length + 1),
-        desc: "Servicio Opcional: Templete de 8 × 6 metros\n• Templete profesional de 8 x 6 metros.\n• Altura de 1 o 1.5 metros, sujeta a validación técnica.\n• Dos escaleras laterales, transporte, montaje y desmontaje.",
-        pu: MXN(18390)
+        desc: "Servicio Opcional: Escenario / Templete Profesional\n• Templete modular con escaleras laterales, transporte, montaje y desmontaje.",
+        pu: "INCLUIDO"
       });
     }
     
@@ -386,27 +386,32 @@ export async function generateContractPdf(
     const decHeader = "D E C L A R A C I O N E S"
     page.drawText(decHeader, { x: (pageWidth - montserratBold.widthOfTextAtSize(decHeader, 10)) / 2, y: ctx.y, size: 10, font: montserratBold })
     ctx.y -= 20
+
+    const fullLegalAddress = data.address || [data.street, data.houseNumber, data.colonia, data.municipio, data.city, data.state].filter(Boolean).join(", ") || "Ubicación por confirmar"
     
     if (isHappening) {
+      let clientDec = "DECLARACIONES DE EL CLIENTE\n" +
+        "El Cliente declara bajo protesta de decir verdad que:\n"
+      if (options.rfc) {
+        clientDec += `a) Que cuenta con registro federal de contribuyentes RFC ${options.rfc.toUpperCase()}.\n`
+        clientDec += `b) Que tiene su domicilio fiscal en ${options.fiscalAddress?.toUpperCase() || fullLegalAddress}.\n`
+      } else {
+        clientDec += "a) Que cuenta con la capacidad jurídica, económica y profesional necesaria para obligarse.\n"
+      }
+      clientDec += "c) Que cuenta con los permisos y condiciones necesarias para la realización del Evento en tiempo y forma.\n\n"
+
       const decText = "DECLARACIONES DEL PRESTADOR\n" +
         "Primera.- El Prestador José Alberto Bautista Romero Paredes, declara bajo protesta de decir verdad que:\n" +
         "• Cuenta con la experiencia, capacidad técnica, conocimientos y recursos necesarios para prestar los servicios objeto de este documento.\n" +
         "• Se encuentra debidamente registrado ante las autoridades fiscales correspondientes para el ejercicio de sus actividades económicas.\n" +
-        "• Que el nombre Vendeta Rock es una denominación comercial utilizada únicamente para la identificación del servicio en el mercado, recayendo toda la responsabilidad legal, fiscal y administrativa en la persona física ya precisada.\n\n" +
-        "Segunda.- El objeto y Alcance del Servicio se hace consistir en: Describir y detallar el servicio objeto del contrato.\n\n" +
-        "DECLARACIONES DE EL CLIENTE\n" +
-        "El Cliente declara bajo protesta de decir verdad que:\n" +
-        "a) Que es una sociedad de carácter mercantil debidamente constituida de acuerdo con las leyes de la República Mexicana según consta en la escritura pública No. 46,971 de fecha 23 de febrero de 1995, pasada ante la fe del Notario Público No. 5 del Distrito Federal hoy Ciudad de México, el licenciado Alfonso Zermeño Infante, la cual se encuentra debidamente inscrita en el Registro Público de Comercio de Ciudad de México, bajo el folio de personas morales número 29792.\n" +
-        "b) Que su representante acredita su personalidad mediante escritura pública No. 48,819 de fecha 10 de octubre de 2025, pasada ante la fe del Notario Público No. 150 de la Ciudad de México, el licenciado José Luis Franco Jiménez, facultades que a la fecha del presente no le han sido limitadas ni revocadas en forma alguna;\n" +
-        "c) Que tiene su domicilio en Calle Providencia No 835, Col. Del Valle Centro, Alcaldía Benito Juárez, C.P. 03100, Ciudad de México y su RFC es CMA950123F48.\n" +
-        "d) Tiene la capacidad jurídica, económica y profesional necesaria para obligarse y que dispone de todos los medios humanos y materiales para organizar y llevar a cabo el presente contrato, evento y para permitir que Vendeta Rock realice las actividades mencionadas en el presente contrato.\n" +
-        "e) Que cuenta con los permisos, licencias y/o autorizaciones necesarios y suficientes para la realización del Evento en tiempo y forma, en términos de lo establecido en el presente contrato.\n\n" +
+        "• Que el nombre Vendetta es una denominación comercial utilizada para la identificación del servicio artístico en vivo, recayendo la responsabilidad en la persona física ya precisada.\n\n" +
+        "Segunda.- El objeto y Alcance del Servicio consiste en la presentación artística musical detallada en el presente documento.\n\n" +
+        clientDec +
         "DECLARACIÓN CONJUNTA\n" +
         "Ambas partes en el presente contrato manifiestan:\n" +
         "• Que comparecen al otorgamiento y firma del presente documento por su propia e independiente voluntad.\n" +
         "• Conocen y entienden cabalmente el alcance, contenido, efectos jurídicos y consecuencias de cada uno de los compromisos aquí asumidos.\n" +
-        "• En la celebración del presente acto no ha mediado ni existe error, dolo, mala fe, violencia, lesión, coacción ni ningún otro vicio del consentimiento que pudiera invalidarlo, rescindirlo o viciarlo en todo o en parte.\n" +
-        "• Reconocen que las prestaciones acordadas son equitativas, proporcionales y justas para sus respectivos intereses, renunciando formalmente a invocar la nulidad del presente acto con fundamento en cualquier supuesta desproporción o vicio de la voluntad.\n" +
+        "• En la celebración del presente acto no ha mediado ni existe error, dolo, mala fe, violencia, lesión, coacción ni ningún otro vicio del consentimiento.\n" +
         "• Es su libre y soberana voluntad someterse incondicionalmente al cumplimiento y observancia de las siguientes:"
       drawJustifiedText(ctx, decText, 8.0, 10.5, pageWidth - margin * 2)
     } else {
@@ -422,9 +427,6 @@ export async function generateContractPdf(
     ctx.y -= 25
     const clauHeader = "C L Á U S U L A S."
     page.drawText(clauHeader, { x: (pageWidth - montserratBold.widthOfTextAtSize(clauHeader, 10)) / 2, y: ctx.y, size: 10, font: montserratBold })
-    ctx.y -= 20
-
-    const fullLegalAddress = data.address || [data.street, data.houseNumber, data.colonia, data.municipio, data.city, data.state].filter(Boolean).join(", ") || "Ubicación por confirmar"
     console.log("[PDF Generator] Generando documento PDF...")
 
     let clausesToDraw: { n: string, t: string }[] = []
