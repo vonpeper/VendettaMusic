@@ -1,9 +1,9 @@
 // src/lib/viaticos/googleMaps.ts
 import { VEHICLE_PROFILES } from "@/lib/vehicles";
-import { config as dotenvConfig } from "dotenv";
 import { db } from "@/lib/db";
+import { roundTo100, roundTo500 } from "@/lib/viaticos";
 
-dotenvConfig();
+export { roundTo100, roundTo500 };
 
 // Environment variables are read dynamically to allow tests to set them post-import
 const getApiKey = () => process.env.GOOGLE_MAPS_API_KEY;
@@ -30,17 +30,6 @@ export function clearViaticosCache() {
   viaticosCache.clear();
   console.log("🧹 Viáticos cache cleared successfully");
 }
-
-/**
- * Redondea viáticos hacia arriba en bloques de $100 MXN.
- * Ejemplo: $1,467 -> $1,500; $1,965 -> $2,000; $2,007 -> $2,100; $3,180 -> $3,200.
- */
-export function roundTo100(amount: number): number {
-  if (!amount || amount <= 0) return 0;
-  return Math.ceil(amount / 100) * 100;
-}
-
-export const roundTo500 = roundTo100;
 
 interface KnownRoute {
   keywords: string[];

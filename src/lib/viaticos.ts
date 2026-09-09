@@ -1,10 +1,13 @@
 /**
- * Lógica de viáticos de Vendetta
- * Zona local: Toluca y municipios del Valle de Toluca
- * Fuera de zona: se cobran viáticos por distancia estimada
+ * Redondea viáticos hacia arriba en bloques de $100 MXN.
+ * Función pura compartida de forma segura entre cliente y servidor.
  */
+export function roundTo100(amount: number): number {
+  if (!amount || amount <= 0) return 0;
+  return Math.ceil(amount / 100) * 100;
+}
 
-import { roundTo100, roundTo500 } from "./viaticos/googleMaps"
+export const roundTo500 = roundTo100;
 
 // ZONA 1: Ciudades y colonias dentro de la zona sin viáticos (Valle de Toluca)
 const ZONA_LOCAL = [
