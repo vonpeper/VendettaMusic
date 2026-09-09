@@ -103,7 +103,6 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
     const apiKey = formData.get("apiKey") as string
     const instance = formData.get("instance") as string
     const adminWhatsapp = (formData.get("adminWhatsapp") as string || "").replace(/\D/g, "") || null
-    const accountantWhatsapp = (formData.get("accountantWhatsapp") as string || "").replace(/\D/g, "") || null
     const isSandbox = formData.get("isSandbox") === "on"
     const logInboundActive = formData.get("logInboundActive") === "on"
 
@@ -123,7 +122,6 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
         evolutionApiKey: finalApiKey,
         evolutionInstance: instance,
         adminWhatsapp,
-        accountantWhatsapp,
         isSandbox,
         logInboundActive,
       },
@@ -133,7 +131,6 @@ export async function saveEvolutionConfigAction(arg1: any, arg2?: any) {
         evolutionApiKey: finalApiKey,
         evolutionInstance: instance,
         adminWhatsapp,
-        accountantWhatsapp,
         isSandbox,
         logInboundActive,
       }

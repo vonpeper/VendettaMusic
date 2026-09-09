@@ -7,7 +7,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Calendar, CheckCircle2, XCircle, Clock, Info, Filter, Loader2, MapPin, Package, Users } from "lucide-react"
 import { NotifyEventButton, EditEventoButton, DeleteEventoButton } from "./EventActions"
-import { NotifyAccountantButton } from "@/components/admin/NotifyAccountantButton"
 import { formatDateMX } from "@/lib/utils"
 import Link from "next/link"
 
@@ -201,14 +200,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                         </div>
 
                         {/* Acciones */}
-                        <div className="p-4 flex flex-wrap justify-end gap-2 bg-muted/5">
-                          <NotifyAccountantButton
-                            eventId={evt.id}
-                            clientName={evt.customName || evt.client?.user?.name || "Cliente"}
-                            baseAmount={evt.amount}
-                            venueOrTitle={evt.location?.name || evt.customName}
-                            variant="icon"
-                          />
+                        <div className="p-4 flex justify-end gap-2 bg-muted/5">
                           <NotifyEventButton 
                             eventId={evt.id} 
                             alreadySent={evt.notifications?.some((n: any) => n.type === "OFFICIAL" && n.status === "SENT")} 
@@ -387,14 +379,6 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                                 IVA pendiente
                               </div>
                             )}
-                            <NotifyAccountantButton
-                              eventId={evt.id}
-                              clientName={evt.customName || evt.client?.user?.name || "Cliente"}
-                              baseAmount={evt.amount}
-                              venueOrTitle={evt.location?.name || evt.customName}
-                              variant="button"
-                              className="w-full mt-2 h-7 text-[10px]"
-                            />
                           </div>
                         )}
                       </div>
@@ -403,13 +387,6 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                     {/* Acciones */}
                     <TableCell className="hidden md:table-cell md:py-6 text-right md:pr-8 md:bg-transparent">
                       <div className="flex items-center justify-end gap-1.5">
-                        <NotifyAccountantButton
-                          eventId={evt.id}
-                          clientName={evt.customName || evt.client?.user?.name || "Cliente"}
-                          baseAmount={evt.amount}
-                          venueOrTitle={evt.location?.name || evt.customName}
-                          variant="icon"
-                        />
                         <NotifyEventButton
                           eventId={evt.id}
                           alreadySent={evt.notificationSent}
