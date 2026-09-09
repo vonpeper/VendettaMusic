@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { NuevoEventoButton } from "@/components/admin/EventActions"
 import { MasterEventsTable } from "@/components/admin/MasterEventsTable"
+import { autoCompleteConcludedEvents } from "@/lib/events-automation"
 import { Info, Bell } from "lucide-react"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(v)
@@ -23,6 +24,9 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default async function AdminEventosPage() {
+  // Reconciliar eventos pasados de forma transparente
+  await autoCompleteConcludedEvents()
+
   const [events, clients, locations, packages, musicianProfiles] = await Promise.all([
     db.event.findMany({
       orderBy: { date: "desc" },

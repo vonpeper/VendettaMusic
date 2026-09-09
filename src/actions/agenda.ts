@@ -1,6 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
+import { autoCompleteConcludedEvents } from "@/lib/events-automation"
 
 export interface AgendaEvent {
   id: string
@@ -28,6 +29,8 @@ export interface AgendaEvent {
 
 export async function getAgendaEventsAction(): Promise<AgendaEvent[]> {
   try {
+    await autoCompleteConcludedEvents()
+
     const [events, bandEvents] = await Promise.all([
       db.event.findMany({
         orderBy: { date: "asc" },

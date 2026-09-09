@@ -2,9 +2,13 @@ export const dynamic = "force-dynamic"
 import { db } from "@/lib/db"
 import { BandEventsClient } from "@/components/admin/BandEventsClient"
 import { Button } from "@/components/ui/button"
+import { autoCompleteConcludedEvents } from "@/lib/events-automation"
 import { Download } from "lucide-react"
 
 export default async function EventualidadesPage() {
+  // Reconciliar eventos pasados de forma transparente
+  await autoCompleteConcludedEvents()
+
   // Fetch from the NEW consolidated table
   const newEvents = await db.event.findMany({
     orderBy: { date: "desc" },

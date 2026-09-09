@@ -24,8 +24,7 @@ import { CancelBookingButton } from "@/components/admin/CancelBookingButton"
 import { EditEventoButton } from "@/components/admin/EventActions"
 import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
-// Temporary diagnostics
-console.log("[DB URL]", process.env.DATABASE_URL)
+import { autoCompleteConcludedEvents } from "@/lib/events-automation"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 
@@ -34,7 +33,10 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", {
 }).format(v)
 
 export default async function AdminVentasPage() {
-  // Fetch de datos unificados (100% de solo lectura, sin efectos secundarios en render)
+  // Reconciliar eventos pasados de forma transparente
+  await autoCompleteConcludedEvents()
+
+  // Fetch de datos unificados
   const [bookings, quotes, expiredStats, config, clients, locations, packages, musicianProfiles] = await Promise.all([
     db.bookingRequest.findMany({ 
       orderBy: { createdAt: "desc" },
