@@ -622,38 +622,59 @@ export async function DELETE(req: NextRequest) {
     }
     const results = []
 
-    for (const id of ids) {
-      const booking = await db.bookingRequest.findUnique({
-        where: { id: id },
+    for (const rawId of ids) {
+      const id = rawId.trim()
+      if (!id) continue
+
+      const booking = await db.bookingRequest.findFirst({
+        where: {
+          OR: [
+            { id: id },
+            { shortId: id.toUpperCase() }
+          ]
+        },
         include: { client: true }
       })
 
-        if (!booking) {
-          // Attempt legacy Quote deletion if no BookingRequest found
-          const quote = await db.quote.findUnique({ where: { id } })
-          if (quote) {
-            // Delete associated Event if exists (linked via quoteId)
-            const event = await db.event.findFirst({ where: { quoteId: quote.id } })
-            if (event) {
-              if (event.googleCalendarId) {
-                try {
-                  const { deleteFromGoogleCalendar } = await import("@/lib/notifications")
-                  await deleteFromGoogleCalendar(event.googleCalendarId)
-                } catch (calErr) {
-                  console.error(`⚠️ Error borrando calendario para quote ${id}:`, calErr)
-                }
-              }
-              await db.event.delete({ where: { id: event.id } }).catch(e => console.error(`Error delete event ${event.id}:`, e))
-            }
-            await db.quote.delete({ where: { id: quote.id } })
-            results.push({ id, status: "deleted" })
-            continue
+      if (!booking) {
+        // Attempt legacy Quote deletion if no BookingRequest found
+        const quote = await db.quote.findFirst({
+          where: {
+            OR: [
+              { id: id }
+            ]
           }
-          results.push({ id, status: "not_found" })
+        })
+
+        if (quote) {
+          // Delete associated Event if exists (linked via quoteId)
+          const event = await db.event.findFirst({ where: { quoteId: quote.id } })
+          if (event) {
+            if (event.googleCalendarId) {
+              try {
+                const { deleteFromGoogleCalendar } = await import("@/lib/notifications")
+                await deleteFromGoogleCalendar(event.googleCalendarId)
+              } catch (calErr) {
+                console.error(`⚠️ Error borrando calendario para quote ${id}:`, calErr)
+              }
+            }
+            await db.eventMusician.deleteMany({ where: { eventId: event.id } }).catch(() => {})
+            await db.contract.deleteMany({ where: { eventId: event.id } }).catch(() => {})
+            await db.payment.deleteMany({ where: { eventId: event.id } }).catch(() => {})
+            await db.event.delete({ where: { id: event.id } }).catch(e => console.error(`Error delete event ${event.id}:`, e))
+          }
+          await db.quoteItem.deleteMany({ where: { quoteId: quote.id } }).catch(() => {})
+          await db.quote.delete({ where: { id: quote.id } })
+          results.push({ id, status: "deleted" })
           continue
         }
+        results.push({ id, status: "not_found" })
+        continue
+      }
 
-      // 1. Si tiene evento, borrarlo (cascada borrará pagos/contratos en la BD)
+      const bookingId = booking.id
+
+      // 1. Si tiene evento, borrar de Google Calendar si existe ID
       if (booking.eventId) {
         const event = await db.event.findUnique({
           where: { id: booking.eventId }
@@ -665,15 +686,43 @@ export async function DELETE(req: NextRequest) {
             const { deleteFromGoogleCalendar } = await import("@/lib/notifications")
             await deleteFromGoogleCalendar(event.googleCalendarId)
           } catch (calErr) {
-            console.error(`⚠️ Error borrando calendario para ${id}:`, calErr)
+            console.error(`⚠️ Error borrando calendario para ${bookingId}:`, calErr)
           }
         }
+      }
 
+      // 2. Desvincular dependencias y limpiar datos para evitar Foreign Key Violations
+      await db.$transaction([
+        db.notification.updateMany({
+          where: { bookingRequestId: bookingId },
+          data: { bookingRequestId: null }
+        }),
+        db.inboxItem.updateMany({
+          where: { bookingRequestId: bookingId },
+          data: { bookingRequestId: null }
+        }),
+        db.payment.deleteMany({
+          where: { bookingRequestId: bookingId }
+        }),
+        db.bookingLineItem.deleteMany({
+          where: { bookingRequestId: bookingId }
+        }),
+        db.bookingRequest.update({
+          where: { id: bookingId },
+          data: { eventId: null }
+        })
+      ])
+
+      // 3. Si tiene evento, borrarlo limpiando sus relaciones hijas
+      if (booking.eventId) {
+        await db.eventMusician.deleteMany({ where: { eventId: booking.eventId } }).catch(() => {})
+        await db.contract.deleteMany({ where: { eventId: booking.eventId } }).catch(() => {})
+        await db.payment.deleteMany({ where: { eventId: booking.eventId } }).catch(() => {})
         await db.event.delete({ where: { id: booking.eventId } }).catch(e => console.error(`Error delete event ${booking.eventId}:`, e))
       }
 
-      // 3. Borrar el BookingRequest
-      await db.bookingRequest.delete({ where: { id: id } })
+      // 4. Borrar el BookingRequest
+      await db.bookingRequest.delete({ where: { id: bookingId } })
       results.push({ id, status: "deleted" })
     }
 

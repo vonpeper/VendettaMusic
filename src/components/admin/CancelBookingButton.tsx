@@ -35,38 +35,40 @@ export function CancelBookingButton({
   label = "Eliminar",
   redirectOnSuccess = false
 }: CancelBookingButtonProps) {
+  const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   async function handleCancel() {
     console.log(`[DELETE BOOKING] ${bookingId}`);
-  setLoading(true);
-  try {
-    const res = await fetch(`/api/booking?id=${bookingId}`, {
-      method: "DELETE",
-    });
-    const json = await res.json();
-    console.log(`[DELETE BOOKING RESULT]`, json);
-    if (json.success) {
-      toast.success("Solicitud/Evento cancelado con éxito");
-      if (redirectOnSuccess || hasEvent) {
-        router.push("/admin/ventas");
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/booking?id=${encodeURIComponent(bookingId)}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      console.log(`[DELETE BOOKING RESULT]`, json);
+      if (json.success) {
+        toast.success("Solicitud/Evento cancelado con éxito");
+        setOpen(false)
+        if (redirectOnSuccess || hasEvent) {
+          router.push("/admin/ventas");
+        } else {
+          // En caso de borrar desde modal o tabla, refresh
+          router.refresh()
+        }
       } else {
-        // En caso de borrar desde modal, refresh
-        router.refresh()
+        toast.error("Error al cancelar: " + (json.error || "Desconocido"));
       }
-    } else {
-      toast.error("Error al cancelar: " + (json.error || "Desconocido"));
+    } catch (err) {
+      toast.error("Error de conexión al servidor");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    toast.error("Error de conexión al servidor");
-  } finally {
-    setLoading(false);
-  }
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger 
         render={(triggerProps) => (
           <Button 

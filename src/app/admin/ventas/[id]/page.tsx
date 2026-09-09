@@ -47,9 +47,16 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", {
 export default async function DetalleSolicitudPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   
-  // Intentar buscar en BookingRequest (Web / Manual Moderno)
-  let booking = await db.bookingRequest.findUnique({
-    where: { id: id },
+  const rawId = id?.trim() || ""
+
+  // Intentar buscar en BookingRequest (Web / Manual Moderno) por id o shortId
+  let booking = await db.bookingRequest.findFirst({
+    where: {
+      OR: [
+        { id: rawId },
+        { shortId: rawId.toUpperCase() }
+      ]
+    },
     include: { 
       client: { include: { user: true } },
       lineItems: { orderBy: { order: "asc" } },
@@ -73,32 +80,56 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
 
   // Si no se encuentra, intentar buscar en Quote (Legacy)
   if (!booking) {
-    const quote = await db.quote.findUnique({
-      where: { id: id },
-      include: { client: { include: { user: true } } }
+    const quote = await db.quote.findFirst({
+      where: {
+        OR: [
+          { id: rawId }
+        ]
+      },
+      include: {
+        client: { include: { user: true } },
+        event: {
+          include: {
+            bookingRequest: true,
+            location: true,
+            contracts: true,
+            musicians: {
+              include: {
+                musician: {
+                  include: { user: true }
+                }
+              }
+            }
+          }
+        }
+      }
     })
     
     if (quote) {
       // Mapear Quote Legacy a estructura de Booking para la vista
       booking = {
         id: quote.id,
-        shortId: (quote as any).shortId || quote.id.slice(0, 8).toUpperCase(),
+        shortId: (quote as any).shortId || `LEG-${quote.id.slice(0, 5).toUpperCase()}`,
         clientName: quote.client?.user?.name || "Cliente Legacy",
         clientEmail: (quote as any).clientEmail || quote.client?.user?.email || "",
-        clientPhone: (quote as any).clientPhone || "",
+        clientPhone: (quote as any).clientPhone || quote.client?.whatsapp || "",
         status: quote.status,
         packageName: (quote as any).packageId || "Paquete Personalizado",
-        requestedDate: quote.eventDate,
-        startTime: (quote as any).startTime || "00:00",
-        endTime: (quote as any).endTime || "00:00",
-        address: (quote as any).location || "Dirección no especificada",
-        city: "",
-        state: "",
+        requestedDate: quote.event?.date || quote.eventDate || new Date(),
+        startTime: quote.event?.startTime || quote.event?.performanceStart || (quote as any).startTime || "00:00",
+        endTime: quote.event?.performanceEnd || (quote as any).endTime || "00:00",
+        address: quote.event?.location?.address || (quote as any).location || "Dirección no especificada",
+        city: quote.event?.location?.city || "",
+        state: quote.event?.location?.state || "",
         baseAmount: quote.totalEstimated,
-        depositAmount: 0,
-        paymentStatus: "pendiente",
+        depositAmount: quote.event?.deposit || 0,
+        paymentStatus: quote.status === "completado" ? "paid" : "pendiente",
         createdAt: quote.createdAt,
         source: "legacy",
+        event: quote.event || null,
+        clientId: quote.clientId,
+        client: quote.client || null,
+        venueType: quote.event?.venueType || quote.ceremonyType || "salon",
       } as any
     }
   }
@@ -156,7 +187,13 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
   if (!booking) notFound()
 
   const notifications = await db.notification.findMany({
-    where: { bookingRequestId: id }
+    where: {
+      OR: [
+        { bookingRequestId: booking.id },
+        ...(booking.event?.id ? [{ eventId: booking.event.id }] : [])
+      ]
+    },
+    orderBy: { createdAt: "desc" }
   })
   
   const missingFields: string[] = []
