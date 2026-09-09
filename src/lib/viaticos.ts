@@ -4,6 +4,8 @@
  * Fuera de zona: se cobran viáticos por distancia estimada
  */
 
+import { roundTo500 } from "./viaticos/googleMaps"
+
 // ZONA 1: Ciudades y colonias dentro de la zona sin viáticos (Valle de Toluca)
 const ZONA_LOCAL = [
   "toluca", "toluca de lerdo", "metepec", "zinacantepec", "zinaca", "ocoyoacac", "san mateo atenco", "lerma",
@@ -80,7 +82,7 @@ export function calcularViatcos(city: string, state?: string, config?: ViaticosC
   if (isZona2) {
     return {
       isOutsideZone: true,
-      amount: config?.zona2Rate || 1500,
+      amount: roundTo500(config?.zona2Rate || 1500),
       label: "Zona 2 (Media Distancia)",
       description: "Aplica tarifa de viáticos para CDMX, Valle de Bravo, Ixtapan, etc."
     }
@@ -90,7 +92,7 @@ export function calcularViatcos(city: string, state?: string, config?: ViaticosC
   if (isZona3) {
     return {
       isOutsideZone: true,
-      amount: config?.zona3Rate || 3000,
+      amount: roundTo500(config?.zona3Rate || 3500),
       label: "Zona 3 (Larga Distancia)",
       description: "Aplica tarifa foránea para Estados colindantes (Querétaro, Puebla, Morelos, etc)."
     }

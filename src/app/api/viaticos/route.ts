@@ -1,7 +1,7 @@
 // src/app/api/viaticos/route.ts
 
 import { NextResponse } from "next/server";
-import { calculateViaticos } from "@/lib/viaticos/googleMaps";
+import { calculateViaticos, roundTo500 } from "@/lib/viaticos/googleMaps";
 import { calcularViatcos } from "@/lib/viaticos";
 import { db } from "@/lib/db";
 
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   try {
     const result = await calculateViaticos(destination, vehicle);
     return NextResponse.json({
-      viaticosAmount: result.viaticosAmount,
+      viaticosAmount: roundTo500(result.viaticosAmount),
       tollCost: result.tollCost,
       fuelCost: result.fuelCost,
       distanceKm: result.distanceKm,

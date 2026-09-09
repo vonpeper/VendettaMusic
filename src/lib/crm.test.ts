@@ -56,4 +56,16 @@ describe("Validaciones de Negocio CRM (crm.test.ts)", () => {
     assert.equal(result.balanceAmount, 0)
     assert.equal(result.isFullyPaid, true)
   })
+
+  it("debe redondear viáticos estrictamente en múltiplos superiores de $500", () => {
+    const { roundTo500 } = require("./viaticos/googleMaps")
+    assert.equal(roundTo500(1467), 1500)
+    assert.equal(roundTo500(1965), 2000)
+    assert.equal(roundTo500(3308), 3500)
+    assert.equal(roundTo500(1654), 2000)
+    assert.equal(roundTo500(0), 0)
+    assert.equal(roundTo500(500), 500)
+    assert.equal(roundTo500(501), 1000)
+    assert.equal(roundTo500(2000), 2000)
+  })
 })
