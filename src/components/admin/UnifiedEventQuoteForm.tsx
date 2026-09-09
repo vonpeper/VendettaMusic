@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo, useTransition } from "react"
+import React, { useState, useEffect, useMemo, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -242,6 +242,67 @@ export function UnifiedEventQuoteForm({
     })
   }, [basePrice, viaticosAmount, discountAmount, additionalItems, invoice, depositAmount])
 
+  const draftKey = useMemo(() => `vendetta_event_draft_${mode}_${targetId || "new"}`, [mode, targetId])
+
+  // Restaurar borrador si el usuario refrescó la página por error de skew
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    try {
+      const raw = sessionStorage.getItem(draftKey)
+      if (raw) {
+        const saved = JSON.parse(raw)
+        if (saved && saved.clientName && !initialData?.clientName) {
+          toast.info("Se restauró tu borrador anterior automáticamente.", { duration: 4000 })
+          if (saved.clientName) setClientName(saved.clientName)
+          if (saved.clientPhone) setClientPhone(saved.clientPhone)
+          if (saved.clientEmail) setClientEmail(saved.clientEmail)
+          if (saved.clientCity) setClientCity(saved.clientCity)
+          if (saved.selectedClientId) setSelectedClientId(saved.selectedClientId)
+          if (saved.customName) setCustomName(saved.customName)
+          if (saved.ceremonyType) setCeremonyType(saved.ceremonyType)
+          if (saved.eventDate) setEventDate(saved.eventDate)
+          if (saved.startTime) setStartTime(saved.startTime)
+          if (saved.endTime) setEndTime(saved.endTime)
+          if (saved.guestCount !== undefined) setGuestCount(saved.guestCount)
+          if (saved.venueName) setVenueName(saved.venueName)
+          if (saved.venueAddress) setVenueAddress(saved.venueAddress)
+          if (saved.venueCity) setVenueCity(saved.venueCity)
+          if (saved.venueState) setVenueState(saved.venueState)
+          if (saved.packageId) setPackageId(saved.packageId)
+          if (saved.basePrice !== undefined && saved.basePrice !== null) setBasePrice(saved.basePrice)
+          if (saved.viaticosAmount !== undefined && saved.viaticosAmount !== null) setViaticosAmount(saved.viaticosAmount)
+          if (saved.discountAmount !== undefined && saved.discountAmount !== null) setDiscountAmount(saved.discountAmount)
+          if (saved.depositAmount !== undefined && saved.depositAmount !== null) setDepositAmount(saved.depositAmount)
+          if (saved.invoice !== undefined) setInvoice(saved.invoice)
+          if (saved.additionalItems?.length) setAdditionalItems(saved.additionalItems)
+        }
+      }
+    } catch {}
+  }, [draftKey, initialData])
+
+  // Guardar borrador en caliente mientras el usuario teclea
+  useEffect(() => {
+    if (typeof window === "undefined" || !clientName) return
+    const draft = {
+      selectedClientId, clientName, clientPhone, clientEmail, clientCity,
+      customName, ceremonyType, eventDate, startTime, endTime, arrivalTime, setupTime,
+      guestCount, dressCode, status, musicianNotes, audioEngineer,
+      selectedVenueId, venueName, venueAddress, venueCity, venueState, mapsLink,
+      packageId, basePrice, viaticosAmount, discountAmount, invoice, depositAmount,
+      additionalItems
+    }
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify(draft))
+    } catch {}
+  }, [
+    draftKey, selectedClientId, clientName, clientPhone, clientEmail, clientCity,
+    customName, ceremonyType, eventDate, startTime, endTime, arrivalTime, setupTime,
+    guestCount, dressCode, status, musicianNotes, audioEngineer,
+    selectedVenueId, venueName, venueAddress, venueCity, venueState, mapsLink,
+    packageId, basePrice, viaticosAmount, discountAmount, invoice, depositAmount,
+    additionalItems
+  ])
+
   // Handlers para Comboboxes con limpieza absoluta de datos anteriores
   function handleSelectClient(client: ClientData | null) {
     if (client) {
@@ -427,9 +488,23 @@ export function UnifiedEventQuoteForm({
           originInquiryId: initialData?.originInquiryId || null,
         }
 
-        const res = await saveUnifiedEventQuoteAction(payload)
+        let res: any
+        try {
+          res = await saveUnifiedEventQuoteAction(payload)
+        } catch (actionErr: any) {
+          console.warn("⚠️ Server Action falló (posible skew de deploy), ejecutando fallback REST API:", actionErr)
+          const fallbackResp = await fetch("/api/admin/events/save-unified", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          })
+          res = await fallbackResp.json()
+        }
 
-        if (res.success) {
+        if (res && res.success) {
+          try {
+            sessionStorage.removeItem(draftKey)
+          } catch {}
           const count = "createdCount" in res ? (res.createdCount as number) : 1
           toast.success(
             mode === "edit"
@@ -449,7 +524,7 @@ export function UnifiedEventQuoteForm({
             router.refresh()
           }
         } else {
-          toast.error(res.error || "Ocurrió un error al guardar el registro")
+          toast.error(res?.error || "Ocurrió un error al guardar el registro")
         }
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Error inesperado"
