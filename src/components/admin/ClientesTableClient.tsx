@@ -204,7 +204,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
             </DialogTrigger>
             <DialogContent className="bg-card border-border">
               <DialogHeader>
-                <DialogTitle className="text-white">¿Confirmas la eliminación?</DialogTitle>
+                <DialogTitle className="text-foreground">¿Confirmas la eliminación?</DialogTitle>
                 <DialogDescription>
                   Se eliminarán permanentemente los {selectedIds.size} clientes seleccionados.
                 </DialogDescription>
@@ -226,13 +226,13 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
       {/* Tabla de Clientes */}
       <div className="rounded-2xl border border-border/40 bg-card overflow-hidden">
         <Table>
-          <TableHeader className="bg-white/5">
+          <TableHeader className="bg-muted/40">
             <TableRow className="border-border/40 hover:bg-transparent">
               <TableHead className="w-12 text-center">
                 <button
                   type="button"
                   onClick={toggleSelectAll}
-                  className="text-muted-foreground hover:text-white"
+                  className="text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   {selectedIds.size === processedClients.length && processedClients.length > 0 ? (
                     <CheckSquare className="w-4 h-4 text-primary" />
@@ -241,10 +241,10 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                   )}
                 </button>
               </TableHead>
-              <TableHead className="font-bold text-white text-xs uppercase tracking-wider">Cliente / Empresa</TableHead>
-              <TableHead className="font-bold text-white text-xs uppercase tracking-wider">Contacto</TableHead>
-              <TableHead className="font-bold text-white text-xs uppercase tracking-wider">Ubicación</TableHead>
-              <TableHead className="font-bold text-white text-xs uppercase tracking-wider text-center">Actividad</TableHead>
+              <TableHead className="font-bold text-foreground text-xs uppercase tracking-wider">Cliente / Empresa</TableHead>
+              <TableHead className="font-bold text-foreground text-xs uppercase tracking-wider">Contacto</TableHead>
+              <TableHead className="font-bold text-foreground text-xs uppercase tracking-wider">Ubicación</TableHead>
+              <TableHead className="font-bold text-foreground text-xs uppercase tracking-wider text-center">Actividad</TableHead>
               <TableHead className="w-20 text-right"></TableHead>
             </TableRow>
           </TableHeader>
@@ -271,7 +271,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                       <button
                         type="button"
                         onClick={() => toggleSelect(client.id)}
-                        className="text-muted-foreground hover:text-white"
+                        className="text-muted-foreground hover:text-foreground cursor-pointer"
                       >
                         {isSelected ? (
                           <CheckSquare className="w-4 h-4 text-primary" />
@@ -282,7 +282,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                     </TableCell>
 
                     <TableCell>
-                      <div className="font-bold text-sm text-white flex items-center gap-2">
+                      <div className="font-bold text-sm text-foreground flex items-center gap-2">
                         {client.user.name || "Sin nombre registrado"}
                         {client.type === "corporate" && (
                           <Badge variant="outline" className="text-[9px] bg-blue-500/10 text-blue-400 border-blue-500/30">
@@ -298,7 +298,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                           <button
                             type="button"
                             onClick={() => setPreviewDuplicateClient(client)}
-                            className="text-[10px] bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 hover:bg-yellow-500/20 cursor-pointer"
+                            className="text-[10px] bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 hover:bg-yellow-500/20 cursor-pointer"
                           >
                             <AlertTriangle className="w-3 h-3" /> {duplicateCount} posible(s) duplicado(s)
                           </button>
@@ -311,11 +311,11 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                         {client.whatsapp ? (
                           <div className="flex items-center gap-1.5 text-muted-foreground">
                             <Phone className="w-3 h-3 text-primary shrink-0" />
-                            <span className={isInvalidPhone ? "text-yellow-400 font-semibold" : "text-white"}>
+                            <span className={isInvalidPhone ? "text-yellow-600 dark:text-yellow-400 font-semibold" : "text-foreground font-medium"}>
                               {client.whatsapp}
                             </span>
                             {isInvalidPhone && (
-                              <span className="text-[9px] text-yellow-500 bg-yellow-500/10 px-1 rounded">Incompleto</span>
+                              <span className="text-[9px] text-yellow-600 bg-yellow-500/10 px-1 rounded">Incompleto</span>
                             )}
                           </div>
                         ) : (
@@ -339,7 +339,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
 
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <span className="text-xs px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-muted-foreground">
+                        <span className="text-xs px-2 py-0.5 rounded-md bg-muted/50 border border-border text-muted-foreground">
                           {client._count.events} evento(s)
                         </span>
                         {(client._count.bookings || client._count.quotes) > 0 && (
@@ -378,17 +378,17 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
         <Dialog open={!!previewDuplicateClient} onOpenChange={() => setPreviewDuplicateClient(null)}>
           <DialogContent className="bg-card border-border max-w-xl">
             <DialogHeader>
-              <DialogTitle className="text-white flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-yellow-400" /> Diagnóstico de Coincidencia (Solo Lectura)
+              <DialogTitle className="text-foreground flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-yellow-500" /> Diagnóstico de Coincidencia (Solo Lectura)
               </DialogTitle>
               <DialogDescription className="text-xs">
                 Se detectaron registros que comparten el mismo número de teléfono. No se realiza ninguna fusión automática.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-3">
-              <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+              <div className="p-3 rounded-xl bg-muted/40 border border-border">
                 <div className="text-xs font-bold text-primary uppercase">Registro Seleccionado</div>
-                <div className="font-bold text-white text-sm mt-1">{previewDuplicateClient.user.name}</div>
+                <div className="font-bold text-foreground text-sm mt-1">{previewDuplicateClient.user.name}</div>
                 <div className="text-xs text-muted-foreground mt-0.5">
                   ID: {previewDuplicateClient.id} • Teléfono: {previewDuplicateClient.whatsapp} • {previewDuplicateClient._count.events} eventos
                 </div>
@@ -400,7 +400,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
                   .filter(c => c.id !== previewDuplicateClient.id && c.whatsapp && previewDuplicateClient.whatsapp && c.whatsapp.replace(/\D/g, "").slice(-10) === previewDuplicateClient.whatsapp.replace(/\D/g, "").slice(-10))
                   .map(match => (
                     <div key={match.id} className="p-3 rounded-xl bg-yellow-500/5 border border-yellow-500/20 text-xs">
-                      <div className="font-bold text-white">{match.user.name || "Sin nombre"}</div>
+                      <div className="font-bold text-foreground">{match.user.name || "Sin nombre"}</div>
                       <div className="text-muted-foreground mt-0.5">
                         ID: {match.id} • Tel: {match.whatsapp} • Correo: {match.user.email || "N/A"} • Eventos: {match._count.events}
                       </div>

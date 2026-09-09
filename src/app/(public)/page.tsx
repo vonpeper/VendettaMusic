@@ -185,6 +185,7 @@ export default async function HomePage() {
        {/* -- PAQUETES ------------------------------------------------------- */}
       <PaquetesSection 
         dbPackages={dbPackages as any} 
+        adminWhatsapp={config?.adminWhatsapp || process.env.ADMIN_WHATSAPP_NUMBER || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || process.env.NEXT_PUBLIC_ADMIN_WA || null}
       />
 
       {mediaMap.video_home && <VideoSection videoUrl={mediaMap.video_home} />}
@@ -218,11 +219,11 @@ export default async function HomePage() {
                <p className="text-gray-400 text-lg mb-8 leading-relaxed max-w-xl italic">
                   Revive la época dorada del pop en español con nuestro show homenaje a "Mentiras". Un concierto en vivo que pondrá a todos a cantar.
                </p>
-               <Link href="/cotizar">
-                  <Button size="lg" className="h-14 px-8 font-black gap-2 text-base">
+               <a href="#paquetes">
+                  <Button size="lg" className="h-14 px-8 font-black gap-2 text-base cursor-pointer">
                      Contratar Tributo <ChevronRight className="w-5 h-5" />
                   </Button>
-               </Link>
+               </a>
             </div>
          </div>
       </section>

@@ -18,7 +18,8 @@ export async function createPackageAction(data: {
       }
     })
     revalidatePath("/admin/paquetes")
-    revalidatePath("/cotizar")
+    revalidatePath("/paquetes")
+    revalidatePath("/")
     return { success: true }
   } catch (error) {
     console.error("Error creating package:", error)
@@ -33,7 +34,8 @@ export async function updatePackageAction(id: string, data: any) {
       data
     })
     revalidatePath("/admin/paquetes")
-    revalidatePath("/cotizar")
+    revalidatePath("/paquetes")
+    revalidatePath("/")
     return { success: true }
   } catch (error) {
     console.error("Error updating package:", error)
@@ -45,7 +47,8 @@ export async function deletePackageAction(id: string) {
   try {
     await db.package.delete({ where: { id } })
     revalidatePath("/admin/paquetes")
-    revalidatePath("/cotizar")
+    revalidatePath("/paquetes")
+    revalidatePath("/")
     return { success: true }
   } catch (error) {
     console.error("Error deleting package:", error)

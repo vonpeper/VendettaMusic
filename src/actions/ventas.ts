@@ -15,31 +15,38 @@ export async function markBookingAsCompleted(bookingId: string) {
       }
     })
     
-    // Sincronizar con Event y Quote si existen
+    // Sincronizar con Event de forma segura
     const br = await db.bookingRequest.findUnique({ where: { id: bookingId } })
-    if (br) {
-      if (br.eventId) {
-        await db.event.update({
-          where: { id: br.eventId },
-          data: { status: "completado" }
-        })
-      }
-      // Si es legacy y tiene quoteId (asumiendo que podría existir una relación indirecta o si bookingRequest se convirtió de Quote)
-      // Pero usualmente BookingRequest e Event son la pareja principal ahora.
+    if (br?.eventId) {
+      await db.event.updateMany({
+        where: { id: br.eventId },
+        data: { status: "completado" }
+      })
     }
 
     revalidatePath("/admin/ventas")
+    revalidatePath("/admin/eventos")
+    revalidatePath("/admin")
+    revalidatePath("/agenda")
     return { success: true }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error marking booking as completed:", error)
-    return { success: false, error: "Error al completar el contrato." }
+    return { success: false, error: error?.message || "Error al completar el contrato." }
   }
 }
 
 export async function updateBookingStatusAction(bookingId: string, newStatus: string) {
   try {
-    const brCheck = await db.bookingRequest.findUnique({
-      where: { id: bookingId },
+    const trimmedId = bookingId?.trim()
+    if (!trimmedId) return { success: false, error: "ID de solicitud no proporcionado." }
+
+    let brCheck = await db.bookingRequest.findFirst({
+      where: {
+        OR: [
+          { id: trimmedId },
+          { shortId: trimmedId.toUpperCase() }
+        ]
+      },
       include: {
         event: {
           include: {
@@ -50,7 +57,60 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
       }
     })
 
-    if (!brCheck) return { success: false, error: "Booking no encontrada." }
+    if (!brCheck) {
+      // Compatibilidad con cotizaciones legacy (Quote)
+      const quote = await db.quote.findFirst({
+        where: {
+          OR: [
+            { id: trimmedId }
+          ]
+        },
+        include: {
+          client: { include: { user: true } },
+          event: true
+        }
+      })
+
+      if (quote) {
+        await db.quote.update({
+          where: { id: quote.id },
+          data: { status: newStatus }
+        })
+
+        const linkedEvent = quote.event || await db.event.findFirst({
+          where: { quoteId: quote.id }
+        })
+
+        if (linkedEvent) {
+          await db.event.update({
+            where: { id: linkedEvent.id },
+            data: { status: newStatus }
+          })
+
+          if (newStatus === "cancelado") {
+            console.log(`⚠️ updateBookingStatusAction: Detectada cancelación para cotización ${quote.id}. Notificando...`)
+            await notifyEventCancellation(linkedEvent.id, db).catch(e => console.error("Error sending cancellation notifications:", e))
+          }
+
+          const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
+          syncEventToGoogleCalendar(linkedEvent.id).catch(e => console.error("Error syncing to Google Calendar:", e))
+        }
+
+        revalidatePath("/admin/ventas")
+        revalidatePath(`/admin/ventas/${quote.id}`)
+        revalidatePath(`/admin/ventas/${trimmedId}`)
+        revalidatePath("/admin/ventas/[id]", "page")
+        revalidatePath("/admin/eventos")
+        revalidatePath("/admin")
+        revalidatePath("/agenda")
+
+        return { success: true }
+      }
+
+      return { success: false, error: "Solicitud o cotización no encontrada." }
+    }
+
+    const canonicalBookingId = brCheck.id
 
     if (newStatus === "agendado") {
       // 1. Validadores estrictos
@@ -63,11 +123,13 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
       
       // Si no hay clientId pero tenemos correo, intentamos buscar el usuario
       let userId = brCheck.clientUserId
-      if (!userId && brCheck.clientEmail) {
+      const cleanEmail = brCheck.clientEmail?.trim() || null
+
+      if (!userId && cleanEmail) {
         const user = await db.user.upsert({
-          where: { email: brCheck.clientEmail },
+          where: { email: cleanEmail },
           create: {
-            email: brCheck.clientEmail,
+            email: cleanEmail,
             name: brCheck.clientName,
             role: "CLIENT",
           },
@@ -76,8 +138,8 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
           }
         })
         userId = user.id
-      } else if (!userId) {
-        // Fallback: Si no hay correo, creamos un usuario placeholder
+      } else if (!userId && !clientId) {
+        // Fallback: Si no hay correo ni clientId, creamos un usuario placeholder sin email
         const user = await db.user.create({
           data: {
             name: brCheck.clientName,
@@ -87,19 +149,19 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
         userId = user.id
       }
 
-      if (userId) {
+      if (userId && !clientId) {
         const clientProfile = await db.clientProfile.upsert({
           where: { userId: userId },
           create: {
             userId: userId,
             whatsapp: brCheck.clientPhone,
-            city: brCheck.city,
-            state: brCheck.state,
+            city: brCheck.city || "Toluca",
+            state: brCheck.state || "México",
           },
           update: {
             whatsapp: brCheck.clientPhone,
-            city: brCheck.city,
-            state: brCheck.state,
+            city: brCheck.city || "Toluca",
+            state: brCheck.state || "México",
           }
         })
         clientId = clientProfile.id
@@ -108,8 +170,8 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
       // 3. Crear o actualizar Location
       let locationId = brCheck.event?.locationId
       if (brCheck.address || brCheck.venueType) {
-        const locationName = `Show - ${brCheck.clientName} (${brCheck.shortId || 'Web'})`
-        const locationAddress = [brCheck.calle, brCheck.numero, brCheck.colonia, brCheck.municipio, brCheck.state, brCheck.zipCode].filter(Boolean).join(", ") || brCheck.address
+        const locationName = brCheck.clientName ? `Show - ${brCheck.clientName} (${brCheck.shortId || 'Web'})` : "Evento Vendetta"
+        const locationAddress = [brCheck.calle, brCheck.numero, brCheck.colonia, brCheck.municipio, brCheck.state, brCheck.zipCode].filter(Boolean).join(", ") || brCheck.address || "Dirección no especificada"
 
         if (locationId) {
           await db.location.update({
@@ -201,13 +263,13 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
 
         // Vincular booking con el eventId
         await db.bookingRequest.update({
-          where: { id: bookingId },
+          where: { id: canonicalBookingId },
           data:  { eventId: eventId }
         })
 
         // Asignar automáticamente los músicos titulares al evento
         const { assignDefaultMusicians } = await import("@/lib/musicians")
-        await assignDefaultMusicians(eventId, db)
+        await assignDefaultMusicians(eventId, db).catch(e => console.error("Error auto-assigning default musicians:", e))
 
         // Sincronizar con Google Calendar si la integración está activa
         try {
@@ -229,7 +291,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
       
       // 5. Actualizar el BookingRequest con el clientId
       await db.bookingRequest.update({
-        where: { id: bookingId },
+        where: { id: canonicalBookingId },
         data: {
           clientId: clientId,
           clientUserId: userId,
@@ -238,7 +300,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
     }
 
     await db.bookingRequest.update({
-      where: { id: bookingId },
+      where: { id: canonicalBookingId },
       data: { 
         status: newStatus,
         ...(newStatus === "completado" ? { paymentStatus: "paid" } : {})
@@ -247,7 +309,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
 
     // Sincronizar con Event
     const br = await db.bookingRequest.findUnique({ 
-      where: { id: bookingId },
+      where: { id: canonicalBookingId },
       include: { 
         event: { 
           include: { 
@@ -259,16 +321,15 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
       }
     })
 
-    if (br?.eventId && br.event) {
+    if (br?.eventId) {
       if (newStatus !== "agendado") {
-        await db.event.update({
+        await db.event.updateMany({
           where: { id: br.eventId },
           data: { status: newStatus }
         })
       }
 
       if (newStatus === "agendado") {
-        // Verificamos de forma independiente si ya se le avisó al cliente
         const existingClientNotif = await db.notification.findFirst({
           where: {
             bookingRequestId: br.id,
@@ -280,19 +341,28 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
           await dispatchNotification({
             type: "CLIENT_CONFIRMED",
             bookingId: br.id
-          })
+          }).catch(e => console.error("Error sending client confirmation notification:", e))
         }
-        // No notificar automáticamente al staff al agendar. El admin lo hará manualmente.
       }
 
       if (newStatus === "cancelado") {
-        console.log(`⚠️ updateBookingStatusAction: Detectada cancelación para contrato ${bookingId}. Notificando...`)
+        console.log(`⚠️ updateBookingStatusAction: Detectada cancelación para contrato ${canonicalBookingId}. Notificando...`)
         await notifyEventCancellation(br.eventId, db).catch(e => console.error("Error sending cancellation notifications:", e))
       }
     }
 
     revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${trimmedId}`)
+    revalidatePath(`/admin/ventas/${canonicalBookingId}`)
+    if (brCheck.shortId) {
+      revalidatePath(`/admin/ventas/${brCheck.shortId}`)
+      revalidatePath(`/status/${brCheck.shortId}`)
+      revalidatePath(`/propuesta/${brCheck.shortId}`)
+    }
+    revalidatePath("/admin/ventas/[id]", "page")
     revalidatePath("/admin/eventos")
+    revalidatePath("/admin")
+    revalidatePath("/agenda")
 
     if (br?.eventId) {
       const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
@@ -300,9 +370,9 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
     }
 
     return { success: true }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating booking status:", error)
-    return { success: false, error: "Error al actualizar el estado." }
+    return { success: false, error: error?.message || "Error al actualizar el estado." }
   }
 }
 

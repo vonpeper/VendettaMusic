@@ -209,7 +209,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
 
       {/* Sidebar Content */}
       <aside className={cn(
-        "bg-gradient-to-br from-[#3c3c3c] to-[#1a1a1a] flex flex-col rounded-2xl shadow-2xl overflow-hidden border-none shrink-0 transition-all duration-300 z-[55]",
+        "bg-gradient-to-br from-[#3c3c3c] to-[#1a1a1a] flex flex-col rounded-2xl shadow-2xl overflow-hidden border-none shrink-0 transition-all duration-300 z-[55] md:z-10",
         "fixed md:relative md:flex top-4 bottom-4 md:top-auto md:bottom-auto h-[calc(100vh-2rem)] md:h-auto",
         "w-64",
         expandedSections.mobile ? "left-4 opacity-100" : "-left-72 opacity-0 md:left-0 md:opacity-100"

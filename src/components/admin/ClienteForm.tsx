@@ -1,6 +1,7 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useActionState, useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { createClienteAction, updateClienteAction } from "@/actions/clientes"
 import { X, AlertCircle, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
-import { useEffect } from "react"
 
 const ESTADOS_MX = [
   "Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas",
@@ -36,6 +36,11 @@ interface ClienteFormProps {
 }
 
 export function ClienteForm({ onClose, editing }: ClienteFormProps) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const isEditing = !!editing
   const action = isEditing ? updateClienteAction : createClienteAction
   const [state, formAction, isPending] = useActionState(action, null) as [any, any, boolean]
@@ -47,20 +52,23 @@ export function ClienteForm({ onClose, editing }: ClienteFormProps) {
     }
   }, [state])
 
+  if (!mounted) return null
+
   if (state?.success) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-card backdrop-blur-sm">
+    return createPortal(
+      <div className="admin-theme fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
         <div className="bg-card border border-green-500/30 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
           <CheckCircle2 className="w-14 h-14 text-green-700 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-foreground mb-2">{state.message}</h3>
-          <Button onClick={onClose} className="mt-4 w-full text-white">Cerrar</Button>
+          <Button onClick={onClose} className="mt-4 w-full">Cerrar</Button>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-card backdrop-blur-sm p-4">
+  return createPortal(
+    <div className="admin-theme fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-card border border-border/40 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border/40">
@@ -72,7 +80,7 @@ export function ClienteForm({ onClose, editing }: ClienteFormProps) {
               {isEditing ? "Actualiza los datos del cliente." : "Completa el registro del nuevo cliente."}
             </p>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-primary/10">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -212,6 +220,7 @@ export function ClienteForm({ onClose, editing }: ClienteFormProps) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

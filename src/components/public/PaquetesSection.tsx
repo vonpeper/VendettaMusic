@@ -8,10 +8,12 @@ import { toast } from "sonner"
 
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
 
+import { submitContactInquiry } from "@/actions/contact"
+
 const {
   Check, X, Sparkles, Music2,
   Mic2, Lightbulb, Users, Volume2, Monitor, Star,
-  ArrowUpRight, Calendar, Clock, MapPin, User, PartyPopper
+  ArrowUpRight, Calendar, Clock, MapPin, User, PartyPopper, Phone, Mail, MessageSquare
 } = Icons
 
 // Helper to get Lucide icon from string
@@ -33,11 +35,12 @@ interface PackageData {
   name: string
   baseCostPerHour: number
   minDuration: number
-  description: string | null
-  serviceItems: ServiceItem[]
-  includes?: string
-  exclusions?: string
-  active?: boolean
+  description?: string | null
+  serviceItems?: ServiceItem[]
+  includes?: string | null
+  exclusions?: string | null
+  active?: boolean | null
+  isCustom?: boolean | null
 }
 
 // Estilos visuales por defecto para paquetes
@@ -125,17 +128,26 @@ const EVENT_MOTIVOS = [
   { value: "Otro", label: "🎶 Otro" },
 ]
 
-export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[]; viaticosConfig?: any }) {
+interface PaquetesSectionProps {
+  dbPackages: PackageData[]
+  adminWhatsapp?: string | null
+  viaticosConfig?: any
+}
+
+export function PaquetesSection({ dbPackages, adminWhatsapp }: PaquetesSectionProps) {
 
   // Estado del modal de cotización
   const [selectedPkg, setSelectedPkg] = useState<PackageData | null>(null)
   const [formData, setFormData] = useState({
     nombre: "",
+    telefono: "",
+    email: "",
     motivo: "Boda",
     fecha: "",
     hora: "",
     invitados: "",
     ubicacion: "",
+    notas: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -148,11 +160,15 @@ export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[]; via
     setIsSubmitting(false)
   }
 
-  const handleSubmitQuote = (e: React.FormEvent) => {
+  const handleSubmitQuote = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!formData.nombre.trim()) {
       toast.error("Por favor ingresa tu nombre")
+      return
+    }
+    if (!formData.telefono.trim()) {
+      toast.error("Por favor ingresa tu número de teléfono / WhatsApp")
       return
     }
     if (!formData.fecha) {
@@ -174,31 +190,62 @@ export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[]; via
 
     setIsSubmitting(true)
 
-    // Formatear mensaje para WhatsApp
     const pkgName = selectedPkg ? selectedPkg.name : "Personalizado"
+
+    // 1. Guardar prospecto en segundo plano en la base de datos
+    try {
+      const inquiryForm = new FormData()
+      inquiryForm.set("nombre", formData.nombre.trim())
+      inquiryForm.set("telefono", formData.telefono.trim())
+      inquiryForm.set("email", formData.email?.trim() || "contacto@vendetta.mx")
+      inquiryForm.set("fecha", formData.fecha)
+      inquiryForm.set("tipo", `${formData.motivo} - Paquete: ${pkgName}`)
+      inquiryForm.set(
+        "mensaje",
+        `Hora: ${formData.hora.trim()} | Invitados: ${formData.invitados.trim()} | Ubicación: ${formData.ubicacion.trim()}${formData.notas.trim() ? ` | Notas: ${formData.notas.trim()}` : ""}`
+      )
+      await submitContactInquiry(inquiryForm).catch((e) => console.warn("Could not save contact inquiry:", e))
+    } catch (inqErr) {
+      console.warn("Inquiry error:", inqErr)
+    }
+
+    // 2. Formatear mensaje para WhatsApp prellenado
     const waMessage = 
 `¡Hola Vendetta Live Music! 🎸⚡
-Me gustaría cotizar el *Paquete ${pkgName}* para mi evento:
+Me gustaría solicitar una cotización formal para mi evento:
 
+📦 *Paquete de interés:* ${pkgName}
 👤 *Nombre:* ${formData.nombre.trim()}
-🎉 *Motivo:* ${formData.motivo}
+📱 *Teléfono:* ${formData.telefono.trim()}
+${formData.email.trim() ? `📧 *Correo:* ${formData.email.trim()}\n` : ""}🎉 *Tipo de Evento:* ${formData.motivo}
 📅 *Fecha:* ${formData.fecha}
 ⏰ *Hora estimada:* ${formData.hora.trim()}
 👥 *Invitados:* ${formData.invitados.trim()} personas
-📍 *Ubicación:* ${formData.ubicacion.trim()}
-
+📍 *Ubicación / Ciudad:* ${formData.ubicacion.trim()}
+${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim()}\n` : ""}
 ¿Tienen disponibilidad para esta fecha? ¡Muchas gracias!`
 
-    const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim()
-    if (rawNumber) {
-      const cleanPhone = rawNumber.replace(/\D/g, "")
-      const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`
-      toast.success("¡Redirigiendo a WhatsApp con los datos de tu evento!")
-      window.open(waUrl, "_blank")
-    } else {
-      toast.success("¡Redirigiendo al cotizador en línea!")
-      window.location.href = `/cotizar`
+    const rawNumber =
+      adminWhatsapp?.trim() ||
+      process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() ||
+      process.env.NEXT_PUBLIC_ADMIN_WA?.trim() ||
+      ""
+    const cleanPhone = rawNumber.replace(/\D/g, "")
+    
+    if (!cleanPhone) {
+      toast.error("Número de WhatsApp de atención no disponible en este momento. Hemos registrado tus datos y te contactaremos a la brevedad.")
+      handleCloseModal()
+      return
     }
+
+    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`
+    
+    toast.success("¡Abriendo WhatsApp con la información prellenada de tu evento!")
+    
+    if (typeof window !== "undefined") {
+      window.open(waUrl, "_blank")
+    }
+    
     handleCloseModal()
   }
 
@@ -394,40 +441,71 @@ Me gustaría cotizar el *Paquete ${pkgName}* para mi evento:
 
             {/* Form */}
             <form onSubmit={handleSubmitQuote} className="space-y-4">
-              {/* Nombre */}
-              <div>
-                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-primary" /> Nombre Completo *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej: Mariana Gómez / Corporativo Liverpool"
-                  value={formData.nombre}
-                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                  className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                />
+              {/* Nombre y Teléfono */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-primary" /> Nombre Completo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej: Mariana Gómez"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-primary" /> Teléfono / WhatsApp *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="Ej: 55 1234 5678"
+                    value={formData.telefono}
+                    onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  />
+                </div>
               </div>
 
-              {/* Motivo (Dropdown) */}
-              <div>
-                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <PartyPopper className="w-3.5 h-3.5 text-primary" /> Motivo del Evento *
-                </label>
-                <div className="relative">
-                  <select
-                    value={formData.motivo}
-                    onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl bg-zinc-900 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
-                  >
-                    {EVENT_MOTIVOS.map((m) => (
-                      <option key={m.value} value={m.value} className="bg-zinc-900 text-white">
-                        {m.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-white/40">
-                    <ArrowUpRight className="w-4 h-4 rotate-90" />
+              {/* Correo y Motivo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-primary" /> Correo Electrónico (Opcional)
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Ej: mariana@correo.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <PartyPopper className="w-3.5 h-3.5 text-primary" /> Motivo del Evento *
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={formData.motivo}
+                      onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
+                      className="w-full h-11 px-4 rounded-xl bg-zinc-900 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
+                    >
+                      {EVENT_MOTIVOS.map((m) => (
+                        <option key={m.value} value={m.value} className="bg-zinc-900 text-white">
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-white/40">
+                      <ArrowUpRight className="w-4 h-4 rotate-90" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -482,12 +560,12 @@ Me gustaría cotizar el *Paquete ${pkgName}* para mi evento:
 
                 <div>
                   <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-primary" /> Ubicación *
+                    <MapPin className="w-3.5 h-3.5 text-primary" /> Ubicación / Municipio *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Ej: Valle de Bravo / CDMX"
+                    placeholder="Ej: Valle de Bravo / Metepec"
                     value={formData.ubicacion}
                     onChange={(e) => setFormData({ ...formData, ubicacion: e.target.value })}
                     className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
@@ -495,19 +573,33 @@ Me gustaría cotizar el *Paquete ${pkgName}* para mi evento:
                 </div>
               </div>
 
+              {/* Notas opcionales */}
+              <div>
+                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-primary" /> Requerimientos o Notas Adicionales (Opcional)
+                </label>
+                <textarea
+                  placeholder="Ej: Horas extras, música especial, temática de rock..."
+                  rows={2}
+                  value={formData.notas}
+                  onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+                />
+              </div>
+
               {/* Botón de Enviar a WhatsApp */}
-              <div className="pt-4">
+              <div className="pt-2">
                 <Button
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full h-13 font-black text-sm uppercase tracking-wider gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-xl shadow-[#25D366]/25 transition-all duration-300 rounded-xl cursor-pointer group hover:scale-[1.01] active:scale-[0.99]"
                 >
                   <WhatsAppIcon className="w-5 h-5 fill-white transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110" />
-                  <span>Continuar a WhatsApp</span>
+                  <span>Enviar y Cotizar por WhatsApp</span>
                   <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Button>
-                <p className="text-[10px] text-gray-500 text-center mt-2.5">
-                  ⚡ Tu información se abrirá automáticamente en WhatsApp para atención personalizada y formalización.
+                <p className="text-[10px] text-gray-500 text-center mt-2">
+                  ⚡ Tu información se abrirá automáticamente en WhatsApp para atención personalizada y formalización directa con el equipo.
                 </p>
               </div>
             </form>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { createEventAction, updateEventAction } from "@/actions/events"
 import { updateBandEventAction } from "@/actions/band-events"
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,11 @@ interface Location {
 }
 
 export function BandEventForm({ onClose, editing }: any) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const isEditing = !!editing
   // Si estamos editando, respetamos la bandera. Si no existe la bandera, es legado (false).
   // Si es nuevo registro (no editing), es true por defecto (nueva tabla).
@@ -43,20 +49,23 @@ export function BandEventForm({ onClose, editing }: any) {
   const ivaAmount = requiresInvoice ? Math.round(base * 0.16 * 100) / 100 : 0
   const totalWithTax = base + ivaAmount
 
+  if (!mounted) return null
+
   if (state?.success) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-card backdrop-blur-sm">
+    return createPortal(
+      <div className="admin-theme fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
         <div className="bg-card border border-green-500/30 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
           <CheckCircle2 className="w-14 h-14 text-green-700 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-foreground mb-2">{state.message || (isEditing ? "Actualizado" : "Creado")}</h3>
-          <Button onClick={onClose} className="mt-4 w-full text-white">Cerrar</Button>
+          <Button onClick={onClose} className="mt-4 w-full">Cerrar</Button>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-card backdrop-blur-sm p-4">
+  return createPortal(
+    <div className="admin-theme fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-card border border-border/40 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-border/40 sticky top-0 bg-card z-10">
           <div>
@@ -65,7 +74,7 @@ export function BandEventForm({ onClose, editing }: any) {
             </h2>
             <p className="text-muted-foreground text-sm mt-0.5">Control rápido de shows e ingresos unificado.</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -216,6 +225,7 @@ export function BandEventForm({ onClose, editing }: any) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

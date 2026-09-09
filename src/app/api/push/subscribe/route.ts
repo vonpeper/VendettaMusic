@@ -17,14 +17,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: res.error }, { status: 500 })
     }
 
-    // Send immediate confirmation push notification
-    await sendWebPush(subscription, {
-      title: "⚡ VENDETTA MUSIC",
-      body: "🔔 ¡Recordatorios activados! Te avisaremos el día de cada show con tus horarios y locación.",
-      url: "/agenda",
-      data: { type: "welcome" }
-    })
-
     return NextResponse.json({ success: true, message: "Notificaciones activadas exitosamente" })
   } catch (err: any) {
     console.error("Error in /api/push/subscribe:", err)

@@ -83,7 +83,7 @@ export function VenueCombobox({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-bold text-white flex items-center gap-2">
+        <Label className="text-sm font-bold text-foreground flex items-center gap-2">
           <MapPin className="w-4 h-4 text-primary" /> Locación / Venue
         </Label>
         <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ export function VenueCombobox({
                 onSelectVenue(null, pendingText || "Lugar por confirmar")
               }
             }}
-            className="text-xs text-muted-foreground hover:text-white font-medium cursor-pointer"
+            className="text-xs text-muted-foreground hover:text-foreground font-medium cursor-pointer"
           >
             {isPendingVenue ? "Seleccionar del catálogo" : "Lugar aún no definido"}
           </button>
@@ -126,9 +126,9 @@ export function VenueCombobox({
         </div>
       ) : isCreatingNew ? (
         <div className="p-4 rounded-xl bg-card border border-primary/40 space-y-3">
-          <div className="flex justify-between items-center pb-2 border-b border-white/10">
+          <div className="flex justify-between items-center pb-2 border-b border-border/40">
             <span className="text-xs font-bold uppercase tracking-wider text-primary">Agregar Venue al Catálogo</span>
-            <button type="button" onClick={() => setIsCreatingNew(false)} className="text-muted-foreground hover:text-white">
+            <button type="button" onClick={() => setIsCreatingNew(false)} className="text-muted-foreground hover:text-foreground">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -183,7 +183,7 @@ export function VenueCombobox({
       ) : selectedVenue ? (
         <div className="p-4 rounded-xl bg-card border border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <div className="font-bold text-white text-base flex items-center gap-2">
+            <div className="font-bold text-foreground text-base flex items-center gap-2">
               {selectedVenue.name}
             </div>
             <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground mt-1">
@@ -264,7 +264,7 @@ export function VenueCombobox({
                     className="w-full text-left p-2.5 rounded-lg hover:bg-primary/10 transition-colors flex items-center justify-between group cursor-pointer"
                   >
                     <div>
-                      <div className="font-semibold text-sm text-white group-hover:text-primary transition-colors">
+                      <div className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
                         {v.name}
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
