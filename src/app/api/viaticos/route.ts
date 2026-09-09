@@ -1,7 +1,7 @@
 // src/app/api/viaticos/route.ts
 
 import { NextResponse } from "next/server";
-import { calculateViaticos, roundTo500 } from "@/lib/viaticos/googleMaps";
+import { calculateViaticos, roundTo100, roundTo500 } from "@/lib/viaticos/googleMaps";
 import { calcularViatcos } from "@/lib/viaticos";
 import { db } from "@/lib/db";
 
@@ -16,13 +16,15 @@ export async function GET(request: Request) {
 
   try {
     const result = await calculateViaticos(destination, vehicle);
+    const isOutsideZone = result.viaticosAmount > 0 || result.distanceKm > 25;
     return NextResponse.json({
-      viaticosAmount: roundTo500(result.viaticosAmount),
+      viaticosAmount: roundTo100(result.viaticosAmount),
       tollCost: result.tollCost,
       fuelCost: result.fuelCost,
       distanceKm: result.distanceKm,
       durationSec: result.durationSec,
-      requiresManualQuote: result.requiresManualQuote
+      requiresManualQuote: result.requiresManualQuote,
+      isOutsideZone
     });
   } catch (err) {
     console.warn("⚠️ Google Maps API calculation failed or not configured, falling back to static tabulator:", err);
@@ -51,6 +53,7 @@ export async function GET(request: Request) {
         distanceKm: 0,
         durationSec: 0,
         isFallback: true,
+        isOutsideZone: fallback.isOutsideZone,
         label: fallback.label,
         description: fallback.description,
         requiresManualQuote: isManual

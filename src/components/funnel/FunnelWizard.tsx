@@ -15,6 +15,7 @@ export interface FunnelData {
   packageId:   string
   packageName: string
   packagePrice: number
+  baseLocalPrice?: number
   packageIncludes?: string
   guestCount:  number
   venueType:   string

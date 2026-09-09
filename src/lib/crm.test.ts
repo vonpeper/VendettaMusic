@@ -57,15 +57,43 @@ describe("Validaciones de Negocio CRM (crm.test.ts)", () => {
     assert.equal(result.isFullyPaid, true)
   })
 
-  it("debe redondear viáticos estrictamente en múltiplos superiores de $500", () => {
-    const { roundTo500 } = require("./viaticos/googleMaps")
-    assert.equal(roundTo500(1467), 1500)
-    assert.equal(roundTo500(1965), 2000)
-    assert.equal(roundTo500(3308), 3500)
-    assert.equal(roundTo500(1654), 2000)
-    assert.equal(roundTo500(0), 0)
-    assert.equal(roundTo500(500), 500)
-    assert.equal(roundTo500(501), 1000)
-    assert.equal(roundTo500(2000), 2000)
+  it("debe redondear viáticos estrictamente en múltiplos superiores de $100 (Opción A)", () => {
+    const { roundTo100, roundTo500 } = require("./viaticos/googleMaps")
+    // Casos reales aprobados por el usuario
+    assert.equal(roundTo100(1467), 1500)
+    assert.equal(roundTo100(1965), 2000)
+    assert.equal(roundTo100(2007), 2100) // Caso Imelda Subiaur: $2,007 redondeado a $2,100
+    assert.equal(roundTo100(3180), 3200) // Caso Querétaro: $3,180 redondeado a $3,200
+    assert.equal(roundTo100(1654), 1700)
+    assert.equal(roundTo100(0), 0)
+    assert.equal(roundTo100(100), 100)
+    assert.equal(roundTo100(101), 200)
+    assert.equal(roundTo100(2000), 2000)
+
+    // Alias retrocompatible roundTo500 debe ejecutar la misma lógica de roundTo100
+    assert.equal(roundTo500(2007), 2100)
+  })
+
+  it("debe aplicar regla de costo base show local ($8,500) y foráneo (+20% -> $10,200)", () => {
+    const { calculateShowBasePrice } = require("./pricing")
+    const { isLocalCity } = require("./viaticos")
+
+    // Validación de zona local
+    assert.equal(isLocalCity("Metepec"), true)
+    assert.equal(isLocalCity("Toluca"), true)
+    assert.equal(isLocalCity("San Mateo Atenco"), true)
+    assert.equal(isLocalCity("Querétaro"), false)
+    assert.equal(isLocalCity("Ciudad de México"), false)
+    assert.equal(isLocalCity("Iztapalapa"), false)
+
+    // Essential base 2 horas = $8,500 MXN
+    const essentialLocal = 8500
+    assert.equal(calculateShowBasePrice(essentialLocal, false), 8500)
+
+    // Foráneo: sube 20% (8,500 * 1.20 = 10,200 MXN)
+    assert.equal(calculateShowBasePrice(essentialLocal, true), 10200)
+
+    // Otro paquete (ej. $15,000)
+    assert.equal(calculateShowBasePrice(15000, true), 18000)
   })
 })

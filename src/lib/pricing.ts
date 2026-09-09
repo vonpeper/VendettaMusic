@@ -136,3 +136,19 @@ export function formatCurrencyMXN(amount: number | null | undefined, includeDeci
     maximumFractionDigits: includeDecimals ? 2 : 0
   }).format(value)
 }
+
+/**
+ * Calcula el costo base del show aplicando la regla foránea (+20% si el destino está fuera de la zona local).
+ *
+ * Regla de negocio oficial de Vendetta Music:
+ * - Local (Metepec / Toluca <= 25km): baseLocalPrice ($8,500 para Essential 2h)
+ * - Foráneo (> 25km o fuera de zona local): baseLocalPrice * 1.20 ($10,200 para Essential 2h)
+ */
+export function calculateShowBasePrice(baseLocalPrice: number, isOutsideZone: boolean): number {
+  const price = Math.max(0, roundCurrency(baseLocalPrice))
+  if (!isOutsideZone) {
+    return price
+  }
+  return Math.round(price * 1.2)
+}
+

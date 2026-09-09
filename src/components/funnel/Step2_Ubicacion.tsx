@@ -7,6 +7,7 @@ import { Input }       from "@/components/ui/input"
 import { Label }       from "@/components/ui/label"
 import { MapPin, AlertTriangle, CheckCircle2, Car, ExternalLink } from "lucide-react"
 import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
+import { calculateShowBasePrice } from "@/lib/pricing"
 
 interface Props {
   data: Partial<FunnelData>
@@ -61,10 +62,11 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
           return
         }
         
-        const { viaticosAmount, tollCost, fuelCost, distanceKm, durationSec, requiresManualQuote, label, description } = resData
+        const { viaticosAmount, tollCost, fuelCost, distanceKm, durationSec, requiresManualQuote, isOutsideZone: apiOutsideZone, label, description } = resData
+        const isOutsideZone = apiOutsideZone !== undefined ? !!apiOutsideZone : (viaticosAmount > 0 || (distanceKm > 25) || !!requiresManualQuote)
         
         setViaticos({
-          isOutsideZone: viaticosAmount > 0 || requiresManualQuote,
+          isOutsideZone,
           amount: viaticosAmount,
           fuelCost: fuelCost || 0,
           tollCost: tollCost || 0,
@@ -73,7 +75,7 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
           requiresManualQuote: !!requiresManualQuote,
           label: requiresManualQuote 
             ? 'Logística Extendida (Cotización Personalizada)' 
-            : (label || (viaticosAmount > 0 ? 'Viáticos' : 'Zona 1 (Local - Sin viáticos)')),
+            : (label || (isOutsideZone ? 'Viáticos' : 'Zona 1 (Local - Sin viáticos)')),
           description: requiresManualQuote
             ? 'Este destino requiere cotización personalizada por logística extendida.'
             : (description || `Distancia ${distanceKm?.toFixed(1) ?? '-'} km, Peaje ${tollCost ?? 0} MXN`)
@@ -87,6 +89,11 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
     }
     fetchViaticos()
   }, [city, state, vehicleKey, viaticosConfig])
+
+  const baseLocalPrice = data.baseLocalPrice ?? data.packagePrice ?? 0
+  const isOutside = viaticos?.isOutsideZone ?? false
+  const currentPackagePrice = calculateShowBasePrice(baseLocalPrice, isOutside)
+  const totalConViaticos = currentPackagePrice + (viaticos?.amount ?? 0)
 
   function handleNext() {
     if (!city || !city.trim()) { 
@@ -108,6 +115,8 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
       state,
       address: `${street} ${houseNumber}, Col. ${colonia}, CP ${zipCode}, ${city}, ${state}`,
       isOutsideZone:  viaticos.isOutsideZone,
+      packagePrice:   currentPackagePrice,
+      baseLocalPrice: baseLocalPrice,
       viaticosAmount: viaticos.amount,
       viaticosLabel:  viaticos.label,
       mapsLink:       mapsLink.trim() || undefined,
@@ -121,8 +130,6 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
       requiresManualQuote: viaticos.requiresManualQuote
     })
   }
-
-  const totalConViaticos = (data.packagePrice ?? 0) + (viaticos?.amount ?? 0)
 
   return (
     <div>
@@ -139,8 +146,10 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
               <h3 className="text-2xl font-black text-white uppercase tracking-tighter">{data.packageName}</h3>
             </div>
             <div className="text-right">
-              <div className="text-xl font-black text-white">{MXN(data.packagePrice ?? 0)}</div>
-              <div className="text-[9px] text-muted-foreground uppercase font-bold">Precio Base</div>
+              <div className="text-xl font-black text-white">{MXN(currentPackagePrice)}</div>
+              <div className="text-[9px] text-muted-foreground uppercase font-bold">
+                {isOutside ? "Show Foráneo (+20%)" : "Precio Base Local"}
+              </div>
             </div>
           </div>
 
@@ -403,8 +412,10 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
           {/* Desglose de precio final en este paso */}
           <div className="pt-6 border-t border-white/10 space-y-3">
             <div className="flex justify-between text-sm font-medium">
-              <span className="text-gray-400">Subtotal Paquete</span>
-              <span className="text-white">{MXN(data.packagePrice ?? 0)}</span>
+              <span className="text-gray-400">
+                {isOutside ? "Subtotal Show (Foráneo +20%)" : "Subtotal Show (Local)"}
+              </span>
+              <span className="text-white">{MXN(currentPackagePrice)}</span>
             </div>
             
             {viaticos.requiresManualQuote ? (
@@ -430,7 +441,7 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
                   {viaticos.requiresManualQuote ? "Total Estimado (Sin Viáticos)" : "Total Estimado"}
                 </span>
                 <span className="text-3xl font-black text-primary tracking-tighter">
-                  {viaticos.requiresManualQuote ? MXN(data.packagePrice ?? 0) : MXN(totalConViaticos)}
+                  {viaticos.requiresManualQuote ? MXN(currentPackagePrice) : MXN(totalConViaticos)}
                 </span>
               </div>
               <span className="text-[10px] text-muted-foreground font-bold mb-1">

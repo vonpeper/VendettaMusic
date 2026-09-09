@@ -32,13 +32,15 @@ export function clearViaticosCache() {
 }
 
 /**
- * Redondea viáticos hacia arriba en bloques de $500 MXN.
- * Ejemplo: $1,467 -> $1,500; $1,965 -> $2,000; $3,308 -> $3,500.
+ * Redondea viáticos hacia arriba en bloques de $100 MXN.
+ * Ejemplo: $1,467 -> $1,500; $1,965 -> $2,000; $2,007 -> $2,100; $3,180 -> $3,200.
  */
-export function roundTo500(amount: number): number {
+export function roundTo100(amount: number): number {
   if (!amount || amount <= 0) return 0;
-  return Math.ceil(amount / 500) * 500;
+  return Math.ceil(amount / 100) * 100;
 }
+
+export const roundTo500 = roundTo100;
 
 interface KnownRoute {
   keywords: string[];
@@ -57,7 +59,7 @@ const KNOWN_ROUTES: KnownRoute[] = [
   },
   // CDMX / Zona Metropolitana
   {
-    keywords: ["ciudad de mexico", "cdmx", "df", "distrito federal", "santa fe", "interlomas", "cuajimalpa", "alvaro obregon", "coyoacan", "tlalpan", "miguel hidalgo", "benito juarez", "naucalpan", "tlalnepantla", "atizapan"],
+    keywords: ["ciudad de mexico", "cdmx", "df", "distrito federal", "santa fe", "interlomas", "cuajimalpa", "alvaro obregon", "coyoacan", "tlalpan", "miguel hidalgo", "benito juarez", "naucalpan", "tlalnepantla", "atizapan", "iztapalapa", "iztacalco", "gustavo a madero", "venustiano carranza", "azcapotzalco"],
     distanceKm: 65,
     durationSec: 4200, // 1h 10m
     tollCostSingle: 120 // Caseta México-Toluca
@@ -264,8 +266,8 @@ export async function calculateViaticos(
   // 6️⃣ Cálculo de casetas (redondo ida y vuelta, para N camionetas)
   let tollCostTotal = tollCostSingle * 2 * viaticosVehicleCount;
 
-  // Viáticos totales redondeados en bloques de $500 MXN (ej: 1467 -> 1500, 1965 -> 2000, 3308 -> 3500)
-  let viaticosAmount = roundTo500(fuelCostTotal + tollCostTotal);
+  // Viáticos totales redondeados en bloques de $100 MXN (ej: 1467 -> 1500, 1965 -> 2000, 2007 -> 2100, 3180 -> 3200)
+  let viaticosAmount = roundTo100(fuelCostTotal + tollCostTotal);
 
   // Regla de radio de cobertura local gratuito (ej. Toluca/Metepec <= 25km)
   if (distanceKm <= viaticosLocalRadius) {

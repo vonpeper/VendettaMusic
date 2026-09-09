@@ -18,7 +18,7 @@ const PACKAGES = [
   {
     id: "61a5477c-de10-4788-a8bd-1dfa8b57d256",
     name: "Essential",
-    baseCostPerHour: 3800,
+    baseCostPerHour: 4250,
     minDuration: 2,
     description: "El paquete base para eventos sociales pequeños.",
     includes: "Audio EV, Backline, Luces RGB, 4 músicos, Staff, 2 sets",

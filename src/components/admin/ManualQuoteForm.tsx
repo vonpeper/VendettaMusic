@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Save, X, Calendar as CalendarIcon, Clock, User, Phone, MapPin, CreditCard } from "lucide-react"
 import { toast } from "sonner"
+import { calculateShowBasePrice } from "@/lib/pricing"
+import { isLocalCity } from "@/lib/viaticos"
 
 const CEREMONY_TYPES = [
   { value: "boda",       label: "💒 Boda" },
@@ -249,7 +251,9 @@ export function ManualQuoteForm({
     }
     const pkg = packages.find(p => p.id === id)
     if (pkg) {
-      const price = pkg.baseCostPerHour * pkg.minDuration
+      const localPrice = pkg.baseCostPerHour * pkg.minDuration
+      const isOutside = formData.municipio ? !isLocalCity(formData.municipio, formData.state) : false
+      const price = calculateShowBasePrice(localPrice, isOutside)
       setFormData(prev => ({
         ...prev,
         packageId: id,
@@ -267,18 +271,31 @@ export function ManualQuoteForm({
     if (!id) return
     const loc = locations.find(l => l.id === id)
     if (loc) {
-      setFormData(prev => ({
-        ...prev,
-        locationId: id,
-        venueName: loc.name || "",
-        calle: loc.address || "",
-        numero: "", 
-        colonia: "",
-        municipio: loc.city || "",
-        state: loc.state || "Estado de México",
-        mapsLink: loc.mapsLink || "",
-        venuePhone: loc.phone || ""
-      }))
+      const isOutside = loc.city ? !isLocalCity(loc.city, loc.state || "Estado de México") : false
+      setFormData(prev => {
+        let newBase = prev.baseAmount
+        let newOriginal = prev.originalPrice
+        const currentPkg = packages.find(p => p.id === prev.packageId)
+        if (currentPkg) {
+          const localPrice = currentPkg.baseCostPerHour * currentPkg.minDuration
+          newBase = calculateShowBasePrice(localPrice, isOutside)
+          newOriginal = newBase
+        }
+        return {
+          ...prev,
+          locationId: id,
+          venueName: loc.name || "",
+          calle: loc.address || "",
+          numero: "", 
+          colonia: "",
+          municipio: loc.city || "",
+          state: loc.state || "Estado de México",
+          mapsLink: loc.mapsLink || "",
+          venuePhone: loc.phone || "",
+          baseAmount: newBase,
+          originalPrice: newOriginal
+        }
+      })
     }
   }
 

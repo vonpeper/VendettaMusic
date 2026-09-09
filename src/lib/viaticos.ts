@@ -4,7 +4,7 @@
  * Fuera de zona: se cobran viáticos por distancia estimada
  */
 
-import { roundTo500 } from "./viaticos/googleMaps"
+import { roundTo100, roundTo500 } from "./viaticos/googleMaps"
 
 // ZONA 1: Ciudades y colonias dentro de la zona sin viáticos (Valle de Toluca)
 const ZONA_LOCAL = [
@@ -54,12 +54,23 @@ export interface ViaticosConfig {
   zona3Cities?: string | null
 }
 
+export function isLocalCity(city: string, state?: string): boolean {
+  if (!city) return false
+  const normCity = normalize(city)
+  const normState = state ? normalize(state) : ""
+  const isStateOk = !normState || normState.includes("mexico") || normState.includes("edomex")
+  if (!isStateOk) return false
+  return ZONA_LOCAL.some(z => {
+    const normZ = normalize(z)
+    return normCity === normZ || normCity.includes(normZ)
+  })
+}
+
 export function calcularViatcos(city: string, state?: string, config?: ViaticosConfig): ViaticosResult {
   const normCity = normalize(city)
   const normState = state ? normalize(state) : ""
 
-  const isLocal = ZONA_LOCAL.some(z => normalize(z) === normCity) && 
-                  (!normState || normState === "estado de mexico" || normState === "edomex" || normState === "mexico" || normState === "estado de mex")
+  const isLocal = isLocalCity(city, state)
   if (isLocal) {
     return {
       isOutsideZone: false,
@@ -82,7 +93,7 @@ export function calcularViatcos(city: string, state?: string, config?: ViaticosC
   if (isZona2) {
     return {
       isOutsideZone: true,
-      amount: roundTo500(config?.zona2Rate || 1500),
+      amount: roundTo100(config?.zona2Rate || 1500),
       label: "Zona 2 (Media Distancia)",
       description: "Aplica tarifa de viáticos para CDMX, Valle de Bravo, Ixtapan, etc."
     }
@@ -92,7 +103,7 @@ export function calcularViatcos(city: string, state?: string, config?: ViaticosC
   if (isZona3) {
     return {
       isOutsideZone: true,
-      amount: roundTo500(config?.zona3Rate || 3500),
+      amount: roundTo100(config?.zona3Rate || 3500),
       label: "Zona 3 (Larga Distancia)",
       description: "Aplica tarifa foránea para Estados colindantes (Querétaro, Puebla, Morelos, etc)."
     }

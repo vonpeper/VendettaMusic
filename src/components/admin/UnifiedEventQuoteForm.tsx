@@ -11,7 +11,8 @@ import { ClientCombobox, ClientData } from "@/components/admin/crm/ClientCombobo
 import { VenueCombobox, VenueData } from "@/components/admin/crm/VenueCombobox"
 import { QuoteLineItems } from "@/components/admin/crm/QuoteLineItems"
 import { FinancialSummary } from "@/components/admin/crm/FinancialSummary"
-import { calculateQuoteTotals, AdditionalLineItem } from "@/lib/pricing"
+import { calculateQuoteTotals, calculateShowBasePrice, formatCurrencyMXN, AdditionalLineItem } from "@/lib/pricing"
+import { isLocalCity } from "@/lib/viaticos"
 import { saveUnifiedEventQuoteAction } from "@/actions/events"
 import { toast } from "sonner"
 import { 
@@ -177,11 +178,19 @@ export function UnifiedEventQuoteForm({
     return packages.find(p => p.id === packageId) || null
   }, [packages, packageId])
 
-  // Precio base ajustable
+  // Detección de zona foránea (+20%)
+  const isOutsideZone = useMemo(() => {
+    const city = venueCity || clientCity
+    if (!city) return false
+    return !isLocalCity(city, venueState)
+  }, [venueCity, clientCity, venueState])
+
+  // Precio base ajustable (aplica +20% automáticamente para foráneo)
   const defaultPackagePrice = useMemo(() => {
     if (!selectedPackage) return 0
-    return selectedPackage.baseCostPerHour * (selectedPackage.minDuration || 1)
-  }, [selectedPackage])
+    const local = selectedPackage.baseCostPerHour * (selectedPackage.minDuration || 1)
+    return calculateShowBasePrice(local, isOutsideZone)
+  }, [selectedPackage, isOutsideZone])
 
   const [basePrice, setBasePrice] = useState<number | null>(() => {
     if (initialData?.amount !== undefined && initialData?.amount !== null) return Number(initialData.amount)
@@ -293,8 +302,33 @@ export function UnifiedEventQuoteForm({
     setPackageId(newPkgId)
     const pkg = packages.find(p => p.id === newPkgId)
     if (pkg) {
-      const price = pkg.baseCostPerHour * (pkg.minDuration || 1)
+      const localBase = pkg.baseCostPerHour * (pkg.minDuration || 1)
+      const price = calculateShowBasePrice(localBase, isOutsideZone)
       setBasePrice(price)
+    }
+  }
+
+  const [calculatingViaticos, setCalculatingViaticos] = useState(false)
+
+  async function handleAutoCalculateViaticos() {
+    const dest = venueCity || clientCity
+    if (!dest) {
+      toast.error("Ingresa la ciudad o locación para calcular viáticos")
+      return
+    }
+    setCalculatingViaticos(true)
+    try {
+      const query = dest + (venueState ? `, ${venueState}` : "")
+      const resp = await fetch(`/api/viaticos?destination=${encodeURIComponent(query)}`)
+      const data = await resp.json()
+      if (data && typeof data.viaticosAmount === "number") {
+        setViaticosAmount(data.viaticosAmount)
+        toast.success(`Viáticos calculados: ${formatCurrencyMXN(data.viaticosAmount, false)} (${data.distanceKm} km)`)
+      }
+    } catch {
+      toast.error("Error al calcular viáticos automáticos")
+    } finally {
+      setCalculatingViaticos(false)
     }
   }
 
@@ -873,14 +907,25 @@ export function UnifiedEventQuoteForm({
 
                   <div>
                     <div className="flex justify-between items-center">
-                      <Label className="text-xs font-semibold text-muted-foreground">Precio Base Show</Label>
+                      <div className="flex items-center gap-1.5">
+                        <Label className="text-xs font-semibold text-muted-foreground">Precio Base Show</Label>
+                        {isOutsideZone ? (
+                          <span className="text-[10px] bg-amber-500/10 text-amber-500 font-bold px-1.5 py-0.2 rounded border border-amber-500/20">
+                            +20% Foráneo
+                          </span>
+                        ) : (
+                          <span className="text-[10px] bg-emerald-500/10 text-emerald-500 font-bold px-1.5 py-0.2 rounded border border-emerald-500/20">
+                            Local Toluca
+                          </span>
+                        )}
+                      </div>
                       {isPriceModified && (
                         <button
                           type="button"
                           onClick={() => setBasePrice(defaultPackagePrice)}
                           className="text-[10px] text-primary hover:underline font-bold"
                         >
-                          Restablecer a catálogo
+                          Restablecer ({formatCurrencyMXN(defaultPackagePrice, false)})
                         </button>
                       )}
                     </div>
@@ -895,7 +940,19 @@ export function UnifiedEventQuoteForm({
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <Label className="text-xs font-semibold text-muted-foreground">Viáticos de Traslado</Label>
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs font-semibold text-muted-foreground">Viáticos de Traslado</Label>
+                      {(venueCity || clientCity) && (
+                        <button
+                          type="button"
+                          onClick={handleAutoCalculateViaticos}
+                          disabled={calculatingViaticos}
+                          className="text-[10px] text-primary hover:underline font-bold"
+                        >
+                          {calculatingViaticos ? "Calculando..." : "Calcular ruta"}
+                        </button>
+                      )}
+                    </div>
                     <CurrencyInput
                       value={viaticosAmount}
                       onChange={setViaticosAmount}
