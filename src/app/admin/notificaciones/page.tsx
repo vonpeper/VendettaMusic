@@ -355,6 +355,9 @@ En *Vendetta* ya estamos preparando todo para que la música sea perfecta. ¿Hay
                         </div>
                         <span className="text-[10px] text-muted-foreground italic">Cliente</span>
                       </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Se envía automáticamente al día siguiente del evento a partir de las <strong>9:00 AM hora México</strong> (en horario prudente, nunca de madrugada). Solo se envía una sola vez; si el cliente es repetido o ya tiene reseña registrada, no se le vuelve a molestar con la recomendación.
+                      </p>
                       <Textarea id="msgTemplateThanks" name="msgTemplateThanks" rows={6}
                         defaultValue={config?.msgTemplateThanks || `¡Hola {{clientName}}! 🎉 Todavía seguimos emocionados por lo de ayer.\n\nFue un honor ser parte de tu evento. Nos encantaría que nos regalas una reseña aquí para que más gente conozca la experiencia Vendetta:\n👉 *vendetta.mx/#testimoniales*\n\n¡Tu feedback es el motor de Vendetta! 🎸🤘`} 
                         className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />

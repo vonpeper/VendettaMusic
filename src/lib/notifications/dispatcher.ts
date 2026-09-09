@@ -62,6 +62,29 @@ export async function dispatchNotification({
       console.log(`⚠️ Prevented duplicate notification of type ${type} for booking ${bookingId} / event ${eventId} (Recipient: ${to})`)
       return existing.messageId || "already_sent"
     }
+
+    // Regla de Cliente Repetido: Para testimoniales (CLIENT_THANKS), si el cliente ya recibió la recomendación anteriormente, no molestar de nuevo
+    if (type === "CLIENT_THANKS") {
+      let targetPhone = to
+      if (!targetPhone && bookingId) {
+        const b = await db.bookingRequest.findUnique({ where: { id: bookingId }, select: { clientPhone: true } })
+        targetPhone = b?.clientPhone
+      }
+      const cleanPhoneSuffix = targetPhone?.replace(/\D+/g, "").slice(-10)
+      if (cleanPhoneSuffix && cleanPhoneSuffix.length >= 7) {
+        const pastThanks = await db.notification.findFirst({
+          where: {
+            type: "client_thanks",
+            status: "sent",
+            recipient: { contains: cleanPhoneSuffix }
+          }
+        })
+        if (pastThanks) {
+          console.log(`⚠️ [DISPATCHER] Omitiendo recomendación repetida para ${cleanPhoneSuffix}: el cliente ya recibió solicitud de reseña en el pasado (notif: ${pastThanks.id}).`)
+          return pastThanks.messageId || "already_sent_repeat_client"
+        }
+      }
+    }
   }
 
   const baseUrl = getAppUrl()

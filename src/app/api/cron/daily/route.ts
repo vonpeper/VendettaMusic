@@ -418,37 +418,162 @@ async function handleCron(request: Request) {
       }
     }
 
-    // 3.5. Post-Event Thanks (Eventos recientes concluidos en los últimos 3 días sin mensaje previo)
-    const recentEventsWindow = startOfDay(subDays(now, 3))
+    // 3.5. Post-Event Thanks y Testimoniales
+    // Reglas de negocio solicitadas:
+    // 1. Horario prudente: Solo enviar entre las 9:00 AM y las 21:00 PM hora México (nunca de madrugada).
+    // 2. Al día siguiente del evento: Solo eventos cuya fecha concluyó estrictamente antes de hoy (requestedDate < startOfTodayMX).
+    // 3. Una sola vez: No repetir si ya se envió para esta reserva o evento.
+    // 4. Cliente repetido: Si el cliente ya recibió la recomendación anteriormente (por teléfono, clientId o reseña existente), no se le vuelve a molestar.
     const msgThanksActive = config?.msgThanksActive ?? true
 
     if (msgThanksActive) {
-      const pastEvents = await db.bookingRequest.findMany({
-        where: {
-          status: { in: ["agendado", "completado"] },
-          requestedDate: {
-            gte: recentEventsWindow,
-            lte: endOfDay(now)
-          }
-        }
-      })
+      // Validar hora actual en México (America/Mexico_City)
+      const cdmxHour = parseInt(
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: "America/Mexico_City",
+          hour: "numeric",
+          hour12: false
+        }).format(now),
+        10
+      )
 
-      for (const booking of pastEvents) {
-        try {
-          const existingThanks = await db.notification.findFirst({
-            where: {
-              bookingRequestId: booking.id,
-              type: "client_thanks",
-              status: { in: ["sent", "successful"] }
+      const isPrudentHour = cdmxHour >= 9 && cdmxHour < 21
+
+      if (!isPrudentHour) {
+        console.log(`ℹ️ [CRON TESTIMONIALES] Fuera de horario prudente (hora actual CDMX: ${cdmxHour}:00 hrs). Las solicitudes de reseña solo se envían a partir de las 9:00 AM.`)
+      } else {
+        // Obtener la fecha de hoy en hora CDMX (UTC-6)
+        const cdmxTodayStr = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Mexico_City",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        }).format(now)
+        const startOfTodayMX = new Date(`${cdmxTodayStr}T00:00:00-06:00`)
+
+        // Ventana de búsqueda: Eventos concluidos estrictamente antes de hoy (al día siguiente)
+        // Máximo 4 días atrás para capturar eventos del fin de semana sin revivir eventos históricos
+        const windowStartMX = subDays(startOfTodayMX, 4)
+        const windowEndMX = new Date(startOfTodayMX.getTime() - 1) // 23:59:59.999 del día de ayer
+
+        const candidateBookings = await db.bookingRequest.findMany({
+          where: {
+            status: { in: ["agendado", "completado"] },
+            requestedDate: {
+              gte: windowStartMX,
+              lte: windowEndMX
             }
-          })
-
-          if (!existingThanks) {
-            await dispatchNotification({ type: "CLIENT_THANKS", bookingId: booking.id })
-            results.postEventThanks++
+          },
+          include: {
+            event: true
+          },
+          orderBy: {
+            requestedDate: "asc" // Procesar primero los más antiguos
           }
-        } catch (err: any) {
-          results.errors.push(`Error in post-event thanks for ${booking.id}: ${err.message}`)
+        })
+
+        const sentPhonesInThisRun = new Set<string>()
+        const sentClientIdsInThisRun = new Set<string>()
+
+        for (const booking of candidateBookings) {
+          try {
+            const cleanPhoneSuffix = booking.clientPhone?.replace(/\D+/g, "").slice(-10) || ""
+
+            // 1. Verificar si ya se envió para esta reserva o evento específico
+            const alreadySentForThisBooking = await db.notification.findFirst({
+              where: {
+                type: "client_thanks",
+                status: { in: ["sent", "successful"] },
+                OR: [
+                  { bookingRequestId: booking.id },
+                  ...(booking.eventId ? [{ eventId: booking.eventId }] : [])
+                ]
+              }
+            })
+
+            if (alreadySentForThisBooking) {
+              continue
+            }
+
+            // 2. Verificar cliente repetido en la misma ejecución (ej. multi-fechas de bares)
+            if (cleanPhoneSuffix && sentPhonesInThisRun.has(cleanPhoneSuffix)) {
+              console.log(`ℹ️ [CRON TESTIMONIALES] Omitiendo ${booking.clientName} (${booking.shortId}): cliente repetido en la misma ejecución.`)
+              continue
+            }
+            if (booking.clientId && sentClientIdsInThisRun.has(booking.clientId)) {
+              console.log(`ℹ️ [CRON TESTIMONIALES] Omitiendo ${booking.clientName} (${booking.shortId}): cliente repetido (clientId) en la misma ejecución.`)
+              continue
+            }
+
+            // 3. Regla de Cliente Repetido: Si ya se le envió en el pasado a su teléfono, no molestar con otra recomendación
+            if (cleanPhoneSuffix && cleanPhoneSuffix.length >= 7) {
+              const previousThanksToPhone = await db.notification.findFirst({
+                where: {
+                  type: "client_thanks",
+                  status: { in: ["sent", "successful"] },
+                  recipient: { contains: cleanPhoneSuffix }
+                }
+              })
+
+              if (previousThanksToPhone) {
+                console.log(`ℹ️ [CRON TESTIMONIALES] Omitiendo para ${booking.clientName} (${booking.shortId}): el cliente ya recibió recomendación testimonial previamente al teléfono ${cleanPhoneSuffix}.`)
+                continue
+              }
+            }
+
+            // 4. Regla de Cliente Repetido por perfil de cliente (clientId)
+            if (booking.clientId) {
+              const allBookingsForClient = await db.bookingRequest.findMany({
+                where: { clientId: booking.clientId },
+                select: { id: true }
+              })
+              const clientBookingIds = allBookingsForClient.map(b => b.id)
+
+              if (clientBookingIds.length > 0) {
+                const previousThanksToClient = await db.notification.findFirst({
+                  where: {
+                    type: "client_thanks",
+                    status: { in: ["sent", "successful"] },
+                    bookingRequestId: { in: clientBookingIds }
+                  }
+                })
+
+                if (previousThanksToClient) {
+                  console.log(`ℹ️ [CRON TESTIMONIALES] Omitiendo para ${booking.clientName} (${booking.shortId}): el cliente con perfil ${booking.clientId} ya recibió recomendación previamente.`)
+                  continue
+                }
+              }
+            }
+
+            // 5. Verificar si el cliente ya dejó una reseña registrada en el sitio
+            if (booking.clientName) {
+              const existingReview = await db.review.findFirst({
+                where: {
+                  name: { equals: booking.clientName.trim() }
+                }
+              })
+
+              if (existingReview) {
+                console.log(`ℹ️ [CRON TESTIMONIALES] Omitiendo para ${booking.clientName} (${booking.shortId}): el cliente ya tiene una reseña registrada en el sitio.`)
+                continue
+              }
+            }
+
+            // Cumple todas las condiciones: enviar el agradecimiento / testimonial
+            const msgId = await dispatchNotification({
+              type: "CLIENT_THANKS",
+              bookingId: booking.id,
+              eventId: booking.eventId || undefined
+            })
+
+            if (msgId) {
+              results.postEventThanks++
+              if (cleanPhoneSuffix) sentPhonesInThisRun.add(cleanPhoneSuffix)
+              if (booking.clientId) sentClientIdsInThisRun.add(booking.clientId)
+            }
+          } catch (err: any) {
+            results.errors.push(`Error in post-event thanks for ${booking.id}: ${err.message}`)
+          }
         }
       }
     }
