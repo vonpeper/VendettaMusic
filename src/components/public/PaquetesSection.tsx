@@ -128,7 +128,13 @@ const EVENT_MOTIVOS = [
   { value: "Otro", label: "🎶 Otro" },
 ]
 
-export function PaquetesSection({ dbPackages }: { dbPackages: PackageData[]; viaticosConfig?: any }) {
+interface PaquetesSectionProps {
+  dbPackages: PackageData[]
+  adminWhatsapp?: string | null
+  viaticosConfig?: any
+}
+
+export function PaquetesSection({ dbPackages, adminWhatsapp }: PaquetesSectionProps) {
 
   // Estado del modal de cotización
   const [selectedPkg, setSelectedPkg] = useState<PackageData | null>(null)
@@ -219,8 +225,19 @@ ${formData.email.trim() ? `📧 *Correo:* ${formData.email.trim()}\n` : ""}🎉 
 ${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim()}\n` : ""}
 ¿Tienen disponibilidad para esta fecha? ¡Muchas gracias!`
 
-    const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() || "5217227845667"
+    const rawNumber =
+      adminWhatsapp?.trim() ||
+      process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() ||
+      process.env.NEXT_PUBLIC_ADMIN_WA?.trim() ||
+      ""
     const cleanPhone = rawNumber.replace(/\D/g, "")
+    
+    if (!cleanPhone) {
+      toast.error("Número de WhatsApp de atención no disponible en este momento. Hemos registrado tus datos y te contactaremos a la brevedad.")
+      handleCloseModal()
+      return
+    }
+
     const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`
     
     toast.success("¡Abriendo WhatsApp con la información prellenada de tu evento!")
