@@ -434,7 +434,7 @@ export function PremiumClientQuoteView({
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Repertorio en vivo:</strong> Clásicos del rock y pop en inglés y español (Queen, Journey, Soda Stereo, Bon Jovi, Caifanes, The Killers y más).</span>
+                  <span><strong>Repertorio en vivo:</strong> Rock y pop en inglés y español.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
