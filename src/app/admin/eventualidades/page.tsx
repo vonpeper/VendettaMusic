@@ -68,8 +68,13 @@ export default async function EventualidadesPage() {
   // 🛡️ SERIALIZACIÓN SEGURA: Convertir a POJOs puros para evitar errores de hidratación/Turbopack con objetos Date
   const allEvents = JSON.parse(JSON.stringify(allEventsRaw))
 
-  // Calcular anticipos bancarios reales (agendados/confirmados, sin importar la fecha, hasta que pasen a completado)
-  const upcomingRealEvents = newEvents.filter(e => e.status === "agendado" || e.status === "confirmed")
+  // Calcular anticipos bancarios reales (agendados/confirmados de eventos próximos que aún no suceden, hasta que pasen a completado)
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const upcomingRealEvents = newEvents.filter(e => {
+    if (e.status !== "agendado" && e.status !== "confirmed") return false
+    return new Date(e.date) >= startOfToday
+  })
   const currentAnticipos = upcomingRealEvents.reduce((acc, e) => acc + (e.deposit || 0), 0)
 
   const anticiposList = upcomingRealEvents

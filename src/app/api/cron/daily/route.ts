@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       musicianReminders: 0,
       weekendReminders: 0,
       postEventThanks: 0,
+      autoCompletedEvents: 0,
       errors: [] as string[]
     }
 
@@ -445,6 +446,31 @@ export async function POST(request: Request) {
       }
     }
 
+    // 3.6. Auto-completar eventos concluidos cuya fecha ya concluyó (ayer o antes)
+    const yesterdayEnd = endOfDay(subDays(now, 1))
+    const pastAgendados = await db.event.findMany({
+      where: {
+        status: { in: ["agendado", "confirmed"] },
+        date: { lte: yesterdayEnd }
+      }
+    })
+
+    for (const evt of pastAgendados) {
+      try {
+        await db.event.update({
+          where: { id: evt.id },
+          data: { status: "completado", balance: 0 }
+        })
+        await db.bookingRequest.updateMany({
+          where: { eventId: evt.id, status: { in: ["agendado", "confirmed"] } },
+          data: { status: "completado", paymentStatus: "paid" }
+        })
+        results.autoCompletedEvents++
+      } catch (err: any) {
+        results.errors.push(`Error auto-completing event ${evt.id}: ${err.message}`)
+      }
+    }
+
     // 4. Retry Failed Notifications
     const failedNotifications = await db.notification.findMany({
       where: {
@@ -580,7 +606,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       results,
-      message: `Procesados: ${results.followups5Days} seguimientos (5d), ${results.followups10Days} seguimientos (10d), ${results.vipReminders} recordatorios VIP, ${results.musicianReminders} recordatorios de músicos hoy, ${results.postEventThanks} agradecimientos post-evento, ${retriesCount} reintentos exitosos.`
+      message: `Procesados: ${results.followups5Days} seguimientos (5d), ${results.followups10Days} seguimientos (10d), ${results.vipReminders} recordatorios VIP, ${results.musicianReminders} recordatorios de músicos hoy, ${results.postEventThanks} agradecimientos post-evento, ${results.autoCompletedEvents} eventos concluidos auto-completados, ${retriesCount} reintentos exitosos.`
     })
     
   } catch (error: any) {

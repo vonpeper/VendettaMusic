@@ -20,12 +20,16 @@ export async function markBookingAsCompleted(bookingId: string) {
     if (br?.eventId) {
       await db.event.updateMany({
         where: { id: br.eventId },
-        data: { status: "completado" }
+        data: { 
+          status: "completado",
+          balance: 0
+        }
       })
     }
 
     revalidatePath("/admin/ventas")
     revalidatePath("/admin/eventos")
+    revalidatePath("/admin/eventualidades")
     revalidatePath("/admin")
     revalidatePath("/agenda")
     return { success: true }
@@ -84,7 +88,10 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
         if (linkedEvent) {
           await db.event.update({
             where: { id: linkedEvent.id },
-            data: { status: newStatus }
+            data: { 
+              status: newStatus,
+              ...(newStatus === "completado" ? { balance: 0 } : {})
+            }
           })
 
           if (newStatus === "cancelado") {
@@ -101,6 +108,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
         revalidatePath(`/admin/ventas/${trimmedId}`)
         revalidatePath("/admin/ventas/[id]", "page")
         revalidatePath("/admin/eventos")
+        revalidatePath("/admin/eventualidades")
         revalidatePath("/admin")
         revalidatePath("/agenda")
 
@@ -325,7 +333,10 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
       if (newStatus !== "agendado") {
         await db.event.updateMany({
           where: { id: br.eventId },
-          data: { status: newStatus }
+          data: { 
+            status: newStatus,
+            ...(newStatus === "completado" ? { balance: 0 } : {})
+          }
         })
       }
 
@@ -361,6 +372,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
     }
     revalidatePath("/admin/ventas/[id]", "page")
     revalidatePath("/admin/eventos")
+    revalidatePath("/admin/eventualidades")
     revalidatePath("/admin")
     revalidatePath("/agenda")
 
