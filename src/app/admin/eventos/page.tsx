@@ -53,9 +53,9 @@ export default async function AdminEventosPage() {
 
   const clientsMapped = clients.map(c => ({
     id: c.id,
-    name: c.user.name ?? c.user.email ?? "Sin nombre",
+    name: c.user?.name ?? c.user?.email ?? "Sin nombre",
     phone: c.whatsapp || null,
-    email: c.user.email || null,
+    email: c.user?.email || null,
     city: c.city || null
   }))
   
@@ -65,11 +65,11 @@ export default async function AdminEventosPage() {
       p.instrument?.toLowerCase().includes("ingeniero") || 
       p.instrument?.toLowerCase().includes("staff")
     )
-    .map(p => ({ id: p.id, name: p.user.name ?? "Sin nombre" }))
+    .map(p => ({ id: p.id, name: p.user?.name ?? "Sin nombre" }))
 
   const allMusiciansMapped = musicianProfiles.map(p => ({ 
     id: p.id, 
-    name: p.user.name ?? "Sin nombre",
+    name: p.user?.name ?? "Sin nombre",
     instrument: p.instrument || "Músico",
     isTitular: p.isTitular
   }))

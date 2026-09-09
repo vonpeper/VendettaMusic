@@ -36,14 +36,16 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
   const router = useRouter()
   const now = new Date()
 
-  const filteredEvents = events.filter((evt: any) => {
+  const filteredEvents = (events || []).filter((evt: any) => {
+    if (!evt) return false
     const eventDate = new Date(evt.date)
+    const isValidDate = !isNaN(eventDate.getTime())
     
     // Status Filter
     if (activeTab !== "todos" && evt.status !== activeTab) return false
     
     // Month Filter
-    if (showCurrentMonth) {
+    if (showCurrentMonth && isValidDate) {
       const isCurrentMonth = eventDate.getUTCMonth() === now.getMonth() && 
                             eventDate.getUTCFullYear() === now.getFullYear()
       if (!isCurrentMonth) return false
@@ -126,8 +128,12 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                 </TableRow>
               ) : filteredEvents.map((evt: any) => {
                 const eventDate = new Date(evt.date)
-                const isCurrentMonth = eventDate.getUTCMonth() === now.getMonth() && 
+                const isValidDate = !isNaN(eventDate.getTime())
+                const isCurrentMonth = isValidDate && 
+                                      eventDate.getUTCMonth() === now.getMonth() && 
                                       eventDate.getUTCFullYear() === now.getFullYear()
+                const monthShort = isValidDate ? eventDate.toLocaleString("es-MX", { month: "short", timeZone: "UTC" }) : "---"
+                const dayNum = isValidDate ? eventDate.getUTCDate() : "--"
                 
                 return (
                   <TableRow key={evt.id} className="flex flex-col md:table-row bg-card md:bg-transparent border border-border/40 md:border-b md:border-t-0 md:border-x-0 rounded-2xl md:rounded-none mb-6 md:mb-0 align-top hover:bg-blue-600/5 transition-colors relative shadow-sm md:shadow-none overflow-hidden">
@@ -137,8 +143,8 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                         {/* Cabecera del Evento */}
                         <div className="p-5 flex items-start gap-4">
                           <div className={`w-14 h-14 rounded-2xl flex flex-col justify-center items-center shadow-sm shrink-0 ${isCurrentMonth ? "bg-blue-600 text-white shadow-blue-600/20" : "bg-muted/50 border border-border/50 text-foreground"}`}>
-                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">{eventDate.toLocaleString("es-MX", { month: "short", timeZone: "UTC" })}</span>
-                            <span className="text-xl font-black mt-0.5">{eventDate.getUTCDate()}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">{monthShort}</span>
+                            <span className="text-xl font-black mt-0.5">{dayNum}</span>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-black text-foreground text-lg leading-tight truncate">
@@ -226,9 +232,9 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                         isCurrentMonth ? "bg-blue-600 text-white ring-2 ring-blue-600/20" : "bg-card border border-border text-foreground"
                       }`}>
                         <span className="text-[10px] font-bold uppercase leading-none tracking-wider">
-                          {eventDate.toLocaleString("es-MX", { month: "short", timeZone: "UTC" })}
+                          {monthShort}
                         </span>
-                        <span className="text-xl font-black leading-none mt-1">{eventDate.getUTCDate()}</span>
+                        <span className="text-xl font-black leading-none mt-1">{dayNum}</span>
                       </div>
                     </TableCell>
 
