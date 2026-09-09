@@ -37,6 +37,7 @@ import { MusicianStatusList } from "@/components/admin/MusicianStatusList"
 import { EditEventoButton } from "@/components/admin/EventActions"
 import { EditDepositInline } from "@/components/admin/EditDepositInline"
 import { CancelBookingButton } from "@/components/admin/CancelBookingButton"
+import { NotifyAccountantButton } from "@/components/admin/NotifyAccountantButton"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 
@@ -297,6 +298,16 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 <FileText className="w-4 h-4" />
               </a>
             </Button>
+
+            {/* Solicitar Factura al Contador (Rodo) */}
+            <NotifyAccountantButton
+              eventId={booking.event?.id || booking.id}
+              clientName={finalClientName}
+              baseAmount={Number(booking.baseAmount || 0)}
+              venueOrTitle={booking.venueType || booking.event?.location?.name || booking.event?.customName || "Show Vendetta"}
+              variant="icon"
+              className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-amber-600/10 border border-amber-600/20 text-amber-500 hover:bg-amber-600/20 transition-all cursor-pointer p-0"
+            />
 
             {/* Cancelar/Eliminar Solicitud (Trash Icon) */}
             <CancelBookingButton
@@ -559,6 +570,13 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                         <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Estado Actual:</div>
                         <div className={`text-sm font-black uppercase ${badgeColor}`}>{badgeLabel}</div>
                       </div>
+                      <NotifyAccountantButton
+                        eventId={booking.event?.id || booking.id}
+                        clientName={finalClientName}
+                        baseAmount={base}
+                        venueOrTitle={booking.venueType || booking.event?.location?.name || booking.event?.customName || "Show Vendetta"}
+                        variant="button"
+                      />
                     </div>
 
                     {booking.paymentRef && (

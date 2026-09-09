@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
-import { confirmAttendanceAction, rejectAttendanceAction } from "@/actions/confirmations"
 import { Button } from "@/components/ui/button"
+import { AttendanceConfirmButtons } from "@/components/musicians/AttendanceConfirmButtons"
 import { CheckCircle2, Calendar, MapPin, Clock } from "lucide-react"
 import Link from "next/link"
 import { Metadata } from "next"
@@ -62,10 +62,8 @@ export default async function ConfirmationPage({
 }) {
   const { musicianId, eventId } = await params
   const { success: successParam, rejected: rejectedParam, token } = await searchParams
-  const success = successParam === "true"
-  const rejected = rejectedParam === "true"
 
-  const [musician, event] = await Promise.all([
+  const [musician, event, existingAssignment] = await Promise.all([
     db.musicianProfile.findUnique({
       where: { id: musicianId },
       include: { user: true },
@@ -74,7 +72,13 @@ export default async function ConfirmationPage({
       where: { id: eventId },
       include: { location: true },
     }),
+    db.eventMusician.findFirst({
+      where: { eventId, musicianId }
+    })
   ])
+
+  const showSuccess = successParam === "true" || existingAssignment?.status === "confirmed"
+  const showRejected = rejectedParam === "true" || existingAssignment?.status === "rejected"
 
   if (!musician || !event) {
     return (
@@ -87,7 +91,7 @@ export default async function ConfirmationPage({
     )
   }
 
-  if (success) {
+  if (showSuccess) {
     // ... (existing success view)
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
@@ -131,7 +135,7 @@ export default async function ConfirmationPage({
     )
   }
 
-  if (rejected) {
+  if (showRejected) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-card border border-red-500/30 rounded-3xl p-8 text-center shadow-2xl">
@@ -200,25 +204,7 @@ export default async function ConfirmationPage({
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          <form action={async () => {
-            "use server"
-            await confirmAttendanceAction(musicianId, eventId, token)
-          }}>
-            <Button type="submit" className="w-full h-14 text-lg font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform cursor-pointer">
-              ✅ SÍ, CONFIRMO
-            </Button>
-          </form>
-          
-          <form action={async () => {
-            "use server"
-            await rejectAttendanceAction(musicianId, eventId, token)
-          }}>
-            <Button type="submit" variant="outline" className="w-full h-12 text-sm font-bold rounded-xl border-red-500/30 text-red-400 hover:bg-red-500/10 cursor-pointer">
-              ❌ NO PUEDO IR
-            </Button>
-          </form>
-        </div>
+        <AttendanceConfirmButtons musicianId={musicianId} eventId={eventId} token={token} />
         
         <p className="text-[10px] text-muted-foreground text-center mt-6 uppercase tracking-widest">
           Vendetta Operational Dashboard

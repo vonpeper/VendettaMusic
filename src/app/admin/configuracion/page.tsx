@@ -140,6 +140,12 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                       placeholder="5217221234567 (E.164 sin +)" className="bg-card border-border/40" />
                     <p className="text-[10px] text-muted-foreground">Recibe avisos cuando un cliente confirma un evento desde el funnel.</p>
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="accountantWhatsapp">WhatsApp del Contador (Rodo)</Label>
+                    <Input id="accountantWhatsapp" name="accountantWhatsapp" defaultValue={config?.accountantWhatsapp || ""}
+                      placeholder="5217221234567 (E.164 sin + o 10 dígitos)" className="bg-card border-border/40" />
+                    <p className="text-[10px] text-muted-foreground">Recibe solicitudes automáticas de facturación con el concepto Happening.</p>
+                  </div>
                   <Button type="submit" className="w-full bg-green-600 hover:bg-green-500 font-bold mt-2 text-white">
                     Guardar Configuración WhatsApp
                   </Button>

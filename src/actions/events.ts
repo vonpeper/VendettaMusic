@@ -1112,40 +1112,94 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
         return { id: val.targetId, bookingId, eventId }
       } else {
         // D. Modo Creación: Delegar al servicio de dominio canónico
-        return await createUnifiedQuote(tx, {
-          clientId: finalClientId,
-          clientName: val.clientName,
-          clientPhone: val.clientPhone,
-          clientEmail: val.clientEmail,
-          clientCity: val.clientCity,
-          customName: val.customName,
-          ceremonyType: val.ceremonyType,
-          eventDate: val.eventDate,
-          startTime: val.startTime,
-          endTime: val.endTime,
-          arrivalTime: val.arrivalTime,
-          setupTime: val.setupTime,
-          guestCount: val.guestCount,
-          dressCode: val.dressCode,
-          status: val.status,
-          musicianNotes: val.musicianNotes,
-          audioEngineer: val.audioEngineer,
-          locationId: finalLocationId,
-          venueName: val.venueName,
-          venueAddress: val.venueAddress,
-          venueCity: val.venueCity,
-          venueState: val.venueState,
-          mapsLink: val.mapsLink,
-          packageId: val.packageId,
-          packageName: val.packageName,
-          basePrice: val.basePrice,
-          viaticosAmount: val.viaticosAmount,
-          discountAmount: val.discountAmount,
-          additionalItems: val.additionalItems,
-          invoice: val.invoice,
-          depositAmount: val.depositAmount,
-          originInquiryId: val.originInquiryId,
-        })
+        const datesToCreate = [
+          val.eventDate,
+          ...(val.additionalDates || [])
+        ].filter((d, idx, arr) => d && arr.indexOf(d) === idx)
+
+        if (datesToCreate.length === 1) {
+          return await createUnifiedQuote(tx, {
+            clientId: finalClientId,
+            clientName: val.clientName,
+            clientPhone: val.clientPhone,
+            clientEmail: val.clientEmail,
+            clientCity: val.clientCity,
+            customName: val.customName,
+            ceremonyType: val.ceremonyType,
+            eventDate: val.eventDate,
+            startTime: val.startTime,
+            endTime: val.endTime,
+            arrivalTime: val.arrivalTime,
+            setupTime: val.setupTime,
+            guestCount: val.guestCount,
+            dressCode: val.dressCode,
+            status: val.status,
+            musicianNotes: val.musicianNotes,
+            audioEngineer: val.audioEngineer,
+            locationId: finalLocationId,
+            venueName: val.venueName,
+            venueAddress: val.venueAddress,
+            venueCity: val.venueCity,
+            venueState: val.venueState,
+            mapsLink: val.mapsLink,
+            packageId: val.packageId,
+            packageName: val.packageName,
+            basePrice: val.basePrice,
+            viaticosAmount: val.viaticosAmount,
+            discountAmount: val.discountAmount,
+            additionalItems: val.additionalItems,
+            invoice: val.invoice,
+            depositAmount: val.depositAmount,
+            originInquiryId: val.originInquiryId,
+          })
+        }
+
+        // Si se especificaron múltiples fechas (ej. temporada de bares)
+        const createdResults = []
+        for (let i = 0; i < datesToCreate.length; i++) {
+          const d = datesToCreate[i]
+          const quoteResult = await createUnifiedQuote(tx, {
+            clientId: finalClientId,
+            clientName: val.clientName,
+            clientPhone: val.clientPhone,
+            clientEmail: val.clientEmail,
+            clientCity: val.clientCity,
+            customName: val.customName,
+            ceremonyType: val.ceremonyType,
+            eventDate: d,
+            startTime: val.startTime,
+            endTime: val.endTime,
+            arrivalTime: val.arrivalTime,
+            setupTime: val.setupTime,
+            guestCount: val.guestCount,
+            dressCode: val.dressCode,
+            status: val.status,
+            musicianNotes: val.musicianNotes,
+            audioEngineer: val.audioEngineer,
+            locationId: finalLocationId,
+            venueName: val.venueName,
+            venueAddress: val.venueAddress,
+            venueCity: val.venueCity,
+            venueState: val.venueState,
+            mapsLink: val.mapsLink,
+            packageId: val.packageId,
+            packageName: val.packageName,
+            basePrice: val.basePrice,
+            viaticosAmount: val.viaticosAmount,
+            discountAmount: val.discountAmount,
+            additionalItems: val.additionalItems,
+            invoice: val.invoice,
+            depositAmount: val.depositAmount,
+            originInquiryId: i === 0 ? val.originInquiryId : null,
+          })
+          createdResults.push(quoteResult)
+        }
+
+        return {
+          ...createdResults[0],
+          createdCount: createdResults.length,
+          allDates: datesToCreate,
+        }
       }
     })
 

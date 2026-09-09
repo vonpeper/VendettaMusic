@@ -12,6 +12,7 @@ export const saveUnifiedEventQuoteSchema = z.object({
   customName: z.string().nullable().optional(),
   ceremonyType: z.string().nullable().optional(),
   eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida (YYYY-MM-DD)"),
+  additionalDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida (YYYY-MM-DD)")).default([]),
   startTime: z.string().nullable().optional(),
   endTime: z.string().nullable().optional(),
   arrivalTime: z.string().nullable().optional(),
