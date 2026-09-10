@@ -41,8 +41,9 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
     const eventDate = new Date(evt.date)
     const isValidDate = !isNaN(eventDate.getTime())
     
-    // Status Filter
-    if (activeTab !== "todos" && evt.status !== activeTab) return false
+    // Status Filter (normaliza "scheduled" a "agendado")
+    const normStatus = evt.status === "scheduled" ? "agendado" : evt.status
+    if (activeTab !== "todos" && normStatus !== activeTab) return false
     
     // Month Filter
     if (showCurrentMonth && isValidDate) {
@@ -170,6 +171,11 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                                   <span className="truncate">{evt.package.name}</span>
                                 </div>
                               )}
+                              {evt.isPublic && (
+                                <div className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1 w-fit mt-1">
+                                  🌐 Show Público
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -268,6 +274,11 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                         {!!evt.dressCode && (
                           <div className="text-[10px] text-muted-foreground bg-muted/30 px-2 py-0.5 rounded border border-border/20">
                             {DRESS_LABELS[evt.dressCode] ?? evt.dressCode}
+                          </div>
+                        )}
+                        {evt.isPublic && (
+                          <div className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded border inline-flex items-center gap-1">
+                            🌐 Show Público
                           </div>
                         )}
                       </div>

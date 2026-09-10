@@ -281,6 +281,7 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Servicios Producti
       clientName: "Cliente Test",
       clientPhone: "5512345678",
       clientEmail: "test@demo.com",
+      customName: "Boda Hacienda Cantalagua",
       venueName: "Hacienda Cantalagua",
       venueAddress: "Carretera México-Guadalajara Km 129",
       venueCity: "Contepec",
@@ -297,7 +298,17 @@ describe("Validación Exhaustiva de las 16 Reglas de Negocio (Servicios Producti
       assert.notEqual(parsed.data.venueName, parsed.data.venueAddress)
       assert.equal(parsed.data.venueName, "Hacienda Cantalagua")
       assert.equal(parsed.data.venueAddress, "Carretera México-Guadalajara Km 129")
+      assert.equal(parsed.data.customName, "Boda Hacienda Cantalagua")
     }
+
+    // Comprobar que customName es estrictamente obligatorio (no permite vacío ni ausente)
+    const invalidWithoutName = saveUnifiedEventQuoteSchema.safeParse({
+      clientName: "Cliente Test",
+      eventDate: "2026-12-01",
+      basePrice: 15000,
+      status: "pendiente"
+    })
+    assert.equal(invalidWithoutName.success, false)
   })
 
   // 10. Anticipo negativo es rechazado

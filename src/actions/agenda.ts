@@ -75,7 +75,7 @@ export async function getAgendaEventsAction(): Promise<AgendaEvent[]> {
         date: dateKey,
         dateTimeISO: e.date.toISOString(),
         title,
-        status: e.status || "agendado",
+        status: e.status === "scheduled" ? "agendado" : (e.status || "agendado"),
         startTime: start,
         endTime: end,
         arrivalTime: e.arrivalTime,

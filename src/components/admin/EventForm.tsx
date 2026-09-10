@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
+import { useRouter } from "next/navigation"
 import { UnifiedEventQuoteForm, PackageOption, StaffOption } from "@/components/admin/UnifiedEventQuoteForm"
 import { ClientData } from "@/components/admin/crm/ClientCombobox"
 import { VenueData } from "@/components/admin/crm/VenueCombobox"
@@ -28,6 +29,7 @@ export function EventForm({
   allMusicians = [],
   initialData
 }: EventFormProps) {
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
     setMounted(true)
@@ -81,7 +83,10 @@ export function EventForm({
           venues={formattedVenues}
           packages={packages}
           staff={staff}
-          onSuccess={onClose}
+          onSuccess={() => {
+            onClose()
+            router.refresh()
+          }}
           onCancel={onClose}
         />
       </div>

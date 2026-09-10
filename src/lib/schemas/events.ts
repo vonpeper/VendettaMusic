@@ -9,7 +9,8 @@ export const saveUnifiedEventQuoteSchema = z.object({
   clientEmail: z.string().email("Correo electrónico inválido").nullable().optional().or(z.literal("")),
   clientCity: z.string().nullable().optional(),
 
-  customName: z.string().nullable().optional(),
+  customName: z.string().trim().min(2, "El nombre o motivo del show es obligatorio (ej. Boda, XV Años, Vizzio Metepec, Terraza 609)").max(150),
+  isPublic: z.boolean().default(false),
   ceremonyType: z.string().nullable().optional(),
   eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida (YYYY-MM-DD)"),
   additionalDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida (YYYY-MM-DD)")).default([]),

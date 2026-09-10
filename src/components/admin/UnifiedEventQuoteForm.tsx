@@ -14,6 +14,7 @@ import { FinancialSummary } from "@/components/admin/crm/FinancialSummary"
 import { calculateQuoteTotals, calculateShowBasePrice, formatCurrencyMXN, AdditionalLineItem } from "@/lib/pricing"
 import { isLocalCity } from "@/lib/viaticos"
 import { saveUnifiedEventQuoteAction } from "@/actions/events"
+import { Toggle } from "@/components/ui/Toggle"
 import { toast } from "sonner"
 import { 
   Calendar, 
@@ -118,6 +119,13 @@ export function UnifiedEventQuoteForm({
   const [customName, setCustomName] = useState<string>(
     initialData?.customName || ""
   )
+  const [isPublic, setIsPublic] = useState<boolean>(() => {
+    if (initialData?.isPublic !== undefined && initialData?.isPublic !== null) {
+      return Boolean(initialData.isPublic)
+    }
+    const cType = initialData?.ceremonyType || ""
+    return cType === "bar" || cType === "festival"
+  })
   const [ceremonyType, setCeremonyType] = useState<string>(
     initialData?.ceremonyType || ""
   )
@@ -259,6 +267,7 @@ export function UnifiedEventQuoteForm({
           if (saved.clientCity) setClientCity(saved.clientCity)
           if (saved.selectedClientId) setSelectedClientId(saved.selectedClientId)
           if (saved.customName) setCustomName(saved.customName)
+          if (saved.isPublic !== undefined) setIsPublic(Boolean(saved.isPublic))
           if (saved.ceremonyType) setCeremonyType(saved.ceremonyType)
           if (saved.eventDate) setEventDate(saved.eventDate)
           if (saved.startTime) setStartTime(saved.startTime)
@@ -285,7 +294,7 @@ export function UnifiedEventQuoteForm({
     if (typeof window === "undefined" || !clientName) return
     const draft = {
       selectedClientId, clientName, clientPhone, clientEmail, clientCity,
-      customName, ceremonyType, eventDate, startTime, endTime, arrivalTime, setupTime,
+      customName, isPublic, ceremonyType, eventDate, startTime, endTime, arrivalTime, setupTime,
       guestCount, dressCode, status, musicianNotes, audioEngineer,
       selectedVenueId, venueName, venueAddress, venueCity, venueState, mapsLink,
       packageId, basePrice, viaticosAmount, discountAmount, invoice, depositAmount,
@@ -296,7 +305,7 @@ export function UnifiedEventQuoteForm({
     } catch {}
   }, [
     draftKey, selectedClientId, clientName, clientPhone, clientEmail, clientCity,
-    customName, ceremonyType, eventDate, startTime, endTime, arrivalTime, setupTime,
+    customName, isPublic, ceremonyType, eventDate, startTime, endTime, arrivalTime, setupTime,
     guestCount, dressCode, status, musicianNotes, audioEngineer,
     selectedVenueId, venueName, venueAddress, venueCity, venueState, mapsLink,
     packageId, basePrice, viaticosAmount, discountAmount, invoice, depositAmount,
@@ -411,6 +420,18 @@ export function UnifiedEventQuoteForm({
     setAdditionalDates(additionalDates.filter(d => d !== dateToRemove))
   }
 
+  function handleGoToVenueStep() {
+    if (!customName.trim()) {
+      toast.error("El nombre o motivo del show es obligatorio (ej. Boda, XV Años, Vizzio Metepec, Terraza 609)")
+      return
+    }
+    if (!eventDate) {
+      toast.error("Por favor selecciona una fecha válida para el evento")
+      return
+    }
+    setActiveStep(3)
+  }
+
   // Submit Handler
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -418,6 +439,12 @@ export function UnifiedEventQuoteForm({
     if (!clientName.trim()) {
       toast.error("Por favor ingresa o selecciona el titular del evento")
       setActiveStep(1)
+      return
+    }
+
+    if (!customName.trim()) {
+      toast.error("El nombre o motivo del show es obligatorio (ej. Boda, XV Años, Vizzio Metepec, Terraza 609)")
+      setActiveStep(2)
       return
     }
 
@@ -454,7 +481,8 @@ export function UnifiedEventQuoteForm({
           clientEmail: clientEmail.trim().toLowerCase() || null,
           clientCity: clientCity.trim() || null,
           
-          customName: customName.trim() || null,
+          customName: customName.trim(),
+          isPublic,
           ceremonyType: ceremonyType || null,
           eventDate,
           additionalDates: mode === "create" ? additionalDates : [],
@@ -514,14 +542,13 @@ export function UnifiedEventQuoteForm({
               : "Evento / Cotización creada exitosamente"
           )
           const targetBookingId = "bookingId" in res ? res.bookingId : undefined
+          router.refresh()
           if (onSuccess) {
             onSuccess()
           } else if (targetBookingId) {
             router.push(`/admin/ventas/${targetBookingId}`)
-            router.refresh()
           } else {
             router.push("/admin/ventas")
-            router.refresh()
           }
         } else {
           toast.error(res?.error || "Ocurrió un error al guardar el registro")
@@ -671,19 +698,33 @@ export function UnifiedEventQuoteForm({
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-xs font-semibold text-muted-foreground">Nombre / Motivo del Show *</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      Nombre / Motivo del Show <span className="text-red-500 font-bold">*</span>
+                    </Label>
                     <Input
                       value={customName}
                       onChange={e => setCustomName(e.target.value)}
-                      placeholder="ej. Boda Mariana & Carlos"
-                      className="mt-1"
+                      placeholder="ej. Boda Mariana & Carlos, Vizzio Metepec, Terraza 609"
+                      required
+                      className={`mt-1 ${!customName.trim() ? "border-amber-500/60 focus:border-amber-500" : ""}`}
                     />
+                    {!customName.trim() && (
+                      <p className="text-[11px] text-amber-500 font-medium mt-1">
+                        Obligatorio. Especifica el nombre o motivo para no registrar eventos genéricos.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label className="text-xs font-semibold text-muted-foreground">Tipo de Celebración</Label>
                     <select
                       value={ceremonyType}
-                      onChange={e => setCeremonyType(e.target.value)}
+                      onChange={e => {
+                        const val = e.target.value
+                        setCeremonyType(val)
+                        if (val === "bar" || val === "festival") {
+                          setIsPublic(true)
+                        }
+                      }}
                       className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
                       {CEREMONY_TYPES.map(t => (
@@ -691,6 +732,35 @@ export function UnifiedEventQuoteForm({
                       ))}
                     </select>
                   </div>
+                </div>
+
+                {/* Switch Show Público / Agenda */}
+                <div className="p-4 rounded-2xl border border-border/80 bg-muted/30 flex items-center justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <Label htmlFor="isPublicSwitch" className="text-sm font-bold text-foreground cursor-pointer">
+                        Publicar en Agenda (Show Público / Cartelera)
+                      </Label>
+                      {isPublic ? (
+                        <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                          Visible en Web y Agenda
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold bg-muted text-muted-foreground border border-border px-2.5 py-0.5 rounded-full">
+                          Evento Privado
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Actívalo para shows en bares, festivales o conciertos abiertos. Si está desactivado, el evento se mantendrá privado (bodas, XV años, corporativos).
+                    </p>
+                  </div>
+                  <Toggle
+                    id="isPublicSwitch"
+                    checked={isPublic}
+                    onChange={(e) => setIsPublic(e.target.checked)}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -875,7 +945,7 @@ export function UnifiedEventQuoteForm({
                   <Button type="button" variant="outline" onClick={() => setActiveStep(1)} className="gap-2 cursor-pointer">
                     <ArrowLeft className="w-4 h-4" /> Anterior
                   </Button>
-                  <Button type="button" onClick={() => setActiveStep(3)} className="gap-2 cursor-pointer font-bold">
+                  <Button type="button" onClick={handleGoToVenueStep} className="gap-2 cursor-pointer font-bold">
                     Siguiente: Venue <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>

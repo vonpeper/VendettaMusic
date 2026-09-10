@@ -9,7 +9,7 @@ export async function UpcomingGigs() {
   const futureEvents = await db.event.findMany({
     where: {
       date: { gte: now },
-      status: { in: ["agendado"] }
+      status: { in: ["agendado", "scheduled", "confirmed"] }
     },
     orderBy: { date: "asc" },
     take: 10,

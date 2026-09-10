@@ -995,7 +995,8 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               clientPhone: val.clientPhone || "",
               clientEmail: val.clientEmail || null,
               clientId: finalClientId || null,
-              customName: val.customName || null,
+              customName: val.customName.trim(),
+              isPublic: Boolean(val.isPublic),
               ceremonyType: val.ceremonyType || "boda",
               requestedDate: dateObj,
               startTime: val.startTime || "21:00",
@@ -1046,7 +1047,8 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
           await tx.event.update({
             where: { id: eventId },
             data: {
-              customName: val.customName || `Evento ${val.clientName}`,
+              customName: val.customName.trim(),
+              isPublic: Boolean(val.isPublic),
               ceremonyType: val.ceremonyType || "boda",
               date: dateObj,
               startTime: val.startTime || "21:00",
@@ -1067,7 +1069,7 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               ivaAmount: totals.ivaAmount,
               totalWithTax: totals.totalAmount,
               invoice: Boolean(val.invoice),
-              status: val.status === "completado" ? "completado" : val.status === "cancelado" ? "cancelado" : "scheduled",
+              status: val.status === "completado" ? "completado" : val.status === "cancelado" ? "cancelado" : "agendado",
               mapsLink: val.mapsLink || null
             }
           })
@@ -1075,7 +1077,8 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
           // Crear el Event por primera vez al pasar de pendiente a agendado
           const createdEvt = await tx.event.create({
             data: {
-              customName: val.customName || `Evento ${val.clientName}`,
+              customName: val.customName.trim(),
+              isPublic: Boolean(val.isPublic),
               ceremonyType: val.ceremonyType || "boda",
               date: dateObj,
               startTime: val.startTime || "21:00",
@@ -1097,7 +1100,7 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               totalWithTax: totals.totalAmount,
               totalIncome: 0,
               invoice: Boolean(val.invoice),
-              status: val.status === "completado" ? "completado" : "scheduled",
+              status: val.status === "completado" ? "completado" : "agendado",
               mapsLink: val.mapsLink || null,
               source: "admin"
             }
@@ -1125,6 +1128,7 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
             clientEmail: val.clientEmail,
             clientCity: val.clientCity,
             customName: val.customName,
+            isPublic: Boolean(val.isPublic),
             ceremonyType: val.ceremonyType,
             eventDate: val.eventDate,
             startTime: val.startTime,
@@ -1165,6 +1169,7 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
             clientEmail: val.clientEmail,
             clientCity: val.clientCity,
             customName: val.customName,
+            isPublic: Boolean(val.isPublic),
             ceremonyType: val.ceremonyType,
             eventDate: d,
             startTime: val.startTime,
@@ -1206,6 +1211,8 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/ventas")
     revalidatePath("/agenda")
+    revalidatePath("/fechas")
+    revalidatePath("/")
 
     return { success: true, ...result }
   } catch (err: unknown) {

@@ -12,6 +12,7 @@ export interface CreateQuoteInput {
   clientCity?: string | null
 
   customName?: string | null
+  isPublic?: boolean
   ceremonyType?: string | null
   eventDate: string // YYYY-MM-DD
   startTime?: string | null
@@ -140,7 +141,8 @@ export async function createUnifiedQuote(
         totalWithTax: totals.totalAmount,
         totalIncome: 0,
         invoice: Boolean(input.invoice),
-        status: quoteStatus === "completado" ? "completado" : "scheduled",
+        isPublic: Boolean(input.isPublic),
+        status: quoteStatus === "completado" ? "completado" : "agendado",
         mapsLink: input.mapsLink || null,
         source: "admin"
       }
@@ -175,6 +177,7 @@ export async function createUnifiedQuote(
         clientEmail: input.clientEmail || null,
         clientId: finalClientId || null,
         customName: input.customName || null,
+        isPublic: Boolean(input.isPublic),
         ceremonyType: input.ceremonyType || "",
         requestedDate: dateObj,
         startTime: input.startTime || "",
@@ -306,7 +309,8 @@ export async function convertQuoteToEvent(
       totalWithTax: booking.baseAmount + (booking.viaticosAmount || 0) - (booking.discountAmount || 0),
       totalIncome: 0,
       invoice: booking.invoice,
-      status: "scheduled",
+      status: "agendado",
+      isPublic: Boolean(booking.isPublic),
       source: booking.source || "admin"
     }
   })
