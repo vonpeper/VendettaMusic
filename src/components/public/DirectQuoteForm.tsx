@@ -257,18 +257,7 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
       if (viaticos.requiresManualQuote) {
         textoViaticos = "Distancia extendida (>250 km, cotización logística personalizada)"
       } else if (viaticos.amount > 0) {
-        const casetasPorCamioneta = Math.round(viaticos.tollCost / 2)
-        const gasolinaPorCamioneta = Math.round(viaticos.fuelCost / 2)
-        const totalPorCamioneta = casetasPorCamioneta + gasolinaPorCamioneta
-
-        textoViaticos = `${MXN(viaticos.amount)} MXN
-   • Por camioneta (1 SUV ida y vuelta):
-     - Casetas: ${MXN(casetasPorCamioneta)} MXN
-     - Gasolina Premium (7.1 km/L): ${MXN(gasolinaPorCamioneta)} MXN
-     - Subtotal por camioneta: ${MXN(totalPorCamioneta)} MXN
-   • Total 2 camionetas (flota completa):
-     - Casetas totales: ${MXN(viaticos.tollCost)} MXN
-     - Gasolina total: ${MXN(viaticos.fuelCost)} MXN`
+        textoViaticos = `${MXN(viaticos.amount)} MXN (Incluye casetas ida y vuelta y gasto de gasolina para 2 camionetas y el transporte de 5 personas)`
       }
     }
 
@@ -626,29 +615,9 @@ ${notas.trim() ? `\n📝 *Notas / Peticiones especiales:* ${notas.trim()}\n` : "
                       <div className="font-black text-sm sm:text-base text-white">
                         🚗 Viáticos estimados: <span className="text-primary">{MXN(viaticos.amount)} MXN</span>
                       </div>
-                      <div className="text-xs text-gray-300">
-                        Cálculo para 2 camionetas SUV (Gasolina Premium a 7.1 km/L y casetas ida y vuelta):
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1.5">
-                        <div className="p-2.5 rounded-xl bg-black/40 border border-white/10 space-y-1">
-                          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Por camioneta (1 SUV):</span>
-                          <p className="text-xs text-emerald-400 font-semibold">• Casetas (ida y vuelta): {MXN(Math.round(viaticos.tollCost / 2))} MXN</p>
-                          <p className="text-xs text-amber-400 font-semibold">• Gasolina Premium: {MXN(Math.round(viaticos.fuelCost / 2))} MXN</p>
-                          <div className="border-t border-white/10 pt-1 text-xs font-bold text-white">
-                            Subtotal 1 SUV: {MXN(Math.round((viaticos.tollCost + viaticos.fuelCost) / 2))} MXN
-                          </div>
-                        </div>
-
-                        <div className="p-2.5 rounded-xl bg-black/40 border border-primary/20 space-y-1">
-                          <span className="text-[10px] text-primary font-bold uppercase tracking-wider block">Total Flota (2 SUVs):</span>
-                          <p className="text-xs text-emerald-400 font-semibold">• Casetas totales: {MXN(viaticos.tollCost)} MXN</p>
-                          <p className="text-xs text-amber-400 font-semibold">• Gasolina total: {MXN(viaticos.fuelCost)} MXN</p>
-                          <div className="border-t border-white/10 pt-1 text-xs font-black text-primary">
-                            Total Viáticos: {MXN(viaticos.amount)} MXN
-                          </div>
-                        </div>
-                      </div>
+                      <p className="text-xs text-gray-300 leading-relaxed pt-0.5">
+                        Incluye casetas ida y vuelta y gasto de gasolina para 2 camionetas y el transporte de 5 personas.
+                      </p>
                     </>
                   )}
                   {viaticos.distanceKm > 0 && (
