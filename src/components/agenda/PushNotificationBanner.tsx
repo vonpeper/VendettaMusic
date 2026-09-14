@@ -250,18 +250,18 @@ export function PushNotificationButton() {
               className="fixed inset-0 bg-black/80 backdrop-blur-md"
             />
 
-            {/* Modal Dialog Content */}
+            {/* Modal Dialog Content - Compact & High-Impact (Fits all mobile screens without scrolling) */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="relative w-full max-w-md bg-zinc-950 border border-white/15 rounded-3xl p-5 sm:p-7 shadow-2xl z-10 space-y-5"
+              className="relative w-full max-w-sm sm:max-w-md bg-zinc-950/95 border border-white/15 rounded-3xl p-5 sm:p-6 shadow-2xl z-10 space-y-4 my-auto backdrop-blur-2xl"
             >
               {/* Header */}
-              <div className="flex items-start justify-between gap-4 pb-4 border-b border-white/10">
+              <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10">
                 <div className="flex items-center gap-3">
-                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border ${
                     isSubscribed 
                       ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
                       : "bg-purple-500/10 border-purple-500/30 text-purple-400"
@@ -269,11 +269,11 @@ export function PushNotificationButton() {
                     {isSubscribed ? <BellRing className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
                   </div>
                   <div>
-                    <h3 className="text-lg font-heading font-black text-white uppercase tracking-tight">
+                    <h3 className="text-base sm:text-lg font-heading font-black text-white uppercase tracking-tight">
                       Alertas de Shows
                     </h3>
-                    <p className="text-xs text-muted-foreground">
-                      Recordatorios push para músicos y staff
+                    <p className="text-[11px] text-muted-foreground">
+                      {isSubscribed ? "Notificaciones push activas" : "Recordatorios push para la banda"}
                     </p>
                   </div>
                 </div>
@@ -282,97 +282,82 @@ export function PushNotificationButton() {
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+                  title="Cerrar"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Status Banner */}
-              <div className={`p-4 rounded-2xl border flex items-start gap-3 ${
-                isSubscribed
-                  ? "bg-emerald-950/30 border-emerald-500/30 text-emerald-200"
-                  : "bg-purple-950/20 border-purple-500/30 text-purple-200"
-              }`}>
-                <div className="mt-0.5 shrink-0">
-                  {isSubscribed ? (
-                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                  ) : (
-                    <Sparkles className="w-5 h-5 text-purple-400" />
-                  )}
-                </div>
-                <div className="text-xs space-y-1">
-                  <div className="font-bold text-white flex items-center gap-1.5">
-                    {isSubscribed ? "Dispositivo Vinculado" : "Notificaciones no activadas"}
-                    {isSubscribed && (
-                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded-full">
-                        <Check className="w-2.5 h-2.5" /> Activo
-                      </span>
-                    )}
+              {/* Status / Benefits Card */}
+              {isSubscribed ? (
+                <div className="p-3.5 rounded-2xl border bg-emerald-950/30 border-emerald-500/30 text-emerald-200 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-white flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" /> Dispositivo Vinculado
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                      <Check className="w-2.5 h-2.5" /> Activo
+                    </span>
                   </div>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {isSubscribed
-                      ? "Recibirás una notificación en tu pantalla la mañana de cada show con tus horarios y locación."
-                      : "Activa los avisos para recibir recordatorios automáticos en tu teléfono el día de cada presentación."}
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Recibirás una alerta en tu pantalla la mañana de cada show con tus horarios de llamado, locación y código de vestimenta.
                   </p>
                 </div>
-              </div>
+              ) : (
+                <div className="p-3.5 rounded-2xl border bg-white/[0.03] border-white/10 space-y-2.5">
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    Activa los avisos para recibir notificaciones automáticas en la pantalla de tu teléfono el día de cada presentación:
+                  </p>
 
-              {/* Features List */}
-              <div className="space-y-2 py-1">
-                <div className="flex items-center gap-2.5 text-xs text-gray-300">
-                  <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-primary shrink-0">
-                    <Clock className="w-3.5 h-3.5" />
+                  {/* Compact Feature Pills */}
+                  <div className="flex flex-wrap gap-1.5 text-[11px] font-semibold">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-200">
+                      <Clock className="w-3 h-3 text-primary" /> Horarios de llamado
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-200">
+                      <MapPin className="w-3 h-3 text-blue-400" /> GPS / Waze
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-200">
+                      <Shirt className="w-3 h-3 text-indigo-400" /> Vestimenta
+                    </span>
                   </div>
-                  <span>Horarios de llamado, montaje e inicio de show.</span>
                 </div>
-                <div className="flex items-center gap-2.5 text-xs text-gray-300">
-                  <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-blue-400 shrink-0">
-                    <MapPin className="w-3.5 h-3.5" />
-                  </div>
-                  <span>Navegación GPS directa a Google Maps y Waze.</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-xs text-gray-300">
-                  <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-indigo-400 shrink-0">
-                    <Shirt className="w-3.5 h-3.5" />
-                  </div>
-                  <span>Código de vestimenta especificado por fecha.</span>
-                </div>
-              </div>
+              )}
 
-              {/* Action Buttons */}
-              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+              {/* Action Buttons - Prominent, Thick & High Touch-Area */}
+              <div className="pt-1 space-y-2">
                 {isSubscribed ? (
                   <Button
                     onClick={handleSendTest}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider gap-2 h-11 rounded-xl shadow-lg shadow-emerald-600/20 cursor-pointer"
+                    className="w-full h-13 sm:h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm sm:text-base uppercase tracking-wider gap-2 shadow-xl shadow-emerald-600/30 cursor-pointer active:scale-[0.98] transition-all"
                   >
-                    <Send className="w-3.5 h-3.5" /> Probar Notificación
+                    <Send className="w-4 h-4" /> Probar Notificación Push
                   </Button>
                 ) : (
                   <Button
                     onClick={handleSubscribe}
                     disabled={isSubscribing}
-                    className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider gap-2 h-11 rounded-xl shadow-lg shadow-purple-600/20 cursor-pointer transition-all"
+                    className="w-full h-13 sm:h-14 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-sm sm:text-base uppercase tracking-wider gap-2.5 shadow-xl shadow-purple-600/40 cursor-pointer active:scale-[0.98] transition-all disabled:opacity-50"
                   >
                     {isSubscribing ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Activando...
+                        <Loader2 className="w-5 h-5 animate-spin" /> Activando en tu dispositivo...
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-3.5 h-3.5" /> Activar Notificaciones
+                        <BellRing className="w-5 h-5 shrink-0" /> Activar Notificaciones Push
                       </>
                     )}
                   </Button>
                 )}
 
-                <Button
-                  variant="outline"
+                <button
+                  type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="border-white/10 text-xs font-bold h-11 rounded-xl px-4 hover:bg-white/10 text-gray-300 cursor-pointer"
+                  className="w-full py-2 text-center text-xs font-bold text-muted-foreground hover:text-white transition-colors cursor-pointer"
                 >
-                  Cerrar
-                </Button>
+                  {isSubscribed ? "Cerrar" : "Ahora no, cerrar"}
+                </button>
               </div>
             </motion.div>
           </div>
