@@ -331,7 +331,7 @@ export function PushNotificationButton() {
                     onClick={handleSendTest}
                     className="w-full h-13 sm:h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm sm:text-base uppercase tracking-wider gap-2 shadow-xl shadow-emerald-600/30 cursor-pointer active:scale-[0.98] transition-all"
                   >
-                    <Send className="w-4 h-4" /> Probar Notificación Push
+                    <Send className="w-4 h-4 shrink-0" /> Probar Notificación
                   </Button>
                 ) : (
                   <Button
@@ -341,11 +341,11 @@ export function PushNotificationButton() {
                   >
                     {isSubscribing ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" /> Activando en tu dispositivo...
+                        <Loader2 className="w-5 h-5 animate-spin shrink-0" /> Activando...
                       </>
                     ) : (
                       <>
-                        <BellRing className="w-5 h-5 shrink-0" /> Activar Notificaciones Push
+                        <BellRing className="w-5 h-5 shrink-0" /> Activar
                       </>
                     )}
                   </Button>
