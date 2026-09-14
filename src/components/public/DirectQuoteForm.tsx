@@ -33,6 +33,7 @@ import {
 interface DirectQuoteFormProps {
   adminWhatsapp?: string | null
   initialPackage?: string | null
+  initialDate?: string | null
 }
 
 const EVENT_TYPES = [
@@ -93,7 +94,7 @@ function formatFechaEspanol(fechaStr: string): string {
   }
 }
 
-export function DirectQuoteForm({ adminWhatsapp, initialPackage }: DirectQuoteFormProps) {
+export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: DirectQuoteFormProps) {
   const pkgLower = (initialPackage || "").toLowerCase()
   const isExperience = pkgLower.includes("experience")
   const isFestival = pkgLower.includes("festival")
@@ -106,7 +107,14 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage }: DirectQuoteFo
   const [telefono, setTelefono] = useState("")
   const [tipoEvento, setTipoEvento] = useState("Boda")
   const [tipoEventoOtro, setTipoEventoOtro] = useState("")
-  const [fecha, setFecha] = useState("")
+  const [fecha, setFecha] = useState(initialDate || "")
+
+  // Sincronizar initialDate si cambia dinámicamente
+  useEffect(() => {
+    if (initialDate) {
+      setFecha(initialDate)
+    }
+  }, [initialDate])
 
   // Horario seleccionable en formato 12h AM/PM
   const [horaInicio, setHoraInicio] = useState("08:00 PM")

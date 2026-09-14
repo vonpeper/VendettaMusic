@@ -22,16 +22,20 @@ import {
   CalendarCheck,
   SlidersHorizontal,
   Filter,
-  RotateCcw
+  RotateCcw,
+  Calculator,
+  ArrowLeft
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { motion, AnimatePresence } from "framer-motion"
 import { PushNotificationButton } from "@/components/agenda/PushNotificationBanner"
+import { DirectQuoteForm } from "@/components/public/DirectQuoteForm"
 
 interface Props {
   events: AgendaEvent[]
+  adminWhatsapp?: string | null
 }
 
 const MONTHS = [
@@ -100,7 +104,10 @@ function formatDateString(isoString: string): string {
   })
 }
 
-export function AgendaCalendarView({ events }: Props) {
+export function AgendaCalendarView({ events, adminWhatsapp }: Props) {
+  const [currentView, setCurrentView] = useState<"agenda" | "cotizar">("agenda")
+  const [quoteInitialDate, setQuoteInitialDate] = useState<string | null>(null)
+
   const today = new Date()
   const todayISO = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
 
@@ -198,6 +205,97 @@ export function AgendaCalendarView({ events }: Props) {
   const totalUpcoming = events.filter(e => e.date >= todayISO && (e.status === "agendado" || e.status === "confirmed")).length
   const totalMonthEvents = monthEvents.length
 
+  // Render Cotizador view when selected by user/musician
+  if (currentView === "cotizar") {
+    return (
+      <div className="min-h-screen bg-[#070709] text-foreground pb-24">
+        {/* Header Cotizador */}
+        <header className="relative border-b border-white/10 bg-gradient-to-b from-black via-zinc-950 to-[#070709] pt-24 sm:pt-28 pb-8 overflow-hidden">
+          {/* Glow de fondo */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 md:w-[600px] h-32 bg-amber-500/15 blur-[100px] pointer-events-none rounded-full" />
+
+          <div className="container mx-auto px-4 max-w-4xl relative z-10">
+            {/* Top Navigation Bar: Back button & switcher */}
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentView("agenda")
+                  window.scrollTo({ top: 0, behavior: "smooth" })
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:text-white transition-all cursor-pointer shadow-sm active:scale-95"
+              >
+                <ArrowLeft className="w-4 h-4 text-primary" />
+                <span>Volver al Calendario</span>
+              </button>
+
+              {/* View Selector Pills */}
+              <div className="flex items-center gap-1.5 p-1 bg-white/5 border border-white/10 rounded-2xl">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentView("agenda")
+                    window.scrollTo({ top: 0, behavior: "smooth" })
+                  }}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 text-gray-400 hover:text-white cursor-pointer"
+                >
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  <span>Agenda</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView("cotizar")}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-amber-500 text-black font-black shadow-md shadow-amber-500/20"
+                >
+                  <Calculator className="w-3.5 h-3.5" />
+                  <span>Cotizador</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Title Section */}
+            <div className="text-center sm:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-300 text-[11px] font-black uppercase tracking-[0.25em] mb-3 shadow-sm">
+                <Sparkles className="w-3.5 h-3.5" /> Cotizador Oficial Vendetta
+              </div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-black text-white uppercase tracking-tight">
+                Cotizar Evento para <span className="text-amber-400 italic">Cliente</span>
+              </h1>
+              <p className="text-muted-foreground text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
+                Personaliza la propuesta, selecciona paquetes y producción adicional, calcula viáticos en tiempo real y genera la propuesta lista para enviar al cliente por WhatsApp.
+              </p>
+            </div>
+          </div>
+        </header>
+
+        {/* Form Container */}
+        <main className="container mx-auto px-4 max-w-4xl mt-6 sm:mt-8 space-y-8">
+          <div className="bg-zinc-900/40 border border-white/10 rounded-3xl p-4 sm:p-7 md:p-9 shadow-2xl backdrop-blur-xl">
+            <DirectQuoteForm
+              adminWhatsapp={adminWhatsapp}
+              initialDate={quoteInitialDate}
+            />
+          </div>
+
+          {/* Footer Back Button */}
+          <div className="text-center pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentView("agenda")
+                window.scrollTo({ top: 0, behavior: "smooth" })
+              }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:text-white transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4 text-primary" />
+              <span>Regresar al Calendario de Shows</span>
+            </button>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#070709] text-foreground pb-20">
       {/* Top Banner / Header - Sleek & Compact */}
@@ -219,19 +317,33 @@ export function AgendaCalendarView({ events }: Props) {
               </p>
             </div>
 
-            {/* Quick Stats Badges (Compact) */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5 shadow-inner">
+            {/* Quick Stats Badges & Cotizar Action (Compact) */}
+            <div className="flex items-center flex-wrap gap-2.5 sm:gap-3 shrink-0">
+              {/* Prominent Header Cotizar Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setQuoteInitialDate(null)
+                  setCurrentView("cotizar")
+                  window.scrollTo({ top: 0, behavior: "smooth" })
+                }}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 active:scale-95 transition-all cursor-pointer shrink-0"
+              >
+                <Calculator className="w-4 h-4" />
+                <span>Cotizar Evento</span>
+              </button>
+
+              <div className="bg-white/[0.03] border border-white/10 rounded-2xl px-3.5 py-2 flex items-center gap-2.5 shadow-inner">
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
                   <div className="text-[9px] text-muted-foreground uppercase font-black tracking-wider">Próximos</div>
-                  <div className="text-sm sm:text-base font-black text-white">{totalUpcoming} <span className="text-[10px] text-emerald-400 font-normal">confirmados</span></div>
+                  <div className="text-sm sm:text-base font-black text-white">{totalUpcoming} <span className="text-[10px] text-emerald-400 font-normal">shows</span></div>
                 </div>
               </div>
 
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5 shadow-inner">
+              <div className="bg-white/[0.03] border border-white/10 rounded-2xl px-3.5 py-2 flex items-center gap-2.5 shadow-inner">
                 <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
                   <CalendarDays className="w-4 h-4" />
                 </div>
@@ -288,6 +400,21 @@ export function AgendaCalendarView({ events }: Props) {
 
               {/* Web Push Notification Pop-up Button */}
               <PushNotificationButton />
+
+              {/* Cotizar Show Button in Toolbar */}
+              <button
+                type="button"
+                onClick={() => {
+                  setQuoteInitialDate(null)
+                  setCurrentView("cotizar")
+                  window.scrollTo({ top: 0, behavior: "smooth" })
+                }}
+                title="Abrir cotizador de shows para clientes"
+                className="relative inline-flex items-center gap-1.5 h-9 sm:h-10 px-3 sm:px-3.5 rounded-xl border border-amber-500/40 bg-amber-950/30 text-amber-300 hover:bg-amber-900/50 hover:border-amber-400 text-xs font-bold transition-all cursor-pointer select-none shadow-sm shadow-amber-500/10"
+              >
+                <Calculator className="w-4 h-4 text-amber-400 shrink-0" />
+                <span className="hidden sm:inline">Cotizar</span>
+              </button>
 
               {/* Subtle Divider */}
               <div className="w-px h-6 bg-white/10 mx-0.5 hidden sm:block" />
@@ -568,13 +695,24 @@ export function AgendaCalendarView({ events }: Props) {
                   <p className="text-xs text-muted-foreground max-w-xs mx-auto">
                     No hay ningún show ni presentación registrada para este día.
                   </p>
-                  <div className="pt-2">
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
                     <Button
                       variant="outline"
                       onClick={() => setIsModalOpen(false)}
-                      className="border-white/10 text-xs font-bold"
+                      className="border-white/10 text-xs font-bold w-full sm:w-auto cursor-pointer"
                     >
                       Cerrar
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setQuoteInitialDate(selectedDate)
+                        setIsModalOpen(false)
+                        setCurrentView("cotizar")
+                        window.scrollTo({ top: 0, behavior: "smooth" })
+                      }}
+                      className="bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider gap-1.5 cursor-pointer shadow-lg shadow-amber-500/20 w-full sm:w-auto"
+                    >
+                      <Calculator className="w-3.5 h-3.5" /> Cotizar esta fecha
                     </Button>
                   </div>
                 </div>
