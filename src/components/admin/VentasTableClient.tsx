@@ -82,6 +82,7 @@ interface Booking {
   contractStatus?: string
   client?: { whatsapp?: string | null; name?: string | null } | null
   payments?: any[]
+  adminNote?: string | null
 }
 
 const formatTotal = (r: any) => {
@@ -379,6 +380,13 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                     })()}
                   </div>
                   <div className="text-[10px] text-muted-foreground font-mono mt-0.5">{reserva.shortId || "S/F"}</div>
+                  {reserva.adminNote?.includes("POR REVISAR") && (
+                    <div className="mt-1">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 border border-amber-500/40 text-amber-300">
+                        ⚠️ Por Revisar (Producción)
+                      </span>
+                    </div>
+                  )}
                 </td>
                 <td className="flex flex-col md:table-cell p-4 md:py-4 md:px-6 border-b border-border/10 md:border-none items-start gap-1">
                   <div className="text-sm text-foreground flex items-center gap-2">

@@ -48,6 +48,7 @@ export interface CreateQuoteInput {
   depositAmount?: number | null
   paymentMethod?: string | null
   originInquiryId?: string | null
+  adminNote?: string | null
 }
 
 export interface UpdateQuoteInput extends CreateQuoteInput {
@@ -202,6 +203,7 @@ export async function createUnifiedQuote(
         state: input.venueState || "",
         mapsLink: input.mapsLink || null,
         status: quoteStatus,
+        adminNote: input.adminNote || null,
         eventId: createdEventId,
         source: input.originInquiryId ? "contacto" : "admin"
       }

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
 import { submitContactInquiry } from "@/actions/contact"
+import { submitPublicQuoteAction } from "@/actions/quote-direct"
 import { toast } from "sonner"
 import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import { 
@@ -131,7 +132,12 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
 
   // Estados de envío
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submittedUrl, setSubmittedUrl] = useState<string | null>(null)
+  const [submittedResult, setSubmittedResult] = useState<{
+    mode: "auto_quote" | "needs_review"
+    proposalUrl?: string
+    shortId?: string
+    waUrl: string
+  } | null>(null)
 
   const cleanPhone = (
     adminWhatsapp ||
@@ -252,36 +258,27 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
     const horarioCompleto = `${horaInicio} a ${horaFin}`
     const ubicacionCompleta = `${muniFinal}, ${estado}${lugarEvento.trim() ? ` (${lugarEvento.trim()})` : ""}`
 
-    // 1. Guardar prospecto en CRM
+    // 1. Guardar y procesar con submitPublicQuoteAction (Bifurcación: Auto-Landing vs Por Revisar)
+    let quoteResult: any = null
     try {
-      const inquiryForm = new FormData()
-      inquiryForm.set("nombre", nombre.trim())
-      inquiryForm.set("telefono", telefono.trim())
-      inquiryForm.set("email", `cliente_${telefono.replace(/\D/g, "") || Date.now()}@cotizacion.vendetta.mx`)
-      inquiryForm.set("fecha", fecha)
-      inquiryForm.set("tipo", `${tipoEventoFinal} - Propuesta Personalizada`)
-
-      let detallesExtra = `Horario: ${horarioCompleto} | Invitados: ${numInvitados} | Ubicación: ${ubicacionCompleta}`
-      if (mapsLink.trim()) {
-        detallesExtra += ` | Google Maps: ${mapsLink.trim()}`
-      }
-      if (tieneMasDe100Invitados && produccionAdicional.length > 0) {
-        detallesExtra += ` | Producción extra: ${produccionAdicional.join(", ")}`
-      }
-      if (viaticos) {
-        detallesExtra += ` | Viáticos: ${viaticos.isOutsideZone ? `$${viaticos.amount} MXN` : "Zona Local ($0)"}`
-      }
-      if (notas.trim()) {
-        detallesExtra += ` | Notas: ${notas.trim()}`
-      }
-
-      inquiryForm.set("mensaje", detallesExtra)
-
-      await submitContactInquiry(inquiryForm).catch((err) =>
-        console.warn("Could not save contact inquiry in DB:", err)
-      )
-    } catch (dbErr) {
-      console.warn("Inquiry save error:", dbErr)
+      quoteResult = await submitPublicQuoteAction({
+        nombre: nombre.trim(),
+        telefono: telefono.trim(),
+        tipoEvento: tipoEventoFinal,
+        fecha,
+        horaInicio,
+        horaFin,
+        invitados: numInvitados,
+        produccionAdicional,
+        estado,
+        municipio: muniFinal,
+        lugarEvento: lugarEvento.trim() || undefined,
+        mapsLink: mapsLink.trim() || undefined,
+        viaticos,
+        notas: notas.trim() || undefined
+      })
+    } catch (saveErr) {
+      console.warn("Quote submit error:", saveErr)
     }
 
     // 2. Formatear texto de viáticos para WhatsApp
@@ -340,6 +337,22 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
       )
     }
 
+    const isAutoQuote = quoteResult?.mode === "auto_quote" && quoteResult?.shortId
+    const proposalFullUrl = isAutoQuote ? `https://vendetta.mx/propuesta/${quoteResult.shortId}` : null
+
+    if (isAutoQuote && proposalFullUrl) {
+      lineasMensaje.push(
+        "",
+        "🔗 *Revisa tu propuesta interactiva y disponibilidad:*",
+        proposalFullUrl
+      )
+    } else if (produccionAdicional.length > 0 || tieneMasDe100Invitados) {
+      lineasMensaje.push(
+        "",
+        "⚠️ *Nota de producción:* Esta solicitud incluye requerimientos especiales de producción técnica y está en revisión."
+      )
+    }
+
     lineasMensaje.push(
       "",
       "¿Tienen disponibilidad para esta fecha? ¡Quedo atento a la propuesta!"
@@ -348,10 +361,15 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
     const waMessage = lineasMensaje.join("\n")
 
     const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(waMessage)}`
-    setSubmittedUrl(waUrl)
+    setSubmittedResult({
+      mode: quoteResult?.mode || (numInvitados <= 100 && produccionAdicional.length === 0 ? "auto_quote" : "needs_review"),
+      proposalUrl: proposalFullUrl || undefined,
+      shortId: quoteResult?.shortId,
+      waUrl
+    })
     setIsSubmitting(false)
 
-    toast.success("¡Propuesta preparada! Abriendo tu WhatsApp...")
+    toast.success(isAutoQuote ? "¡Propuesta lista en línea! Abriendo WhatsApp..." : "¡Solicitud registrada! Abriendo WhatsApp...")
 
     // Abrir WhatsApp
     if (typeof window !== "undefined") {
@@ -360,35 +378,67 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
   }
 
   // Pantalla de confirmación y reintento
-  if (submittedUrl) {
+  if (submittedResult) {
+    const isAutoQuote = submittedResult.mode === "auto_quote"
+
     return (
       <div className="bg-card/90 border border-white/10 rounded-3xl p-8 sm:p-12 text-center max-w-xl mx-auto shadow-2xl backdrop-blur-xl space-y-6 animate-in fade-in-0 duration-300">
-        <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
-          <CheckCircle2 className="w-9 h-9" />
+        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-lg ${
+          isAutoQuote
+            ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 shadow-emerald-500/20"
+            : "bg-primary/20 border border-primary/40 text-primary shadow-primary/20"
+        }`}>
+          {isAutoQuote ? <CheckCircle2 className="w-9 h-9" /> : <Sparkles className="w-9 h-9" />}
         </div>
 
         <div className="space-y-2">
           <h2 className="text-2xl sm:text-3xl font-heading font-black text-white uppercase tracking-tight">
-            ¡Propuesta Preparada!
+            {isAutoQuote ? "¡Tu Cotización Está Lista!" : "¡Solicitud de Producción Recibida!"}
           </h2>
-          <p className="text-sm text-gray-300 max-w-md mx-auto">
-            Hemos organizado los detalles de tu evento en un mensaje listo para WhatsApp. Si no se abrió automáticamente, toca el botón de abajo para enviarlo directamente.
+          <p className="text-sm text-gray-300 max-w-md mx-auto leading-relaxed">
+            {isAutoQuote ? (
+              <>
+                Generamos tu propuesta interactiva exclusiva{submittedResult.shortId ? ` (Folio: ${submittedResult.shortId})` : ""}. Puedes revisarla en línea ahora mismo o enviar el mensaje por WhatsApp.
+              </>
+            ) : (
+              <>
+                Tu evento cuenta con requerimientos especiales de producción técnica (pantallas, audio o extras). Hemos registrado tu solicitud para revisión personalizada por WhatsApp.
+              </>
+            )}
           </p>
         </div>
 
-        <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center items-center">
+          {isAutoQuote && submittedResult.proposalUrl && (
+            <a
+              href={submittedResult.proposalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto"
+            >
+              <Button
+                size="lg"
+                className="w-full sm:w-auto h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base rounded-2xl shadow-xl shadow-primary/25 gap-2 cursor-pointer transition-all hover:scale-[1.02]"
+              >
+                <Sparkles className="w-5 h-5" />
+                <span>Ver mi Propuesta en Línea</span>
+                <ExternalLink className="w-4 h-4 ml-1 opacity-70" />
+              </Button>
+            </a>
+          )}
+
           <a
-            href={submittedUrl}
+            href={submittedResult.waUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto"
           >
             <Button
               size="lg"
-              className="w-full h-14 px-8 bg-[#25D366] hover:bg-[#20ba59] text-white font-black text-base rounded-2xl shadow-xl shadow-[#25D366]/30 gap-2 cursor-pointer transition-all hover:scale-[1.02]"
+              className="w-full sm:w-auto h-14 px-8 bg-[#25D366] hover:bg-[#20ba59] text-white font-black text-base rounded-2xl shadow-xl shadow-[#25D366]/30 gap-2 cursor-pointer transition-all hover:scale-[1.02]"
             >
               <WhatsAppIcon className="w-5 h-5 fill-white" />
-              <span>Enviar por WhatsApp</span>
+              <span>{isAutoQuote ? "Confirmar por WhatsApp" : "Continuar por WhatsApp"}</span>
               <ExternalLink className="w-4 h-4 ml-1 opacity-70" />
             </Button>
           </a>
@@ -396,7 +446,7 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
           <Button
             variant="outline"
             size="lg"
-            onClick={() => setSubmittedUrl(null)}
+            onClick={() => setSubmittedResult(null)}
             className="w-full sm:w-auto h-14 px-6 rounded-2xl border-white/15 hover:bg-white/5 text-gray-300 font-bold text-sm cursor-pointer"
           >
             Editar datos
