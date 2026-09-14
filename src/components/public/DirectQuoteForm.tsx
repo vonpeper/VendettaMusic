@@ -40,7 +40,8 @@ const EVENT_TYPES = [
   { value: "Corporativo / Fin de Año", label: "🏢 Corporativo / Fin de Año" },
   { value: "Bar / Restaurante / Festival", label: "🍸 Bar / Restaurante / Festival" },
   { value: "Graduación", label: "🎓 Graduación" },
-  { value: "Fiesta Privada / Otro", label: "🎸 Fiesta Privada / Otro" },
+  { value: "Fiesta Privada", label: "🎸 Fiesta Privada" },
+  { value: "Otro", label: "✨ Otro motivo..." },
 ]
 
 const TIME_OPTIONS = [
@@ -77,6 +78,7 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
   const [nombre, setNombre] = useState("")
   const [telefono, setTelefono] = useState("")
   const [tipoEvento, setTipoEvento] = useState("Boda")
+  const [tipoEventoOtro, setTipoEventoOtro] = useState("")
   const [fecha, setFecha] = useState("")
 
   // Horario seleccionable en formato 12h AM/PM
@@ -84,7 +86,7 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
   const [horaFin, setHoraFin] = useState("01:00 AM")
 
   // Invitados y producción adicional (>100)
-  const [invitados, setInvitados] = useState("150")
+  const [invitados, setInvitados] = useState("50")
   const [produccionAdicional, setProduccionAdicional] = useState<string[]>([])
 
   // Ubicación y viáticos
@@ -92,6 +94,7 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
   const [municipio, setMunicipio] = useState("Metepec")
   const [municipioManual, setMunicipioManual] = useState("")
   const [lugarEvento, setLugarEvento] = useState("")
+  const [mapsLink, setMapsLink] = useState("")
 
   // Estado de viáticos
   const [viaticos, setViaticos] = useState<{
@@ -211,6 +214,11 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
       return
     }
 
+    if (tipoEvento === "Otro" && !tipoEventoOtro.trim()) {
+      toast.error("Por favor especifica el motivo de tu festejo")
+      return
+    }
+
     const muniFinal = isMunicipioManual ? municipioManual.trim() : municipio
     if (!muniFinal) {
       toast.error("Por favor selecciona o ingresa el municipio del evento")
@@ -218,6 +226,10 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
     }
 
     setIsSubmitting(true)
+
+    const tipoEventoFinal = tipoEvento === "Otro"
+      ? (tipoEventoOtro.trim() ? `Otro (${tipoEventoOtro.trim()})` : "Otro")
+      : tipoEvento
 
     const horarioCompleto = `${horaInicio} a ${horaFin}`
     const ubicacionCompleta = `${muniFinal}, ${estado}${lugarEvento.trim() ? ` (${lugarEvento.trim()})` : ""}`
@@ -229,9 +241,12 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
       inquiryForm.set("telefono", telefono.trim())
       inquiryForm.set("email", `cliente_${telefono.replace(/\D/g, "") || Date.now()}@cotizacion.vendetta.mx`)
       inquiryForm.set("fecha", fecha)
-      inquiryForm.set("tipo", `${tipoEvento} - Propuesta Personalizada`)
+      inquiryForm.set("tipo", `${tipoEventoFinal} - Propuesta Personalizada`)
 
       let detallesExtra = `Horario: ${horarioCompleto} | Invitados: ${numInvitados} | Ubicación: ${ubicacionCompleta}`
+      if (mapsLink.trim()) {
+        detallesExtra += ` | Google Maps: ${mapsLink.trim()}`
+      }
       if (tieneMasDe100Invitados && produccionAdicional.length > 0) {
         detallesExtra += ` | Producción extra: ${produccionAdicional.join(", ")}`
       }
@@ -274,11 +289,11 @@ Llené el formulario para personalizar la propuesta para mi evento:
 
 👤 *Nombre:* ${nombre.trim()}
 📱 *WhatsApp:* ${telefono.trim()}
-🎉 *Tipo de Evento:* ${tipoEvento}
+🎉 *Tipo de Evento:* ${tipoEventoFinal}
 📅 *Fecha:* ${fecha}
 ⏰ *Horario:* ${horarioCompleto}
 👥 *Invitados estimados:* ${numInvitados} personas${textoProduccion}
-📍 *Ubicación:* ${ubicacionCompleta}
+📍 *Ubicación:* ${ubicacionCompleta}${mapsLink.trim() ? `\n🗺️ *Google Maps:* ${mapsLink.trim()}` : ""}
 🚗 *Viáticos estimados:* ${textoViaticos}
 ⚠️ *(Nota: No incluye planta de luz. Viáticos para 2 camionetas, gasolina y casetas únicamente. No incluye alimentos.)*
 ${notas.trim() ? `\n📝 *Notas / Peticiones especiales:* ${notas.trim()}\n` : ""}
@@ -411,6 +426,22 @@ ${notas.trim() ? `\n📝 *Notas / Peticiones especiales:* ${notas.trim()}\n` : "
             className="h-12 bg-white/5 border-white/10 text-white text-sm rounded-xl focus:border-primary [color-scheme:dark]"
           />
         </div>
+
+        {tipoEvento === "Otro" && (
+          <div className="sm:col-span-2 space-y-1.5 animate-in fade-in-0 duration-150">
+            <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-primary" /> Especifica el Motivo de tu Festejo <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              required
+              type="text"
+              placeholder="Ej: Bautizo, Primera Comunión, Pedida de Mano, Despedida..."
+              value={tipoEventoOtro}
+              onChange={(e) => setTipoEventoOtro(e.target.value)}
+              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
+            />
+          </div>
+        )}
       </div>
 
       {/* 3. HORARIO SELECCIONABLE (AM / PM) */}
@@ -467,7 +498,7 @@ ${notas.trim() ? `\n📝 *Notas / Peticiones especiales:* ${notas.trim()}\n` : "
             min={10}
             max={5000}
             step={10}
-            placeholder="Ej: 150"
+            placeholder="Ej: 50"
             value={invitados}
             onChange={(e) => setInvitados(e.target.value)}
             className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
@@ -576,16 +607,31 @@ ${notas.trim() ? `\n📝 *Notas / Peticiones especiales:* ${notas.trim()}\n` : "
           </div>
         )}
 
-        {/* Nombre del Salón / Lugar opcional */}
-        <div className="space-y-1">
-          <span className="text-[11px] text-gray-400 font-medium">Nombre del salón, hacienda o jardín (Opcional):</span>
-          <Input
-            type="text"
-            placeholder="Ej: Hacienda San Martín, Jardín La Concordia, Domicilio particular..."
-            value={lugarEvento}
-            onChange={(e) => setLugarEvento(e.target.value)}
-            className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
-          />
+        {/* Nombre del Salón / Lugar opcional y Link de Maps */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <span className="text-[11px] text-gray-400 font-medium">Nombre del salón, hacienda o jardín (Opcional):</span>
+            <Input
+              type="text"
+              placeholder="Ej: Hacienda San Martín, Jardín La Concordia..."
+              value={lugarEvento}
+              onChange={(e) => setLugarEvento(e.target.value)}
+              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[11px] text-gray-400 font-medium flex items-center gap-1.5">
+              <ExternalLink className="w-3.5 h-3.5 text-primary" /> Link de Google Maps (Opcional):
+            </span>
+            <Input
+              type="url"
+              placeholder="Ej: https://maps.app.goo.gl/... o enlace de ubicación"
+              value={mapsLink}
+              onChange={(e) => setMapsLink(e.target.value)}
+              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
+            />
+          </div>
         </div>
 
         {/* Resultado del Cálculo de Viáticos */}
