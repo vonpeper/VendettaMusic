@@ -890,14 +890,13 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span>Preparando Propuesta...</span>
+              <Loader2 className="w-6 h-6 animate-spin shrink-0" />
+              <span>Enviando...</span>
             </>
           ) : (
             <>
               <WhatsAppIcon className="w-6 h-6 fill-white shrink-0" />
-              <span>Enviar Cotización por WhatsApp</span>
-              <ArrowRight className="w-5 h-5 ml-auto opacity-70" />
+              <span>Enviar</span>
             </>
           )}
         </Button>
