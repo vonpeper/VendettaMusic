@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { isValidShortIdFormat } from "@/lib/folios"
 import { formatDateMX } from "@/lib/utils"
 import { generateResourceToken } from "@/lib/security"
@@ -16,11 +16,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return { title: "No encontrado | Vendetta Live Music" }
   }
 
-  const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(lookupId)
   const booking = await db.bookingRequest.findFirst({
-    where: isUuid
-      ? { OR: [{ shortId: lookupId }, { id: id.trim() }] }
-      : { shortId: lookupId }
+    where: {
+      OR: [
+        { shortId: lookupId },
+        { id: id.trim() },
+        { adminNote: { contains: lookupId } }
+      ]
+    }
   })
 
   if (!booking) {
@@ -80,11 +83,14 @@ export default async function StatusDetailPage({ params }: { params: Promise<{ i
     return notFound()
   }
 
-  const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(lookupId)
   const mainBooking = await db.bookingRequest.findFirst({
-    where: isUuid
-      ? { OR: [{ shortId: lookupId }, { id: id.trim() }] }
-      : { shortId: lookupId },
+    where: {
+      OR: [
+        { shortId: lookupId },
+        { id: id.trim() },
+        { adminNote: { contains: lookupId } }
+      ]
+    },
     include: { 
       client: true,
       lineItems: { orderBy: { order: "asc" } },
@@ -105,6 +111,12 @@ export default async function StatusDetailPage({ params }: { params: Promise<{ i
 
   if (!mainBooking) {
     return notFound()
+  }
+
+  // Si se accedió por un folio largo legacy pero la cotización tiene un folio estándar corto oficial,
+  // redirigir canónicamente a la URL del folio estándar
+  if (mainBooking.shortId && lookupId !== mainBooking.shortId.toUpperCase() && lookupId.startsWith("VND-") && lookupId.length > 10) {
+    redirect(`/status/${mainBooking.shortId}`)
   }
 
   const globalConfig = await db.globalConfig.findUnique({

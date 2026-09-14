@@ -1,36 +1,14 @@
 import crypto from "crypto"
 import { PrismaClient, Prisma } from "@prisma/client"
 
-// Alfabeto Crockford Base32 (32 caracteres libres de ambigüedad visual)
-// Excluye I, L, O, U para evitar confusiones al leer o transcribir manualmente.
-const CROCKFORD_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
-
 /**
- * Genera una cadena aleatoria criptográficamente segura con 80 bits de entropía
- * en formato Crockford Base32 estructurado en 4 bloques de 4 caracteres.
- * Total: VND-XXXX-XXXX-XXXX-XXXX (16 caracteres base32 = 32^16 = 2^80 combinaciones).
+ * Genera el folio estándar oficial de Vendetta Live Music:
+ * Formato canónico: VND-XXXX (4 caracteres hexadecimales en mayúsculas).
+ * Ejemplo: VND-4A2B, VND-5F39, VND-A7FA.
  */
 export function generateSecureShortId(): string {
-  // 10 bytes = 80 bits = 16 caracteres de 5 bits cada uno
-  const bytes = crypto.randomBytes(10)
-  let chars = ""
-  
-  // Extraer 16 índices de 5 bits a partir de los 80 bits aleatorios
-  let bitBuffer = 0
-  let bitCount = 0
-  let byteIndex = 0
-
-  while (chars.length < 16) {
-    if (bitCount < 5 && byteIndex < bytes.length) {
-      bitBuffer = (bitBuffer << 8) | bytes[byteIndex++]
-      bitCount += 8
-    }
-    const index = (bitBuffer >> (bitCount - 5)) & 31
-    bitCount -= 5
-    chars += CROCKFORD_ALPHABET[index]
-  }
-
-  return `VND-${chars.slice(0, 4)}-${chars.slice(4, 8)}-${chars.slice(8, 12)}-${chars.slice(12, 16)}`
+  const randomHex = crypto.randomBytes(2).toString("hex").toUpperCase()
+  return `VND-${randomHex}`
 }
 
 /**
@@ -39,8 +17,9 @@ export function generateSecureShortId(): string {
  */
 export async function generateUniqueShortId(
   tx: Prisma.TransactionClient | PrismaClient,
-  maxRetries = 5
+  maxRetries = 10
 ): Promise<string> {
+  // Intentos principales: Formato estándar oficial VND-XXXX (4 caracteres hex)
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     const candidateId = generateSecureShortId()
     const existing = await tx.bookingRequest.findUnique({
@@ -50,27 +29,46 @@ export async function generateUniqueShortId(
       return candidateId
     }
   }
+
+  // Si tras múltiples reintentos con 2 bytes colisiona (extremadamente raro en 65,536 combinaciones),
+  // se escala a 3 bytes (6 caracteres hex: VND-XXXXXX) para garantizar disponibilidad inmediata
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const candidateId = `VND-${crypto.randomBytes(3).toString("hex").toUpperCase()}`
+    const existing = await tx.bookingRequest.findUnique({
+      where: { shortId: candidateId }
+    })
+    if (!existing) {
+      return candidateId
+    }
+  }
+
   throw new Error("No fue posible generar un folio único tras múltiples reintentos.")
 }
 
 /**
  * Valida si un ID o folio cumple con el formato válido.
- * Acepta tanto el nuevo formato seguro de 80 bits (VND-XXXX-XXXX-XXXX-XXXX),
- * como los folios heredados (VND-XXXX, VND-XXXX-V2) y UUIDs directos.
+ * Acepta:
+ * 1. Formato estándar oficial: VND-XXXX (4 a 8 caracteres hex, con o sin versión -V1, -V2)
+ * 2. Formato personalizado o retrocompatible con folios previos (ej. VND-COLEGIO o folios largos)
+ * 3. Formato UUID directo
  */
 export function isValidShortIdFormat(id?: string | null): boolean {
   if (!id || typeof id !== "string") return false
   const trimmed = id.trim().toUpperCase()
 
-  // 1. Nuevo formato seguro: VND- + 4 bloques de 4 caracteres Crockford Base32
-  const isNewSecureFormat = /^VND-[0-9A-HJKMNP-Z]{4}-[0-9A-HJKMNP-Z]{4}-[0-9A-HJKMNP-Z]{4}-[0-9A-HJKMNP-Z]{4}$/.test(trimmed)
-  if (isNewSecureFormat) return true
+  // 1. Formato estándar oficial: VND- + 4 a 8 caracteres hexadecimales (con o sin versión -V1, -V2)
+  const isStandardFormat = /^VND-[0-9A-F]{4,8}(-V\d+)?$/.test(trimmed)
+  if (isStandardFormat) return true
 
-  // 2. Formato histórico corto: VND- + 4 a 8 caracteres hexadecimales (con o sin sufijo de versión -V1, -V2)
-  const isLegacyFormat = /^VND-[0-9A-F]{4,8}(-V\d+)?$/.test(trimmed)
-  if (isLegacyFormat) return true
+  // 2. Soporte retrocompatible para folios largos previos de 16 caracteres Base32
+  const isLongFormat = /^VND-[0-9A-HJKMNP-Z]{4}(-[0-9A-HJKMNP-Z]{4}){3}$/.test(trimmed)
+  if (isLongFormat) return true
 
-  // 3. Formato UUID directo (soporte retrocompatible para consultas directas por ID interno)
+  // 3. Formato personalizado por palabra clave (ej. VND-COLEGIO, mínimo 5 letras)
+  const isNamedCustom = /^VND-[A-Z]{5,15}$/.test(trimmed)
+  if (isNamedCustom) return true
+
+  // 4. Formato UUID directo (soporte retrocompatible para consultas directas por ID interno)
   const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(trimmed)
   if (isUuid) return true
 

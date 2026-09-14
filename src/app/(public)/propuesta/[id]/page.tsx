@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { formatDateMX } from "@/lib/utils"
 import { generateResourceToken } from "@/lib/security"
 import { PremiumClientQuoteView } from "@/components/quote/PremiumClientQuoteView"
@@ -15,7 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     where: {
       OR: [
         { shortId: lookupId },
-        { id: id.trim() }
+        { id: id.trim() },
+        { adminNote: { contains: lookupId } }
       ]
     }
   })
@@ -77,7 +78,8 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
     where: {
       OR: [
         { shortId: lookupId },
-        { id: id.trim() }
+        { id: id.trim() },
+        { adminNote: { contains: lookupId } }
       ]
     },
     include: {
@@ -102,6 +104,12 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
 
   if (!booking) {
     return notFound()
+  }
+
+  // Si se accedió por un folio largo legacy pero la cotización tiene un folio estándar corto oficial,
+  // redirigir canónicamente a la URL del folio estándar
+  if (booking.shortId && lookupId !== booking.shortId.toUpperCase() && lookupId.startsWith("VND-") && lookupId.length > 10) {
+    redirect(`/propuesta/${booking.shortId}`)
   }
 
   const globalConfig = await db.globalConfig.findUnique({

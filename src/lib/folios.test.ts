@@ -3,34 +3,35 @@ import assert from "node:assert/strict"
 import { generateSecureShortId, isValidShortIdFormat, generateUniqueShortId } from "./folios"
 
 describe("Generación y Validación de Folios Criptográficos (folios.ts)", () => {
-  it("debe generar un ID con 80 bits de entropía en formato VND-XXXX-XXXX-XXXX-XXXX", () => {
+  it("debe generar un ID en formato canónico oficial VND-XXXX (4 caracteres hexadecimales)", () => {
     const id = generateSecureShortId()
     
-    // Formato exacto
-    assert.match(id, /^VND-[0-9A-HJKMNP-Z]{4}-[0-9A-HJKMNP-Z]{4}-[0-9A-HJKMNP-Z]{4}-[0-9A-HJKMNP-Z]{4}$/)
+    // Formato exacto VND-XXXX
+    assert.match(id, /^VND-[0-9A-F]{4}$/)
     
-    // Caracteres Crockford Base32 (16 caracteres = 80 bits)
-    const rawChars = id.replace(/VND-|-/g, "")
-    assert.equal(rawChars.length, 16)
-    
-    // No debe contener caracteres ambiguos (I, L, O, U)
-    assert.equal(/[ILOUilou]/.test(rawChars), false)
+    // Caracteres hexadecimales en mayúsculas
+    const hexPart = id.replace("VND-", "")
+    assert.equal(hexPart.length, 4)
+    assert.match(hexPart, /^[0-9A-F]{4}$/)
   })
 
-  it("debe generar 1,000 IDs únicos sin colisiones estadísticas", () => {
+  it("debe generar IDs válidos con alta entropía y aleatoriedad", () => {
     const set = new Set<string>()
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 500; i++) {
       const id = generateSecureShortId()
-      assert.equal(set.has(id), false, `Colisión detectada en iteración ${i}`)
+      assert.match(id, /^VND-[0-9A-F]{4}$/)
       set.add(id)
     }
-    assert.equal(set.size, 1000)
+    // En 500 muestras de 65,536 combinaciones, la inmensa mayoría deben ser únicos
+    assert.ok(set.size > 480, `Esperado > 480 IDs únicos, obtenido ${set.size}`)
   })
 
-  it("debe validar correctamente folios con el nuevo formato seguro", () => {
-    assert.equal(isValidShortIdFormat("VND-7K9M-4X2P-8W3T-9A2C"), true)
-    assert.equal(isValidShortIdFormat("vnd-7k9m-4x2p-8w3t-9a2c"), true) // Case insensitive
-    assert.equal(isValidShortIdFormat("VND-0000-1111-2222-3333"), true)
+  it("debe validar correctamente folios con el formato oficial y con versiones", () => {
+    assert.equal(isValidShortIdFormat("VND-4A2B"), true)
+    assert.equal(isValidShortIdFormat("vnd-4a2b"), true) // Case insensitive
+    assert.equal(isValidShortIdFormat("VND-5F39"), true)
+    assert.equal(isValidShortIdFormat("VND-A7FA-V2"), true)
+    assert.equal(isValidShortIdFormat("VND-MBBC-EENW-QSRR-NTE1"), true) // Retrocompatibilidad con anteriores
   })
 
   it("debe mantener retrocompatibilidad con folios anteriores y versiones históricas", () => {
