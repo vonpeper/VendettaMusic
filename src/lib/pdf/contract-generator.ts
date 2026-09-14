@@ -72,13 +72,6 @@ export interface GenerateContractPdfOptions {
   bankAccount?: string | null
   bankClabe?: string | null
   bankBeneficiary?: string | null
-  rfc?: string
-  fiscalAddress?: string
-  legalRepName?: string
-  legalRepRole?: string
-  legalRepPower?: string
-  notificationAddress?: string
-  billingData?: string
 }
 
 export async function generateContractPdf(
@@ -375,11 +368,7 @@ export async function generateContractPdf(
     page.drawText(legalTitle, { x: (pageWidth - montserratBold.widthOfTextAtSize(legalTitle, 14)) / 2, y: ctx.y, size: 14, font: montserratBold })
     ctx.y -= 35
 
-    let introText = `SERVICIOS MUSICALES PROFESIONALES QUE CELEBRAN POR UNA PARTE JOSÉ ALBERTO BAUTISTA ROMERO PAREDES Y POR LA OTRA PARTE EL CLIENTE ${safeValue(data.clientName, "EL CLIENTE")}`
-    if (options.legalRepName) {
-      introText += `, REPRESENTADA EN ESTE ACTO POR EL C. ${options.legalRepName.toUpperCase()} EN SU CARÁCTER DE ${options.legalRepRole?.toUpperCase() || "REPRESENTANTE LEGAL"}, ACREDITANDO SUS FACULTADES MEDIANTE ${options.legalRepPower?.toUpperCase() || "PODER LEGAL"}`
-    }
-    introText += `, A QUIEN EN LO SUCESIVO Y PARA TODOS LOS EFECTOS LEGALES SE LE DENOMINARÁ “EL CLIENTE.”`
+    const introText = `CONTRATO DE PRESTACIÓN DE SERVICIOS MUSICALES QUE CELEBRAN POR UNA PARTE JOSÉ ALBERTO BAUTISTA ROMERO PAREDES (EN LO SUCESIVO “VENDETTA”) Y POR LA OTRA PARTE ${safeValue(data.clientName, "EL CLIENTE").toUpperCase()} (EN LO SUCESIVO “EL CLIENTE”), AL TENOR DE LAS SIGUIENTES DECLARACIONES Y CLÁUSULAS:`
     drawJustifiedText(ctx, introText, 8.5, 11, pageWidth - margin * 2)
 
     ctx.y -= 20
@@ -388,41 +377,16 @@ export async function generateContractPdf(
     ctx.y -= 20
 
     const fullLegalAddress = data.address || [data.street, data.houseNumber, data.colonia, data.municipio, data.city, data.state].filter(Boolean).join(", ") || "Ubicación por confirmar"
-    
-    if (isHappening) {
-      let clientDec = "DECLARACIONES DE EL CLIENTE\n" +
-        "El Cliente declara bajo protesta de decir verdad que:\n"
-      if (options.rfc) {
-        clientDec += `a) Que cuenta con registro federal de contribuyentes RFC ${options.rfc.toUpperCase()}.\n`
-        clientDec += `b) Que tiene su domicilio fiscal en ${options.fiscalAddress?.toUpperCase() || fullLegalAddress}.\n`
-      } else {
-        clientDec += "a) Que cuenta con la capacidad jurídica, económica y profesional necesaria para obligarse.\n"
-      }
-      clientDec += "c) Que cuenta con los permisos y condiciones necesarias para la realización del Evento en tiempo y forma.\n\n"
 
-      const decText = "DECLARACIONES DEL PRESTADOR\n" +
-        "Primera.- El Prestador José Alberto Bautista Romero Paredes, declara bajo protesta de decir verdad que:\n" +
-        "• Cuenta con la experiencia, capacidad técnica, conocimientos y recursos necesarios para prestar los servicios objeto de este documento.\n" +
-        "• Se encuentra debidamente registrado ante las autoridades fiscales correspondientes para el ejercicio de sus actividades económicas.\n" +
-        "• Que el nombre Vendetta es una denominación comercial utilizada para la identificación del servicio artístico en vivo, recayendo la responsabilidad en la persona física ya precisada.\n\n" +
-        "Segunda.- El objeto y Alcance del Servicio consiste en la presentación artística musical detallada en el presente documento.\n\n" +
-        clientDec +
-        "DECLARACIÓN CONJUNTA\n" +
-        "Ambas partes en el presente contrato manifiestan:\n" +
-        "• Que comparecen al otorgamiento y firma del presente documento por su propia e independiente voluntad.\n" +
-        "• Conocen y entienden cabalmente el alcance, contenido, efectos jurídicos y consecuencias de cada uno de los compromisos aquí asumidos.\n" +
-        "• En la celebración del presente acto no ha mediado ni existe error, dolo, mala fe, violencia, lesión, coacción ni ningún otro vicio del consentimiento.\n" +
-        "• Es su libre y soberana voluntad someterse incondicionalmente al cumplimiento y observancia de las siguientes:"
-      drawJustifiedText(ctx, decText, 8.0, 10.5, pageWidth - margin * 2)
-    } else {
-      let decText = "DECLARA Y ACEPTA “JOSÉ ALBERTO BAUTISTA ROMERO PAREDES” con RFC BARA8804PQ2 A QUIEN EN LO SUCESIVO Y PARA TODOS LOS EFECTOS LEGALES SE LE DENOMINARÁ “VENDETTA” SER REPRESENTANTE LEGAL DE “VENDETTA ROCK” Y QUE PUEDE COMPROMETERSE POR SÍ MISMO O SU REPRESENTADA A LOS FINES NECESARIOS AL TENOR DE LAS SIGUIENTES:\n\n"
-      if (options.rfc) {
-        decText += `DECLARA “EL CLIENTE” BAJO PROTESTA DE DECIR VERDAD: SER UNA PERSONA MORAL DEBIDAMENTE CONSTITUIDA CON RFC ${options.rfc.toUpperCase()}, CON DOMICILIO FISCAL EN ${options.fiscalAddress?.toUpperCase() || "PENDIENTE"}, Y SEÑALANDO COMO DOMICILIO PARA RECIBIR NOTIFICACIONES EL UBICADO EN ${options.notificationAddress?.toUpperCase() || "EL MISMO DOMICILIO FISCAL"}.`
-      } else {
-        decText += "DECLARA “EL CLIENTE” BAJO PROTESTA DE DECIR VERDAD: CONTAR CON LAS FACULTADES LEGALES Y ECONÓMICAS SUFICIENTES PARA CELEBRAR EL PRESENTE CONTRATO."
-      }
-      drawJustifiedText(ctx, decText, 8.5, 11, pageWidth - margin * 2)
-    }
+    const decText = "I. DECLARA “VENDETTA”:\n" +
+      "a) Ser una agrupación musical y artística profesional representada por José Alberto Bautista Romero Paredes con capacidad legal, técnica y operativa para prestar los servicios musicales contratados.\n" +
+      "b) Que cuenta con el equipo, instrumental, personal técnico e integrantes requeridos para el cumplimiento cabal del presente contrato.\n\n" +
+      "II. DECLARA “EL CLIENTE”:\n" +
+      `a) Llamarse como ha quedado asentado en el presente documento (${safeValue(data.clientName, "EL CLIENTE")}) y contar con plena capacidad para celebrar y obligarse al cumplimiento del presente contrato.\n` +
+      `b) Que es su voluntad contratar la presentación musical en vivo para la fecha, horario y lugar convenidos (${formatDateSpanish(data.requestedDate)} en ${fullLegalAddress}).\n\n` +
+      "III. AMBAS PARTES DECLARAN:\n" +
+      "Que reconocen mutuamente su personalidad y capacidad legal, manifestando que en la celebración del presente contrato no existe dolo, error, mala fe ni vicio alguno del consentimiento, sujetándose incondicionalmente al cumplimiento y observancia de las siguientes:"
+    drawJustifiedText(ctx, decText, 8.0, 10.5, pageWidth - margin * 2)
 
     ctx.y -= 25
     const clauHeader = "C L Á U S U L A S."
@@ -431,42 +395,55 @@ export async function generateContractPdf(
 
     let clausesToDraw: { n: string, t: string }[] = []
 
-    if (isHappening) {
-      const formatBankText = () => {
+    // --- CÁLCULO AUTOMÁTICO DE HORAS / TURNOS EXTRAS (SIN VIÁTICOS) ---
+    const baseServicePrice = data.packagePrice || 0
+    const contractedHours = data.bandHours && data.bandHours > 0 ? data.bandHours : (isBarPackage ? 1.5 : 2)
+    const dynamicExtraHour = isBarPackage
+      ? (baseServicePrice > 0 ? Math.round((baseServicePrice / 2) / 100) * 100 : 3500)
+      : (baseServicePrice > 0 ? Math.round((baseServicePrice / (contractedHours || 2)) / 100) * 100 : 5000)
+    const extraTimeLabel = isBarPackage ? "TURNO EXTRA (45 MINUTOS)" : "HORA EXTRA DE MÚSICA EN VIVO"
+
+    const formatBankText = () => {
       const parts = []
       if (options.bankName) parts.push(`Banco ${options.bankName}`)
       if (options.bankAccount) parts.push(`Cuenta: ${options.bankAccount}`)
       if (options.bankClabe) parts.push(`CLABE: ${options.bankClabe}`)
       if (options.bankBeneficiary) parts.push(`a nombre de ${options.bankBeneficiary}`)
-      if (parts.length > 0) return `medio de ${parts.join(" ")}`
+      if (parts.length > 0) return `medio de depósito o transferencia a ${parts.join(" ")}`
       return "medio de transferencia electrónica o depósito bancario a los datos oficiales compartidos por canal seguro"
     }
     const bankDetails = formatBankText()
+
+    if (isHappening) {
       clausesToDraw = [
-        { n: "PRIMERA", t: "DECLARA Y ACEPTA “EL CLIENTE.” Conocer el trabajo que desempeña “VENDETTA” y estar de acuerdo en su modalidad de “BANDA DE MÚSICA EN VIVO”" },
-        { n: "SEGUNDA", t: "DECLARA “VENDETTA” tener la capacidad y experiencia necesaria en términos musicales para cumplir con el compromiso motivo de este contrato de forma profesional." },
-        { n: "TERCERA", t: `“VENDETTA” se compromete a tocar en el evento que se efectuará el día ${formatDateSpanish(data.requestedDate)} en ${fullLegalAddress}.` },
-        { n: "CUARTA", t: `La actuación de “VENDETTA” será efectuada dentro del siguiente programa: ${safeValue(data.startTime)} HRS A ${safeValue(data.endTime)} HRS.` },
+        { n: "PRIMERA", t: "DECLARA Y ACEPTA “EL CLIENTE”: Conocer el trabajo que desempeña “VENDETTA” y estar de acuerdo en su modalidad de “PRESENTACIÓN MUSICAL EN VIVO / HAPPENING”." },
+        { n: "SEGUNDA", t: "DECLARA “VENDETTA”: Tener la capacidad, instrumental, equipo técnico y experiencia profesional necesaria para cumplir con el compromiso motivo de este contrato de forma cabal y con los más altos estándares artísticos." },
+        { n: "TERCERA", t: `“VENDETTA” se compromete a presentarse y ejecutar el servicio contratado en el evento que se efectuará el día ${formatDateSpanish(data.requestedDate)} en el inmueble ubicado en ${fullLegalAddress}.` },
+        { n: "CUARTA", t: `La actuación de “VENDETTA” será efectuada dentro del siguiente programa: ${safeValue(data.startTime)} HRS A ${safeValue(data.endTime)} HRS (${bandHours} horas de música en vivo).` },
         { 
           n: "QUINTA", 
-          t: `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación. La cual “EL CLIENTE” se compromete a liquidar en 2 pagos: un anticipo de ${MXN(anticipo)} por ${bankDetails}, y la liquidación del restante por un monto de ${MXN(liquidacion)} se realizará el día del evento en el momento en el que “VENDETTA” llegue a la dirección mencionada en la tercera cláusula, antes de descargar y montar la producción de la presentación.`
+          t: `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación${(data.viaticosAmount || 0) > 0 ? ` (incluyendo ${MXN(data.viaticosAmount || 0)} por concepto de viáticos y gastos logísticos foráneos)` : ""}. La cual “EL CLIENTE” se compromete a liquidar en 2 pagos: un anticipo de ${MXN(anticipo)} (${pct}%) por ${bankDetails}, y la liquidación del restante por un monto de ${MXN(liquidacion)} se realizará en efectivo el día del evento al momento en el que “VENDETTA” arribe al lugar mencionado en la tercera cláusula, antes de descargar y montar la producción. En caso de que “EL CLIENTE” opte por liquidar mediante transferencia electrónica (SPEI), dicha transferencia deberá quedar realizada, acreditada y confirmada en la cuenta bancaria de “VENDETTA” con al menos 24 horas de anticipación a la fecha del evento.`
         },
-        { n: "SEXTA", t: "En caso de alternar con otro grupo (musical, mariachis, disco, etc.), si dicho grupo no respeta el horario establecido entre ambos y llegara a ocupar más tiempo del establecido, “VENDETTA” no repondrá dicho tiempo y será sujeto a cumplir dentro del horario de inicio y final estipulado en el presente contrato. En caso de que el tiempo sea agotado no habrá opción de reembolso, VENDETTA cobrará el 100% del monto estipulado en este contrato y en caso de acordar seguir con el evento en un nuevo tiempo se tendrá que negociar un nuevo contrato." },
-        { n: "SÉPTIMA", t: "“EL CLIENTE.” se compromete a poner a la disposición de “VENDETTA” un espacio (mesa, sala, silla o sillas) con servicio para sus descansos, asimismo “EL CLIENTE.” será el único responsable de contar con el espacio adecuado para la instalación del equipo, provista de la instalación eléctrica mínima, dos tomas de corriente de 110 V y como máximo 10 metros de distancia, el espacio deberá ser exclusivo para la colocación de VENDETTA por seguridad del público como para el buen desempeño de la actuación de “VENDETTA”, si por alguna razón imputable a “EL CLIENTE” o a los asistentes al evento, el equipo de VENDETTA sufre algún percance de consideración (que lo deje incapacitado para realizar su función) “EL CLIENTE” acepta cubrir el costo de la reparación o reemplazo en dado caso de que sea irreparable, del aparato, instrumento afectado o daño físico o agresión a algún miembro de la agrupación." },
-        { n: "OCTAVA", t: "“EL CLIENTE” se compromete a proporcionar a “VENDETTA” bebidas hidratantes durante el desarrollo del evento (agua, refrescos o equivalentes). El ofrecimiento de bebidas alcohólicas o cualquier otro tipo de cortesía queda a criterio exclusivo del cliente, entendiéndose que tales cortesías no constituyen obligación contractual ni condicionan la ejecución del servicio. Asimismo, “VENDETTA” manifiesta que su personal no realizará sus actividades bajo influencia de sustancias, estupefacientes o niveles inapropiados de alcohol, conservando en todo momento la capacidad óptima para el desempeño de su trabajo. La existencia de cortesías por parte de “EL CLIENTE” no será interpretada como autorización o exigencia para su consumo. Cualquier consumo voluntario por parte del personal de “VENDETTA”, dentro de los límites que no afecten la correcta ejecución del servicio, no será causa de cancelación, rescisión ni penalización contractual, salvo que se comprometa de manera evidente la integridad del evento, extremo que deberá ser objetivamente comprobable." },
-        { n: "NOVENA", t: "“VENDETTA” asegura presentarse en tiempo y forma con vestimenta, limpieza y respeto para el cumplimiento del evento, motivo de este contrato." },
-        { n: "DÉCIMA", t: "“EL CLIENTE” se obliga a proporcionar a “VENDETTA” las condiciones adecuadas para la correcta, cómoda y segura ejecución del servicio. Esto incluye, de manera enunciativa mas no limitativa, brindar seguridad en el área designada, suficiente espacio para la instalación del equipo y libre movilidad de los integrantes, así como un entorno que no comprometa la integridad del personal ni del equipo técnico. En ningún caso “EL CLIENTE” podrá solicitar que “VENDETTA” se presente, instale o opere bajo condiciones atmosféricas adversas, riesgos de seguridad, falta de espacio, exposure directa a lluvia, humedad o viento, o cualquier otro factor que pueda perjudicar la ejecución musical, la estabilidad del equipo o el bienestar del personal, especialmente en eventos al aire libre. En caso de que no se cumplan las condiciones mencionadas, “VENDETTA” podrá suspender temporalmente o ajustar la prestación del servicio hasta que el área sea acondicionada adecuadamente, sin que ello implique responsabilidad alguna para VENDETTA." },
-        { n: "DÉCIMA PRIMERA", t: "Si por algún motivo el evento citado en la cláusula primera de este contrato no se realizara por causas imputables a “EL CLIENTE”, éste mismo se compromete a pagar a “VENDETTA” el 50% del costo total de la presentación por concepto de indemnización, por daños y perjuicios ocasionados por razones de apartado de fecha y/o movilización de equipo. En el respectivo caso, si el motivo es por causas imputables a VENDETTA, ésta se compromete a realizar el reembolso del anticipo otorgado así como a volver a agendar la fecha, en caso de que “EL CLIENTE.” así lo desee, con un 10% de descuento sobre el monto del presente contrato por concepto de indemnización por daños y perjuicios ocasionados." },
-        { n: "DÉCIMA SEGUNDA", t: "Las partes están de acuerdo en que una vez terminada la actuación de “VENDETTA” y si fuese necesario seguir tocando por tiempo extra y las condiciones son adecuadas, el precio por este será de $10,000.00 MN por HORA EXTRA (Sujeta a disponibilidad de agenda)." },
-        { n: "DÉCIMA TERCERA", t: "“EL CLIENTE” hace constar bajo protesta de decir verdad que la información anteriormente asentada es verídica, comprometiéndose a resarcir los daños y perjuicios que sean ocasionados con base en una falsa declaración de su parte, SOBRE TODO EN EL CASO ESPECÍFICO DE QUE DICHO CONTRATO SEA ENVIADO Y RECIBIDO POR ALGÚN MEDIO ELECTRÓNICO AJENO AL CONTROL DE “VENDETTA”; en todo caso este se reserva el derecho de hacer válida la garantía de indemnización enumerada en la cláusula DÉCIMA PRIMERA de este documento." },
-        { n: "DÉCIMA CUARTA", t: "Para todo lo relativo a la interpretación, cumplimiento y ejecución en su caso del presente CONTRATO, así como para todo aquello que no esté estipulado en el mismo, “las partes” que en él intervinieron se someten a la jurisdicción y competencia de las leyes y tribunales civiles de Toluca, Estado de México, renunciado expresamente a cualquier otro fuero que por razón de su actual o futuro domicilio o, por cualquier otra causa pudiere llegar a corresponderles. Leído que fue el presente CONTRATO y estando “las partes” que en él intervinieron conformes en todas y cada una de las cláusulas que anteceden, firman por duplicado el mismo, teniendo ambos ejemplares la misma fuerza y valor de un documento original, independientemente de que dicho convenio se haya celebrado por medio de alguna otra forma de comunicación como pudiese ser el caso de envío del mismo por medio de correo electrónico, mensajería instantánea ó cualquier otro medio electrónico moderno, bastando únicamente la firma electrónica, rastro digital de envío/recepción o la confirmación por medios digitales para hacerlo valer conforme a derecho y de conformidad con lo dispuesto por el artículo 89 del Código de Comercio, quedando un ejemplar en poder de cada una de “las partes”, firman con fecha del día en el que el anticipo es depositado y comprobado por el banco receptor y que “VENDETTA” pueda verificar." },
-        { n: "DÉCIMA QUINTA", t: "“VENDETTA” podrá interrumpir la presentación a criterio en el caso específico donde alguno de los miembros de VENDETTA o staff sea molestado con motivo sexual, racial, de clase, género, violencia verbal o física, además de no respetar la seguridad en el espacio o ubicación donde se lleve a cabo la presentación, también aplica para daños a transportes de los músicos, “EL CLIENTE” deberá pagar el 100% del monto total estipulado en este contrato como indemnización, el arreglo deberá ser expuesto con “EL CLIENTE” con pruebas y a una posterior consideración de ambas partes." },
-        { n: "DÉCIMA SEXTA", t: "“EL CLIENTE” Acepta al firmar este contrato que la propuesta de equipo de audio no puede ser modificada en el momento del evento, “EL CLIENTE” confirma que fue notificado sobre los alcances del montaje y está de acuerdo con el equipo de audio y backline establecido conociendo sus limitaciones. Toda modificación deberá ser solicitada 72 hrs antes del evento y deberá cumplir con el costo adicional e indirectos necesarios para poder realizar el nuevo montaje solicitado." },
-        { n: "DÉCIMA SÉPTIMA", t: "LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Cuando el servicio se realice fuera del área de cobertura sin viáticos (radio previamente establecido) o cuando, por requerimientos del evento, el tiempo total de permanencia de “VENDETTA” en el lugar exceda el tiempo estándar de operación (considerando hasta 1 hora de montaje, 2 horas de show y 1 hora de desmontaje), se considerará como logística extendida. En dichos casos, “EL CLIENTE” acepta que podrán generarse cargos adicionales por tiempo de estancia, horas extra y/o disponibilidad extendida. Asimismo, cuando la logística implique tiempos prolongados entre montaje, presentación y desmontaje, o traslados que imposibiliten el retorno inmediato, “EL CLIENTE” se obliga a proporcionar a “VENDETTA” un espacio adecuado de descanso, el cual podrá consistir en habitación de hotel, Airbnb, sala privada o área acondicionada, que garantice seguridad, comodidad y resguardo del equipo." },
-        { n: "DÉCIMA OCTAVA", t: "LIMITACIÓN DE RESPONSABILIDAD TÉCNICA (PROVEEDOR EXTERNO): Las partes reconocen y aceptan que la participación de “VENDETTA” se limita de manera exclusiva a la ejecución y presentación artística musical del show, aportando la agrupación su propio backline (instrumentos y amplificadores sobre escenario) y su ingeniero de audio. Sin embargo, toda la infraestructura técnica de refuerzo sonoro, incluyendo de forma enunciativa mas no limitativa, el sistema de PA (altavoces principales para el recinto), mezcladora (consola/mixer) y derivados necesarios para la sonorización del evento, será provista en su totalidad por un proveedor externo contratado por el cliente. Por lo tanto, “VENDETTA” no asume responsabilidad alguna por la calidad, idoneidad, potencia, suficiencia, fallas técnicas, retrasos o incumplimientos del equipo provisto por dicho proveedor, deslindándose de cualquier reclamación legal o contractual derivada de la inadecuación o deficiencia técnica del equipamiento sonoro, recayendo dicha responsabilidad civil o administrativa directamente en el proveedor técnico contratado por “EL CLIENTE”, el cual es completamente ajeno a la organización y producción de “VENDETTA”." },
+        { n: "SEXTA", t: "En caso de alternar con otro grupo (musical, mariachis, disco, protocolo, etc.), si dicho acto no respeta el horario establecido entre ambos y llegara a ocupar más tiempo del asignado, “VENDETTA” no repondrá dicho tiempo y se sujetará al horario convenido de inicio y final estipulado en el presente contrato. En caso de que el tiempo se agote por causas no imputables a “VENDETTA”, no habrá opción de reembolso y se cobrará el 100% del monto estipulado en este contrato; cualquier tiempo extendido requerirá la contratación de tiempo extra." },
+        { n: "SÉPTIMA", t: "“EL CLIENTE” se compromete a poner a disposición de “VENDETTA” un espacio (mesa, sala, sillas) con servicio para sus descansos. Asimismo, “EL CLIENTE” será el único responsable de contar con el espacio adecuado para la instalación del equipo, provisto de una instalación eléctrica estable y regulada de al menos dos tomas de corriente de 110V aterrizadas a no más de 10 metros, en un circuito independiente y exclusivo (sin compartir línea con equipos de cocina, calentadores ni plantas de refrigeración). “VENDETTA” no se hace responsable por fallas o pausas derivadas de fluctuaciones de voltaje del inmueble. Queda estrictamente prohibido a los asistentes colocar vasos, botellas o líquidos sobre o a menos de un metro del equipo de audio, iluminación e instrumentos; cualquier daño o percance imputable a los asistentes o al recinto será cubierto al 100% por “EL CLIENTE” a valor de reposición inmediata, así como responder por cualquier agresión física o daño al personal de la agrupación." },
+        { n: "OCTAVA", t: "“EL CLIENTE” se compromete a proporcionar a “VENDETTA” bebidas hidratantes durante el desarrollo del evento (agua, refrescos o equivalentes). El ofrecimiento de bebidas alcohólicas o cualquier otro tipo de cortesía queda a criterio exclusivo del cliente, entendiéndose que tales cortesías no constituyen obligación contractual ni condicionan la ejecución del servicio. Asimismo, “VENDETTA” manifiesta que su personal no realizará sus actividades bajo influencia de sustancias, estupefacientes o niveles inapropiados de alcohol, conservando en todo momento la capacidad óptima para el desempeño de su trabajo. Cualquier consumo voluntario por parte del personal de “VENDETTA”, dentro de los límites que no afecten la correcta ejecución del servicio, no será causa de cancelación, rescisión ni penalización contractual, salvo que se comprometa de manera evidente la integridad del evento, extremo que deberá ser objetivamente comprobable." },
+        { n: "NOVENA", t: "“VENDETTA” asegura presentarse en tiempo y forma con vestimenta, limpieza y respeto profesional para el cumplimiento del evento motivo de este contrato." },
+        { n: "DÉCIMA", t: "“EL CLIENTE” se obliga a proporcionar a “VENDETTA” las condiciones adecuadas para la correcta, cómoda y segura ejecución del servicio, incluyendo seguridad en el área y libre movilidad. En ningún caso “EL CLIENTE” podrá solicitar que “VENDETTA” se presente, instale u opere bajo condiciones atmosféricas adversas, exposición directa a lluvia, humedad extrema o viento, o factores que comprometan la estabilidad del equipo o el bienestar del personal. En caso de que no se cumplan las condiciones mencionadas, “VENDETTA” podrá suspender temporalmente o ajustar la prestación del servicio hasta que el área cuente con resguardo y techado adecuado, sin que ello implique responsabilidad o penalización para “VENDETTA”." },
+        { n: "DÉCIMA PRIMERA", t: "Si el evento no se realizara por causas imputables a “EL CLIENTE”, éste se compromete a cubrir a “VENDETTA” el 50% del costo total del contrato por concepto de indemnización por daños y apartado de fecha. Si la cancelación fuere por causas imputables a “VENDETTA”, ésta se compromete a reembolsar el anticipo otorgado y a otorgar la opción de reagendar con un 10% de descuento sobre el monto contratado. En caso de suspensión o cancelación por Caso Fortuito o Fuerza Mayor (fenómenos meteorológicos graves, sismos, emergencias sanitarias, actos de autoridad o cortes generales de suministro eléctrico municipal ajenos a las partes), el anticipo pagado no será reembolsable en efectivo y se conservará como saldo a favor y crédito para reagendar la presentación dentro de los siguientes 180 (ciento ochenta) días naturales conforme a disponibilidad de agenda de “VENDETTA”, deduciendo únicamente los viáticos y gastos de traslado que ya se hubieren devengado efectivamente si la agrupación ya se encontraba en movilización o en el recinto." },
+        { n: "DÉCIMA SEGUNDA", t: `Las partes convienen que, en caso de requerirse tiempo adicional de presentación una vez concluido el programa y existiendo condiciones operativas y de agenda, la tarifa por ${extraTimeLabel} se determina proporcionalmente con base en el valor pactado del servicio artístico (sin viáticos), fijándose en la cantidad de ${MXN(dynamicExtraHour)} (${numeroALetras(dynamicExtraHour)} pesos mexicanos) por cada ${isBarPackage ? "turno de 45 minutos" : "hora extra"}, debiendo ser autorizada y liquidada en efectivo antes de iniciar dicho tiempo adicional.` },
+        { n: "DÉCIMA TERCERA", t: "“EL CLIENTE” asume expresamente el carácter de organizador del evento y será el único y exclusivo responsable de tramitar y cubrir ante las autoridades correspondientes cualquier permiso municipal, estatal o de protección civil, así como el pago de derechos de autor y licencias de ejecución pública musical ante la Sociedad de Autores y Compositores de México (SACM) o sociedad de gestión colectiva aplicable, deslindando totalmente a “VENDETTA” de cualquier pago, multa o requerimiento emitido por dichas instituciones." },
+        { n: "DÉCIMA CUARTA", t: "“EL CLIENTE” autoriza a “VENDETTA” a registrar fotografía y video de la actuación musical para fines exclusivos de portafolio artístico, difusión musical y promoción en redes sociales y medios digitales de la agrupación. En caso de que “EL CLIENTE” requiera privacidad total o confidencialidad, deberá manifestarlo por escrito con anterioridad a la firma del presente contrato." },
+        { n: "DÉCIMA QUINTA", t: "“VENDETTA” podrá interrumpir la presentación a criterio en el caso específico de que alguno de los miembros de la agrupación o staff sea víctima de acoso, discriminación, violencia verbal o agresión física, o bien si se registran daños a los transportes de los músicos por parte de asistentes al evento. En tales supuestos, “EL CLIENTE” deberá cubrir el 100% del monto total estipulado en este contrato como indemnización por incumplimiento de condiciones mínimas de seguridad." },
+        { n: "DÉCIMA SEXTA", t: "“EL CLIENTE” acepta al firmar este contrato que la propuesta de equipo técnico y audio no puede ser modificada el día del evento durante el montaje. Toda modificación técnica deberá ser solicitada por escrito con al menos 72 horas de anticipación al evento y estará sujeta a la cobertura de los costos adicionales e indirectos correspondientes." },
+        { n: "DÉCIMA SÉPTIMA", t: "LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Cuando el servicio se realice fuera del área de cobertura estándar o cuando por requerimientos del evento el tiempo total de permanencia de “VENDETTA” en el lugar exceda el tiempo estándar de operación (considerando hasta 1 hora de montaje, el tiempo de show convenido y 1 hora de desmontaje), se considerará logística extendida, generando los cargos adicionales correspondientes por disponibilidad. Asimismo, cuando los traslados imposibiliten el retorno seguro inmediato, “EL CLIENTE” se obliga a proporcionar a “VENDETTA” un espacio adecuado de descanso (habitación de hotel o área acondicionada) que garantice el resguardo del equipo y descanso del personal." },
+        { n: "DÉCIMA OCTAVA", t: "LIMITACIÓN DE RESPONSABILIDAD TÉCNICA (PROVEEDOR EXTERNO): Las partes reconocen y aceptan que la participación de “VENDETTA” se limita de manera exclusiva a la ejecución y presentación artística musical del show, aportando la agrupación su propio backline (instrumentos y amplificadores sobre escenario) y su ingeniero de audio. Toda la infraestructura técnica de refuerzo sonoro (PA principal, mezcladora/consola y derivados) provista por un proveedor externo contratado por el cliente será de la exclusiva responsabilidad de dicho proveedor, deslindándose “VENDETTA” de cualquier falla técnica, insuficiencia de potencia o deficiencia imputable a terceros." },
         { 
           n: "DÉCIMA NOVENA", 
-          t: "NO EXISTENCIA DE RELACIÓN LABORAL. Las partes reconocen y aceptan que las únicas relaciones jurídicas existentes entre ellas son las derivadas del presente contrato, razón por la cual el PRESTADOR (Vendeta) es y será el único responsable ante el personal que utilice, contrate, y/o subcontrate, y que se encontrará bajo su inmediata dirección y dependencia, del cumplimiento a todas las obligaciones derivadas de las disposiciones laborales, de seguridad social, impositivas y de cualquier otra índole, vigentes y aplicables, incluyendo el pago de salarios ordinarios y extraordinarios, vacaciones, aguinaldo, prima de antigüedad, accidentes, riesgos de trabajo, reparto de utilidades, finiquitos, despidos, así como cualquier obligación aplicable derivada de la Ley Federal del Trabajo en vigor, del Instituto Mexicano del Seguro Social, del “INFONAVIT”, por lo que el PRESTADOR asume expresamente el carácter de patrón en términos de lo que se establecen los artículo 8, 10 y 20 y demás relativos y aplicables de la Ley Federal del Trabajo respecto de las personas que se encuentren comprendidas dentro del personal, para todos los efectos legales a que haya lugar. Asimismo, el PRESTADOR se obliga a contratar expresamente y en nombre propio al personal administrativo, técnico y demás personas, que requiera para el cumplimiento del objeto del presente contrato, obligándose a celebrar los contratos individuales de trabajo con todos los requisitos y formalidades establecidas por los artículos 24 y 25 de la Ley Federal del Trabajo, estipulando con toda claridad las prestaciones a otorgarles por parte del PRESTADOR, por lo que no existe ni existirá relación laboral alguna entre los trabajadores y dependientes o aquellos que sean subcontratados por el PRESTADOR y COLEGIO MEXICANO DE ANESTESIOLOGIA , sus filiales, subsidiarias y partes relacionadas. El PRESTADOR se obliga a defender, mantener y sacar en paz y a salvo a El Cliente, receptor de los Servicios y a sus funcionarios, directivos y empleados de su controladora, filiales y/o subsidiarias, en caso de que se vieran involucrados inútilmente en alguna demanda, reclamación y/o responsabilidad de cualquier clase exigida por cualquier empleado, agente y/o contratista y/o subcontratista del PRESTADOR presentada ante cualquier Junta de Conciliación y Arbitraje, Tribunal Laboral o Autoridad Administrativa o Judicial, sea federal, local o municipal, y en caso de que El Cliente o el receptor de los Servicios tuviera que cumplir con alguna obligación de pago o de cualquier otra índole que surja de cualesquier resolución relativa a cualquier demanda, queja o reclamación entablada por algún trabajador del PRESTADOR, éste último le reembolsará a El Cliente la cantidad que corresponda. Las obligaciones previstas en esta Cláusula a cargo del PRESTADOR sobrevivirán y subsistirán a la expiración del plazo de este contrato y a la terminación y/o rescisión por cualquier causa, de conformidad con la Ley, por lo que El Cliente podrá solicitar en cualquier momento al PRESTADOR que le acredite con documentación idónea, que cumple con sus obligaciones laborales y que cuenta con los elementos propios y suficientes para cumplir con las obligaciones que deriven de las relaciones con sus trabajadores. El PRESTADOR es el único y exclusivo responsable y obligado, sin contar con obligados solidarios ni sustitutos, de la relación laboral con su Personal en términos de los ordenamientos legales laborales, por tanto, conviene y se obliga a sacar en paz a El Cliente."
+          t: "NO EXISTENCIA DE RELACIÓN LABORAL. Las partes reconocen y aceptan que las únicas relaciones jurídicas existentes entre ellas son las derivadas del presente contrato, razón por la cual el PRESTADOR (Vendetta) es y será el único responsable ante el personal que utilice, contrate, y/o subcontrate, y que se encontrará bajo su inmediata dirección y dependencia, del cumplimiento a todas las obligaciones derivadas de las disposiciones laborales, de seguridad social, impositivas y de cualquier otra índole, vigentes y aplicables, incluyendo el pago de salarios ordinarios y extraordinarios, vacaciones, aguinaldo, prima de antigüedad, accidentes, riesgos de trabajo, reparto de utilidades, finiquitos, despidos, así como cualquier obligación aplicable derivada de la Ley Federal del Trabajo en vigor, del Instituto Mexicano del Seguro Social, del “INFONAVIT”, por lo que el PRESTADOR asume expresamente el carácter de patrón en términos de lo que se establecen los artículos 8, 10 y 20 y demás relativos y aplicables de la Ley Federal del Trabajo respecto de las personas que se encuentren comprendidas dentro del personal, para todos los efectos legales a que haya lugar. Asimismo, el PRESTADOR se obliga a defender, mantener y sacar en paz y a salvo a El Cliente en caso de cualquier reclamación laboral."
+        },
+        { 
+          n: "VIGÉSIMA", 
+          t: "Para todo lo relativo a la interpretación, cumplimiento y ejecución del presente CONTRATO, las partes se someten expresamente a la jurisdicción de las leyes y tribunales civiles de Toluca, Estado de México, renunciando a cualquier otro fuero que pudiera corresponderles. Leído que fue el presente contrato y conformes las partes en todas sus cláusulas, lo firman teniendo la misma fuerza y valor probatorio en documento físico o electrónico, bastando la firma electrónica, rastro digital o confirmación por medios digitales para hacerlo valer conforme a derecho y según lo dispuesto por el artículo 89 del Código de Comercio." 
         }
       ]
     } else if (options.contractLegalText) {
@@ -506,61 +483,46 @@ export async function generateContractPdf(
         .filter(p => p.trim().length > 0)
         .map(p => ({ n: "", t: p }))
     } else {
-      // Cláusulas por defecto (Legacy)
+      // Cláusulas por defecto (Estándar / Bar)
       clausesToDraw = [
-        { n: "PRIMERA", t: "DECLARA Y ACEPTA “EL CLIENTE.” Conocer el trabajo que desempeña “VENDETTA” y estar de acuerdo en su modalidad de “BANDA DE ROCK DE COVERS EN INGLES Y ESPAÑOL”" },
-        { n: "SEGUNDA", t: "DECLARA “VENDETTA” tener la capacidad y experiencia necesaria en términos musicales para cumplir con el compromiso motivo de este contrato de forma profesional." },
-        { n: "TERCERA", t: `“VENDETTA” se compromete a tocar en el evento que se efectuará el día ${formatDateSpanish(data.requestedDate)} en ${fullLegalAddress}.` },
+        { n: "PRIMERA", t: "DECLARA Y ACEPTA “EL CLIENTE”: Conocer el trabajo que desempeña “VENDETTA” y estar de acuerdo en su modalidad de “BANDA DE ROCK DE COVERS EN INGLÉS Y ESPAÑOL”." },
+        { n: "SEGUNDA", t: "DECLARA “VENDETTA”: Tener la capacidad, instrumental, equipo técnico y experiencia profesional necesaria para cumplir con el compromiso motivo de este contrato de forma cabal y con los más altos estándares artísticos." },
+        { n: "TERCERA", t: `“VENDETTA” se compromete a presentarse y ejecutar el servicio contratado en el evento que se efectuará el día ${formatDateSpanish(data.requestedDate)} en el inmueble ubicado en ${fullLegalAddress}.` },
         { 
           n: "CUARTA", 
           t: isBarPackage 
             ? `La actuación de “VENDETTA” será efectuada dentro del siguiente programa: ${safeValue(data.startTime)} HRS A ${safeValue(data.endTime)} HRS, comprendiendo un total de 2 turnos de 45 minutos de música en vivo.`
-            : `La actuación de “VENDETTA” será efectuada en el siguiente programa: ${safeValue(data.startTime)} HRS A ${safeValue(data.endTime)} HRS.` 
+            : `La actuación de “VENDETTA” será efectuada dentro del siguiente programa: ${safeValue(data.startTime)} HRS A ${safeValue(data.endTime)} HRS (${bandHours} horas de música en vivo).` 
         },
         { 
           n: "QUINTA", 
           t: (data.viaticosAmount || 0) > 0 
-            ? (pct > 0 ? `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; más la cantidad de: ${MXN(data.viaticosAmount || 0)} por concepto de viáticos foráneos, dando un total de ${MXN(total)} a liquidar. La cual “EL CLIENTE” se compromete a liquidar en 2 pagos: un anticipo del ${pct}% (${MXN(anticipo)}) ${(() => {
-    const parts = []
-    if (options.bankName) parts.push(`Banco ${options.bankName}`)
-    if (options.bankAccount) parts.push(`Cuenta: ${options.bankAccount}`)
-    if (options.bankClabe) parts.push(`CLABE: ${options.bankClabe}`)
-    if (options.bankBeneficiary) parts.push(`a nombre de ${options.bankBeneficiary}`)
-    if (parts.length > 0) return `por medio de depósito o transferencia a: ${parts.join(" ")}`
-    return "por medio de transferencia electrónica o depósito a los datos oficiales compartidos por canal seguro"
-  })()}, LA LIQUIDACIÓN DEL RESTANTE POR UN MONTO DE ${MXN(liquidacion)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO EN EL MOMENTO EN EL QUE “VENDETTA” LLEGUE A LA DIRECCIÓN MENCIONADA EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`
-                       : `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; más la cantidad de: ${MXN(data.viaticosAmount || 0)} por concepto de viáticos foráneos, dando un total de ${MXN(total)} a liquidar. LA TOTALIDAD DEL MONTO POR ${MXN(total)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO EN EL MOMENTO EN EL QUE “VENDETTA” LLEGUE A LA DIRECCIÓN MENCIONADA EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`)
-            : (pct > 0 ? `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; la cual “EL CLIENTE” se compromete a liquidar en 2 pagos: un anticipo del ${pct}% (${MXN(anticipo)}) ${(() => {
-    const parts = []
-    if (options.bankName) parts.push(`Banco ${options.bankName}`)
-    if (options.bankAccount) parts.push(`Cuenta: ${options.bankAccount}`)
-    if (options.bankClabe) parts.push(`CLABE: ${options.bankClabe}`)
-    if (options.bankBeneficiary) parts.push(`a nombre de ${options.bankBeneficiary}`)
-    if (parts.length > 0) return `por medio de depósito o transferencia a: ${parts.join(" ")}`
-    return "por medio de transferencia electrónica o depósito a los datos oficiales compartidos por canal seguro"
-  })()}, LA LIQUIDACIÓN DEL RESTANTE POR UN MONTO DE ${MXN(liquidacion)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO EN EL MOMENTO EN EL QUE “VENDETTA” LLEGUE A LA DIRECCIÓN MENCIONADA EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`
-                       : `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; LA TOTALIDAD DEL MONTO POR ${MXN(total)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO EN EL MOMENTO EN EL QUE “VENDETTA” LLEGUE A LA DIRECCIÓN MENCIONADA EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`)
+            ? (pct > 0 ? `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación, incluyendo la cantidad de: ${MXN(data.viaticosAmount || 0)} por concepto de viáticos y gastos logísticos foráneos. La cual “EL CLIENTE” se compromete a liquidar en 2 pagos: un anticipo del ${pct}% (${MXN(anticipo)}) por ${bankDetails}, y LA LIQUIDACIÓN DEL RESTANTE POR UN MONTO DE ${MXN(liquidacion)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO AL MOMENTO EN EL QUE “VENDETTA” ARRIBE AL LUGAR MENCIONADO EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN. En caso de que “EL CLIENTE” opte por liquidar mediante transferencia electrónica (SPEI), dicha transferencia deberá quedar realizada, acreditada y confirmada en la cuenta bancaria de “VENDETTA” con al menos 24 horas de anticipación a la fecha del evento.`
+                       : `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación, incluyendo la cantidad de: ${MXN(data.viaticosAmount || 0)} por concepto de viáticos y gastos logísticos foráneos. LA TOTALIDAD DEL MONTO POR ${MXN(total)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO AL MOMENTO EN EL QUE “VENDETTA” ARRIBE AL LUGAR MENCIONADO EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`)
+            : (pct > 0 ? `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; la cual “EL CLIENTE” se compromete a liquidar en 2 pagos: un anticipo del ${pct}% (${MXN(anticipo)}) por ${bankDetails}, y LA LIQUIDACIÓN DEL RESTANTE POR UN MONTO DE ${MXN(liquidacion)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO AL MOMENTO EN EL QUE “VENDETTA” ARRIBE AL LUGAR MENCIONADO EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN. En caso de que “EL CLIENTE” opte por liquidar mediante transferencia electrónica (SPEI), dicha transferencia deberá quedar realizada, acreditada y confirmada en la cuenta bancaria de “VENDETTA” con al menos 24 horas de anticipación a la fecha del evento.`
+                       : `Por esta actuación “EL CLIENTE” se compromete a pagar a “VENDETTA” la cantidad de: ${MXN(total)} (${numeroALetras(total)} pesos mexicanos) por concepto de la actuación; LA TOTALIDAD DEL MONTO POR ${MXN(total)} SE REALIZARÁ EN EFECTIVO EL DÍA DEL EVENTO AL MOMENTO EN EL QUE “VENDETTA” ARRIBE AL LUGAR MENCIONADO EN LA TERCERA CLÁUSULA, ANTES DE DESCARGAR Y MONTAR LA PRODUCCIÓN DE LA PRESENTACIÓN.`)
         },
-        { n: "SEXTA", t: "En caso de alternar con otro grupo (musical, mariachis, disco, etc.), si dicho grupo no respeta el horario establecido entre ambos y llegara a ocupar más tiempo del establecido, “VENDETTA” no repondrá dicho tiempo y será sujeto a cumplir dentro del horario de inicio y final estipulado en el presente contrato. En caso de que el tiempo sea agotado no habrá opción de reembolso, VENDETTA cobrará el 100% del monto estipulado en este contrato y en caso de acordar seguir con el evento en un nuevo tiempo se tendrá que negociar un nuevo contrato." },
-        { n: "SÉPTIMA", t: "“EL CLIENTE.” se compromete a poner a la disposición de “VENDETTA” un espacio (mesa, sala, silla o sillas) con servicio para sus descansos, asimismo “EL CLIENTE.” será el único responsable de contar con el espacio adecuado para la instalación del equipo, provista de la instalación eléctrica mínima, dos tomas de corriente de 110 V y como máximo 10 metros de distancia, el espacio deberá ser exclusivo para la colocación de VENDETTA por seguridad del público como para el buen desempeño de la actuación de “VENDETTA”, si por alguna razón imputable a “EL CLIENTE” o a los asistentes al evento, el equipo de VENDETTA sufre algún percance de consideración (que lo deje incapacitado para realizar su función) “EL CLIENTE” acepta cubrir el costo de la reparación o reemplazo en dado caso de que sea irreparable, del aparato, instrumento afectado o daño físico o agresión a algún miembro de la agrupación." },
-        { n: "OCTAVA", t: "“EL CLIENTE” se compromete a proporcionar a “VENDETTA” bebidas hidratantes durante el desarrollo del evento (agua, refrescos o equivalentes). El ofrecimiento de bebidas alcohólicas o cualquier otro tipo de cortesía queda a criterio exclusivo del cliente, entendiéndose que tales cortesías no constituyen obligación contractual ni condicionan la ejecución del servicio. Asimismo, “VENDETTA” manifiesta que su personal no realizará sus actividades bajo influencia de sustancias, estupefacientes o niveles inapropiados de alcohol, conservando en todo momento la capacidad óptima para el desempeño de su trabajo. La existencia de cortesías por parte de “EL CLIENTE” no será interpretada como autorización o exigencia para su consumo. Cualquier consumo voluntario por parte del personal de “VENDETTA”, dentro de los límites que no afecten la correcta ejecución del servicio, no será causa de cancelación, rescisión ni penalización contractual, salvo que se comprometa de manera evidente la integridad del evento, extremo que deberá ser objetivamente comprobable." },
-        { n: "NOVENA", t: "“VENDETTA” asegura presentarse en tiempo y forma con vestimenta, limpieza y respeto para el cumplimiento del evento, motivo de este contrato." },
-        { n: "DÉCIMA", t: "“EL CLIENTE” se obliga a proporcionar a “VENDETTA” las condiciones adecuadas para la correcta, cómoda y segura ejecución del servicio. Esto incluye, de manera enunciativa mas no limitativa, brindar seguridad en el área designada, suficiente espacio para la instalación del equipo y libre movilidad de los integrantes, así como un entorno que no comprometa la integridad del personal ni del equipo técnico. En ningún caso “EL CLIENTE” podrá solicitar que “VENDETTA” se presente, instale o opere bajo condiciones atmosféricas adversas, riesgos de seguridad, falta de espacio, exposure directa a lluvia, humedad o viento, o cualquier otro factor que pueda perjudicar la ejecución musical, la estabilidad del equipo o el bienestar del personal, especialmente en eventos al aire libre. En caso de que no se cumplan las condiciones mencionadas, “VENDETTA” podrá suspender temporalmente o ajustar la prestación del servicio hasta que el área sea acondicionada adecuadamente, sin que ello implique responsabilidad alguna para VENDETTA." },
+        { n: "SEXTA", t: "En caso de alternar con otro grupo (musical, mariachis, disco, protocolo, etc.), si dicho acto no respeta el horario establecido entre ambos y llegara a ocupar más tiempo del asignado, “VENDETTA” no repondrá dicho tiempo y se sujetará al horario convenido de inicio y final estipulado en el presente contrato. En caso de que el tiempo se agote por causas no imputables a “VENDETTA”, no habrá opción de reembolso y se cobrará el 100% del monto estipulado en este contrato; cualquier tiempo extendido requerirá la contratación de tiempo extra." },
+        { n: "SÉPTIMA", t: "“EL CLIENTE” se compromete a poner a disposición de “VENDETTA” un espacio (mesa, sala, sillas) con servicio para sus descansos. Asimismo, “EL CLIENTE” será el único responsable de contar con el espacio adecuado para la instalación del equipo, provisto de una instalación eléctrica estable y regulada de al menos dos tomas de corriente de 110V aterrizadas a no más de 10 metros, en un circuito independiente y exclusivo (sin compartir línea con equipos de cocina, calentadores ni plantas de refrigeración). “VENDETTA” no se hace responsable por fallas o pausas derivadas de fluctuaciones de voltaje del inmueble. Queda estrictamente prohibido a los asistentes colocar vasos, botellas o líquidos sobre o a menos de un metro del equipo de audio, iluminación e instrumentos; cualquier daño o percance imputable a los asistentes o al recinto será cubierto al 100% por “EL CLIENTE” a valor de reposición inmediata, así como responder por cualquier agresión física o daño al personal de la agrupación." },
+        { n: "OCTAVA", t: "“EL CLIENTE” se compromete a proporcionar a “VENDETTA” bebidas hidratantes durante el desarrollo del evento (agua, refrescos o equivalentes). El ofrecimiento de bebidas alcohólicas o cualquier otro tipo de cortesía queda a criterio exclusivo del cliente, entendiéndose que tales cortesías no constituyen obligación contractual ni condicionan la ejecución del servicio. Asimismo, “VENDETTA” manifiesta que su personal no realizará sus actividades bajo influencia de sustancias, estupefacientes o niveles inapropiados de alcohol, conservando en todo momento la capacidad óptima para el desempeño de su trabajo. Cualquier consumo voluntario por parte del personal de “VENDETTA”, dentro de los límites que no afecten la correcta ejecución del servicio, no será causa de cancelación, rescisión ni penalización contractual, salvo que se comprometa de manera evidente la integridad del evento, extremo que deberá ser objetivamente comprobable." },
+        { n: "NOVENA", t: "“VENDETTA” asegura presentarse en tiempo y forma con vestimenta, limpieza y respeto profesional para el cumplimiento del evento motivo de este contrato." },
+        { n: "DÉCIMA", t: "“EL CLIENTE” se obliga a proporcionar a “VENDETTA” las condiciones adecuadas para la correcta, cómoda y segura ejecución del servicio, incluyendo seguridad en el área y libre movilidad. En ningún caso “EL CLIENTE” podrá solicitar que “VENDETTA” se presente, instale u opere bajo condiciones atmosféricas adversas, exposición directa a lluvia, humedad extrema o viento, o factores que comprometan la estabilidad del equipo o el bienestar del personal. En caso de que no se cumplan las condiciones mencionadas, “VENDETTA” podrá suspender temporalmente o ajustar la prestación del servicio hasta que el área cuente con resguardo y techado adecuado, sin que ello implique responsabilidad o penalización para “VENDETTA”." },
         { 
           n: "DÉCIMA PRIMERA", 
           t: pct > 0
-            ? "Si por algún motivo el evento citado en la cláusula primera de este contrato no se realizara por causas imputables a “EL CLIENTE”, éste mismo se compromete a pagar a “VENDETTA” el 50% del costo total de la presentación por concepto de indemnización, por daños y perjuicios ocasionados por razones de apartado de fecha y/o movilización de equipo. En el respectivo caso, si el motivo es por causas imputables a VENDETTA, ésta se compromete a realizar el reembolso del anticipo otorgado así como a volver a agendar la fecha, en caso de que “EL CLIENTE.” así lo desee, con un 10% de descuento sobre el monto del presente contrato por concepto de indemnización por daños y perjuicios ocasionados."
-            : "Si por algún motivo el evento citado en la cláusula primera de este contrato no se realizara por causas imputables a “EL CLIENTE”, éste mismo se compromete a pagar a “VENDETTA” el 50% del costo total de la presentación por concepto de indemnización, por daños y perjuicios ocasionados por razones de apartado de fecha y/o movilización de equipo. En el respectivo caso, si el motivo es por causas imputables a VENDETTA, ésta se compromete a volver a agendar la fecha, en caso de que “EL CLIENTE.” así lo desee, con un 10% de descuento sobre el monto del presente contrato por concepto de indemnización por daños y perjuicios ocasionados."
+            ? "Si el evento no se realizara por causas imputables a “EL CLIENTE”, éste se compromete a cubrir a “VENDETTA” el 50% del costo total del contrato por concepto de indemnización por daños y apartado de fecha. Si la cancelación fuere por causas imputables a “VENDETTA”, ésta se compromete a reembolsar el anticipo otorgado y a otorgar la opción de reagendar con un 10% de descuento sobre el monto contratado. En caso de suspensión o cancelación por Caso Fortuito o Fuerza Mayor (fenómenos meteorológicos graves, sismos, emergencias sanitarias, actos de autoridad o cortes generales de suministro eléctrico municipal ajenos a las partes), el anticipo pagado no será reembolsable en efectivo y se conservará como saldo a favor y crédito para reagendar la presentación dentro de los siguientes 180 (ciento ochenta) días naturales conforme a disponibilidad de agenda de “VENDETTA”, deduciendo únicamente los viáticos y gastos de traslado que ya se hubieren devengado efectivamente si la agrupación ya se encontraba en movilización o en el recinto."
+            : "Si el evento no se realizara por causas imputables a “EL CLIENTE”, éste se compromete a cubrir a “VENDETTA” el 50% del costo total del contrato por concepto de indemnización por daños y apartado de fecha. Si la cancelación fuere por causas imputables a “VENDETTA”, ésta se compromete a otorgar la opción de reagendar con un 10% de descuento sobre el monto contratado. En caso de suspensión o cancelación por Caso Fortuito o Fuerza Mayor (fenómenos meteorológicos graves, sismos, emergencias sanitarias, actos de autoridad o cortes generales de suministro eléctrico municipal ajenos a las partes), el evento podrá reagendarse dentro de los siguientes 180 días naturales conforme a disponibilidad de agenda de “VENDETTA”."
         },
-        { n: "DÉCIMA SEGUNDA", t: "Las partes están de acuerdo en que una vez terminada la actuación de “VENDETTA” y si fuese necesario seguir tocando por tiempo extra y las condiciones son adecuadas, el precio por este será de $3,500.00 MN por TURNO EXTRA (Sujeta a disponibilidad de agenda)." },
-        { n: "DÉCIMA TERCERA", t: "“EL CLIENTE” hace constar bajo protesta de decir verdad que la información anteriormente asentada es verídica, comprometiéndose a resarcir los daños y perjuicios que sean ocasionados con base en una falsa declaración de su parte, SOBRE TODO EN EL CASO ESPECÍFICO DE QUE DICHO CONTRATO SEA ENVIADO Y RECIBIDO POR ALGÚN MEDIO ELECTRÓNICO AJENO AL CONTROL DE “VENDETTA”; en todo caso este se reserva el derecho de hacer válida la garantía de indemnización enumerada en la cláusula DÉCIMA PRIMERA de este documento." },
+        { n: "DÉCIMA SEGUNDA", t: `Las partes convienen que, en caso de requerirse tiempo adicional de presentación una vez concluido el programa y existiendo condiciones operativas y de agenda, la tarifa por ${extraTimeLabel} se determina proporcionalmente con base en el valor pactado del servicio artístico (sin viáticos), fijándose en la cantidad de ${MXN(dynamicExtraHour)} (${numeroALetras(dynamicExtraHour)} pesos mexicanos) por cada ${isBarPackage ? "turno de 45 minutos" : "hora extra"}, debiendo ser autorizada y liquidada en efectivo antes de iniciar dicho tiempo adicional.` },
+        { n: "DÉCIMA TERCERA", t: "“EL CLIENTE” asume expresamente el carácter de organizador del evento y será el único y exclusivo responsable de tramitar y cubrir ante las autoridades correspondientes cualquier permiso municipal, estatal o de protección civil, así como el pago de derechos de autor y licencias de ejecución pública musical ante la Sociedad de Autores y Compositores de México (SACM) o sociedad de gestión colectiva aplicable, deslindando totalmente a “VENDETTA” de cualquier pago, multa o requerimiento emitido por dichas instituciones." },
+        { n: "DÉCIMA CUARTA", t: "“EL CLIENTE” autoriza a “VENDETTA” a registrar fotografía y video de la actuación musical para fines exclusivos de portafolio artístico, difusión musical y promoción en redes sociales y medios digitales de la agrupación. En caso de que “EL CLIENTE” requiera privacidad total o confidencialidad, deberá manifestarlo por escrito con anterioridad a la firma del presente contrato." },
+        { n: "DÉCIMA QUINTA", t: "“VENDETTA” podrá interrumpir la presentación a criterio en el caso específico de que alguno de los miembros de la agrupación o staff sea víctima de acoso, discriminación, violencia verbal o agresión física, o bien si se registran daños a los transportes de los músicos por parte de asistentes al evento. En tales supuestos, “EL CLIENTE” deberá cubrir el 100% del monto total estipulado en este contrato como indemnización por incumplimiento de condiciones mínimas de seguridad." },
+        { n: "DÉCIMA SEXTA", t: "“EL CLIENTE” acepta al firmar este contrato que la propuesta de equipo técnico y audio no puede ser modificada el día del evento durante el montaje. Toda modificación técnica deberá ser solicitada por escrito con al menos 72 horas de anticipación al evento y estará sujeta a la cobertura de los costos adicionales e indirectos correspondientes." },
+        { n: "DÉCIMA SÉPTIMA", t: "LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Cuando el servicio se realice fuera del área de cobertura estándar o cuando por requerimientos del evento el tiempo total de permanencia de “VENDETTA” en el lugar exceda el tiempo estándar de operación (considerando hasta 1 hora de montaje, el tiempo de show convenido y 1 hora de desmontaje), se considerará logística extendida, generando los cargos adicionales correspondientes por disponibilidad. Asimismo, cuando los traslados imposibiliten el retorno seguro inmediato, “EL CLIENTE” se obliga a proporcionar a “VENDETTA” un espacio adecuado de descanso (habitación de hotel o área acondicionada) que garantice el resguardo del equipo y descanso del personal." },
         { 
-          n: "DÉCIMA CUARTA", 
-          t: "Para todo lo relativo a la interpretación, cumplimiento y ejecución en su caso del presente CONTRATO, así como para todo aquello que no esté estipulado en el mismo, “las partes” que en él intervinieron se someten a la jurisdicción y competencia de las leyes y tribunales civiles de Toluca, Estado de México, renunciado expresamente a cualquier otro fuero que por razón de su actual o futuro domicilio o, por cualquier otra causa pudiere llegar a corresponderles. Leído que fue el presente CONTRATO y estando “las partes” que en él intervinieron conformes en todas y cada una de las cláusulas que anteceden, firman por duplicado el mismo, teniendo ambos ejemplares la misma fuerza y valor de un documento original, independientemente de que dicho convenio se haya celebrado por medio de alguna otra forma de comunicación como pudiese ser el caso de envío del mismo por medio de correo electrónico, mensajería instantánea ó cualquier otro medio electrónico moderno, bastando únicamente la firma electrónica, rastro digital de envío/recepción o la confirmación por medios digitales para hacerlo valer conforme a derecho y de conformidad con lo dispuesto por el artículo 89 del Código de Comercio, quedando un ejemplar en poder de cada una de “las partes”" + (pct > 0 ? ", firman con fecha del día en el que el anticipo es depositado y comprobado por el banco receptor y que “VENDETTA” pueda verificar." : ", firman con la fecha del presente documento.") 
-        },
-        { n: "DÉCIMA QUINTA", t: "“VENDETTA” podrá interrumpir la presentación a criterio en el caso específico donde alguno de los miembros de VENDETTA o staff sea molestado con motivo sexual, racial, de clase, género, violencia verbal o física, además de no respetar la seguridad en el espacio o ubicación donde se lleve a cabo la presentación, también aplica para daños a transportes de los músicos, “EL CLIENTE” deberá pagar el 100% del monto total estipulado en este contrato como indemnización, el arreglo deberá ser expuesto con “EL CLIENTE” con pruebas y a una posterior consideración de ambas partes." },
-        { n: "DÉCIMA SEXTA", t: "“EL CLIENTE” Acepta al firmar este contrato que la propuesta de equipo de audio no puede ser modificada en el momento del evento, “EL CLIENTE” confirma que fue notificado sobre los alcances del montaje y está de acuerdo con el equipo de audio y backline establecido conociendo sus limitaciones. Toda modificación deberá ser solicitada 72 hrs antes del evento y deberá cumplir con el costo adicional e indirectos necesarios para poder realizar el nuevo montaje solicitado." },
-        { n: "DÉCIMA SÉPTIMA", t: "LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Cuando el servicio se realice fuera del área de cobertura sin viáticos (radio previamente establecido) o cuando, por requerimientos del evento, el tiempo total de permanencia de “VENDETTA” en el lugar exceda el tiempo estándar de operación (considerando hasta 1 hora de montaje, 2 horas de show y 1 hora de desmontaje), se considerará como logística extendida. En dichos casos, “EL CLIENTE” acepta que podrán generarse cargos adicionales por tiempo de estancia, horas extra y/o disponibilidad extendida. Asimismo, cuando la logística implique tiempos prolongados entre montaje, presentación y desmontaje, o traslados que imposibiliten el retorno inmediato, “EL CLIENTE” se obliga a proporcionar a “VENDETTA” un espacio adecuado de descanso, el cual podrá consistir en habitación de hotel, Airbnb, sala privada o área acondicionada, que garantice seguridad, comodidad y resguardo del equipo." }
+          n: "DÉCIMA OCTAVA", 
+          t: "Para todo lo relativo a la interpretación, cumplimiento y ejecución del presente CONTRATO, las partes se someten expresamente a la jurisdicción de las leyes y tribunales civiles de Toluca, Estado de México, renunciando a cualquier otro fuero que pudiera corresponderles. Leído que fue el presente contrato y conformes las partes en todas sus cláusulas, lo firman teniendo la misma fuerza y valor probatorio en documento físico o electrónico, bastando la firma electrónica, rastro digital o confirmación por medios digitales para hacerlo valer conforme a derecho y según lo dispuesto por el artículo 89 del Código de Comercio." 
+        }
       ]
     }
 
@@ -661,15 +623,12 @@ export async function generateContractPdf(
       lineY -= 10
     })
 
-    if (options.legalRepName) {
-      const repLabel = `REP: ${options.legalRepName.toUpperCase()}`
-      const repLines = wrapTextRobust(repLabel, montserrat, 6, sw + 20)
-      repLines.forEach(line => {
-        const lineWidth = montserrat.widthOfTextAtSize(line, 6)
-        const lineX = (pageWidth - margin - sw) + (sw - lineWidth) / 2
-        ctx.page.drawText(line, { x: lineX, y: lineY, size: 6, font: montserrat })
-        lineY -= 8
-      })
+    if (data.clientPhone) {
+      const phoneLabel = `TEL: ${data.clientPhone}`
+      const phoneWidth = montserrat.widthOfTextAtSize(phoneLabel, 6)
+      const phoneX = (pageWidth - margin - sw) + (sw - phoneWidth) / 2
+      ctx.page.drawText(phoneLabel, { x: phoneX, y: lineY, size: 6, font: montserrat })
+      lineY -= 8
     }
 
     if (options.signedAt) {
@@ -851,12 +810,65 @@ function renderJustifiedLine(ctx: DrawContext, words: string[], x: number, width
 
 
 function numeroALetras(n: number): string {
-  // Simplificado para montos Vendetta
-  const map: Record<number, string> = {
-    7600: "SIETE MIL SEISCIENTOS",
-    15500: "QUINCE MIL QUINIENTOS",
-    25500: "VEINTICINCO MIL QUINIENTOS"
+  const unidades = ["", "UN", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"]
+  const especiales = ["DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE", "DIECISÉIS", "DIECISIETE", "DIECIOCHO", "DIECINUEVE"]
+  const decenas = ["", "DIEZ", "VEINTE", "TREINTA", "CUARENTA", "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"]
+  const centenas = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"]
+
+  function seccion(num: number): string {
+    if (num === 0) return ""
+    if (num === 100) return "CIEN"
+    let output = ""
+    const c = Math.floor(num / 100)
+    const d = Math.floor((num % 100) / 10)
+    const u = num % 10
+
+    if (c > 0) output += centenas[c] + " "
+
+    const du = num % 100
+    if (du >= 10 && du <= 19) {
+      output += especiales[du - 10] + " "
+    } else if (du >= 21 && du <= 29) {
+      output += "VEINTI" + unidades[u] + " "
+    } else {
+      if (d > 0) {
+        output += decenas[d]
+        if (u > 0) output += " Y " + unidades[u]
+        output += " "
+      } else if (u > 0) {
+        output += unidades[u] + " "
+      }
+    }
+    return output.trim()
   }
-  if (map[n]) return `${map[n]} PESOS 00/100 MN`
-  return `${Math.floor(n)} PESOS 00/100 MN`
+
+  const entero = Math.floor(n)
+  const centavos = Math.round((n - entero) * 100)
+  const strCentavos = centavos < 10 ? `0${centavos}` : `${centavos}`
+
+  if (entero === 0) return `CERO PESOS ${strCentavos}/100 M.N.`
+
+  let letras = ""
+  const millones = Math.floor(entero / 1000000)
+  const miles = Math.floor((entero % 1000000) / 1000)
+  const resto = entero % 1000
+
+  if (millones === 1) {
+    letras += miles === 0 && resto === 0 ? "UN MILLÓN DE " : "UN MILLÓN "
+  } else if (millones > 1) {
+    letras += miles === 0 && resto === 0 ? `${seccion(millones)} MILLONES DE ` : `${seccion(millones)} MILLONES `
+  }
+
+  if (miles === 1) {
+    letras += "MIL "
+  } else if (miles > 1) {
+    letras += `${seccion(miles)} MIL `
+  }
+
+  if (resto > 0) {
+    letras += `${seccion(resto)} `
+  }
+
+  const moneda = entero === 1 && millones === 0 && miles === 0 ? "PESO" : "PESOS"
+  return `${letras.trim()} ${moneda} ${strCentavos}/100 M.N.`
 }

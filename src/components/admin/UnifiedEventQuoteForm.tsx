@@ -28,7 +28,9 @@ import {
   ArrowLeft,
   Plus,
   CalendarPlus,
-  X
+  X,
+  Car,
+  Navigation
 } from "lucide-react"
 
 const CEREMONY_TYPES = [
@@ -347,6 +349,12 @@ export function UnifiedEventQuoteForm({
       setVenueCity(venue.city ?? "")
       setVenueState(venue.state ?? "")
       setMapsLink(venue.mapsLink ?? "")
+
+      // Intentar calcular viáticos de inmediato si el venue tiene ubicación
+      const dest = [venue.address, venue.city, venue.state].filter(Boolean).join(", ") || venue.name
+      if (dest) {
+        handleAutoCalculateViaticos(dest)
+      }
     } else {
       setSelectedVenueId(null)
       setVenueName("")
@@ -366,6 +374,11 @@ export function UnifiedEventQuoteForm({
     setVenueState(newVenue.state ?? "")
     setMapsLink(newVenue.mapsLink ?? "")
     toast.success(`Locación "${newVenue.name}" asignada`)
+
+    const dest = [newVenue.address, newVenue.city, newVenue.state].filter(Boolean).join(", ") || newVenue.name
+    if (dest) {
+      handleAutoCalculateViaticos(dest)
+    }
   }
 
   function handlePackageChange(newPkgId: string) {
@@ -380,26 +393,44 @@ export function UnifiedEventQuoteForm({
 
   const [calculatingViaticos, setCalculatingViaticos] = useState(false)
 
-  async function handleAutoCalculateViaticos() {
-    const dest = venueCity || clientCity
+  async function handleAutoCalculateViaticos(explicitDestination?: string) {
+    const rawDest = explicitDestination || [venueAddress, venueCity, venueState].filter(Boolean).join(", ") || venueCity || venueName || clientCity
+    const dest = typeof rawDest === "string" ? rawDest.trim() : ""
     if (!dest) {
-      toast.error("Ingresa la ciudad o locación para calcular viáticos")
+      toast.error("Ingresa la dirección, ciudad o locación para calcular viáticos")
       return
     }
     setCalculatingViaticos(true)
     try {
-      const query = dest + (venueState ? `, ${venueState}` : "")
-      const resp = await fetch(`/api/viaticos?destination=${encodeURIComponent(query)}`)
+      const resp = await fetch(`/api/viaticos?destination=${encodeURIComponent(dest)}`)
       const data = await resp.json()
       if (data && typeof data.viaticosAmount === "number") {
         setViaticosAmount(data.viaticosAmount)
-        toast.success(`Viáticos calculados: ${formatCurrencyMXN(data.viaticosAmount, false)} (${data.distanceKm} km)`)
+        if (data.viaticosAmount === 0 && !data.isOutsideZone) {
+          toast.success(`Ubicación en Zona Local: $0 MXN de viáticos (${data.distanceKm || 0} km)`)
+        } else {
+          const detailParts = []
+          if (data.distanceKm) detailParts.push(`${data.distanceKm} km`)
+          if (data.tollCost) detailParts.push(`casetas: $${data.tollCost.toLocaleString()}`)
+          const detailStr = detailParts.length > 0 ? ` (${detailParts.join(", ")})` : ""
+          toast.success(`Viáticos calculados: ${formatCurrencyMXN(data.viaticosAmount, false)}${detailStr}`)
+        }
+      } else if (data && data.error) {
+        toast.error(data.error)
       }
-    } catch {
+    } catch (err) {
+      console.error("Error al calcular viáticos:", err)
       toast.error("Error al calcular viáticos automáticos")
     } finally {
       setCalculatingViaticos(false)
     }
+  }
+
+  function handleGoToPricingStep() {
+    if (viaticosAmount === null && (venueCity || venueAddress || venueName || clientCity)) {
+      handleAutoCalculateViaticos()
+    }
+    setActiveStep(4)
   }
 
   function handleAddDate() {
@@ -1012,11 +1043,43 @@ export function UnifiedEventQuoteForm({
                   </div>
                 </div>
 
+                <div className="p-3.5 rounded-xl bg-muted/40 border border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      <Car className="w-4 h-4 text-primary" /> Cálculo de Viáticos de Traslado
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {viaticosAmount !== null ? (
+                        viaticosAmount === 0 ? (
+                          <span className="text-emerald-500 font-semibold">📍 Zona Local (Valle de Toluca / Metepec) — $0 MXN</span>
+                        ) : (
+                          <span className="text-primary font-semibold">🚗 Viáticos estimados: {formatCurrencyMXN(viaticosAmount, false)}</span>
+                        )
+                      ) : isOutsideZone ? (
+                        <span className="text-amber-500 font-medium">⚠️ Zona Foránea detectada (+20% show y viáticos de traslado)</span>
+                      ) : (
+                        <span>Calcula automáticamente kilometraje, combustible y casetas según la ubicación.</span>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={calculatingViaticos || (!venueCity && !venueAddress && !venueName && !clientCity)}
+                    onClick={() => handleAutoCalculateViaticos()}
+                    className="shrink-0 text-xs h-8 gap-1.5 font-bold cursor-pointer"
+                  >
+                    {calculatingViaticos ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5 text-primary" />}
+                    {calculatingViaticos ? "Calculando..." : (viaticosAmount !== null ? "Recalcular Viáticos" : "Calcular Viáticos")}
+                  </Button>
+                </div>
+
                 <div className="flex justify-between pt-4">
                   <Button type="button" variant="outline" onClick={() => setActiveStep(2)} className="gap-2 cursor-pointer">
                     <ArrowLeft className="w-4 h-4" /> Anterior
                   </Button>
-                  <Button type="button" onClick={() => setActiveStep(4)} className="gap-2 cursor-pointer font-bold">
+                  <Button type="button" onClick={handleGoToPricingStep} className="gap-2 cursor-pointer font-bold">
                     Siguiente: Cotización y Precios <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -1087,16 +1150,14 @@ export function UnifiedEventQuoteForm({
                   <div>
                     <div className="flex justify-between items-center">
                       <Label className="text-xs font-semibold text-muted-foreground">Viáticos de Traslado</Label>
-                      {(venueCity || clientCity) && (
-                        <button
-                          type="button"
-                          onClick={handleAutoCalculateViaticos}
-                          disabled={calculatingViaticos}
-                          className="text-[10px] text-primary hover:underline font-bold"
-                        >
-                          {calculatingViaticos ? "Calculando..." : "Calcular ruta"}
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleAutoCalculateViaticos()}
+                        disabled={calculatingViaticos || (!venueCity && !venueAddress && !venueName && !clientCity)}
+                        className="text-[10px] text-primary hover:underline font-bold disabled:opacity-40 disabled:no-underline cursor-pointer"
+                      >
+                        {calculatingViaticos ? "Calculando..." : "Calcular ruta"}
+                      </button>
                     </div>
                     <CurrencyInput
                       value={viaticosAmount}

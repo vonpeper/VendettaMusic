@@ -148,13 +148,6 @@ export async function GET(
       contractLegalText: (booking.venueType?.toLowerCase() === "bar" || booking.event?.venueType?.toLowerCase() === "bar") 
         ? ((globalConfig as any)?.contractBarLegalText || undefined)
         : (globalConfig?.contractLegalText || undefined),
-      rfc: booking.client?.rfc || undefined,
-      fiscalAddress: booking.client?.fiscalAddress || undefined,
-      legalRepName: booking.client?.legalRepName || undefined,
-      legalRepRole: booking.client?.legalRepRole || undefined,
-      legalRepPower: booking.client?.legalRepPower || undefined,
-      notificationAddress: booking.client?.notificationAddress || undefined,
-      billingData: booking.client?.billingData || undefined,
       bankName: globalConfig?.bankName || undefined,
       bankAccount: globalConfig?.bankAccount || undefined,
       bankClabe: globalConfig?.bankClabe || undefined,
