@@ -73,6 +73,24 @@ const MXN = (v: number) =>
     maximumFractionDigits: 0,
   }).format(v)
 
+function formatFechaEspanol(fechaStr: string): string {
+  if (!fechaStr) return ""
+  try {
+    const [year, month, day] = fechaStr.split("-").map(Number)
+    if (!year || !month || !day) return fechaStr
+    const fechaObj = new Date(year, month - 1, day, 12, 0, 0)
+    const fechaFormateada = new Intl.DateTimeFormat("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(fechaObj)
+    return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1)
+  } catch {
+    return fechaStr
+  }
+}
+
 export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
   // Datos de contacto
   const [nombre, setNombre] = useState("")
@@ -279,27 +297,57 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
     // 3. Formatear producción adicional
     let textoProduccion = ""
     if (tieneMasDe100Invitados && produccionAdicional.length > 0) {
-      textoProduccion = `\n🎪 *Producción adicional de interés (>100 invitados):*\n${produccionAdicional.map((p) => `  • ${p}`).join("\n")}\n`
+      textoProduccion = `\n• *Producción adicional de interés (>100 invitados):*\n${produccionAdicional.map((p) => `  - ${p}`).join("\n")}`
     }
 
-    // 4. Construir mensaje de WhatsApp
-    const waMessage = 
-`¡Hola Vendetta Live Music! 🎸⚡
-Llené el formulario para personalizar la propuesta para mi evento:
+    // 4. Construir mensaje de WhatsApp con formato limpio (sin emojis problemáticos)
+    const fechaFormateada = formatFechaEspanol(fecha) || fecha
 
-👤 *Nombre:* ${nombre.trim()}
-📱 *WhatsApp:* ${telefono.trim()}
-🎉 *Tipo de Evento:* ${tipoEventoFinal}
-📅 *Fecha:* ${fecha}
-⏰ *Horario:* ${horarioCompleto}
-👥 *Invitados estimados:* ${numInvitados} personas${textoProduccion}
-📍 *Ubicación:* ${ubicacionCompleta}${mapsLink.trim() ? `\n🗺️ *Google Maps:* ${mapsLink.trim()}` : ""}
-🚗 *Viáticos estimados:* ${textoViaticos}
-⚠️ *(Nota: No incluye planta de luz. Viáticos para 2 camionetas, gasolina y casetas únicamente. No incluye alimentos.)*
-${notas.trim() ? `\n📝 *Notas / Peticiones especiales:* ${notas.trim()}\n` : ""}
-¿Tienen disponibilidad para esta fecha? ¡Quedo atento a la propuesta!`
+    const lineasMensaje = [
+      "¡Hola Vendetta Live Music!",
+      "Llené el formulario para personalizar la propuesta para mi evento:",
+      "",
+      "*DETALLES DEL EVENTO*",
+      `• *Nombre:* ${nombre.trim()}`,
+      `• *WhatsApp:* ${telefono.trim()}`,
+      `• *Tipo de Evento:* ${tipoEventoFinal}`,
+      `• *Fecha:* ${fechaFormateada}`,
+      `• *Horario:* ${horarioCompleto}`,
+      `• *Invitados estimados:* ${numInvitados} personas`,
+      `• *Ubicación:* ${ubicacionCompleta}`,
+    ]
 
-    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`
+    if (mapsLink.trim()) {
+      lineasMensaje.push(`• *Google Maps:* ${mapsLink.trim()}`)
+    }
+
+    if (textoProduccion) {
+      lineasMensaje.push(textoProduccion)
+    }
+
+    lineasMensaje.push(
+      "",
+      "*LOGÍSTICA Y VIÁTICOS*",
+      `• *Viáticos estimados:* ${textoViaticos}`,
+      "• *Condiciones:* No incluye planta de luz. Viáticos para 2 camionetas (gasolina y casetas únicamente). No incluye alimentos."
+    )
+
+    if (notas.trim()) {
+      lineasMensaje.push(
+        "",
+        "*NOTAS O PETICIONES ESPECIALES*",
+        notas.trim()
+      )
+    }
+
+    lineasMensaje.push(
+      "",
+      "¿Tienen disponibilidad para esta fecha? ¡Quedo atento a la propuesta!"
+    )
+
+    const waMessage = lineasMensaje.join("\n")
+
+    const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(waMessage)}`
     setSubmittedUrl(waUrl)
     setIsSubmitting(false)
 
