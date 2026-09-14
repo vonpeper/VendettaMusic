@@ -38,6 +38,91 @@ export type SubmitPublicQuoteResult = {
   error?: string
 }
 
+function formatFechaEspanol(fechaStr: string): string {
+  if (!fechaStr) return ""
+  try {
+    const [year, month, day] = fechaStr.split("-").map(Number)
+    if (!year || !month || !day) return fechaStr
+    const fechaObj = new Date(year, month - 1, day, 12, 0, 0)
+    const fechaFormateada = new Intl.DateTimeFormat("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(fechaObj)
+    return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1)
+  } catch {
+    return fechaStr
+  }
+}
+
+function buildClientWhatsAppMessage(params: {
+  nombre: string
+  tipoEvento: string
+  fecha: string
+  horaInicio: string
+  horaFin: string
+  invitados: number
+  municipio: string
+  estado: string
+  lugarEvento?: string
+  mapsLink?: string
+  viaticosAmount: number
+  produccionAdicional: string[]
+  paquete?: string
+  proposalUrl?: string
+  notas?: string
+}): string {
+  const fechaFormateada = formatFechaEspanol(params.fecha) || params.fecha
+  const horario = `${params.horaInicio} a ${params.horaFin}`
+  const ubicacion = `${params.municipio}, ${params.estado}${params.lugarEvento?.trim() ? ` (${params.lugarEvento.trim()})` : ""}`
+
+  let textoViaticos = "Zona local (sin costo adicional de viáticos)"
+  if (params.viaticosAmount > 0) {
+    textoViaticos = `$${params.viaticosAmount.toLocaleString("es-MX")} MXN (Incluye casetas ida y vuelta y gasto de gasolina para 2 camionetas y el transporte de 5 personas)`
+  }
+
+  const lines = [
+    `¡Hola ${params.nombre.trim()}! 👋🎸`,
+    "Recibimos con éxito tu formulario para personalizar la propuesta de tu evento con Vendetta Live Music:",
+    "",
+    "📋 *RESUMEN DE TU SOLICITUD*",
+    ...(params.paquete ? [`• *Paquete:* ${params.paquete}`] : []),
+    `• *Tipo de Evento:* ${params.tipoEvento}`,
+    `• *Fecha:* ${fechaFormateada}`,
+    `• *Horario:* ${horario}`,
+    `• *Invitados estimados:* ${params.invitados} personas`,
+    `• *Ubicación:* ${ubicacion}`,
+    ...(params.mapsLink?.trim() ? [`• *Google Maps:* ${params.mapsLink.trim()}`] : []),
+    ...(params.produccionAdicional.length > 0 ? [
+      "",
+      "• *Producción solicitada:*",
+      ...params.produccionAdicional.map((p) => `  - ${p}`)
+    ] : []),
+    "",
+    "🚗 *LOGÍSTICA Y VIÁTICOS*",
+    `• *Viáticos estimados:* ${textoViaticos}`,
+    "• *Condiciones:* No incluye planta de luz. Viáticos para 2 camionetas (gasolina y casetas únicamente). No incluye alimentos.",
+    ...(params.notas?.trim() ? [`\n📝 *Notas adicionales:* ${params.notas.trim()}`] : []),
+  ]
+
+  if (params.proposalUrl) {
+    lines.push(
+      "",
+      "🔗 *Puedes consultar tu propuesta interactiva en línea aquí:*",
+      params.proposalUrl
+    )
+  }
+
+  lines.push(
+    "",
+    "En breve estaré asistiéndole personalmente por este medio para verificar la disponibilidad de tu fecha y afinar cualquier detalle. ¡Muchas gracias por tu interés en Vendetta!",
+    "Vendetta Live Music ⚡"
+  )
+
+  return lines.join("\n")
+}
+
 export async function submitPublicQuoteAction(
   input: SubmitPublicQuoteInput
 ): Promise<SubmitPublicQuoteResult> {
@@ -86,7 +171,7 @@ export async function submitPublicQuoteAction(
           venueState: input.estado.trim(),
           mapsLink: input.mapsLink?.trim() || null,
           packageId: "61a5477c-de10-4788-a8bd-1dfa8b57d256", // Essential
-          packageName: "Show Vendetta Versátil (2 Horas)",
+          packageName: input.paquete ? `Show Vendetta - ${input.paquete}` : "Show Vendetta Versátil (2 Horas)",
           basePrice: showBasePrice,
           viaticosAmount: viaticosAmount,
           depositAmount: 3000,
@@ -95,6 +180,67 @@ export async function submitPublicQuoteAction(
           musicianNotes: `Cotización web para ${aforo} invitados en ${input.municipio}, ${input.estado}. Horario: ${input.horaInicio} a ${input.horaFin}.${input.notas?.trim() ? ` Notas: ${input.notas.trim()}` : ""}`
         })
       })
+
+      const proposalFullUrl = `https://vendetta.mx/propuesta/${result.shortId}`
+
+      // 1. WhatsApp automático al CLIENTE con el resumen y enlace a su propuesta
+      try {
+        const clientMsg = buildClientWhatsAppMessage({
+          nombre: input.nombre,
+          tipoEvento: input.tipoEvento,
+          fecha: input.fecha,
+          horaInicio: input.horaInicio,
+          horaFin: input.horaFin,
+          invitados: aforo,
+          municipio: input.municipio,
+          estado: input.estado,
+          lugarEvento: input.lugarEvento,
+          mapsLink: input.mapsLink,
+          viaticosAmount: viaticosAmount,
+          produccionAdicional: input.produccionAdicional,
+          paquete: input.paquete || "Show Vendetta Versátil (2 Horas)",
+          proposalUrl: proposalFullUrl,
+          notas: input.notas
+        })
+        await sendWhatsApp(input.telefono.trim(), clientMsg, `Confirmación Cliente - ${input.nombre.trim()}`).catch(
+          (err) => console.warn("Aviso WhatsApp cliente (auto-quote) no enviado:", err)
+        )
+      } catch (clientWaErr) {
+        console.warn("Error al enviar WhatsApp a cliente (auto-quote):", clientWaErr)
+      }
+
+      // 2. WhatsApp automático al ADMINISTRADOR
+      try {
+        const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+        const adminPhone =
+          config?.adminWhatsapp ||
+          process.env.ADMIN_WHATSAPP_NUMBER ||
+          process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
+          "5217222880045"
+
+        const avisoAdmin = 
+`⚡ *NUEVA COTIZACIÓN WEB (PROPUESTA AUTOMÁTICA)*
+Se generó una propuesta interactiva para un cliente:
+
+• *Cliente:* ${input.nombre.trim()}
+• *Teléfono:* ${input.telefono.trim()}
+${input.paquete ? `• *Paquete:* ${input.paquete}\n` : ""}• *Evento:* ${input.tipoEvento}
+• *Fecha:* ${input.fecha}
+• *Horario:* ${input.horaInicio} a ${input.horaFin}
+• *Invitados:* ${aforo} personas
+• *Ubicación:* ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}
+${input.mapsLink?.trim() ? `• *Maps:* ${input.mapsLink.trim()}\n` : ""}• *Viáticos:* $${viaticosAmount.toLocaleString("es-MX")} MXN
+• *Propuesta en línea:* ${proposalFullUrl}
+
+👉 *Ver en panel administrativo:*
+https://vendetta.mx/admin/ventas/${result.bookingId}`
+
+        await sendWhatsApp(adminPhone, avisoAdmin, `Aviso Admin - AutoCotización ${input.nombre.trim()}`).catch(
+          (err) => console.warn("Aviso WhatsApp admin no enviado:", err)
+        )
+      } catch (adminWaErr) {
+        console.warn("Error al enviar alerta a WhatsApp admin:", adminWaErr)
+      }
 
       return {
         success: true,
@@ -167,7 +313,32 @@ export async function submitPublicQuoteAction(
       }
     })
 
-    // 4. Enviar notificación automática por WhatsApp al administrador
+    // 4. Enviar notificación automática por WhatsApp al CLIENTE
+    try {
+      const clientMsg = buildClientWhatsAppMessage({
+        nombre: input.nombre,
+        tipoEvento: input.tipoEvento,
+        fecha: input.fecha,
+        horaInicio: input.horaInicio,
+        horaFin: input.horaFin,
+        invitados: aforo,
+        municipio: input.municipio,
+        estado: input.estado,
+        lugarEvento: input.lugarEvento,
+        mapsLink: input.mapsLink,
+        viaticosAmount: viaticosAmount,
+        produccionAdicional: input.produccionAdicional,
+        paquete: input.paquete,
+        notas: input.notas
+      })
+      await sendWhatsApp(input.telefono.trim(), clientMsg, `Confirmación Cliente - ${input.nombre.trim()}`).catch(
+        (err) => console.warn("Aviso WhatsApp cliente (revisión) no enviado:", err)
+      )
+    } catch (clientWaErr) {
+      console.warn("Error al enviar WhatsApp a cliente (revisión):", clientWaErr)
+    }
+
+    // 5. Enviar notificación automática por WhatsApp al administrador
     try {
       const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
       const adminPhone =

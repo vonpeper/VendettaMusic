@@ -415,12 +415,11 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
     })
     setIsSubmitting(false)
 
-    toast.success(isAutoQuote ? "¡Propuesta lista en línea! Abriendo WhatsApp..." : "¡Solicitud registrada! Abriendo WhatsApp...")
-
-    // Abrir WhatsApp
-    if (typeof window !== "undefined") {
-      window.open(waUrl, "_blank")
-    }
+    toast.success(
+      isAutoQuote
+        ? "¡Propuesta lista! Enviamos el resumen a tu WhatsApp."
+        : "¡Solicitud recibida! Enviamos el resumen a tu WhatsApp."
+    )
   }
 
   // Pantalla de confirmación y reintento
@@ -437,18 +436,24 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
           {isAutoQuote ? <CheckCircle2 className="w-9 h-9" /> : <Sparkles className="w-9 h-9" />}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <h2 className="text-2xl sm:text-3xl font-heading font-black text-white uppercase tracking-tight">
-            {isAutoQuote ? "¡Tu Cotización Está Lista!" : "¡Solicitud de Producción Recibida!"}
+            {isAutoQuote ? "¡Tu Cotización Está Lista!" : "¡Solicitud Recibida con Éxito!"}
           </h2>
+
+          <div className="p-3.5 rounded-2xl bg-[#25D366]/10 border border-[#25D366]/30 text-emerald-300 text-xs sm:text-sm font-medium flex items-center justify-center gap-2 max-w-md mx-auto">
+            <WhatsAppIcon className="w-4 h-4 fill-[#25D366] shrink-0" />
+            <span>Enviamos el resumen completo directamente a tu WhatsApp (<strong>{telefono}</strong>).</span>
+          </div>
+
           <p className="text-sm text-gray-300 max-w-md mx-auto leading-relaxed">
             {isAutoQuote ? (
               <>
-                Generamos tu propuesta interactiva exclusiva{submittedResult.shortId ? ` (Folio: ${submittedResult.shortId})` : ""}. Puedes revisarla en línea ahora mismo o enviar el mensaje por WhatsApp.
+                Generamos tu propuesta interactiva exclusiva{submittedResult.shortId ? ` (Folio: ${submittedResult.shortId})` : ""}. En breve estaré asistiéndole personalmente por WhatsApp para verificar disponibilidad y afinar cualquier detalle.
               </>
             ) : (
               <>
-                Tu evento cuenta con requerimientos especiales de producción técnica (pantallas, audio o extras). Hemos registrado tu solicitud para revisión personalizada por WhatsApp.
+                Tu evento cuenta con requerimientos especiales de producción técnica. Hemos registrado tu solicitud y en breve estaré asistiéndole personalmente por WhatsApp.
               </>
             )}
           </p>
@@ -484,7 +489,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
               className="w-full sm:w-auto h-14 px-8 bg-[#25D366] hover:bg-[#20ba59] text-white font-black text-base rounded-2xl shadow-xl shadow-[#25D366]/30 gap-2 cursor-pointer transition-all hover:scale-[1.02]"
             >
               <WhatsAppIcon className="w-5 h-5 fill-white" />
-              <span>{isAutoQuote ? "Confirmar por WhatsApp" : "Continuar por WhatsApp"}</span>
+              <span>Abrir WhatsApp</span>
               <ExternalLink className="w-4 h-4 ml-1 opacity-70" />
             </Button>
           </a>
