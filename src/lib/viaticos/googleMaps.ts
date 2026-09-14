@@ -8,7 +8,7 @@ export { roundTo100, roundTo500 };
 // Environment variables are read dynamically to allow tests to set them post-import
 const getApiKey = () => process.env.GOOGLE_MAPS_API_KEY;
 const getDefaultOrigin = () => process.env.DEFAULT_ORIGIN_ADDRESS || "Metepec, Estado de México, México";
-const getFuelPrice = () => Number(process.env.FUEL_PRICE_MXN ?? "25"); // MXN per litre
+const getFuelPrice = () => Number(process.env.FUEL_PRICE_MXN ?? "28.5"); // MXN per litre Gasolina Premium
 
 /**
  * Resultado del cálculo de viáticos.
@@ -58,21 +58,21 @@ const KNOWN_ROUTES: KnownRoute[] = [
     keywords: ["valle de bravo", "avandaro", "colorines", "donato guerra"],
     distanceKm: 85,
     durationSec: 5400, // 1h 30m
-    tollCostSingle: 170
+    tollCostSingle: 180
   },
   // Malinalco / Tenancingo
   {
     keywords: ["malinalco", "tenancingo", "chalma"],
     distanceKm: 70,
     durationSec: 4800,
-    tollCostSingle: 60
+    tollCostSingle: 82 // Tenango ($37) + Tenancingo ($45)
   },
   // Ixtapan de la Sal / Tonatico
   {
     keywords: ["ixtapan de la sal", "tonatico", "villa guerrero"],
-    distanceKm: 75,
-    durationSec: 4500,
-    tollCostSingle: 115
+    distanceKm: 65,
+    durationSec: 3600,
+    tollCostSingle: 158 // Tenango ($37) + Villa Guerrero ($45) + La Finca ($76)
   },
   // Morelos: Cuernavaca / Tepoztlán
   {
@@ -243,10 +243,10 @@ export async function calculateViaticos(
   }
 
   // 5️⃣ Cálculo de combustible (viaje redondo ida y vuelta, para N camionetas)
-  // Rendimiento calibrado con consumo real (ej. Querétaro):
-  // 1 tanque de $1,000 MXN (40L) para 400 km redondos = 10 L / 100km (10 km/L) a $25/L de gasolina.
-  const vehicleProfile = VEHICLE_PROFILES[vehicleKey] || { litersPer100km: 10 };
-  const litersPer100kmSingle = vehicleProfile.litersPer100km || 10;
+  // Rendimiento calibrado para SUVs Vendetta: 7.1 km por litro con Gasolina Premium
+  const defaultLitersPer100km = 100 / 7.1; // ~14.0845 L / 100km
+  const vehicleProfile = VEHICLE_PROFILES[vehicleKey] || { litersPer100km: defaultLitersPer100km, kmPerLiter: 7.1 };
+  const litersPer100kmSingle = vehicleProfile.litersPer100km || defaultLitersPer100km;
   const litersPer100kmCombined = litersPer100kmSingle * viaticosVehicleCount;
   const distanceKmRedondo = distanceKm * 2;
   const litersNeeded = (distanceKmRedondo * litersPer100kmCombined) / 100;

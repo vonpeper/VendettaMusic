@@ -96,6 +96,8 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
   // Estado de viáticos
   const [viaticos, setViaticos] = useState<{
     amount: number
+    tollCost: number
+    fuelCost: number
     isOutsideZone: boolean
     distanceKm: number
     requiresManualQuote: boolean
@@ -153,6 +155,8 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
         if (resp.ok && !data.error) {
           setViaticos({
             amount: data.viaticosAmount || 0,
+            tollCost: data.tollCost || 0,
+            fuelCost: data.fuelCost || 0,
             isOutsideZone: data.isOutsideZone ?? data.viaticosAmount > 0,
             distanceKm: data.distanceKm || 0,
             requiresManualQuote: !!data.requiresManualQuote,
@@ -253,7 +257,7 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
       if (viaticos.requiresManualQuote) {
         textoViaticos = "Distancia extendida (>250 km, cotización logística personalizada)"
       } else if (viaticos.amount > 0) {
-        textoViaticos = `${MXN(viaticos.amount)} MXN (calculado para 2 camionetas: gasolina y casetas)`
+        textoViaticos = `${MXN(viaticos.amount)} MXN (2 camionetas SUV ida y vuelta: ${MXN(viaticos.tollCost)} casetas + ${MXN(viaticos.fuelCost)} gasolina Premium a 7.1 km/L)`
       }
     }
 
@@ -599,21 +603,34 @@ ${notas.trim() ? `\n📝 *Notas / Peticiones especiales:* ${notas.trim()}\n` : "
                   : "bg-blue-500/10 border-blue-500/30 text-blue-200"
               }`}
             >
-              <div className="flex items-center gap-2 font-bold text-sm">
-                <Car className="w-4 h-4 shrink-0" />
-                {!viaticos.isOutsideZone || viaticos.amount === 0 ? (
-                  <span>✅ Zona Local (Toluca, Metepec y alrededores) — Sin costo de viáticos ($0 MXN)</span>
-                ) : viaticos.requiresManualQuote ? (
-                  <span>📍 Destino extendido (&gt;250 km) — Sujeto a cotización logística especial</span>
-                ) : (
-                  <span>🚗 Viáticos estimados: {MXN(viaticos.amount)} MXN</span>
-                )}
+              <div className="flex items-start gap-2.5">
+                <Car className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  {!viaticos.isOutsideZone || viaticos.amount === 0 ? (
+                    <span className="font-bold text-sm">✅ Zona Local (Toluca, Metepec y alrededores) — Sin costo de viáticos ($0 MXN)</span>
+                  ) : viaticos.requiresManualQuote ? (
+                    <span className="font-bold text-sm">📍 Destino extendido (&gt;250 km) — Sujeto a cotización logística especial</span>
+                  ) : (
+                    <>
+                      <div className="font-black text-sm sm:text-base text-white">
+                        🚗 Viáticos estimados: <span className="text-primary">{MXN(viaticos.amount)} MXN</span>
+                      </div>
+                      <div className="text-xs text-gray-300">
+                        Cálculo para 2 camionetas SUV (viaje redondo con Gasolina Premium a 7.1 km/L):
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold text-gray-200 pt-0.5">
+                        <span className="text-emerald-400">• Casetas ida y vuelta: {MXN(viaticos.tollCost)} MXN</span>
+                        <span className="text-amber-400">• Gasolina Premium: {MXN(viaticos.fuelCost)} MXN</span>
+                      </div>
+                    </>
+                  )}
+                  {viaticos.distanceKm > 0 && (
+                    <p className="text-[11px] text-gray-400 pt-0.5">
+                      Distancia estimada: ~{viaticos.distanceKm.toFixed(0)} km por trayecto
+                    </p>
+                  )}
+                </div>
               </div>
-              {viaticos.distanceKm > 0 && (
-                <p className="text-[11px] opacity-80 mt-1">
-                  Distancia estimada desde la base: ~{viaticos.distanceKm.toFixed(0)} km
-                </p>
-              )}
             </div>
           ) : null}
 
