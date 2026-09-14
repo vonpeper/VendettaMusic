@@ -39,5 +39,9 @@ export const ESTADOS_MUNICIPIOS: Record<string, string[]> = {
   "Guerrero": [
     "Taxco", "Iguala", "Buenavista de Cuéllar",
     "Otro municipio / cotización manual"
+  ],
+  "Puebla": [
+    "Puebla", "San Andrés Cholula", "San Pedro Cholula", "Atlixco", "San Martín Texmelucan",
+    "Otro municipio / cotización manual"
   ]
 }

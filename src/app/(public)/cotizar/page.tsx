@@ -4,8 +4,8 @@ import { Metadata } from "next"
 import { Sparkles, ShieldCheck, MapPin, Music } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Cotiza tu Evento | Vendetta Live Music",
-  description: "Llena el formulario directo y recibe la cotización formal de tu evento por WhatsApp con disponibilidad inmediata.",
+  title: "Personaliza tu Propuesta | Vendetta Live Music",
+  description: "Llena este formulario para personalizar la propuesta para tu evento y recibir los detalles por WhatsApp con disponibilidad inmediata.",
   alternates: {
     canonical: "/cotizar",
   }
@@ -14,14 +14,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function CotizarPage() {
-  const [packages, config] = await Promise.all([
-    db.package.findMany({
-      where: { active: true },
-      select: { id: true, name: true, description: true },
-      orderBy: { baseCostPerHour: "asc" }
-    }),
-    db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
-  ])
+  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
   const adminWhatsapp =
     config?.adminWhatsapp ||
@@ -38,15 +31,15 @@ export default async function CotizarPage() {
 
         <div className="container mx-auto px-4 max-w-3xl text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-black uppercase tracking-[0.25em] mb-4 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5" /> Cotización Rápida
+            <Sparkles className="w-3.5 h-3.5" /> Propuesta a tu Medida
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-white uppercase tracking-tight leading-tight">
-            Cotiza tu Evento con <span className="text-primary italic">Vendetta</span>
+            Personaliza la propuesta para tu evento con <span className="text-primary italic">Vendetta</span>
           </h1>
 
           <p className="text-muted-foreground text-sm sm:text-base mt-3 max-w-xl mx-auto leading-relaxed">
-            Completa estos sencillos datos para calcular disponibilidad y enviarte la propuesta formal directamente a tu WhatsApp.
+            Llena este formulario para personalizar la propuesta para tu evento y recibir los detalles directamente a tu WhatsApp con disponibilidad inmediata.
           </p>
 
           {/* Badges rápidos de confianza */}
@@ -68,7 +61,7 @@ export default async function CotizarPage() {
 
       {/* Contenedor del Formulario Directo */}
       <main className="container mx-auto px-4 max-w-2xl mt-10">
-        <DirectQuoteForm packages={packages} adminWhatsapp={adminWhatsapp} />
+        <DirectQuoteForm adminWhatsapp={adminWhatsapp} />
       </main>
     </div>
   )

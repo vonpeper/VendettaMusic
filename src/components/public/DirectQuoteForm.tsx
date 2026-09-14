@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
 import { submitContactInquiry } from "@/actions/contact"
 import { toast } from "sonner"
+import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import { 
   User, 
   Phone, 
-  Mail, 
   Calendar, 
   Clock, 
   MapPin, 
@@ -20,18 +20,16 @@ import {
   CheckCircle2, 
   Loader2, 
   ArrowRight,
-  Music2,
-  ExternalLink
+  ExternalLink,
+  Car,
+  AlertTriangle,
+  Tv,
+  Maximize2,
+  Lightbulb,
+  Grid
 } from "lucide-react"
 
-interface PackageOption {
-  id: string
-  name: string
-  description?: string | null
-}
-
 interface DirectQuoteFormProps {
-  packages: PackageOption[]
   adminWhatsapp?: string | null
 }
 
@@ -39,31 +37,159 @@ const EVENT_TYPES = [
   { value: "Boda", label: "💒 Boda" },
   { value: "XV Años", label: "👸 XV Años" },
   { value: "Cumpleaños / Aniversario", label: "🎂 Cumpleaños / Aniversario" },
-  { value: "Corporativo / Gala", label: "🏢 Corporativo / Gala" },
-  { value: "Bar / Restaurante", label: "🍸 Bar / Restaurante" },
-  { value: "Festival / Masivo", label: "🎪 Festival / Masivo" },
+  { value: "Corporativo / Fin de Año", label: "🏢 Corporativo / Fin de Año" },
+  { value: "Bar / Restaurante / Festival", label: "🍸 Bar / Restaurante / Festival" },
   { value: "Graduación", label: "🎓 Graduación" },
   { value: "Fiesta Privada / Otro", label: "🎸 Fiesta Privada / Otro" },
 ]
 
-export function DirectQuoteForm({ packages, adminWhatsapp }: DirectQuoteFormProps) {
-  const [packageName, setPackageName] = useState<string>(
-    packages.length > 0 ? packages[0].name : "Essential"
-  )
+const TIME_OPTIONS = [
+  "12:00 PM", "12:30 PM",
+  "01:00 PM", "01:30 PM",
+  "02:00 PM", "02:30 PM",
+  "03:00 PM", "03:30 PM",
+  "04:00 PM", "04:30 PM",
+  "05:00 PM", "05:30 PM",
+  "06:00 PM", "06:30 PM",
+  "07:00 PM", "07:30 PM",
+  "08:00 PM", "08:30 PM",
+  "09:00 PM", "09:30 PM",
+  "10:00 PM", "10:30 PM",
+  "11:00 PM", "11:30 PM",
+  "12:00 AM", "12:30 AM",
+  "01:00 AM", "01:30 AM",
+  "02:00 AM", "02:30 AM",
+  "03:00 AM", "03:30 AM",
+  "04:00 AM", "04:30 AM",
+  "05:00 AM",
+  "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM"
+]
+
+const MXN = (v: number) =>
+  new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 0,
+  }).format(v)
+
+export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
+  // Datos de contacto
   const [nombre, setNombre] = useState("")
   const [telefono, setTelefono] = useState("")
-  const [email, setEmail] = useState("")
   const [tipoEvento, setTipoEvento] = useState("Boda")
   const [fecha, setFecha] = useState("")
-  const [hora, setHora] = useState("21:00")
+
+  // Horario seleccionable en formato 12h AM/PM
+  const [horaInicio, setHoraInicio] = useState("08:00 PM")
+  const [horaFin, setHoraFin] = useState("01:00 AM")
+
+  // Invitados y producción adicional (>100)
   const [invitados, setInvitados] = useState("150")
-  const [ubicacion, setUbicacion] = useState("")
+  const [produccionAdicional, setProduccionAdicional] = useState<string[]>([])
+
+  // Ubicación y viáticos
+  const [estado, setEstado] = useState("Estado de México")
+  const [municipio, setMunicipio] = useState("Metepec")
+  const [municipioManual, setMunicipioManual] = useState("")
+  const [lugarEvento, setLugarEvento] = useState("")
+
+  // Estado de viáticos
+  const [viaticos, setViaticos] = useState<{
+    amount: number
+    isOutsideZone: boolean
+    distanceKm: number
+    requiresManualQuote: boolean
+    description?: string
+  } | null>(null)
+  const [loadingViaticos, setLoadingViaticos] = useState(false)
+
+  // Notas
   const [notas, setNotas] = useState("")
 
+  // Estados de envío
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedUrl, setSubmittedUrl] = useState<string | null>(null)
 
-  const cleanPhone = (adminWhatsapp || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5217222880045").replace(/\D/g, "")
+  const cleanPhone = (
+    adminWhatsapp ||
+    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
+    "5217222880045"
+  ).replace(/\D/g, "")
+
+  // Lista de municipios según el estado seleccionado
+  const municipiosDisponibles = ESTADOS_MUNICIPIOS[estado] || [
+    "Otro municipio / cotización manual",
+  ]
+  const isMunicipioManual =
+    municipio === "Otro municipio / cotización manual" ||
+    municipio === "Otro municipio"
+
+  // Cuando cambia el estado, resetear municipio al primero de la lista
+  const handleEstadoChange = (nuevoEstado: string) => {
+    setEstado(nuevoEstado)
+    const primerMuni = ESTADOS_MUNICIPIOS[nuevoEstado]?.[0] || "Otro municipio / cotización manual"
+    setMunicipio(primerMuni)
+    setMunicipioManual("")
+  }
+
+  // Cálculo automático de viáticos cuando cambia municipio o estado
+  useEffect(() => {
+    const muniEfectivo = isMunicipioManual ? municipioManual.trim() : municipio.trim()
+    if (!muniEfectivo || muniEfectivo.length < 2) {
+      setViaticos(null)
+      return
+    }
+
+    let isMounted = true
+    const fetchViaticos = async () => {
+      setLoadingViaticos(true)
+      try {
+        const destination = `${muniEfectivo}, ${estado}`
+        const resp = await fetch(`/api/viaticos?destination=${encodeURIComponent(destination)}`)
+        const data = await resp.json()
+
+        if (!isMounted) return
+
+        if (resp.ok && !data.error) {
+          setViaticos({
+            amount: data.viaticosAmount || 0,
+            isOutsideZone: data.isOutsideZone ?? data.viaticosAmount > 0,
+            distanceKm: data.distanceKm || 0,
+            requiresManualQuote: !!data.requiresManualQuote,
+            description: data.description,
+          })
+        } else {
+          setViaticos(null)
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.warn("Error calculando viáticos:", err)
+          setViaticos(null)
+        }
+      } finally {
+        if (isMounted) setLoadingViaticos(false)
+      }
+    }
+
+    const timer = setTimeout(() => {
+      fetchViaticos()
+    }, 400)
+
+    return () => {
+      isMounted = false
+      clearTimeout(timer)
+    }
+  }, [municipio, municipioManual, estado, isMunicipioManual])
+
+  // Toggle de producción adicional
+  const toggleProduccionItem = (item: string) => {
+    setProduccionAdicional((prev) =>
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+    )
+  }
+
+  const numInvitados = parseInt(invitados, 10) || 0
+  const tieneMasDe100Invitados = numInvitados > 100
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -80,25 +206,40 @@ export function DirectQuoteForm({ packages, adminWhatsapp }: DirectQuoteFormProp
       toast.error("Por favor selecciona la fecha de tu evento")
       return
     }
-    if (!ubicacion.trim()) {
-      toast.error("Por favor indica la ciudad o municipio del evento")
+
+    const muniFinal = isMunicipioManual ? municipioManual.trim() : municipio
+    if (!muniFinal) {
+      toast.error("Por favor selecciona o ingresa el municipio del evento")
       return
     }
 
     setIsSubmitting(true)
 
-    // 1. Guardar prospecto en base de datos CRM
+    const horarioCompleto = `${horaInicio} a ${horaFin}`
+    const ubicacionCompleta = `${muniFinal}, ${estado}${lugarEvento.trim() ? ` (${lugarEvento.trim()})` : ""}`
+
+    // 1. Guardar prospecto en CRM
     try {
       const inquiryForm = new FormData()
       inquiryForm.set("nombre", nombre.trim())
       inquiryForm.set("telefono", telefono.trim())
-      inquiryForm.set("email", email.trim() || "contacto@vendetta.mx")
+      inquiryForm.set("email", `cliente_${telefono.replace(/\D/g, "") || Date.now()}@cotizacion.vendetta.mx`)
       inquiryForm.set("fecha", fecha)
-      inquiryForm.set("tipo", `${tipoEvento} - Paquete: ${packageName}`)
-      inquiryForm.set(
-        "mensaje",
-        `Hora: ${hora.trim()} | Invitados: ${invitados.trim()} | Ubicación: ${ubicacion.trim()}${notas.trim() ? ` | Notas: ${notas.trim()}` : ""}`
-      )
+      inquiryForm.set("tipo", `${tipoEvento} - Propuesta Personalizada`)
+
+      let detallesExtra = `Horario: ${horarioCompleto} | Invitados: ${numInvitados} | Ubicación: ${ubicacionCompleta}`
+      if (tieneMasDe100Invitados && produccionAdicional.length > 0) {
+        detallesExtra += ` | Producción extra: ${produccionAdicional.join(", ")}`
+      }
+      if (viaticos) {
+        detallesExtra += ` | Viáticos: ${viaticos.isOutsideZone ? `$${viaticos.amount} MXN` : "Zona Local ($0)"}`
+      }
+      if (notas.trim()) {
+        detallesExtra += ` | Notas: ${notas.trim()}`
+      }
+
+      inquiryForm.set("mensaje", detallesExtra)
+
       await submitContactInquiry(inquiryForm).catch((err) =>
         console.warn("Could not save contact inquiry in DB:", err)
       )
@@ -106,27 +247,44 @@ export function DirectQuoteForm({ packages, adminWhatsapp }: DirectQuoteFormProp
       console.warn("Inquiry save error:", dbErr)
     }
 
-    // 2. Construir mensaje estructurado de WhatsApp
+    // 2. Formatear texto de viáticos para WhatsApp
+    let textoViaticos = "Zona local (sin costo adicional de viáticos)"
+    if (viaticos) {
+      if (viaticos.requiresManualQuote) {
+        textoViaticos = "Distancia extendida (>250 km, cotización logística personalizada)"
+      } else if (viaticos.amount > 0) {
+        textoViaticos = `${MXN(viaticos.amount)} MXN (calculado para 2 camionetas: gasolina y casetas)`
+      }
+    }
+
+    // 3. Formatear producción adicional
+    let textoProduccion = ""
+    if (tieneMasDe100Invitados && produccionAdicional.length > 0) {
+      textoProduccion = `\n🎪 *Producción adicional de interés (>100 invitados):*\n${produccionAdicional.map((p) => `  • ${p}`).join("\n")}\n`
+    }
+
+    // 4. Construir mensaje de WhatsApp
     const waMessage = 
 `¡Hola Vendetta Live Music! 🎸⚡
-Acabo de llenar mi solicitud de cotización en su página:
+Llené el formulario para personalizar la propuesta para mi evento:
 
-📦 *Paquete de interés:* ${packageName}
 👤 *Nombre:* ${nombre.trim()}
-📱 *Teléfono:* ${telefono.trim()}
-${email.trim() ? `📧 *Correo:* ${email.trim()}\n` : ""}🎉 *Tipo de Evento:* ${tipoEvento}
+📱 *WhatsApp:* ${telefono.trim()}
+🎉 *Tipo de Evento:* ${tipoEvento}
 📅 *Fecha:* ${fecha}
-⏰ *Hora estimada:* ${hora.trim()}
-👥 *Invitados estimados:* ${invitados.trim()} personas
-📍 *Ubicación / Ciudad:* ${ubicacion.trim()}
-${notas.trim() ? `📝 *Notas / Requerimientos:* ${notas.trim()}\n` : ""}
-¿Tienen disponibilidad para esta fecha? ¡Muchas gracias!`
+⏰ *Horario:* ${horarioCompleto}
+👥 *Invitados estimados:* ${numInvitados} personas${textoProduccion}
+📍 *Ubicación:* ${ubicacionCompleta}
+🚗 *Viáticos estimados:* ${textoViaticos}
+⚠️ *(Nota: No incluye planta de luz. Viáticos para 2 camionetas, gasolina y casetas únicamente. No incluye alimentos.)*
+${notas.trim() ? `\n📝 *Notas / Peticiones especiales:* ${notas.trim()}\n` : ""}
+¿Tienen disponibilidad para esta fecha? ¡Quedo atento a la propuesta!`
 
     const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`
     setSubmittedUrl(waUrl)
     setIsSubmitting(false)
 
-    toast.success("¡Información lista! Abriendo tu WhatsApp...")
+    toast.success("¡Propuesta preparada! Abriendo tu WhatsApp...")
 
     // Abrir WhatsApp
     if (typeof window !== "undefined") {
@@ -144,10 +302,10 @@ ${notas.trim() ? `📝 *Notas / Requerimientos:* ${notas.trim()}\n` : ""}
 
         <div className="space-y-2">
           <h2 className="text-2xl sm:text-3xl font-heading font-black text-white uppercase tracking-tight">
-            ¡Formulario Completado!
+            ¡Propuesta Preparada!
           </h2>
           <p className="text-sm text-gray-300 max-w-md mx-auto">
-            Hemos preparado tu mensaje con todos los datos de tu evento. Si no se abrió automáticamente, presiona el botón a continuación para enviarlo por WhatsApp.
+            Hemos organizado los detalles de tu evento en un mensaje listo para WhatsApp. Si no se abrió automáticamente, toca el botón de abajo para enviarlo directamente.
           </p>
         </div>
 
@@ -187,28 +345,7 @@ ${notas.trim() ? `📝 *Notas / Requerimientos:* ${notas.trim()}\n` : ""}
       <div className="absolute -top-32 -right-32 w-72 h-72 bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-[#25D366]/15 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* 1. SELECCIÓN DE PAQUETE */}
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
-          <Music2 className="w-4 h-4 text-primary" /> Paquete de Interés
-        </Label>
-        <select
-          value={packageName}
-          onChange={(e) => setPackageName(e.target.value)}
-          className="w-full h-12 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all cursor-pointer font-medium"
-        >
-          {packages.map((pkg) => (
-            <option key={pkg.id} value={pkg.name} className="bg-zinc-900 text-white">
-              {pkg.name} {pkg.name === "Essential" ? "— Show 2 Horas (Básico Audio & Luces)" : pkg.name === "Experience" ? "— Show 2 Horas (Audio Ampliado + Monitoreo)" : pkg.name === "Festival Premium" ? "— Gran Producción Masiva" : ""}
-            </option>
-          ))}
-          <option value="Personalizado / Por definir" className="bg-zinc-900 text-white">
-            Personalizado / Aún no lo sé (Asesoría directa)
-          </option>
-        </select>
-      </div>
-
-      {/* 2. NOMBRE Y TELÉFONO */}
+      {/* 1. NOMBRE Y TELÉFONO */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
@@ -239,21 +376,8 @@ ${notas.trim() ? `📝 *Notas / Requerimientos:* ${notas.trim()}\n` : ""}
         </div>
       </div>
 
-      {/* 3. CORREO Y TIPO DE EVENTO */}
+      {/* 2. TIPO DE CELEBRACIÓN Y FECHA */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
-            <Mail className="w-3.5 h-3.5 text-primary" /> Correo Electrónico (Opcional)
-          </Label>
-          <Input
-            type="email"
-            placeholder="Ej: mariana@ejemplo.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
-          />
-        </div>
-
         <div className="space-y-1.5">
           <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
             <PartyPopper className="w-3.5 h-3.5 text-primary" /> Tipo de Celebración <span className="text-red-500">*</span>
@@ -270,10 +394,7 @@ ${notas.trim() ? `📝 *Notas / Requerimientos:* ${notas.trim()}\n` : ""}
             ))}
           </select>
         </div>
-      </div>
 
-      {/* 4. FECHA Y HORA */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-primary" /> Fecha del Evento <span className="text-red-500">*</span>
@@ -286,31 +407,62 @@ ${notas.trim() ? `📝 *Notas / Requerimientos:* ${notas.trim()}\n` : ""}
             className="h-12 bg-white/5 border-white/10 text-white text-sm rounded-xl focus:border-primary [color-scheme:dark]"
           />
         </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-primary" /> Horario Estimado del Show <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            required
-            type="text"
-            placeholder="Ej: 21:00 a 23:00 hrs"
-            value={hora}
-            onChange={(e) => setHora(e.target.value)}
-            className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
-          />
-        </div>
       </div>
 
-      {/* 5. INVITADOS Y UBICACIÓN */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* 3. HORARIO SELECCIONABLE (AM / PM) */}
+      <div className="space-y-2">
+        <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5 text-primary" /> Horario Estimado del Evento <span className="text-red-500">*</span>
+        </Label>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <span className="text-[11px] text-gray-400 font-medium">Hora de inicio:</span>
+            <select
+              value={horaInicio}
+              onChange={(e) => setHoraInicio(e.target.value)}
+              className="w-full h-12 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all cursor-pointer font-medium"
+            >
+              {TIME_OPTIONS.map((time) => (
+                <option key={`start-${time}`} value={time} className="bg-zinc-900 text-white">
+                  {time}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[11px] text-gray-400 font-medium">Hora de término aproximada:</span>
+            <select
+              value={horaFin}
+              onChange={(e) => setHoraFin(e.target.value)}
+              className="w-full h-12 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all cursor-pointer font-medium"
+            >
+              {TIME_OPTIONS.map((time) => (
+                <option key={`end-${time}`} value={time} className="bg-zinc-900 text-white">
+                  {time}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <p className="text-[11px] text-gray-500">
+          Horario seleccionado: <span className="text-primary font-bold">{horaInicio}</span> a <span className="text-primary font-bold">{horaFin}</span>
+        </p>
+      </div>
+
+      {/* 4. INVITADOS & PRODUCCIÓN ADICIONAL SI >100 */}
+      <div className="space-y-3">
         <div className="space-y-1.5">
           <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5 text-primary" /> No. Estimado de Invitados <span className="text-red-500">*</span>
           </Label>
           <Input
             required
-            type="text"
+            type="number"
+            min={10}
+            max={5000}
+            step={10}
             placeholder="Ej: 150"
             value={invitados}
             onChange={(e) => setInvitados(e.target.value)}
@@ -318,29 +470,171 @@ ${notas.trim() ? `📝 *Notas / Requerimientos:* ${notas.trim()}\n` : ""}
           />
         </div>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-primary" /> Ciudad / Municipio del Evento <span className="text-red-500">*</span>
-          </Label>
+        {/* Sección condicional cuando hay más de 100 invitados */}
+        {tieneMasDe100Invitados && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-primary/10 border border-primary/30 space-y-3 animate-in fade-in-0 duration-200">
+            <div className="flex items-center gap-2 text-primary text-xs sm:text-sm font-black uppercase tracking-wide">
+              <Sparkles className="w-4 h-4" />
+              <span>Por tu aforo ({numInvitados} invitados), ¿te gustaría agregar producción adicional?</span>
+            </div>
+            <p className="text-xs text-gray-300">
+              Para garantizar la mejor cobertura acústica y experiencia visual en espacios grandes, puedes seleccionar los elementos que te interesen:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              {[
+                { id: "Producción más grande", label: "Producción más grande (Audio de mayor potencia)", icon: Maximize2 },
+                { id: "Pantalla LED", label: "Pantalla LED gigante", icon: Tv },
+                { id: "Templete / Escenario", label: "Templete / Escenario para banda", icon: Grid },
+                { id: "Iluminación adicional", label: "Iluminación adicional (Robóticas)", icon: Lightbulb },
+                { id: "Pista iluminada", label: "Pista iluminada", icon: Sparkles },
+              ].map(({ id, label, icon: Icon }) => {
+                const isSelected = produccionAdicional.includes(id)
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => toggleProduccionItem(id)}
+                    className={`flex items-center gap-2.5 p-3 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-primary/20 border-primary text-white shadow-sm shadow-primary/20"
+                        : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? "border-primary bg-primary text-black" : "border-white/30"}`}>
+                      {isSelected && <span className="text-[10px] font-black">✓</span>}
+                    </div>
+                    <Icon className="w-4 h-4 text-primary shrink-0" />
+                    <span>{label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 5. UBICACIÓN Y CÁLCULO DE VIÁTICOS */}
+      <div className="space-y-3 pt-2">
+        <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+          <MapPin className="w-3.5 h-3.5 text-primary" /> Ubicación del Evento (Cálculo de Viáticos) <span className="text-red-500">*</span>
+        </Label>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Selector de Estado */}
+          <div className="space-y-1">
+            <span className="text-[11px] text-gray-400 font-medium">Estado:</span>
+            <select
+              value={estado}
+              onChange={(e) => handleEstadoChange(e.target.value)}
+              className="w-full h-12 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all cursor-pointer font-medium"
+            >
+              {Object.keys(ESTADOS_MUNICIPIOS).map((est) => (
+                <option key={est} value={est} className="bg-zinc-900 text-white">
+                  {est}
+                </option>
+              ))}
+              <option value="Otro estado" className="bg-zinc-900 text-white">
+                Otro estado (Cotización manual)
+              </option>
+            </select>
+          </div>
+
+          {/* Selector de Municipio */}
+          <div className="space-y-1">
+            <span className="text-[11px] text-gray-400 font-medium">Municipio / Alcaldía:</span>
+            <select
+              value={municipio}
+              onChange={(e) => setMunicipio(e.target.value)}
+              className="w-full h-12 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all cursor-pointer font-medium"
+            >
+              {municipiosDisponibles.map((mun) => (
+                <option key={mun} value={mun} className="bg-zinc-900 text-white">
+                  {mun}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Input manual si seleccionó "Otro municipio" */}
+        {isMunicipioManual && (
+          <div className="space-y-1 animate-in fade-in-0 duration-150">
+            <span className="text-[11px] text-gray-400 font-medium">Escribe el nombre del municipio:</span>
+            <Input
+              required
+              type="text"
+              placeholder="Ej: Avándaro, Valle de Bravo, Cuautitlán..."
+              value={municipioManual}
+              onChange={(e) => setMunicipioManual(e.target.value)}
+              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
+            />
+          </div>
+        )}
+
+        {/* Nombre del Salón / Lugar opcional */}
+        <div className="space-y-1">
+          <span className="text-[11px] text-gray-400 font-medium">Nombre del salón, hacienda o jardín (Opcional):</span>
           <Input
-            required
             type="text"
-            placeholder="Ej: Metepec, Toluca, CDMX, Valle de Bravo..."
-            value={ubicacion}
-            onChange={(e) => setUbicacion(e.target.value)}
+            placeholder="Ej: Hacienda San Martín, Jardín La Concordia, Domicilio particular..."
+            value={lugarEvento}
+            onChange={(e) => setLugarEvento(e.target.value)}
             className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
           />
         </div>
+
+        {/* Resultado del Cálculo de Viáticos */}
+        <div className="mt-2">
+          {loadingViaticos ? (
+            <div className="flex items-center gap-2 p-3.5 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-300">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <span>Calculando viáticos para {isMunicipioManual ? municipioManual || "tu destino" : municipio}...</span>
+            </div>
+          ) : viaticos ? (
+            <div
+              className={`p-4 rounded-xl border transition-all ${
+                !viaticos.isOutsideZone || viaticos.amount === 0
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                  : "bg-blue-500/10 border-blue-500/30 text-blue-200"
+              }`}
+            >
+              <div className="flex items-center gap-2 font-bold text-sm">
+                <Car className="w-4 h-4 shrink-0" />
+                {!viaticos.isOutsideZone || viaticos.amount === 0 ? (
+                  <span>✅ Zona Local (Toluca, Metepec y alrededores) — Sin costo de viáticos ($0 MXN)</span>
+                ) : viaticos.requiresManualQuote ? (
+                  <span>📍 Destino extendido (&gt;250 km) — Sujeto a cotización logística especial</span>
+                ) : (
+                  <span>🚗 Viáticos estimados: {MXN(viaticos.amount)} MXN</span>
+                )}
+              </div>
+              {viaticos.distanceKm > 0 && (
+                <p className="text-[11px] opacity-80 mt-1">
+                  Distancia estimada desde la base: ~{viaticos.distanceKm.toFixed(0)} km
+                </p>
+              )}
+            </div>
+          ) : null}
+
+          {/* Nota obligatoria de viáticos */}
+          <div className="mt-2.5 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300/90 flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="leading-relaxed">
+              <span className="font-bold text-amber-200">Nota importante:</span> No incluye planta de luz. Viáticos calculados para 2 camionetas (gasolina y casetas únicamente). No incluye alimentos.
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 6. NOTAS O REQUERIMIENTOS */}
-      <div className="space-y-1.5">
+      {/* 6. NOTAS O PETICIONES ESPECIALES */}
+      <div className="space-y-1.5 pt-2">
         <Label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
           Comentarios o Peticiones Especiales (Opcional)
         </Label>
         <textarea
           rows={3}
-          placeholder="¿Alguna canción especial para vals, detalles del salón, dudas de audio o logística?"
+          placeholder="¿Alguna canción especial para vals, detalles del salón, temas de audio o logística?"
           value={notas}
           onChange={(e) => setNotas(e.target.value)}
           className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
@@ -357,7 +651,7 @@ ${notas.trim() ? `📝 *Notas / Requerimientos:* ${notas.trim()}\n` : ""}
           {isSubmitting ? (
             <>
               <Loader2 className="w-6 h-6 animate-spin" />
-              <span>Preparando Cotización...</span>
+              <span>Preparando Propuesta...</span>
             </>
           ) : (
             <>
