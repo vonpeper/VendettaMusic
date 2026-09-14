@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Bell, BellRing, Check, Sparkles, Loader2, Send } from "lucide-react"
+import { Bell, BellRing, Check, Sparkles, Loader2, Send, X, ShieldCheck, MapPin, Clock, Shirt } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { motion, AnimatePresence } from "framer-motion"
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "BNed5hz80wadrpiAoeOqHQ5SWOa5Fgw_OJepWU8zomvD9HLPObjZGM_oc4L219jhAicmbUiG4dgct3gRCm24R-U"
 
@@ -18,19 +19,61 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray
 }
 
-export function PushNotificationBanner() {
+export function PushNotificationButton() {
   const [isSupported, setIsSupported] = useState<boolean>(false)
   const [isSubscribing, setIsSubscribing] = useState<boolean>(false)
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false)
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
 
   useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator) {
+    async function checkSubscription() {
+      if (typeof window === "undefined" || !("Notification" in window) || !("serviceWorker" in navigator)) {
+        return
+      }
       setIsSupported(true)
 
-      if (Notification.permission === "granted") {
-        setIsSubscribed(true)
+      try {
+        const reg = await navigator.serviceWorker.register("/sw.js")
+        await navigator.serviceWorker.ready
+        const existingSub = await reg.pushManager.getSubscription()
+
+        if (existingSub) {
+          setIsSubscribed(true)
+          // Ensure the server has this subscription in SQLite
+          await fetch("/api/push/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ subscription: existingSub.toJSON() })
+          }).catch(() => null)
+        } else if (Notification.permission === "granted") {
+          // If browser has permission granted, auto-create subscription with VAPID key for Android/iOS
+          try {
+            const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            const newSub = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey
+            })
+            if (newSub) {
+              await fetch("/api/push/subscribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ subscription: newSub.toJSON() })
+              }).catch(() => null)
+              setIsSubscribed(true)
+            }
+          } catch (autoErr) {
+            console.warn("Auto-subscribe on mount failed:", autoErr)
+            setIsSubscribed(false)
+          }
+        } else {
+          setIsSubscribed(false)
+        }
+      } catch (err) {
+        console.error("Error checking subscription:", err)
       }
     }
+
+    checkSubscription()
   }, [])
 
   const registerServiceWorker = async () => {
@@ -123,95 +166,222 @@ export function PushNotificationBanner() {
         }
       }
 
-      let reg = await navigator.serviceWorker.getRegistration()
-      if (!reg) {
-        reg = await navigator.serviceWorker.register("/sw.js")
-        await navigator.serviceWorker.ready
-      }
+      // Disparar prueba directamente desde el servidor (WebPush real hacia FCM / APNs)
+      const res = await fetch("/api/push/send-reminder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ test: true })
+      })
 
-      if (reg && reg.showNotification) {
-        await reg.showNotification("⚡ VENDETTA | ¡HOY HAY SHOW!", {
-          body: "🎸 Boda Mariana & Carlos — Show 21:00 hrs en Hacienda San José. Llamado 18:30 hrs. Vestimenta: Formal Rock.",
-          icon: "/images/branding/logo-vendetta.png",
-          badge: "/images/branding/logo-vendetta.png",
-          vibrate: [200, 100, 200, 100, 200],
-          tag: "vendetta-show-demo",
-          renotify: true,
-          data: { url: "/agenda" }
-        } as NotificationOptions)
-        toast.success("¡Notificación de prueba enviada a tu pantalla!")
+      const data = await res.json()
+      if (res.ok && data.success) {
+        toast.success("¡Notificación push real enviada desde el servidor a tu dispositivo!")
       } else {
-        new Notification("⚡ VENDETTA | ¡HOY HAY SHOW!", {
-          body: "🎸 Boda Mariana & Carlos — Show 21:00 hrs en Hacienda San José. Llamado 18:30 hrs.",
-          icon: "/images/branding/logo-vendetta.png"
-        })
-        toast.success("¡Notificación de prueba enviada!")
+        // Respaldo con notificación local si la llamada al servidor no entregó
+        const reg = await navigator.serviceWorker.ready
+        if (reg?.showNotification) {
+          await reg.showNotification("⚡ VENDETTA | ¡HOY HAY SHOW!", {
+            body: "🎸 Boda Mariana & Carlos — Show 21:00 hrs en Hacienda San José. Llamado 18:30 hrs.",
+            icon: "/icon.png",
+            badge: "/icon.png",
+            vibrate: [200, 100, 200, 100, 200],
+            tag: "vendetta-show-demo",
+            renotify: true,
+            data: { url: "/agenda" }
+          } as NotificationOptions)
+        }
+        toast.info("Prueba enviada a tu pantalla")
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Desconocido"
       console.error("Test notification error:", err)
-      toast.error(`Error al mostrar notificación: ${msg}`)
+      toast.error(`Error al enviar prueba: ${msg}`)
     }
   }
 
   if (!isSupported) return null
 
   return (
-    <div className="bg-gradient-to-r from-zinc-950 via-purple-950/20 to-black border border-purple-500/30 rounded-3xl p-4 sm:p-5 shadow-xl backdrop-blur-xl relative overflow-hidden">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-start sm:items-center gap-3.5">
-          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
-            {isSubscribed ? <BellRing className="w-5 h-5 animate-bounce" /> : <Bell className="w-5 h-5" />}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h4 className="text-sm font-heading font-black text-white uppercase tracking-tight">
-                Recordatorios de Shows
-              </h4>
-              {isSubscribed && (
-                <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                  <Check className="w-2.5 h-2.5" /> Activadas
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5 max-w-lg leading-relaxed">
-              {isSubscribed
-                ? "Recibirás una notificación en tu pantalla el día de cada show con tus horarios y locación."
-                : "Activa las alertas push para recibir un aviso elegante en tu teléfono el día de cada presentación."}
-            </p>
-          </div>
-        </div>
+    <>
+      {/* Compact Trigger Button */}
+      <button
+        type="button"
+        onClick={() => setIsModalOpen(true)}
+        title={isSubscribed ? "Notificaciones activadas (Click para configurar)" : "Activar recordatorios de shows"}
+        className={`relative inline-flex items-center gap-2 h-9 sm:h-10 px-3 sm:px-3.5 rounded-xl border text-xs font-bold transition-all cursor-pointer select-none ${
+          isSubscribed
+            ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/60 hover:border-emerald-400"
+            : "bg-purple-950/30 border-purple-500/40 text-purple-300 hover:bg-purple-900/50 hover:border-purple-400"
+        }`}
+      >
+        {isSubscribed ? (
+          <BellRing className="w-4 h-4 text-emerald-400 shrink-0" />
+        ) : (
+          <Bell className="w-4 h-4 text-purple-400 shrink-0" />
+        )}
+        
+        <span className="hidden sm:inline">
+          {isSubscribed ? "Alertas ON" : "Alertas"}
+        </span>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+        {/* Status Indicator Dot */}
+        <span className="relative flex h-2 w-2">
           {isSubscribed ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSendTest}
-              className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10 text-xs font-bold gap-1.5 h-10 px-4 rounded-xl cursor-pointer w-full sm:w-auto"
-            >
-              <Send className="w-3.5 h-3.5" /> Probar Notificación
-            </Button>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
           ) : (
-            <Button
-              size="sm"
-              onClick={handleSubscribe}
-              disabled={isSubscribing}
-              className="bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider gap-2 h-10 px-5 rounded-xl shadow-lg shadow-purple-600/20 cursor-pointer w-full sm:w-auto transition-all"
-            >
-              {isSubscribing ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Activando...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" /> Activar Notificaciones
-                </>
-              )}
-            </Button>
+            <>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
+            </>
           )}
-        </div>
-      </div>
-    </div>
+        </span>
+      </button>
+
+      {/* Pop-up Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsModalOpen(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-md"
+            />
+
+            {/* Modal Dialog Content */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="relative w-full max-w-md bg-zinc-950 border border-white/15 rounded-3xl p-5 sm:p-7 shadow-2xl z-10 space-y-5"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between gap-4 pb-4 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${
+                    isSubscribed 
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
+                      : "bg-purple-500/10 border-purple-500/30 text-purple-400"
+                  }`}>
+                    {isSubscribed ? <BellRing className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-heading font-black text-white uppercase tracking-tight">
+                      Alertas de Shows
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Recordatorios push para músicos y staff
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Status Banner */}
+              <div className={`p-4 rounded-2xl border flex items-start gap-3 ${
+                isSubscribed
+                  ? "bg-emerald-950/30 border-emerald-500/30 text-emerald-200"
+                  : "bg-purple-950/20 border-purple-500/30 text-purple-200"
+              }`}>
+                <div className="mt-0.5 shrink-0">
+                  {isSubscribed ? (
+                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                  ) : (
+                    <Sparkles className="w-5 h-5 text-purple-400" />
+                  )}
+                </div>
+                <div className="text-xs space-y-1">
+                  <div className="font-bold text-white flex items-center gap-1.5">
+                    {isSubscribed ? "Dispositivo Vinculado" : "Notificaciones no activadas"}
+                    {isSubscribed && (
+                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded-full">
+                        <Check className="w-2.5 h-2.5" /> Activo
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {isSubscribed
+                      ? "Recibirás una notificación en tu pantalla la mañana de cada show con tus horarios y locación."
+                      : "Activa los avisos para recibir recordatorios automáticos en tu teléfono el día de cada presentación."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Features List */}
+              <div className="space-y-2 py-1">
+                <div className="flex items-center gap-2.5 text-xs text-gray-300">
+                  <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-primary shrink-0">
+                    <Clock className="w-3.5 h-3.5" />
+                  </div>
+                  <span>Horarios de llamado, montaje e inicio de show.</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs text-gray-300">
+                  <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-blue-400 shrink-0">
+                    <MapPin className="w-3.5 h-3.5" />
+                  </div>
+                  <span>Navegación GPS directa a Google Maps y Waze.</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs text-gray-300">
+                  <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-indigo-400 shrink-0">
+                    <Shirt className="w-3.5 h-3.5" />
+                  </div>
+                  <span>Código de vestimenta especificado por fecha.</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+                {isSubscribed ? (
+                  <Button
+                    onClick={handleSendTest}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider gap-2 h-11 rounded-xl shadow-lg shadow-emerald-600/20 cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5" /> Probar Notificación
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubscribe}
+                    disabled={isSubscribing}
+                    className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider gap-2 h-11 rounded-xl shadow-lg shadow-purple-600/20 cursor-pointer transition-all"
+                  >
+                    {isSubscribing ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Activando...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" /> Activar Notificaciones
+                      </>
+                    )}
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  onClick={() => setIsModalOpen(false)}
+                  className="border-white/10 text-xs font-bold h-11 rounded-xl px-4 hover:bg-white/10 text-gray-300 cursor-pointer"
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
+
+// Backwards-compatible alias
+export const PushNotificationBanner = PushNotificationButton
+

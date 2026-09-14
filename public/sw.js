@@ -14,8 +14,8 @@ self.addEventListener('push', (event) => {
   let data = {
     title: '⚡ Vendetta Music',
     body: '¡Hay una actualización en la agenda de shows!',
-    icon: '/images/logo-icon.png',
-    badge: '/images/logo-icon.png',
+    icon: '/icon.png',
+    badge: '/icon.png',
     url: '/agenda'
   };
 
@@ -32,10 +32,10 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: data.icon || '/images/logo-icon.png',
-    badge: data.badge || '/images/logo-icon.png',
+    icon: data.icon || '/icon.png',
+    badge: data.badge || '/icon.png',
     vibrate: [200, 100, 200],
-    tag: 'vendetta-reminder',
+    tag: data.tag || 'vendetta-' + Date.now(),
     renotify: true,
     data: {
       url: data.url || '/agenda',

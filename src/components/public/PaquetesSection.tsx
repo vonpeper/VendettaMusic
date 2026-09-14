@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import * as Icons from "lucide-react"
 import Image from "next/image"
@@ -151,8 +152,19 @@ export function PaquetesSection({ dbPackages, adminWhatsapp }: PaquetesSectionPr
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const isLargePackage = (name?: string) => {
+    if (!name) return false
+    const lower = name.toLowerCase()
+    return lower.includes("experience") || lower.includes("festival")
+  }
+
   const handleOpenQuote = (pkg: PackageData) => {
     setSelectedPkg(pkg)
+    const isLarge = isLargePackage(pkg.name)
+    setFormData((prev) => ({
+      ...prev,
+      invitados: isLarge ? "100" : (prev.invitados || "50"),
+    }))
   }
 
   const handleCloseModal = () => {
@@ -183,6 +195,14 @@ export function PaquetesSection({ dbPackages, adminWhatsapp }: PaquetesSectionPr
       toast.error("Por favor indica el número aproximado de invitados")
       return
     }
+
+    const numInv = parseInt(formData.invitados, 10) || 0
+    const isLarge = selectedPkg ? isLargePackage(selectedPkg.name) : false
+    if (isLarge && numInv < 100) {
+      toast.error(`El paquete ${selectedPkg?.name} incluye producción diseñada para un aforo mínimo de 100 invitados.`)
+      return
+    }
+
     if (!formData.ubicacion.trim()) {
       toast.error("Por favor indica la ubicación o municipio del evento")
       return
@@ -308,21 +328,41 @@ ${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim(
                   <p className="text-sm text-white/70 leading-relaxed">{pkg.description}</p>
                 </div>
 
-                {/* Precios: Solo se despliega para Essential */}
+                {/* Precios y Aforo */}
                 {isEssential ? (
                   <div className="mb-6 pb-6 border-b border-white/10">
-                    <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Inversión</div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-black text-white">Desde $8,500</span>
-                      <span className="text-xs text-primary font-bold">MXN</span>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Inversión</div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-3xl font-black text-white">Desde $8,500</span>
+                          <span className="text-xs text-primary font-bold">MXN</span>
+                        </div>
+                        <div className="text-xs text-primary font-semibold mt-1">2 horas de show</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Aforo</div>
+                        <span className="text-xs font-bold text-gray-300 bg-white/5 px-2.5 py-1 rounded-md border border-white/10 inline-block">
+                          Hasta 100 inv.
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-xs text-primary font-semibold mt-1">2 horas de show</div>
                   </div>
                 ) : (
                   <div className="mb-6 pb-6 border-b border-white/10">
-                    <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Inversión</div>
-                    <div className="text-lg font-black text-white/90">Cotización personalizada</div>
-                    <div className="text-xs text-muted-foreground mt-1">Atención directa a la medida</div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Inversión</div>
+                        <div className="text-lg font-black text-white/90">Cotización personalizada</div>
+                        <div className="text-xs text-muted-foreground mt-1">Atención directa a la medida</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Aforo</div>
+                        <span className="text-xs font-bold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/30 inline-block">
+                          {pkg.name.toLowerCase().includes("experience") ? "100 a 300 inv." : "Mínimo 100 inv."}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -550,12 +590,17 @@ ${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim(
                   <input
                     type="number"
                     required
-                    min="10"
-                    placeholder="Ej: 150"
+                    min={selectedPkg && isLargePackage(selectedPkg.name) ? 100 : 10}
+                    placeholder={selectedPkg && isLargePackage(selectedPkg.name) ? "Mínimo 100 invitados" : "Ej: 50"}
                     value={formData.invitados}
                     onChange={(e) => setFormData({ ...formData, invitados: e.target.value })}
                     className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
+                  {selectedPkg && isLargePackage(selectedPkg.name) && (
+                    <p className="text-[11px] text-amber-400 font-semibold mt-1.5">
+                      ⚠️ Mínimo 100 invitados por la dimensión de este paquete.
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -601,6 +646,16 @@ ${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim(
                 <p className="text-[10px] text-gray-500 text-center mt-2">
                   ⚡ Tu información se abrirá automáticamente en WhatsApp para atención personalizada y formalización directa con el equipo.
                 </p>
+
+                <div className="mt-4 pt-3 border-t border-white/10 text-center">
+                  <Link
+                    href={`/cotizar?paquete=${selectedPkg ? (selectedPkg.name.toLowerCase().includes("experience") ? "experience" : selectedPkg.name.toLowerCase().includes("festival") ? "festival" : "essential") : "essential"}`}
+                    className="text-xs text-gray-400 hover:text-primary transition-colors inline-flex items-center gap-1 font-semibold group"
+                  >
+                    <span>¿Prefieres calcular viáticos y personalizar tu propuesta en línea?</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </Link>
+                </div>
               </div>
             </form>
           </div>

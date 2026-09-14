@@ -11,21 +11,24 @@ import {
   ChevronRight, 
   Search, 
   ExternalLink, 
-  Sparkles,
-  CheckCircle2,
-  Clock3,
-  CalendarDays,
-  Shirt,
-  Info,
-  Users,
-  X,
-  CalendarCheck
+  Sparkles, 
+  CheckCircle2, 
+  Clock3, 
+  CalendarDays, 
+  Shirt, 
+  Info, 
+  Users, 
+  X, 
+  CalendarCheck,
+  SlidersHorizontal,
+  Filter,
+  RotateCcw
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { motion, AnimatePresence } from "framer-motion"
-import { PushNotificationBanner } from "@/components/agenda/PushNotificationBanner"
+import { PushNotificationButton } from "@/components/agenda/PushNotificationBanner"
 
 interface Props {
   events: AgendaEvent[]
@@ -117,6 +120,9 @@ export function AgendaCalendarView({ events }: Props) {
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [statusFilter, setStatusFilter] = useState<string>("todos")
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false)
+
+  const hasActiveFilters = searchQuery.trim().length > 0 || statusFilter !== "todos"
 
   // Group all events by YYYY-MM-DD
   const eventsByDate = useMemo(() => {
@@ -194,44 +200,44 @@ export function AgendaCalendarView({ events }: Props) {
 
   return (
     <div className="min-h-screen bg-[#070709] text-foreground pb-20">
-      {/* Top Banner / Header */}
-      <header className="relative border-b border-white/10 bg-gradient-to-b from-black via-zinc-950 to-[#070709] pt-32 md:pt-36 pb-8 md:pb-12 overflow-hidden">
+      {/* Top Banner / Header - Sleek & Compact */}
+      <header className="relative border-b border-white/10 bg-gradient-to-b from-black via-zinc-950 to-[#070709] pt-24 sm:pt-28 pb-4 sm:pb-6 overflow-hidden">
         {/* Glow FX */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 md:w-[600px] h-32 bg-primary/20 blur-[100px] pointer-events-none rounded-full" />
 
         <div className="container mx-auto px-4 max-w-6xl relative z-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary text-[11px] font-black uppercase tracking-[0.25em] mb-3 shadow-sm">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary text-[11px] font-black uppercase tracking-[0.25em] mb-2 shadow-sm">
                 <Sparkles className="w-3.5 h-3.5" /> Agenda Oficial Vendetta
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-white uppercase tracking-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-black text-white uppercase tracking-tight">
                 Calendario de <span className="text-primary italic">Fechas</span>
               </h1>
-              <p className="text-muted-foreground text-xs md:text-sm mt-1.5 max-w-xl">
-                Toca cualquier fecha para abrir la información completa del show al instante.
+              <p className="text-muted-foreground text-xs sm:text-sm mt-1 max-w-xl">
+                Toca cualquier fecha para abrir los detalles completos del show al instante.
               </p>
             </div>
 
-            {/* Quick Stats Badges */}
-            <div className="flex items-center gap-3">
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-inner">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                  <CheckCircle2 className="w-5 h-5" />
+            {/* Quick Stats Badges (Compact) */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <div className="bg-white/[0.03] border border-white/10 rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5 shadow-inner">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-[10px] text-muted-foreground uppercase font-black tracking-wider">Próximos Shows</div>
-                  <div className="text-xl font-black text-white">{totalUpcoming} <span className="text-xs text-emerald-400 font-normal">confirmados</span></div>
+                  <div className="text-[9px] text-muted-foreground uppercase font-black tracking-wider">Próximos</div>
+                  <div className="text-sm sm:text-base font-black text-white">{totalUpcoming} <span className="text-[10px] text-emerald-400 font-normal">confirmados</span></div>
                 </div>
               </div>
 
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-inner">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
-                  <CalendarDays className="w-5 h-5" />
+              <div className="bg-white/[0.03] border border-white/10 rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5 shadow-inner">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
+                  <CalendarDays className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-[10px] text-muted-foreground uppercase font-black tracking-wider">Este Mes</div>
-                  <div className="text-xl font-black text-white">{totalMonthEvents} <span className="text-xs text-primary font-normal">fechas</span></div>
+                  <div className="text-[9px] text-muted-foreground uppercase font-black tracking-wider">Este Mes</div>
+                  <div className="text-sm sm:text-base font-black text-white">{totalMonthEvents} <span className="text-[10px] text-primary font-normal">fechas</span></div>
                 </div>
               </div>
             </div>
@@ -239,55 +245,16 @@ export function AgendaCalendarView({ events }: Props) {
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="container mx-auto px-4 max-w-6xl mt-6 space-y-6">
-        {/* Web Push Notification Banner for Musicians / Users */}
-        <PushNotificationBanner />
-
-        {/* Filters and Search Bar */}
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center bg-zinc-900/40 border border-white/10 p-3 md:p-4 rounded-2xl backdrop-blur-md">
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Buscar por evento, locación, ciudad o notas..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="pl-10 bg-black/40 border-white/10 text-white placeholder:text-muted-foreground/60 h-11 rounded-xl text-sm focus:border-primary"
-            />
-          </div>
-
-          {/* Status Filter Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-            {[
-              { id: "todos", label: "Todos los estatus" },
-              { id: "agendado", label: "🟢 Confirmados" },
-              { id: "pendiente", label: "🟡 Pendientes" },
-              { id: "completado", label: "🔵 Completados" },
-            ].map(f => (
-              <button
-                key={f.id}
-                onClick={() => setStatusFilter(f.id)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  statusFilter === f.id
-                    ? "bg-primary text-white shadow-md shadow-primary/20"
-                    : "bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white border border-white/5"
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
+      {/* Main Container - CALENDAR IS NOW THE FIRST ELEMENT! */}
+      <main className="container mx-auto px-4 max-w-6xl mt-4 sm:mt-6 space-y-6">
         {/* Main Monthly Calendar Card */}
         <div className="bg-zinc-900/50 border border-white/10 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl backdrop-blur-xl">
-          {/* Calendar Controls */}
-          <div className="flex items-center justify-between mb-6">
+          {/* Calendar Controls & Action Toolbar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            {/* Left: Month and Year */}
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                <CalendarIcon className="w-6 h-6" />
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-black text-white uppercase tracking-tight">
@@ -299,33 +266,93 @@ export function AgendaCalendarView({ events }: Props) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Right: Actions (Filtros, Alertas, Navegación de Mes) */}
+            <div className="flex items-center flex-wrap gap-2">
+              {/* Filtros Pop-up Button */}
+              <button
+                type="button"
+                onClick={() => setIsFilterModalOpen(true)}
+                title="Filtrar por estatus o buscar por texto"
+                className={`relative inline-flex items-center gap-1.5 h-9 sm:h-10 px-3 sm:px-3.5 rounded-xl border text-xs font-bold transition-all cursor-pointer select-none ${
+                  hasActiveFilters
+                    ? "bg-primary/20 border-primary text-primary hover:bg-primary/30 shadow-md shadow-primary/20"
+                    : "bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <SlidersHorizontal className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Filtros</span>
+                {hasActiveFilters && (
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+                )}
+              </button>
+
+              {/* Web Push Notification Pop-up Button */}
+              <PushNotificationButton />
+
+              {/* Subtle Divider */}
+              <div className="w-px h-6 bg-white/10 mx-0.5 hidden sm:block" />
+
+              {/* Month Navigation */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={goToToday}
-                className="border-white/10 text-xs font-bold text-gray-300 hover:text-white hover:bg-white/10 h-9 rounded-xl px-3 cursor-pointer"
+                className="border-white/10 text-xs font-bold text-gray-300 hover:text-white hover:bg-white/10 h-9 sm:h-10 rounded-xl px-3 cursor-pointer"
               >
                 Hoy
               </Button>
-              <div className="flex items-center gap-1 bg-black/40 border border-white/10 rounded-xl p-1">
+              <div className="flex items-center gap-1 bg-black/40 border border-white/10 rounded-xl p-0.5 sm:p-1">
                 <button
+                  type="button"
                   onClick={prevMonth}
-                  className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/10 text-white transition-all cursor-pointer"
+                  className="w-8 h-8 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-white transition-all cursor-pointer"
                   title="Mes anterior"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
                 <button
+                  type="button"
                   onClick={nextMonth}
-                  className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/10 text-white transition-all cursor-pointer"
+                  className="w-8 h-8 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-white transition-all cursor-pointer"
                   title="Mes siguiente"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             </div>
           </div>
+
+          {/* Active Filters Summary Strip (Shown only when a filter is applied) */}
+          {hasActiveFilters && (
+            <div className="flex items-center justify-between gap-2 p-2.5 sm:px-4 bg-primary/10 border border-primary/20 rounded-2xl text-xs mb-5 animate-in fade-in">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                <span className="font-bold text-primary flex items-center gap-1 shrink-0">
+                  <Filter className="w-3.5 h-3.5" /> Filtros activos:
+                </span>
+                {statusFilter !== "todos" && (
+                  <span className="bg-white/10 px-2 py-0.5 rounded-lg text-white font-bold text-[11px] shrink-0">
+                    {STATUS_CONFIG[statusFilter]?.label || statusFilter}
+                  </span>
+                )}
+                {searchQuery.trim() && (
+                  <span className="bg-white/10 px-2 py-0.5 rounded-lg text-white font-bold text-[11px] shrink-0">
+                    &ldquo;{searchQuery}&rdquo;
+                  </span>
+                )}
+                <span className="text-muted-foreground text-[11px] shrink-0">
+                  ({monthEvents.length} {monthEvents.length === 1 ? "show coincide" : "shows coinciden"})
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(""); setStatusFilter("todos") }}
+                className="text-primary hover:text-white hover:underline text-xs font-bold shrink-0 flex items-center gap-1 cursor-pointer ml-2"
+              >
+                <X className="w-3.5 h-3.5" /> Limpiar
+              </button>
+            </div>
+          )}
 
           {/* Days Header */}
           <div className="grid grid-cols-7 mb-2 text-center">
@@ -667,6 +694,137 @@ export function AgendaCalendarView({ events }: Props) {
                   })}
                 </div>
               )}
+            </motion.div>
+          </div>
+        )}
+
+        {/* POP-UP MODAL (Filters and Search) */}
+        {isFilterModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsFilterModalOpen(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-md"
+            />
+
+            {/* Modal Dialog Content */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="relative w-full max-w-md bg-zinc-950 border border-white/15 rounded-3xl p-5 sm:p-7 shadow-2xl z-10 space-y-5"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between gap-4 pb-4 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+                    <SlidersHorizontal className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-heading font-black text-white uppercase tracking-tight">
+                      Filtros y Búsqueda
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Filtra la agenda por estatus o texto
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsFilterModalOpen(false)}
+                  className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Search Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block">
+                  Buscar por texto
+                </label>
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Evento, locación, ciudad o notas..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-9 bg-black/50 border-white/10 text-white placeholder:text-muted-foreground/60 h-11 rounded-xl text-sm focus:border-primary"
+                  />
+                  {searchQuery.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Filter Chips */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block">
+                  Estatus del evento
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "todos", label: "Todos los estatus", icon: "✨" },
+                    { id: "agendado", label: "Confirmados", icon: "🟢" },
+                    { id: "pendiente", label: "Pendientes", icon: "🟡" },
+                    { id: "completado", label: "Completados", icon: "🔵" },
+                  ].map(f => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setStatusFilter(f.id)}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-bold text-left transition-all cursor-pointer flex items-center gap-2 border ${
+                        statusFilter === f.id
+                          ? "bg-primary text-white border-primary shadow-md shadow-primary/20"
+                          : "bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border-white/5"
+                      }`}
+                    >
+                      <span>{f.icon}</span>
+                      <span className="truncate">{f.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Summary Count */}
+              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-muted-foreground flex items-center justify-between">
+                <span>Resultados en {MONTHS[viewMonth]}:</span>
+                <span className="font-bold text-white">
+                  {monthEvents.length} {monthEvents.length === 1 ? "show coincide" : "shows coinciden"}
+                </span>
+              </div>
+
+              {/* Actions */}
+              <div className="pt-2 flex items-center gap-2.5">
+                {hasActiveFilters && (
+                  <Button
+                    variant="outline"
+                    onClick={() => { setSearchQuery(""); setStatusFilter("todos") }}
+                    className="border-white/10 text-xs font-bold h-11 rounded-xl px-4 text-gray-300 hover:bg-white/10 cursor-pointer gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> Limpiar
+                  </Button>
+                )}
+
+                <Button
+                  onClick={() => setIsFilterModalOpen(false)}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-wider h-11 rounded-xl shadow-lg shadow-primary/20 cursor-pointer"
+                >
+                  Ver {monthEvents.length} Resultados
+                </Button>
+              </div>
             </motion.div>
           </div>
         )}

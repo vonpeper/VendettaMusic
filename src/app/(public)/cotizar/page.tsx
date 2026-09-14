@@ -13,7 +13,16 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
-export default async function CotizarPage() {
+interface CotizarPageProps {
+  searchParams?: Promise<{
+    paquete?: string
+    package?: string
+  }>
+}
+
+export default async function CotizarPage({ searchParams }: CotizarPageProps) {
+  const resolvedParams = searchParams ? await searchParams : undefined
+  const initialPackage = resolvedParams?.paquete || resolvedParams?.package || null
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
   const adminWhatsapp =
@@ -61,7 +70,7 @@ export default async function CotizarPage() {
 
       {/* Contenedor del Formulario Directo */}
       <main className="container mx-auto px-4 max-w-2xl mt-10">
-        <DirectQuoteForm adminWhatsapp={adminWhatsapp} />
+        <DirectQuoteForm adminWhatsapp={adminWhatsapp} initialPackage={initialPackage} />
       </main>
     </div>
   )

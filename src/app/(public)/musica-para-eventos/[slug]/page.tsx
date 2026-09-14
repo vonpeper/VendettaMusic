@@ -30,8 +30,9 @@ const LOCATIONS: Record<string, any> = {
   }
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const loc = LOCATIONS[params.slug]
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const loc = LOCATIONS[slug]
   if (!loc) return {}
   const title = loc.title;
   const description = loc.description;
@@ -40,12 +41,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title,
     description,
     alternates: {
-      canonical: `/musica-para-eventos/${params.slug}`,
+      canonical: `/musica-para-eventos/${slug}`,
     },
     openGraph: {
       title,
       description,
-      url: `https://vendetta.mx/musica-para-eventos/${params.slug}`,
+      url: `https://vendetta.mx/musica-para-eventos/${slug}`,
       images: [{ url: image }],
     },
     twitter: {
@@ -57,8 +58,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function LocationPage({ params }: { params: { slug: string } }) {
-  const loc = LOCATIONS[params.slug]
+export default async function LocationPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const loc = LOCATIONS[slug]
   if (!loc) notFound()
 
   return (

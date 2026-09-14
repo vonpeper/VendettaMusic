@@ -197,6 +197,10 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                     if (isUnavailable) return;
                     setSelectedPkg(p.id); 
                     setError(""); 
+                    const isBig = p.name.toLowerCase().includes("experience") || p.name.toLowerCase().includes("festival");
+                    if (isBig && guests < 100) {
+                      setGuests(100);
+                    }
                     // Si es un paquete estándar, reseteamos a sus horas mínimas
                     if (!["custom", "arma-tu-show"].includes(p.id) && 
                         !p.name.toLowerCase().includes("arma") && 
@@ -277,7 +281,10 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
             </label>
             <div className="flex items-center gap-4">
               <input 
-                type="range" min={20} max={500} step={10} 
+                type="range" 
+                min={pkg?.name.toLowerCase().includes("experience") || pkg?.name.toLowerCase().includes("festival") ? 100 : 20} 
+                max={500} 
+                step={10} 
                 value={guests} 
                 onChange={e => setGuests(parseInt(e.target.value))}
                 className="flex-1 accent-red-600"

@@ -53,7 +53,7 @@ export function PublicNavbar() {
             </Link>
           ))}
           <div className="w-px h-4 bg-white/10 mx-1" />
-          <Link href="/#paquetes">
+          <Link href="/cotizar">
             <Button className="bg-primary hover:bg-primary/90 text-white font-sans font-bold text-xs uppercase tracking-wider px-5 h-9 rounded-lg shadow-lg shadow-primary/20 border-0 cursor-pointer">
               Cotizar
             </Button>
@@ -109,7 +109,7 @@ export function PublicNavbar() {
                 <div className="p-6 mt-auto space-y-4">
                   <SheetClose 
                     render={
-                      <Link href="/#paquetes" className="block w-full" />
+                      <Link href="/cotizar" className="block w-full" />
                     }
                   >
                     <Button variant="default" className="w-full py-6 font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20">

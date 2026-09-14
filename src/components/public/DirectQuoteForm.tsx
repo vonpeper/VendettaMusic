@@ -32,6 +32,7 @@ import {
 
 interface DirectQuoteFormProps {
   adminWhatsapp?: string | null
+  initialPackage?: string | null
 }
 
 const EVENT_TYPES = [
@@ -92,7 +93,14 @@ function formatFechaEspanol(fechaStr: string): string {
   }
 }
 
-export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
+export function DirectQuoteForm({ adminWhatsapp, initialPackage }: DirectQuoteFormProps) {
+  const pkgLower = (initialPackage || "").toLowerCase()
+  const isExperience = pkgLower.includes("experience")
+  const isFestival = pkgLower.includes("festival")
+  const isEssential = pkgLower.includes("essential")
+  const isLargePackage = isExperience || isFestival
+  const paqueteNombre = isFestival ? "Festival Premium" : isExperience ? "Experience" : isEssential ? "Essential" : null
+
   // Datos de contacto
   const [nombre, setNombre] = useState("")
   const [telefono, setTelefono] = useState("")
@@ -105,8 +113,31 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
   const [horaFin, setHoraFin] = useState("01:00 AM")
 
   // Invitados y producción adicional (>100)
-  const [invitados, setInvitados] = useState("50")
-  const [produccionAdicional, setProduccionAdicional] = useState<string[]>([])
+  const [invitados, setInvitados] = useState(isLargePackage ? "100" : "50")
+  const [produccionAdicional, setProduccionAdicional] = useState<string[]>(() => {
+    if (isFestival) {
+      return ["Producción más grande", "Pantalla LED", "Templete / Escenario", "Iluminación adicional"]
+    }
+    if (isExperience) {
+      return ["Producción más grande"]
+    }
+    return []
+  })
+
+  // Sincronizar si cambia initialPackage dinámicamente
+  useEffect(() => {
+    if (isLargePackage) {
+      setInvitados((prev) => {
+        const n = parseInt(prev, 10) || 0
+        return n < 100 ? "100" : prev
+      })
+      if (isFestival) {
+        setProduccionAdicional(["Producción más grande", "Pantalla LED", "Templete / Escenario", "Iluminación adicional"])
+      } else if (isExperience) {
+        setProduccionAdicional((prev) => prev.includes("Producción más grande") ? prev : [...prev, "Producción más grande"])
+      }
+    }
+  }, [initialPackage, isLargePackage, isFestival, isExperience])
 
   // Ubicación y viáticos
   const [estado, setEstado] = useState("Estado de México")
@@ -249,6 +280,11 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
       return
     }
 
+    if (isLargePackage && numInvitados < 100) {
+      toast.error(`El paquete ${paqueteNombre || "seleccionado"} incluye producción diseñada para un aforo mínimo de 100 invitados.`)
+      return
+    }
+
     setIsSubmitting(true)
 
     const tipoEventoFinal = tipoEvento === "Otro"
@@ -275,6 +311,7 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
         lugarEvento: lugarEvento.trim() || undefined,
         mapsLink: mapsLink.trim() || undefined,
         viaticos,
+        paquete: paqueteNombre || undefined,
         notas: notas.trim() || undefined
       })
     } catch (saveErr) {
@@ -305,6 +342,7 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
       "Llené el formulario para personalizar la propuesta para mi evento:",
       "",
       "*DETALLES DEL EVENTO*",
+      ...(paqueteNombre ? [`• *Paquete de interés:* ${paqueteNombre}`] : []),
       `• *Nombre:* ${nombre.trim()}`,
       `• *WhatsApp:* ${telefono.trim()}`,
       `• *Tipo de Evento:* ${tipoEventoFinal}`,
@@ -462,6 +500,33 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
       <div className="absolute -top-32 -right-32 w-72 h-72 bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-[#25D366]/15 rounded-full blur-[100px] pointer-events-none" />
 
+      {/* Banner de paquete pre-seleccionado */}
+      {paqueteNombre && (
+        <div className={`p-4 rounded-2xl border flex items-center justify-between gap-3 animate-in fade-in-0 duration-300 ${
+          isFestival 
+            ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
+            : isExperience
+              ? "bg-red-500/10 border-red-500/30 text-red-200"
+              : "bg-primary/10 border-primary/30 text-primary-foreground"
+        }`}>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{isFestival ? "🏆" : isExperience ? "⚡" : "🎸"}</span>
+            <div>
+              <div className="text-xs font-black uppercase tracking-wider">
+                Propuesta Personalizada: {paqueteNombre}
+              </div>
+              <p className="text-xs opacity-80 mt-0.5">
+                {isFestival
+                  ? "Configuración tipo concierto con pantalla, templete, robóticas y audio (Mínimo 100 invitados)."
+                  : isExperience
+                    ? "Producción de audio profesional y monitoreo in-ear para 100 a 300 invitados."
+                    : "Show estándar de 2 horas en vivo para eventos sociales."}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 1. NOMBRE Y TELÉFONO */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
@@ -593,14 +658,19 @@ export function DirectQuoteForm({ adminWhatsapp }: DirectQuoteFormProps) {
           <Input
             required
             type="number"
-            min={10}
+            min={isLargePackage ? 100 : 10}
             max={5000}
             step={10}
-            placeholder="Ej: 50"
+            placeholder={isLargePackage ? "Mínimo 100 invitados" : "Ej: 50"}
             value={invitados}
             onChange={(e) => setInvitados(e.target.value)}
             className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
           />
+          {isLargePackage && (
+            <p className="text-[11px] text-amber-400 font-semibold mt-1">
+              ⚠️ Mínimo 100 invitados por la capacidad técnica del paquete {paqueteNombre}.
+            </p>
+          )}
         </div>
 
         {/* Sección condicional cuando hay más de 100 invitados */}

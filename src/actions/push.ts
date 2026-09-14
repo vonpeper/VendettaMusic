@@ -87,6 +87,61 @@ export async function sendTodayShowReminderAction() {
   }
 }
 
+export async function sendWeekShowsReminderAction() {
+  try {
+    const cdmxDateStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Mexico_City",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(new Date())
+
+    const weekStart = new Date(`${cdmxDateStr}T00:00:00.000Z`)
+    const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000 - 1)
+
+    const weekEvents = await db.event.findMany({
+      where: {
+        date: { gte: weekStart, lte: weekEnd },
+        status: { in: ["agendado", "confirmed"] }
+      },
+      include: { location: true },
+      orderBy: { date: "asc" }
+    })
+
+    if (weekEvents.length > 0) {
+      const eventsList = weekEvents.map(e => {
+        const dayName = new Intl.DateTimeFormat("es-MX", { 
+          timeZone: "America/Mexico_City", 
+          weekday: "short", 
+          day: "numeric",
+          month: "short" 
+        }).format(e.date)
+        return `${dayName}: ${e.customName || "Show Vendetta"}`
+      }).join(" | ")
+
+      const res = await broadcastWebPush({
+        title: "📅 VENDETTA | Shows de esta Semana",
+        body: `🎸 Esta semana tenemos ${weekEvents.length} show(s): ${eventsList}. ¡Revisa tus horarios en la agenda!`,
+        url: "/agenda",
+        data: { type: "weekly_reminder" }
+      })
+
+      return {
+        success: true,
+        message: `Recordatorio semanal enviado a ${res.successCount} dispositivo(s) para ${weekEvents.length} show(s).`
+      }
+    }
+
+    return {
+      success: true,
+      message: "No hay eventos programados para los próximos 7 días."
+    }
+  } catch (error: any) {
+    console.error("Error in sendWeekShowsReminderAction:", error)
+    return { success: false, message: `Error: ${error.message}` }
+  }
+}
+
 export async function testPushBroadcastAction() {
   try {
     const result = await broadcastWebPush({

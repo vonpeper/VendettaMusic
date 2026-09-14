@@ -373,8 +373,8 @@ async function handleCron(request: Request) {
       }
     }
 
-    // 3.4.1. Recordatorio de Lunes para Músicos (Shows del próximo fin de semana: Viernes a Domingo)
-    // Se ejecuta los lunes hora CDMX para preparar la semana
+    // 3.4.1. Recordatorio de Lunes para Músicos (Shows de toda la semana: Lunes a Domingo)
+    // Se ejecuta los lunes hora CDMX para preparar la semana completa (incluye eventos entre semana como 15 de sep y fin de semana)
     const cdmxDayOfWeek = new Intl.DateTimeFormat("en-US", {
       timeZone: "America/Mexico_City",
       weekday: "short"
@@ -382,39 +382,39 @@ async function handleCron(request: Request) {
 
     if (cdmxDayOfWeek === "Mon") {
       try {
-        const upcomingFriday = startOfDay(addDays(now, 4))
-        const upcomingSunday = endOfDay(addDays(now, 6))
+        const weekStart = startOfDay(now)
+        const weekEnd = endOfDay(addDays(now, 6))
 
-        const weekendEvents = await db.event.findMany({
+        const weekEvents = await db.event.findMany({
           where: {
             status: { in: ["agendado", "confirmed"] },
             date: {
-              gte: upcomingFriday,
-              lte: upcomingSunday
+              gte: weekStart,
+              lte: weekEnd
             }
           },
           include: { location: true },
           orderBy: { date: "asc" }
         })
 
-        if (weekendEvents.length > 0) {
+        if (weekEvents.length > 0) {
           const { broadcastWebPush } = await import("@/lib/webpush")
-          const eventsList = weekendEvents.map(e => {
-            const dayName = new Intl.DateTimeFormat("es-MX", { timeZone: "America/Mexico_City", weekday: "short", day: "numeric" }).format(e.date)
+          const eventsList = weekEvents.map(e => {
+            const dayName = new Intl.DateTimeFormat("es-MX", { timeZone: "America/Mexico_City", weekday: "short", day: "numeric", month: "short" }).format(e.date)
             return `${dayName}: ${e.customName || "Show Vendetta"}`
           }).join(" | ")
 
           await broadcastWebPush({
-            title: "📅 VENDETTA | Shows de este Fin de Semana",
-            body: `🎸 Esta semana tenemos ${weekendEvents.length} show(s): ${eventsList}. ¡Revisa tus horarios en la agenda!`,
+            title: "📅 VENDETTA | Shows de esta Semana",
+            body: `🎸 Esta semana tenemos ${weekEvents.length} show(s): ${eventsList}. ¡Revisa tus horarios en la agenda!`,
             url: "/agenda",
-            data: { type: "weekend_reminder" }
-          }).catch(e => console.error("WebPush weekend reminder error:", e))
+            data: { type: "weekly_reminder" }
+          }).catch(e => console.error("WebPush weekly reminder error:", e))
 
-          results.weekendReminders = weekendEvents.length
+          results.weekendReminders = weekEvents.length
         }
-      } catch (weekendErr: any) {
-        results.errors.push(`Error in Monday weekend reminders: ${weekendErr.message}`)
+      } catch (weekErr: any) {
+        results.errors.push(`Error in Monday weekly reminders: ${weekErr.message}`)
       }
     }
 

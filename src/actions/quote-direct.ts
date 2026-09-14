@@ -24,6 +24,7 @@ export interface SubmitPublicQuoteInput {
     isOutsideZone: boolean
     description?: string
   } | null
+  paquete?: string
   notas?: string
 }
 
@@ -110,20 +111,21 @@ export async function submitPublicQuoteAction(
     const extrasDetalle = input.produccionAdicional.join(", ")
 
     // 1. Guardar primero el lead como ContactInquiry
+    const pkgLabel = input.paquete ? `Paquete: ${input.paquete}` : "Producción especial"
     const inquiry = await db.contactInquiry.create({
       data: {
         name: input.nombre.trim(),
         phone: input.telefono.trim(),
         email: `cliente_${input.telefono.replace(/\D/g, "") || Date.now()}@cotizacion.vendetta.mx`,
         requestedDate: new Date(`${input.fecha}T12:00:00`),
-        eventType: `${input.tipoEvento} (Producción especial)`,
-        message: `Horario: ${input.horaInicio} a ${input.horaFin} | Invitados: ${aforo} | Ubicación: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}${input.mapsLink?.trim() ? ` | Maps: ${input.mapsLink.trim()}` : ""} | Extras solicitados: ${extrasDetalle || "Aforo > 100"} | Viáticos: $${viaticosAmount} MXN${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""}`,
+        eventType: `${input.tipoEvento} (${pkgLabel})`,
+        message: `${input.paquete ? `[${input.paquete}] ` : ""}Horario: ${input.horaInicio} a ${input.horaFin} | Invitados: ${aforo} | Ubicación: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}${input.mapsLink?.trim() ? ` | Maps: ${input.mapsLink.trim()}` : ""} | Extras solicitados: ${extrasDetalle || "Aforo > 100"} | Viáticos: $${viaticosAmount} MXN${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""}`,
         status: "new"
       }
     })
 
     // 2. Crear la cotización en BookingRequest etiquetada como POR REVISAR
-    const adminNoteText = `⚠️ POR REVISAR POR ADMINISTRADOR: El cliente solicitó producción técnica adicional (${extrasDetalle || "Aforo > 100"}). Aforo: ${aforo} invitados.`
+    const adminNoteText = `⚠️ POR REVISAR POR ADMINISTRADOR: ${input.paquete ? `[Paquete ${input.paquete}] ` : ""}El cliente solicitó producción técnica adicional (${extrasDetalle || "Aforo > 100"}). Aforo: ${aforo} invitados.`
 
     const result = await db.$transaction(async (tx) => {
       return await createUnifiedQuote(tx, {
@@ -131,7 +133,7 @@ export async function submitPublicQuoteAction(
         clientName: input.nombre.trim(),
         clientPhone: input.telefono.trim(),
         clientCity: input.municipio.trim(),
-        customName: `${input.tipoEvento} - ${input.nombre.trim()} (Requiere Producción)`,
+        customName: `${input.tipoEvento} - ${input.nombre.trim()} (${input.paquete || "Requiere Producción"})`,
         ceremonyType: input.tipoEvento,
         eventDate: input.fecha,
         startTime: input.horaInicio,
@@ -143,13 +145,13 @@ export async function submitPublicQuoteAction(
         venueCity: input.municipio.trim(),
         venueState: input.estado.trim(),
         mapsLink: input.mapsLink?.trim() || null,
-        packageName: "Show Vendetta con Producción Especial (Por revisar)",
+        packageName: input.paquete ? `Show Vendetta - ${input.paquete} (Por revisar)` : "Show Vendetta con Producción Especial (Por revisar)",
         basePrice: showBasePrice,
         viaticosAmount: viaticosAmount,
         depositAmount: 0,
         paymentMethod: "transferencia",
         adminNote: adminNoteText,
-        musicianNotes: `Solicitud con producción especial: ${extrasDetalle || "Aforo > 100"}.${input.notas?.trim() ? ` Notas: ${input.notas.trim()}` : ""}`
+        musicianNotes: `Solicitud con producción especial${input.paquete ? ` (${input.paquete})` : ""}: ${extrasDetalle || "Aforo > 100"}.${input.notas?.trim() ? ` Notas: ${input.notas.trim()}` : ""}`
       })
     })
 
@@ -180,7 +182,7 @@ Se registró una solicitud con requerimientos especiales de producción:
 
 • *Cliente:* ${input.nombre.trim()}
 • *Teléfono:* ${input.telefono.trim()}
-• *Evento:* ${input.tipoEvento}
+${input.paquete ? `• *Paquete:* ${input.paquete}\n` : ""}• *Evento:* ${input.tipoEvento}
 • *Fecha:* ${input.fecha}
 • *Horario:* ${input.horaInicio} a ${input.horaFin}
 • *Invitados:* ${aforo} personas

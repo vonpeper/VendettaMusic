@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sendTodayShowReminderAction, testPushBroadcastAction } from "@/actions/push"
+import { sendTodayShowReminderAction, sendWeekShowsReminderAction, testPushBroadcastAction } from "@/actions/push"
 
 export const dynamic = "force-dynamic"
 
@@ -7,9 +7,15 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const isTest = searchParams.get("test") === "true"
+    const isWeek = searchParams.get("type") === "week" || searchParams.get("week") === "true"
 
     if (isTest) {
       const res = await testPushBroadcastAction()
+      return NextResponse.json(res)
+    }
+
+    if (isWeek) {
+      const res = await sendWeekShowsReminderAction()
       return NextResponse.json(res)
     }
 
@@ -24,9 +30,15 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}))
     const isTest = body.test === true
+    const isWeek = body.type === "week" || body.week === true
 
     if (isTest) {
       const res = await testPushBroadcastAction()
+      return NextResponse.json(res)
+    }
+
+    if (isWeek) {
+      const res = await sendWeekShowsReminderAction()
       return NextResponse.json(res)
     }
 

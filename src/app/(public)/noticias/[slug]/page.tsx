@@ -4,7 +4,7 @@ import Link from "next/link"
 import ReactMarkdown from "react-markdown"
 import { Metadata } from "next"
 
-export async function generateMetadata(props: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const params = await props.params;
   const post = getNoticiaBySlug(params.slug)
   if (!post) return {}
@@ -48,7 +48,7 @@ export function generateStaticParams() {
   }))
 }
 
-export default async function NoticiaPage(props: { params: { slug: string } }) {
+export default async function NoticiaPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
   const post = getNoticiaBySlug(params.slug)
 
