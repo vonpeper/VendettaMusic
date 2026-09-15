@@ -47,6 +47,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     ? `¡Fecha confirmada para ${booking.clientName} el ${dateStr}! Entra para consultar la ficha técnica y firmar digitalmente tu contrato de prestación de servicios.`
     : `Hola ${booking.clientName}, te compartimos la cotización exclusiva para tu evento el ${dateStr}. Revisa tu propuesta y aprueba tu fecha en línea.`
 
+  const ogImage = isConfirmed
+    ? 'https://vendetta.mx/images/opengraph-confirmacion.png'
+    : 'https://vendetta.mx/images/opengraph-cotizacion.jpg'
+
   return {
     title,
     description,
@@ -57,10 +61,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       siteName: 'Vendetta Live Music',
       images: [
         {
-          url: 'https://vendetta.mx/images/opengraph-evento.png',
+          url: ogImage,
+          secureUrl: ogImage,
           width: 1200,
           height: 630,
-          alt: 'Vendetta Live Music',
+          alt: `Cotización de Show: ${booking.clientName} (${booking.shortId})`,
+          type: 'image/jpeg',
         },
       ],
       locale: 'es_MX',
@@ -70,7 +76,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       card: 'summary_large_image',
       title: ogTitle,
       description,
-      images: ['https://vendetta.mx/images/opengraph-evento.png'],
+      images: [ogImage],
     },
   }
 }
