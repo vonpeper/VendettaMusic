@@ -231,7 +231,7 @@ export function PremiumClientQuoteView({
   const hasRobotLed = Boolean(booking.hasRobot) || lineItems.some(i => i.description.toLowerCase().includes("robot") || i.description.toLowerCase().includes("batucada"))
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-950 relative overflow-hidden pb-28 sm:pb-20 font-sans selection:bg-red-600 selection:text-white">
+    <div className="min-h-screen bg-transparent text-slate-950 relative overflow-hidden pb-28 sm:pb-20 font-sans selection:bg-red-600 selection:text-white">
       {/* Fondo Vectorial de Concierto con Malla Acústica SVG y Luces de Escenario en Blanco */}
       <RockBackground intensity="vibrant" />
 
@@ -694,25 +694,25 @@ export function PremiumClientQuoteView({
             </div>
 
             {/* Caja de Inversión Total */}
-            <div className="w-full md:w-92 space-y-2.5 bg-slate-50 p-5 sm:p-6 rounded-2xl border-2 border-slate-200 shadow-md">
-              <div className="flex justify-between text-xs text-slate-600">
+            <div className="w-full md:w-92 space-y-2.5 bg-emerald-50/70 p-5 sm:p-6 rounded-2xl border-2 border-emerald-500 shadow-lg shadow-emerald-500/10">
+              <div className="flex justify-between text-xs text-slate-700 font-medium">
                 <span className="font-bold">Subtotal Neto:</span>
                 <span className="font-mono text-slate-950 font-black">{formatMXN(subtotal)}</span>
               </div>
               {hasInvoice && (
-                <div className="flex justify-between text-xs text-slate-600">
+                <div className="flex justify-between text-xs text-slate-700 font-medium">
                   <span className="font-bold">IVA (16% Fiscal):</span>
                   <span className="font-mono text-slate-950 font-black">{formatMXN(ivaAmount)}</span>
                 </div>
               )}
-              <div className="pt-3 border-t-2 border-slate-200 flex justify-between items-baseline">
+              <div className="pt-3 border-t-2 border-emerald-200 flex justify-between items-baseline">
                 <div>
-                  <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-red-600 block">
+                  <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-emerald-800 block">
                     Inversión Total
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono font-bold">Moneda Nacional (MXN)</span>
+                  <span className="text-[10px] text-emerald-700/80 font-mono font-bold">Moneda Nacional (MXN)</span>
                 </div>
-                <span className="text-3xl sm:text-4xl font-black font-mono text-red-600 tracking-tight">
+                <span className="text-3xl sm:text-4xl font-black font-mono text-emerald-600 tracking-tight">
                   {formatMXN(totalAmount)}
                 </span>
               </div>

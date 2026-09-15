@@ -11,41 +11,47 @@ export function RockBackground({ intensity = "medium" }: RockBackgroundProps) {
   const opacityMultiplier = intensity === "vibrant" ? 1.4 : intensity === "subtle" ? 0.7 : 1.0
 
   return (
-    <div className="fixed inset-0 z-[-1] overflow-hidden bg-[#f8fafc] pointer-events-none select-none">
-      {/* 1. SVG PATTERN: Rejilla Acústica de Bocinas / Speaker Grille Hex Mesh sobre fondo blanco */}
+    <div className="fixed inset-0 z-0 overflow-hidden bg-[#f8fafc] pointer-events-none select-none">
+      {/* 1. SVG PATTERN: Textura Acústica Tenue de Escenario (Rejilla de Bocina + Micro-perforaciones de Audio) */}
       <svg
-        className="absolute inset-0 w-full h-full opacity-[0.24]"
+        className="absolute inset-0 w-full h-full opacity-70"
         xmlns="http://www.w3.org/2000/svg"
         width="100%"
         height="100%"
       >
         <defs>
-          {/* Malla hexagonal de bafles y amplificadores profesionales */}
-          <pattern id="acoustic-hex-mesh-light" width="28" height="48.497" patternUnits="userSpaceOnUse">
-            <path
-              d="M14 0 L28 8.083 L28 24.249 L14 32.332 L0 24.249 L0 8.083 Z"
-              fill="none"
-              stroke="#cbd5e1"
-              strokeWidth="0.8"
-            />
-            <path
-              d="M14 32.332 L28 40.415 L28 56.58 L14 64.663 L0 56.58 L0 40.415 Z"
-              fill="none"
-              stroke="#cbd5e1"
-              strokeWidth="0.8"
-            />
-            <circle cx="14" cy="16.166" r="1.5" fill="#dc2626" fillOpacity="0.4" />
-            <circle cx="14" cy="48.497" r="1.5" fill="#f59e0b" fillOpacity="0.35" />
+          {/* Micro-perforación acústica (Perforated Speaker Grille) */}
+          <pattern id="acoustic-perforations" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="1.2" fill="#64748b" fillOpacity="0.35" />
+            <circle cx="12" cy="12" r="1.4" fill="#475569" fillOpacity="0.45" />
           </pattern>
 
           {/* Micro-cuadrícula de ingeniería de audio */}
           <pattern id="sound-grid-light" width="40" height="40" patternUnits="userSpaceOnUse">
-            <line x1="0" y1="40" x2="40" y2="40" stroke="#e2e8f0" strokeWidth="0.75" />
-            <line x1="40" y1="0" x2="40" y2="40" stroke="#e2e8f0" strokeWidth="0.75" />
-            <circle cx="40" cy="40" r="0.8" fill="#94a3b8" fillOpacity="0.3" />
+            <line x1="0" y1="40" x2="40" y2="40" stroke="#cbd5e1" strokeWidth="0.8" strokeOpacity="0.5" />
+            <line x1="40" y1="0" x2="40" y2="40" stroke="#cbd5e1" strokeWidth="0.8" strokeOpacity="0.5" />
+          </pattern>
+
+          {/* Malla hexagonal de amplificadores de concierto */}
+          <pattern id="acoustic-hex-mesh-light" width="28" height="48.497" patternUnits="userSpaceOnUse">
+            <path
+              d="M14 0 L28 8.083 L28 24.249 L14 32.332 L0 24.249 L0 8.083 Z"
+              fill="none"
+              stroke="#94a3b8"
+              strokeWidth="0.85"
+              strokeOpacity="0.3"
+            />
+            <path
+              d="M14 32.332 L28 40.415 L28 56.58 L14 64.663 L0 56.58 L0 40.415 Z"
+              fill="none"
+              stroke="#94a3b8"
+              strokeWidth="0.85"
+              strokeOpacity="0.3"
+            />
           </pattern>
         </defs>
 
+        <rect width="100%" height="100%" fill="url(#acoustic-perforations)" />
         <rect width="100%" height="100%" fill="url(#sound-grid-light)" />
         <rect width="100%" height="100%" fill="url(#acoustic-hex-mesh-light)" />
       </svg>
