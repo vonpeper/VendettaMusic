@@ -3,12 +3,46 @@ import { DirectQuoteForm } from "@/components/public/DirectQuoteForm"
 import { Metadata } from "next"
 import { Sparkles, ShieldCheck, MapPin, Music } from "lucide-react"
 
+const ogImage = "https://vendetta.mx/images/opengraph-cotizar.jpg?v=1"
+
 export const metadata: Metadata = {
   title: "Personaliza tu Propuesta | Vendetta Live Music",
   description: "Llena este formulario para personalizar la propuesta para tu evento y recibir los detalles por WhatsApp con disponibilidad inmediata.",
   alternates: {
     canonical: "/cotizar",
-  }
+  },
+  icons: {
+    other: [
+      {
+        rel: "image_src",
+        url: ogImage,
+      },
+    ],
+  },
+  openGraph: {
+    title: "🎸 Cotiza tu Show en Vivo | Vendetta Live Music",
+    description: "Personaliza tu paquete musical, verifica disponibilidad en tiempo real y recibe tu propuesta oficial con fecha bloqueada.",
+    url: "https://vendetta.mx/cotizar",
+    siteName: "Vendetta Live Music",
+    locale: "es_MX",
+    type: "website",
+    images: [
+      {
+        url: ogImage,
+        secureUrl: ogImage,
+        width: 1200,
+        height: 630,
+        alt: "Cotizar Evento en Vivo - Vendetta Live Music",
+        type: "image/jpeg",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "🎸 Cotiza tu Show en Vivo | Vendetta Live Music",
+    description: "Personaliza tu paquete musical, verifica disponibilidad en tiempo real y recibe tu propuesta oficial con fecha bloqueada.",
+    images: [ogImage],
+  },
 }
 
 export const dynamic = "force-dynamic"
