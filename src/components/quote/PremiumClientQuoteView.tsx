@@ -100,8 +100,8 @@ export function PremiumClientQuoteView({
   const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
   const totalAmount = subtotal + ivaAmount
 
-  // Anticipo requerido (50% por defecto)
-  const depositAmount = Number(booking.depositAmount || Math.round(totalAmount * 0.5))
+  // Anticipo requerido (Esquema estricto 50% / 50%)
+  const depositAmount = Math.round(totalAmount * 0.5)
   const remainingAmount = Math.max(0, totalAmount - depositAmount)
 
   const formatMXN = (val: number) => {
@@ -732,7 +732,7 @@ export function PremiumClientQuoteView({
               <div className="p-6 rounded-2xl bg-red-50/80 border-2 border-red-500 space-y-3 relative overflow-hidden shadow-lg shadow-red-500/10">
                 <div className="flex items-center justify-between">
                   <div className="text-xs font-black uppercase tracking-wider text-red-700 flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-red-600" /> 1. Anticipo para Congelar Fecha
+                    <ShieldCheck className="w-4 h-4 text-red-600" /> 1. Anticipo para Congelar Fecha (50%)
                   </div>
                   <Badge className="text-[10px] bg-red-600 text-white font-black uppercase tracking-wider">
                     Paso Inicial
@@ -763,7 +763,7 @@ export function PremiumClientQuoteView({
               <div className="p-6 rounded-2xl bg-slate-50 border-2 border-slate-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="text-xs font-black uppercase tracking-wider text-slate-700">
-                    2. Finiquito / Saldo Restante
+                    2. Finiquito el Día del Show (50%)
                   </div>
                   <Badge variant="outline" className="text-[10px] border-2 border-slate-300 text-slate-700 font-bold">
                     El Día del Show

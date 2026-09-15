@@ -174,7 +174,7 @@ export async function submitPublicQuoteAction(
           packageName: input.paquete ? `Show Vendetta - ${input.paquete}` : "Show Vendetta Versátil (2 Horas)",
           basePrice: showBasePrice,
           viaticosAmount: viaticosAmount,
-          depositAmount: 3000,
+          depositAmount: Math.round((showBasePrice + viaticosAmount) * 0.5),
           paymentMethod: "transferencia",
           adminNote: `Cotización web automática para ${aforo} invitados (Show estándar).`,
           musicianNotes: `Cotización web para ${aforo} invitados en ${input.municipio}, ${input.estado}. Horario: ${input.horaInicio} a ${input.horaFin}.${input.notas?.trim() ? ` Notas: ${input.notas.trim()}` : ""}`
