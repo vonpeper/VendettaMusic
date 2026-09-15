@@ -44,11 +44,19 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   const ogImage = isConfirmed
     ? 'https://vendetta.mx/images/opengraph-confirmacion.png'
-    : 'https://vendetta.mx/images/opengraph-cotizacion.jpg'
+    : 'https://vendetta.mx/images/opengraph-cotizacion.jpg?v=2'
 
   return {
     title,
     description,
+    icons: {
+      other: [
+        {
+          rel: 'image_src',
+          url: ogImage,
+        },
+      ],
+    },
     openGraph: {
       title: ogTitle,
       description,
