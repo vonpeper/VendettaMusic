@@ -10,6 +10,9 @@ import { VideoSection } from "@/components/public/VideoSection"
 import { InstagramReelsSection } from "@/components/public/InstagramReelsSection"
 import { PhotoGallery } from "@/components/public/PhotoGallery"
 import { NeonBorder } from "@/components/public/NeonBorder"
+import { ConcertAtmosphere } from "@/components/public/ConcertAtmosphere"
+import { LiveStageMixer } from "@/components/public/LiveStageMixer"
+import { VinylShowcase } from "@/components/public/VinylShowcase"
 import { WhatsAppButton } from "@/components/public/WhatsAppButton"
 import { VendettaExperience } from "@/components/public/VendettaExperience"
 import { Suspense } from "react"
@@ -76,6 +79,7 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <NeonBorder />
+      <ConcertAtmosphere />
       <WhatsAppButton />
 
       {/* -- HERO ---------------------------------------------------------- */}
@@ -265,41 +269,54 @@ export default async function HomePage() {
             </p>
           </div>
 
-          {/* -- BENTO GRID -- */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          {/* -- BENTO GRID CON FOTOS DE CONCIERTO -- */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mb-16">
             
             {/* Bento Card 1: HERO BENTO (Spans 2 cols, 2 rows on lg) */}
-            <div className="lg:col-span-2 lg:row-span-2 rounded-3xl p-8 sm:p-10 border border-white/15 bg-gradient-to-br from-[#2D0F22]/90 via-[#18122B]/90 to-[#0A0A16] relative overflow-hidden flex flex-col justify-between group shadow-2xl glass-card-hover">
+            <div className="lg:col-span-2 lg:row-span-2 rounded-3xl p-8 sm:p-10 border-2 border-white/20 bg-black/60 relative overflow-hidden flex flex-col justify-between group shadow-2xl glass-card-hover neon-live-coral">
+              {/* Real Concert Photo Background */}
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src="/images/galeria/vendetta-cantante-escenario.jpg"
+                  alt="Voz en Escenario Vendetta"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover opacity-25 group-hover:opacity-45 group-hover:scale-105 transition-all duration-700"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#07080D] via-[#07080D]/85 to-transparent" />
+              </div>
+
               {/* Glow ambiental */}
-              <div className="absolute -top-12 -right-12 w-64 h-64 bg-[#FF5A5F]/20 rounded-full blur-3xl group-hover:bg-[#FF5A5F]/30 transition-colors pointer-events-none" />
+              <div className="absolute -top-12 -right-12 w-64 h-64 bg-[#FF5A5F]/20 rounded-full blur-3xl group-hover:bg-[#FF5A5F]/35 transition-colors pointer-events-none" />
               <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-[#6F0D2B]/30 rounded-full blur-2xl pointer-events-none" />
 
-              <div>
+              <div className="relative z-10">
                 <div className="flex flex-wrap items-center gap-2 mb-6">
-                  <span className="px-3 py-1 rounded-full bg-[#6F0D2B]/50 border border-[#FF5A5F]/40 text-[#F2F0EB] text-[10px] font-bold uppercase tracking-widest shadow">
+                  <span className="px-3 py-1 rounded-full bg-[#6F0D2B]/70 border border-[#FF5A5F]/40 text-[#F2F0EB] text-[10px] font-bold uppercase tracking-widest shadow backdrop-blur-md">
                     🔥 Experiencia Insignia
                   </span>
-                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#F2F0EB]/70 text-[10px] font-semibold uppercase tracking-wider">
+                  <span className="px-3 py-1 rounded-full bg-black/50 border border-white/15 text-[#F2F0EB]/80 text-[10px] font-semibold uppercase tracking-wider backdrop-blur-md">
                     80s · 90s · 2000s
                   </span>
                 </div>
 
-                <h3 className="font-heading font-black text-2xl sm:text-3xl lg:text-4xl text-white uppercase tracking-tight leading-tight mb-4">
+                <h3 className="font-heading font-black text-2xl sm:text-3xl lg:text-4xl text-white uppercase tracking-tight leading-tight mb-4 drop-shadow-md">
                   Concierto Real en Vivo <br />
                   <span className="text-gradient-encore italic">Cero Poses, Cero Pistas</span>
                 </h3>
 
-                <p className="text-[#F2F0EB]/80 text-sm sm:text-base leading-relaxed mb-6 font-normal">
+                <p className="text-[#F2F0EB]/90 text-sm sm:text-base leading-relaxed mb-6 font-normal">
                   Erradicamos el cliché del grupo convencional. Tocamos con el pulso, la distorsión, las armonías y el clímax de una banda en gira de estadio. Cada solo, cada coro y cada remate suceden en tiempo real.
                 </p>
 
                 {/* Visualizador de Ecualizador / Soundwave Animado */}
-                <div className="p-4 rounded-2xl bg-black/50 border border-white/10 mb-6">
+                <div className="p-4 rounded-2xl bg-black/70 border border-white/15 backdrop-blur-md mb-6">
                   <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#FF5A5F] tracking-widest mb-3">
                     <span className="flex items-center gap-1.5">
                       <Activity className="w-3.5 h-3.5 animate-pulse" /> Live Sound Spectrum
                     </span>
-                    <span className="font-mono text-white/50">48kHz · 24-bit Hi-Fi</span>
+                    <span className="font-mono text-white/60">48kHz · 24-bit Hi-Fi</span>
                   </div>
                   <div className="flex items-end gap-1.5 h-12 w-full pt-2">
                     {[
@@ -318,7 +335,7 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-white/10 flex items-center justify-between text-xs text-[#F2F0EB]/70 font-medium">
+              <div className="relative z-10 pt-6 border-t border-white/15 flex items-center justify-between text-xs text-[#F2F0EB]/80 font-medium">
                 <span>Garantía de Pista Encendida</span>
                 <span className="text-[#FF5A5F] font-bold uppercase tracking-wider flex items-center gap-1">
                   <Flame className="w-3.5 h-3.5 fill-[#FF5A5F]" /> 100% Directo
@@ -326,117 +343,177 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Bento Card 2: Audio de Alta Fidelidad (lg:col-span-1) */}
-            <div className="rounded-3xl p-6 border border-white/10 glass-card-hover bg-gradient-to-b from-white/[0.04] to-white/[0.01] flex flex-col justify-between group">
-              <div>
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6F0D2B]/40 to-[#FF5A5F]/20 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg">
+            {/* Bento Card 2: Audio Pro Line Array con Foto */}
+            <div className="rounded-3xl p-6 border border-white/15 bg-black/50 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group glass-card-hover">
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src="/images/galeria/vendetta-musica-corporativo.jpg"
+                  alt="Evento Corporativo Vendetta"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                  className="object-cover opacity-20 group-hover:opacity-35 group-hover:scale-105 transition-all duration-700"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#07080D] via-[#07080D]/85 to-transparent" />
+              </div>
+
+              <div className="relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6F0D2B]/60 to-[#FF5A5F]/30 border border-white/20 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg backdrop-blur-md">
                   <Volume2 className="w-6 h-6 text-[#FF5A5F]" />
                 </div>
                 <h4 className="font-bold text-white text-lg mb-2 uppercase tracking-tight group-hover:text-[#FF5A5F] transition-colors">
                   Audio Pro Line Array
                 </h4>
-                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 leading-relaxed font-normal">
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/80 leading-relaxed font-normal">
                   Sistemas Electro-Voice de tiro largo y consolas digitales para un impacto sonoro claro y sin saturación.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-white/50">
+              <div className="relative z-10 mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-white/60">
                 <span>SPL: 128 dB MAX</span>
                 <span className="text-emerald-400 font-bold">CRYSTAL CLEAR</span>
               </div>
             </div>
 
-            {/* Bento Card 3: Monitoreo In-Ear & Sync (lg:col-span-1) */}
-            <div className="rounded-3xl p-6 border border-white/10 glass-card-hover bg-gradient-to-b from-white/[0.04] to-white/[0.01] flex flex-col justify-between group">
-              <div>
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#7777FF]/30 to-[#20D5E5]/20 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg">
+            {/* Bento Card 3: Monitoreo In-Ear con Foto */}
+            <div className="rounded-3xl p-6 border border-white/15 bg-black/50 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group glass-card-hover">
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src="/images/galeria/vendetta-vocalista-grupo.jpg"
+                  alt="Vocalistas Vendetta"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                  className="object-cover opacity-20 group-hover:opacity-35 group-hover:scale-105 transition-all duration-700"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#07080D] via-[#07080D]/85 to-transparent" />
+              </div>
+
+              <div className="relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#7777FF]/40 to-[#20D5E5]/30 border border-white/20 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg backdrop-blur-md">
                   <Cpu className="w-6 h-6 text-[#20D5E5]" />
                 </div>
                 <h4 className="font-bold text-white text-lg mb-2 uppercase tracking-tight group-hover:text-[#20D5E5] transition-colors">
                   In-Ear & Cero Ruido
                 </h4>
-                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 leading-relaxed font-normal">
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/80 leading-relaxed font-normal">
                   Monitoreo inalámbrico profesional. Eliminamos monitores ruidosos en el piso: el salón suena impecable.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-white/50">
+              <div className="relative z-10 mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-white/60">
                 <span>STAGE NOISE: 0 dB</span>
                 <span className="text-[#20D5E5] font-bold">WIRELESS</span>
               </div>
             </div>
 
-            {/* Bento Card 4: Iluminación Robótica & Show (lg:col-span-1) */}
-            <div className="rounded-3xl p-6 border border-white/10 glass-card-hover bg-gradient-to-b from-white/[0.04] to-white/[0.01] flex flex-col justify-between group">
-              <div>
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/30 to-[#FF5A5F]/20 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg">
+            {/* Bento Card 4: Iluminación Robótica con Foto */}
+            <div className="rounded-3xl p-6 border border-white/15 bg-black/50 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group glass-card-hover">
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src="/images/galeria/vendetta-trompetista-show.jpg"
+                  alt="Trompeta e Iluminación Vendetta"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                  className="object-cover opacity-20 group-hover:opacity-35 group-hover:scale-105 transition-all duration-700"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#07080D] via-[#07080D]/85 to-transparent" />
+              </div>
+
+              <div className="relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/40 to-[#FF5A5F]/30 border border-white/20 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg backdrop-blur-md">
                   <Zap className="w-6 h-6 text-amber-400" />
                 </div>
                 <h4 className="font-bold text-white text-lg mb-2 uppercase tracking-tight group-hover:text-amber-400 transition-colors">
                   Robótica & Atmósfera
                 </h4>
-                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 leading-relaxed font-normal">
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/80 leading-relaxed font-normal">
                   Cabezas móviles beam, wash y barras perimetrales coreografiadas en vivo con cada cambio de tema.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-white/50">
+              <div className="relative z-10 mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-white/60">
                 <span>DMX SYNC 512</span>
                 <span className="text-amber-400 font-bold">CONCERT LEVEL</span>
               </div>
             </div>
 
-            {/* Bento Card 5: Backline Boutique (lg:col-span-1) */}
-            <div className="rounded-3xl p-6 border border-white/10 glass-card-hover bg-gradient-to-b from-white/[0.04] to-white/[0.01] flex flex-col justify-between group">
-              <div>
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6F0D2B]/40 to-[#A91D4D]/20 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg">
+            {/* Bento Card 5: Backline Boutique con Foto */}
+            <div className="rounded-3xl p-6 border border-white/15 bg-black/50 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group glass-card-hover">
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src="/images/galeria/vendetta-saxofonista-metales.jpg"
+                  alt="Saxofón y Metales Vendetta"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                  className="object-cover opacity-20 group-hover:opacity-35 group-hover:scale-105 transition-all duration-700"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#07080D] via-[#07080D]/85 to-transparent" />
+              </div>
+
+              <div className="relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6F0D2B]/50 to-[#A91D4D]/30 border border-white/20 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg backdrop-blur-md">
                   <Music2 className="w-6 h-6 text-[#FF5A5F]" />
                 </div>
                 <h4 className="font-bold text-white text-lg mb-2 uppercase tracking-tight group-hover:text-[#FF5A5F] transition-colors">
                   Backline de Gira
                 </h4>
-                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 leading-relaxed font-normal">
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/80 leading-relaxed font-normal">
                   Batería acústica microfoneada, sintetizadores analógicos, guitarras Fender / Gibson y bajos de precisión.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-white/50">
+              <div className="relative z-10 mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-white/60">
                 <span>BOUTIQUE GEAR</span>
                 <span className="text-[#FF5A5F] font-bold">100% PRO</span>
               </div>
             </div>
 
             {/* Bento Card 6: Logística & Timeline Cronometrado (lg:col-span-2) */}
-            <div className="lg:col-span-2 rounded-3xl p-8 border border-white/10 glass-card-hover bg-gradient-to-r from-[#15152B]/90 to-[#0F0F1E] flex flex-col justify-between group">
-              <div>
+            <div className="lg:col-span-2 rounded-3xl p-8 border border-white/15 bg-black/50 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group glass-card-hover">
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src="/images/galeria/vendetta-grupo-musical-animacion.jpg"
+                  alt="Animación y Logística Vendetta"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover opacity-20 group-hover:opacity-35 group-hover:scale-105 transition-all duration-700"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#07080D] via-[#07080D]/85 to-transparent" />
+              </div>
+
+              <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#6F0D2B]/30 border border-[#FF5A5F]/30 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-[#6F0D2B]/40 border border-[#FF5A5F]/40 flex items-center justify-center backdrop-blur-md">
                       <Clock className="w-5 h-5 text-[#FF5A5F]" />
                     </div>
                     <h4 className="font-bold text-white text-lg uppercase tracking-tight">
                       Logística Impecable & Cero Estrés
                     </h4>
                   </div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A5F] px-2.5 py-1 rounded bg-[#6F0D2B]/20 border border-[#FF5A5F]/30">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A5F] px-2.5 py-1 rounded bg-[#6F0D2B]/30 border border-[#FF5A5F]/40 backdrop-blur-md">
                     Puntualidad Absoluta
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 mb-6 font-normal">
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/80 mb-6 font-normal">
                   Llegamos con 4 horas de anticipación. Coordinamos con tu wedding planner o staff del salón para un montaje silencioso y prueba de sonido invisible.
                 </p>
 
                 {/* Timeline Visual en Línea */}
                 <div className="grid grid-cols-4 gap-2 pt-2">
-                  <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center">
+                  <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 text-center backdrop-blur-md">
                     <div className="text-[10px] font-mono text-[#FF5A5F] font-bold">T-4 HORAS</div>
                     <div className="text-[11px] text-white font-bold mt-0.5">Montaje</div>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center">
+                  <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 text-center backdrop-blur-md">
                     <div className="text-[10px] font-mono text-amber-400 font-bold">T-2 HORAS</div>
                     <div className="text-[11px] text-white font-bold mt-0.5">Soundcheck</div>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center">
+                  <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 text-center backdrop-blur-md">
                     <div className="text-[10px] font-mono text-emerald-400 font-bold">SHOWTIME</div>
                     <div className="text-[11px] text-white font-bold mt-0.5">Concierto</div>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-gradient-to-r from-[#6F0D2B]/40 to-[#FF5A5F]/20 border border-[#FF5A5F]/30 text-center">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-r from-[#6F0D2B]/50 to-[#FF5A5F]/30 border border-[#FF5A5F]/40 text-center backdrop-blur-md">
                     <div className="text-[10px] font-mono text-[#FF5A5F] font-bold">ENCORE</div>
                     <div className="text-[11px] text-white font-bold mt-0.5">Fiesta Total</div>
                   </div>
@@ -445,34 +522,53 @@ export default async function HomePage() {
             </div>
 
             {/* Bento Card 7: Métrica y Prestigio (lg:col-span-2) */}
-            <div className="lg:col-span-2 rounded-3xl p-8 border border-white/10 glass-card-hover bg-gradient-to-r from-[#101020] via-[#1A0D1E] to-[#120F24] flex flex-col sm:flex-row items-center justify-between gap-6 group">
-              <div className="flex-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold uppercase tracking-wider mb-3">
+            <div className="lg:col-span-2 rounded-3xl p-8 border border-white/15 bg-black/50 backdrop-blur-md relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 group glass-card-hover neon-live-cyan">
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src="/images/galeria/vendetta-concierto-versatil.jpg"
+                  alt="Prestigio y Reputación Vendetta"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover opacity-20 group-hover:opacity-35 group-hover:scale-105 transition-all duration-700"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#07080D] via-[#07080D]/85 to-transparent" />
+              </div>
+
+              <div className="flex-1 relative z-10">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-bold uppercase tracking-wider mb-3 backdrop-blur-md">
                   <Star className="w-3 h-3 fill-amber-400" /> Reputación 5.0 Estrellas
                 </div>
-                <h4 className="font-bold text-white text-xl sm:text-2xl uppercase tracking-tight mb-2">
+                <h4 className="font-bold text-white text-xl sm:text-2xl uppercase tracking-tight mb-2 drop-shadow-md">
                   +500 Eventos que Fueron Leyenda
                 </h4>
-                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 font-normal">
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/80 font-normal">
                   Empresas multinacionales, bodas de ensueño y recintos icónicos respaldan nuestra trayectoria en todo México.
                 </p>
               </div>
-              <div className="shrink-0 flex sm:flex-col items-center justify-center p-5 rounded-2xl bg-black/50 border border-white/10 text-center w-full sm:w-auto">
+              <div className="shrink-0 flex sm:flex-col items-center justify-center p-5 rounded-2xl bg-black/70 border border-white/15 text-center w-full sm:w-auto relative z-10 backdrop-blur-md">
                 <div className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#FF5A5F] to-amber-300">
                   100%
                 </div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-[#F2F0EB]/60 mt-1">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[#F2F0EB]/70 mt-1">
                   Recomendados
                 </div>
               </div>
             </div>
 
           </div>
+
+          {/* -- VINYL SHOWCASE TOCADISCOS INTERACTIVO -- */}
+          <VinylShowcase />
+
         </div>
 
         {/* Máscara de mezcla de gradiente para transición suave */}
         <div className="section-blend-bottom bg-gradient-to-t from-[#15152B] to-transparent" />
       </section>
+
+      {/* -- SIMULADOR DE CONSOLA O MEZCLADORA (WEB AUDIO API) ------------ */}
+      <LiveStageMixer />
 
       {/* -- MÚSICOS (NOSOTROS) ------------------------------------------- */}
       <MusiciansSection musicians={liveMusicians} />

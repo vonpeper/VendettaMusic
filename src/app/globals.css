@@ -390,6 +390,82 @@
   .vacuum-tube-glow {
     background: radial-gradient(ellipse at 50% 60%, rgba(255, 160, 40, 0.22) 0%, rgba(255, 90, 40, 0.10) 45%, transparent 75%);
   }
+
+  /* MODO NEON LIVE & STAGE EFFECTS */
+  @keyframes neon-pulse-coral {
+    0%, 100% {
+      border-color: rgba(255, 90, 95, 0.4);
+      box-shadow: 0 0 15px rgba(255, 90, 95, 0.25), inset 0 0 12px rgba(255, 90, 95, 0.1);
+    }
+    50% {
+      border-color: rgba(255, 90, 95, 0.85);
+      box-shadow: 0 0 28px rgba(255, 90, 95, 0.5), inset 0 0 20px rgba(255, 90, 95, 0.22);
+    }
+  }
+
+  @keyframes neon-pulse-cyan {
+    0%, 100% {
+      border-color: rgba(32, 213, 229, 0.4);
+      box-shadow: 0 0 15px rgba(32, 213, 229, 0.25), inset 0 0 12px rgba(32, 213, 229, 0.1);
+    }
+    50% {
+      border-color: rgba(32, 213, 229, 0.85);
+      box-shadow: 0 0 28px rgba(32, 213, 229, 0.5), inset 0 0 20px rgba(32, 213, 229, 0.22);
+    }
+  }
+
+  @keyframes strobe-flash {
+    0%, 94%, 98%, 100% {
+      opacity: 0.1;
+    }
+    95%, 97% {
+      opacity: 0.85;
+    }
+  }
+
+  @keyframes spin-vinyl {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .neon-live-coral {
+    animation: neon-pulse-coral 3s ease-in-out infinite;
+  }
+
+  .neon-live-cyan {
+    animation: neon-pulse-cyan 3.2s ease-in-out infinite;
+  }
+
+  .animate-spin-vinyl {
+    animation: spin-vinyl 1.8s linear infinite;
+  }
+
+  .vinyl-grooves {
+    background: 
+      radial-gradient(circle at center, transparent 32%, rgba(255,255,255,0.05) 33%, transparent 34%),
+      radial-gradient(circle at center, transparent 42%, rgba(255,255,255,0.06) 43%, transparent 44%),
+      radial-gradient(circle at center, transparent 52%, rgba(255,255,255,0.07) 53%, transparent 54%),
+      radial-gradient(circle at center, transparent 62%, rgba(255,255,255,0.06) 63%, transparent 64%),
+      radial-gradient(circle at center, transparent 72%, rgba(255,255,255,0.07) 73%, transparent 74%),
+      radial-gradient(circle at center, transparent 82%, rgba(255,255,255,0.05) 83%, transparent 84%),
+      repeating-radial-gradient(circle at center, #111 0, #181818 2px, #0e0e0e 4px);
+  }
+
+  .vinyl-shine {
+    background: conic-gradient(
+      from 45deg at center,
+      transparent 0deg,
+      rgba(255,255,255,0.12) 60deg,
+      transparent 120deg,
+      rgba(255,255,255,0.12) 240deg,
+      transparent 300deg,
+      rgba(255,255,255,0.12) 360deg
+    );
+  }
 }
 
 @theme inline {
