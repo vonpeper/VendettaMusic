@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { PaquetesSection } from "@/components/public/PaquetesSection"
 import {
-  Volume2, Cpu, Music2, Star, Clock, ChevronRight, Quote, Zap, Loader2, MapPin, Activity, Flame, Radio, Disc3
+  Volume2, Cpu, Music2, Star, Clock, ChevronRight, Zap, Loader2, MapPin, Activity, Flame, Radio, Disc3
 } from "lucide-react"
 import { MusiciansSection } from "@/components/public/MusiciansSection"
 import { UpcomingGigs } from "@/components/public/UpcomingGigs"
@@ -11,14 +11,14 @@ import { InstagramReelsSection } from "@/components/public/InstagramReelsSection
 import { PhotoGallery } from "@/components/public/PhotoGallery"
 import { NeonBorder } from "@/components/public/NeonBorder"
 import { ConcertAtmosphere } from "@/components/public/ConcertAtmosphere"
-import { LiveStageMixer } from "@/components/public/LiveStageMixer"
+import { AutographWall } from "@/components/public/AutographWall"
+import { TestimonialsScroll } from "@/components/public/TestimonialsScroll"
 import { VinylShowcase } from "@/components/public/VinylShowcase"
 import { WhatsAppButton } from "@/components/public/WhatsAppButton"
 import { VendettaExperience } from "@/components/public/VendettaExperience"
 import { Suspense } from "react"
 import Image from "next/image"
 import { db } from "@/lib/db"
-import { ReviewModal } from "@/components/public/ReviewModal"
 import { StatusSearch } from "@/components/public/StatusSearch"
 import { Metadata } from "next"
 
@@ -37,15 +37,6 @@ export const metadata: Metadata = {
 // La home lee paquetes/medios/reseñas de la DB en cada request — no debe pre-renderizarse
 // estáticamente o queda con el snapshot del build (vacío si la DB se llenó después del deploy).
 export const dynamic = "force-dynamic"
-
-const CLIENTS = [
-  "WTC México", "COMEXANE A.C", "Secretaría de Salud Edomex",
-  "Ayuntamiento de Toluca", "Ayuntamiento de Ocoyoacac",
-  "Ayuntamiento de Santiago Tianguistenco", "UNTICKET",
-  "Harley Davidson", "Bistró Mecha", "Alquimia 73",
-  "Bruma", "McCarthy's Irish Pub",
-  "Ayuntamiento de Ixtapan de la Sal", "Teatro Quimera"
-]
 
 export default async function HomePage() {
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
@@ -178,14 +169,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* -- VENDETTA EXPERIENCE ------------------------------------------- */}
-      <VendettaExperience />
-
-       {/* -- PAQUETES ------------------------------------------------------- */}
+      {/* -- PAQUETES ------------------------------------------------------- */}
       <PaquetesSection 
         dbPackages={dbPackages as any} 
         adminWhatsapp={config?.adminWhatsapp || process.env.ADMIN_WHATSAPP_NUMBER || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || process.env.NEXT_PUBLIC_ADMIN_WA || null}
       />
+
+      {/* -- VENDETTA EXPERIENCE ------------------------------------------- */}
+      <VendettaExperience />
 
       {mediaMap.video_home && <VideoSection videoUrl={mediaMap.video_home} />}
       {!mediaMap.video_home && <VideoSection />}
@@ -567,8 +558,7 @@ export default async function HomePage() {
         <div className="section-blend-bottom bg-gradient-to-t from-[#15152B] to-transparent" />
       </section>
 
-      {/* -- SIMULADOR DE CONSOLA O MEZCLADORA (WEB AUDIO API) ------------ */}
-      <LiveStageMixer />
+
 
       {/* -- MÚSICOS (NOSOTROS) ------------------------------------------- */}
       <MusiciansSection musicians={liveMusicians} />
@@ -586,106 +576,18 @@ export default async function HomePage() {
         <UpcomingGigs />
       </Suspense>
 
-      {/* -- CLIENTES ------------------------------------------------------- */}
-      <section className="py-32 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#15152B] to-[#0E0E1A]">
-        {/* Máscara de mezcla de gradiente para transición suave */}
+      {/* -- SALÓN DE LA FAMA • PARED DE AUTÓGRAFOS ------------------------ */}
+      <AutographWall />
+
+      {/* -- GALERÍA DE FOTOS ----------------------------------------------- */}
+      <section id="galeria" className="py-24 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#120F24] to-[#0B0B14]">
         <div className="section-blend-top bg-gradient-to-b from-[#07080D] to-transparent" />
-
-        {/* Fondo decorativo con gradientes radiales */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#6F0D2B]/15 rounded-full blur-[140px] opacity-60" />
-          <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-[#7777FF]/10 rounded-full blur-[120px] opacity-40" />
-          <div className="absolute bottom-10 right-10 w-[350px] h-[350px] bg-[#FF5A5F]/10 rounded-full blur-[100px] opacity-30" />
-        </div>
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16">
-             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[#F2F0EB]/60 text-[10px] font-bold uppercase tracking-[0.4em] mb-5">
-               Trusted By
-             </div>
-             <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-white uppercase tracking-tight leading-tight md:leading-none">
-               Clientes que <span className="text-gradient-encore italic pr-4">Nos Recomiendan</span>
-             </h2>
-          </div>
-          
-          <div className="flex flex-wrap justify-center gap-4 max-w-6xl mx-auto">
-            {CLIENTS.map(c => (
-              <div 
-                key={c} 
-                className="px-8 py-4 rounded-2xl border border-white/10 glass-card-subtle text-xs font-bold text-[#F2F0EB]/70 hover:text-white hover:border-[#FF5A5F]/40 hover:bg-[#6F0D2B]/15 transition-all duration-300 cursor-default uppercase tracking-widest shadow-lg"
-              >
-                {c}
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div id="galeria" className="pt-24 mt-20">
-          <PhotoGallery images={mediaMap.galeria} />
-        </div>
-
-        {/* Máscara de mezcla de gradiente para transición suave */}
-        <div className="section-blend-bottom bg-gradient-to-t from-[#0E0E1A] to-transparent" />
-      </section>
-
-      {/* -- TESTIMONIOS ---------------------------------------------------- */}
-      <section id="testimonios" className="py-32 bg-gradient-to-b from-[#0E0E1A] via-[#120F24] to-[#0B0B14] relative overflow-hidden">
-        {/* Máscara de mezcla de gradiente para transición suave */}
-        <div className="section-blend-top bg-gradient-to-b from-[#0E0E1A] to-transparent" />
-
-        {/* Glow ambiental */}
-        <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-[#6F0D2B]/15 rounded-full blur-[140px] pointer-events-none" />
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col lg:flex-row items-end justify-between gap-8 mb-20">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#6F0D2B]/20 text-[#FF5A5F] font-bold text-xs uppercase tracking-widest mb-6">
-                ⭐ Testimoniales
-              </div>
-              <h2 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl tracking-tighter mb-4 leading-[1] md:leading-[0.9] text-white">
-                Lo que dicen <br />
-                <span className="text-gradient-encore italic">nuestros clientes</span>
-              </h2>
-            </div>
-            <p className="text-[#F2F0EB]/70 max-w-sm text-base font-normal lg:text-right">
-              &quot;La mejor inversión para mi boda, todos quedaron fascinados con la energía de la banda.&quot;
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {liveDbReviews.slice(0, 9).map((r, i) => (
-              <div
-                key={("id" in r ? r.id : null) || i}
-                className={`group relative glass-card-hover border border-white/10 rounded-3xl p-10 hover:border-[#FF5A5F]/40 transition-all duration-500 ${
-                  i % 2 !== 0 ? "lg:-translate-y-8" : ""
-                }`}
-              >
-                <Quote className="absolute top-10 right-10 w-12 h-12 text-white/5 group-hover:text-[#FF5A5F]/20 transition-colors" />
-                <div className="flex gap-1 mb-8">
-                   {[...Array(r.stars || 5)].map((_, sIdx) => <Star key={sIdx} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
-                </div>
-                <p className="text-xl font-bold text-white mb-10 leading-snug italic">&quot;{r.text}&quot;</p>
-                <div className="flex items-center gap-4 border-t border-white/10 pt-8">
-                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6F0D2B]/40 to-[#FF5A5F]/20 border border-white/10 flex items-center justify-center font-black text-[#FF5A5F] text-xl">
-                      {r.name.charAt(0).toUpperCase()}
-                   </div>
-                   <div>
-                      <div className="font-bold text-white text-base">{r.name}</div>
-                      <div className="text-[11px] text-[#F2F0EB]/50 uppercase tracking-widest font-semibold">
-                         {('event' in r) ? (r as any).event : "Verificado en sitio"}
-                      </div>
-                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <ReviewModal />
-        </div>
-
-        {/* Máscara de mezcla de gradiente para transición suave */}
+        <PhotoGallery images={mediaMap.galeria} />
         <div className="section-blend-bottom bg-gradient-to-t from-[#0B0B14] to-transparent" />
       </section>
+
+      {/* -- TESTIMONIOS EN SCROLL HORIZONTAL ------------------------------- */}
+      <TestimonialsScroll reviews={liveDbReviews} />
 
       {/* -- CONSULTA ESTATUS --------------------------------------------- */}
       <section id="estatus" className="py-24 relative overflow-hidden bg-gradient-to-b from-[#0B0B14] via-[#15152B]/60 to-[#0B0B14]">
