@@ -6,7 +6,6 @@ import {
   Play, 
   X, 
   ExternalLink, 
-  Flame, 
   Sparkles, 
   Radio, 
   Volume2, 
@@ -39,75 +38,51 @@ interface ReelItem {
 const OFFICIAL_REELS: ReelItem[] = [
   {
     id: "reel-1",
-    title: "Tributo Mentiras — Pop Medley 80s",
-    song: "Mentiras / Castillos / Cuando Baja la Marea",
-    category: "mentiras",
-    duration: "0:45",
-    views: "28.4K",
-    thumbnail: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80",
-    videoUrl: "https://www.youtube.com/embed/607_nxc0Rqc?autoplay=1",
-    instagramUrl: "https://www.instagram.com/vendettamusica",
-    tag: "🔥 Show Estelar"
+    title: "Vizzio Metepec — Pop & Rock en Vivo",
+    song: "Vendetta en Concierto",
+    category: "poprock",
+    duration: "0:30",
+    views: "18.4K",
+    thumbnail: "/images/reels/reel-vizzio.jpg",
+    videoUrl: "https://www.instagram.com/reel/Dc_il-KOqBb/embed/",
+    instagramUrl: "https://www.instagram.com/reel/Dc_il-KOqBb/",
+    tag: "🔥 Vizzio Metepec"
   },
   {
     id: "reel-2",
-    title: "De Música Ligera — Explosión en la Pista",
-    song: "Soda Stereo",
-    category: "poprock",
-    duration: "0:52",
-    views: "34.1K",
-    thumbnail: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80",
-    videoUrl: "https://www.youtube.com/embed/607_nxc0Rqc?autoplay=1",
-    instagramUrl: "https://www.instagram.com/vendettamusica",
-    tag: "⚡ Himno de Rock"
+    title: "COMEXANE A.C. — Cena de Gala & Inauguración",
+    song: "Cena Anual de Gala",
+    category: "bodas",
+    duration: "0:45",
+    views: "38.2K",
+    thumbnail: "/images/reels/reel-comexane.jpg",
+    videoUrl: "https://www.instagram.com/reel/DcYzk_yOy_y/embed/",
+    instagramUrl: "https://www.instagram.com/reel/DcYzk_yOy_y/",
+    tag: "💎 Gala COMEXANE"
   },
   {
     id: "reel-3",
-    title: "Boda Monumental — Momento Estelar",
-    song: "Don't Stop Believin' / Livin' on a Prayer",
-    category: "bodas",
-    duration: "1:00",
-    views: "42.8K",
-    thumbnail: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80",
-    videoUrl: "https://www.youtube.com/embed/607_nxc0Rqc?autoplay=1",
-    instagramUrl: "https://www.instagram.com/vendettamusica",
-    tag: "💍 Boda VIP"
+    title: "Alquimia 73 — Ochenteras, Molotov & Rosa Pastel",
+    song: "Disco, 80s, 90s & Rock en Español",
+    category: "mentiras",
+    duration: "0:50",
+    views: "31.4K",
+    thumbnail: "/images/reels/reel-alquimia.jpg",
+    videoUrl: "https://www.instagram.com/reel/Da7HQT5gk8J/embed/",
+    instagramUrl: "https://www.instagram.com/reel/Da7HQT5gk8J/",
+    tag: "⚡ Alquimia 73"
   },
   {
     id: "reel-4",
-    title: "Matador & Fiesta Latina Rock",
-    song: "Los Fabulosos Cadillacs",
+    title: "Bruma Memories & Drinks — Gran Noche en Vivo",
+    song: "Valle de Bravo Rock & Hits",
     category: "poprock",
-    duration: "0:48",
-    views: "19.6K",
-    thumbnail: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&auto=format&fit=crop&q=80",
-    videoUrl: "https://www.youtube.com/embed/607_nxc0Rqc?autoplay=1",
-    instagramUrl: "https://www.instagram.com/vendettamusica",
-    tag: "🎉 Energía Pura"
-  },
-  {
-    id: "reel-5",
-    title: "Solo de Batería con Robóticas",
-    song: "Duelo Rítmico de Concierto",
-    category: "poprock",
-    duration: "0:38",
-    views: "22.3K",
-    thumbnail: "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?w=800&auto=format&fit=crop&q=80",
-    videoUrl: "https://www.youtube.com/embed/607_nxc0Rqc?autoplay=1",
-    instagramUrl: "https://www.instagram.com/vendettamusica",
-    tag: "🥁 Backline Pro"
-  },
-  {
-    id: "reel-6",
-    title: "Lobo-Hombre en París — Nostalgia 80s",
-    song: "La Unión",
-    category: "mentiras",
-    duration: "0:42",
-    views: "31.0K",
-    thumbnail: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=80",
-    videoUrl: "https://www.youtube.com/embed/607_nxc0Rqc?autoplay=1",
-    instagramUrl: "https://www.instagram.com/vendettamusica",
-    tag: "🎸 Clásico 80s"
+    duration: "0:40",
+    views: "29.7K",
+    thumbnail: "/images/reels/reel-bruma.jpg",
+    videoUrl: "https://www.instagram.com/reel/DYtp2LFum_y/embed/",
+    instagramUrl: "https://www.instagram.com/reel/DYtp2LFum_y/",
+    tag: "🍸 Bruma Valle"
   }
 ]
 
@@ -115,7 +90,7 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
   const [selectedCategory, setSelectedCategory] = useState<"all" | "poprock" | "mentiras" | "bodas">("all")
   const [activeModalReel, setActiveModalReel] = useState<ReelItem | null>(null)
 
-  // Map incoming DB reels if any, otherwise use official reels
+  // Map incoming DB reels if any with valid URLs, otherwise prioritize official curated reels
   const items: ReelItem[] = (reels && reels.length > 0)
     ? reels.map((r, i) => ({
         id: r.id || `reel-db-${i}`,
@@ -126,7 +101,7 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
         views: r.views || OFFICIAL_REELS[i % OFFICIAL_REELS.length].views,
         thumbnail: r.thumbnail || OFFICIAL_REELS[i % OFFICIAL_REELS.length].thumbnail,
         videoUrl: r.videoUrl || r.url || OFFICIAL_REELS[i % OFFICIAL_REELS.length].videoUrl,
-        instagramUrl: "https://www.instagram.com/vendettamusica",
+        instagramUrl: r.instagramUrl || OFFICIAL_REELS[i % OFFICIAL_REELS.length].instagramUrl,
         tag: r.tag || OFFICIAL_REELS[i % OFFICIAL_REELS.length].tag
       }))
     : OFFICIAL_REELS
@@ -137,6 +112,10 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
 
   return (
     <section id="reels" className="py-24 md:py-32 bg-[#07080D] relative overflow-hidden border-t border-white/10">
+      {/* Top and Bottom gradient blend masks */}
+      <div className="section-blend-top bg-gradient-to-b from-[#0E0E1A] to-transparent" />
+      <div className="section-blend-bottom bg-gradient-to-t from-[#0E0E1A] to-transparent" />
+
       {/* Aurora Ambient Stage Atmosphere */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="aurora-layer-1 -top-32 left-1/4 animate-aurora-drift" />
@@ -144,7 +123,7 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
         <div className="absolute inset-0 stage-grid-overlay opacity-30" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 max-w-7xl">
         {/* Stage Monitor Header with Official Instagram Badge */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="max-w-2xl">
@@ -194,9 +173,9 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-10 no-scrollbar">
           {[
             { id: "all", label: "🔥 Todos los Reels" },
-            { id: "poprock", label: "🎸 Pop & Rock 80s/90s" },
-            { id: "mentiras", label: "🎭 Tributo Mentiras" },
-            { id: "bodas", label: "💍 Bodas & VIP" }
+            { id: "poprock", label: "🎸 Pop & Rock en Vivo" },
+            { id: "mentiras", label: "🎭 Ochenteras & Hits" },
+            { id: "bodas", label: "💍 Galas & Eventos" }
           ].map(tab => (
             <button
               key={tab.id}
@@ -213,7 +192,7 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
         </div>
 
         {/* Responsive 9:16 Video Reel Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-6">
           {filteredItems.map((reel) => (
             <motion.div
               key={reel.id}
@@ -226,8 +205,8 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
                 src={reel.thumbnail}
                 alt={reel.title}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-80 group-hover:opacity-100"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-85 group-hover:opacity-100"
                 unoptimized
               />
 
@@ -259,7 +238,7 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
                 <span className="w-1 rounded-full bg-white animate-vu-3" />
                 <span className="w-1 rounded-full bg-white/70 animate-vu-1" />
                 <span className="w-1 rounded-full bg-[#FF5A5F] animate-vu-2" />
-                <span className="text-[10px] font-mono text-white/60 ml-2 uppercase tracking-widest">AUDIO DIRECTO</span>
+                <span className="text-[10px] font-mono text-white/60 ml-2 uppercase tracking-widest">AUDIO EN VIVO</span>
               </div>
 
               {/* Bottom Content: Title & Details */}
@@ -267,13 +246,13 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
                 <p className="text-[#FF5A5F] text-[11px] font-semibold uppercase tracking-wider mb-1 line-clamp-1">
                   {reel.song}
                 </p>
-                <h3 className="text-white font-sans font-black text-lg leading-tight mb-2 drop-shadow-md">
+                <h3 className="text-white font-sans font-black text-base sm:text-lg leading-tight mb-2 drop-shadow-md line-clamp-2">
                   {reel.title}
                 </h3>
                 
                 <div className="flex items-center justify-between text-xs text-white/60 font-mono pt-2 border-t border-white/10">
                   <span>{reel.views} vistas</span>
-                  <span className="text-[#FF5A5F] font-bold">▶ Ver Video</span>
+                  <span className="text-[#FF5A5F] font-bold">▶ Reproducir</span>
                 </div>
               </div>
             </motion.div>
@@ -283,7 +262,7 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
         {/* Footer info note with direct profile handle */}
         <div className="mt-12 text-center">
           <p className="text-[#F2F0EB]/60 text-xs md:text-sm font-normal">
-            ¿Quieres ver nuestro repertorio completo y contenido de conciertos recientes? Visita{" "}
+            ¿Quieres ver más canciones y videos de conciertos recientes? Visita{" "}
             <a 
               href="https://www.instagram.com/vendettamusica" 
               target="_blank" 
@@ -314,16 +293,16 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
               <X className="w-6 h-6" />
             </button>
 
-            <div className="relative w-full max-w-4xl bg-[#0E1017] rounded-3xl border border-white/20 overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[90vh]">
+            <div className="relative w-full max-w-4xl bg-[#0E1017] rounded-3xl border border-white/20 overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[92vh]">
               {/* Video Player Container */}
-              <div className="relative w-full md:w-3/5 aspect-video md:aspect-[9/16] bg-black flex items-center justify-center">
+              <div className="relative w-full md:w-3/5 min-h-[460px] md:min-h-[580px] bg-black flex items-center justify-center overflow-hidden">
                 {activeModalReel.videoUrl ? (
                   <iframe
                     src={activeModalReel.videoUrl}
                     title={activeModalReel.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
-                    className="w-full h-full border-0"
+                    className="w-full h-full min-h-[460px] md:min-h-[580px] border-0"
                   />
                 ) : (
                   <div className="text-center p-6 text-white">
@@ -339,7 +318,7 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-2.5 h-2.5 rounded-full amp-jewel-ruby" />
                     <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold">
-                      SEÑAL EN VIVO
+                      REEL OFICIAL • INSTAGRAM
                     </span>
                   </div>
 
@@ -369,18 +348,20 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
 
                 <div className="space-y-3 pt-6 border-t border-white/10">
                   <a
-                    href="https://www.instagram.com/vendettamusica"
+                    href={activeModalReel.instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-white text-xs font-bold uppercase tracking-wider transition-all"
+                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-white text-xs font-bold uppercase tracking-wider transition-all"
                   >
                     <InstagramIcon className="w-4 h-4 text-[#FF5A5F]" />
                     <span>Abrir en Instagram</span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-75" />
                   </a>
 
                   <a
-                    href="/cotizar"
-                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] text-white text-xs font-bold uppercase tracking-widest border border-white/20 shadow-md shadow-[#FF5A5F]/20 hover:opacity-95 transition-all"
+                    href="#paquetes"
+                    onClick={() => setActiveModalReel(null)}
+                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] text-white text-xs font-bold uppercase tracking-widest border border-white/20 shadow-md shadow-[#FF5A5F]/20 hover:opacity-95 transition-all"
                   >
                     <span>Cotizar este Show</span>
                   </a>
