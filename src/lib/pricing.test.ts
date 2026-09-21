@@ -146,37 +146,41 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
   it("debe calcular el split de costos y nómina (calculateEventCostBreakdown) para privados y bares", async () => {
     const { calculateEventCostBreakdown } = await import("./pricing")
 
-    // Privado 2 Horas ($8,500): Músicos $1,500 c/u, Staff $600, Vendetta $1,900
+    // Privado 2 Horas ($8,500): Músicos $1,675 c/u, Staff $600, Vendetta $1,200, Dueño Total $2,875
     const priv2h = calculateEventCostBreakdown(2, "privado")
     assert.equal(priv2h.totalPrice, 8500)
-    assert.equal(priv2h.musicianPayEach, 1500)
-    assert.equal(priv2h.musiciansTotal, 6000)
+    assert.equal(priv2h.musicianPayEach, 1675)
+    assert.equal(priv2h.musiciansTotal, 6700)
     assert.equal(priv2h.staffPay, 600)
-    assert.equal(priv2h.audioAndOfficeProfit, 1900)
+    assert.equal(priv2h.audioAndOfficeProfit, 1200)
+    assert.equal(priv2h.ownerTotalTakeHome, 2875)
 
-    // Privado 3 Horas ($13,500): Músicos $2,500 c/u, Staff $900, Vendetta $2,600
+    // Privado 3 Horas ($13,500): Músicos $2,675 c/u, Staff $900, Vendetta $1,900, Dueño Total $4,575
     const priv3h = calculateEventCostBreakdown(3, "privado")
     assert.equal(priv3h.totalPrice, 13500)
-    assert.equal(priv3h.musicianPayEach, 2500)
-    assert.equal(priv3h.musiciansTotal, 10000)
+    assert.equal(priv3h.musicianPayEach, 2675)
+    assert.equal(priv3h.musiciansTotal, 10700)
     assert.equal(priv3h.staffPay, 900)
-    assert.equal(priv3h.audioAndOfficeProfit, 2600)
+    assert.equal(priv3h.audioAndOfficeProfit, 1900)
+    assert.equal(priv3h.ownerTotalTakeHome, 4575)
 
-    // Privado 5 Horas ($23,500): Músicos $4,500 c/u, Staff $1,500, Vendetta $4,000
+    // Privado 5 Horas ($23,500): Músicos $4,675 c/u, Staff $1,500, Vendetta $3,300, Dueño Total $7,975
     const priv5h = calculateEventCostBreakdown(5, "privado")
     assert.equal(priv5h.totalPrice, 23500)
-    assert.equal(priv5h.musicianPayEach, 4500)
-    assert.equal(priv5h.musiciansTotal, 18000)
+    assert.equal(priv5h.musicianPayEach, 4675)
+    assert.equal(priv5h.musiciansTotal, 18700)
     assert.equal(priv5h.staffPay, 1500)
-    assert.equal(priv5h.audioAndOfficeProfit, 4000)
+    assert.equal(priv5h.audioAndOfficeProfit, 3300)
+    assert.equal(priv5h.ownerTotalTakeHome, 7975)
 
-    // Bar 2 Horas ($3,800): Músicos $850 c/u, Staff $400, Vendetta $0 (0 comisión)
+    // Bar 2 Horas ($3,800): Músicos $850 c/u, Staff $400, Vendetta $0 (0 comisión), Dueño Total $850
     const bar = calculateEventCostBreakdown(2, "bar")
     assert.equal(bar.totalPrice, 3800)
     assert.equal(bar.staffPay, 400)
     assert.equal(bar.musicianPayEach, 850)
     assert.equal(bar.musiciansTotal, 3400)
     assert.equal(bar.audioAndOfficeProfit, 0)
+    assert.equal(bar.ownerTotalTakeHome, 850)
   })
 })
 

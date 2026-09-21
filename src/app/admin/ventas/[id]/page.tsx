@@ -637,6 +637,28 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                       </div>
                     </div>
 
+                    <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/20 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-base">👑</span>
+                        <div>
+                          <div className="text-xs font-bold text-foreground">
+                            Ingreso Total del Dueño (Músico + Audio/Oficina)
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {MXN(breakdown.musicianPayEach)} (como músico) + {MXN(breakdown.audioAndOfficeProfit)} (oficina y renta de audio)
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-lg font-black text-primary">
+                          {MXN(breakdown.ownerTotalTakeHome)}
+                        </span>
+                        <div className="text-[10px] text-muted-foreground font-medium">
+                          Remuneración total
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="p-3 rounded-xl bg-muted/30 border border-border/30 text-[11px] text-muted-foreground leading-relaxed flex items-start gap-2">
                       <span className="text-emerald-500 font-bold shrink-0">ℹ️</span>
                       <span>{breakdown.notes}</span>

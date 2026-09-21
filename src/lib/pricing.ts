@@ -260,6 +260,7 @@ export interface EventCostBreakdown {
   musiciansTotal: number
   staffPay: number
   audioAndOfficeProfit: number
+  ownerTotalTakeHome: number
   notes: string
 }
 
@@ -267,14 +268,16 @@ export interface EventCostBreakdown {
  * Calcula el desglose interno de nómina y margen para Vendetta.
  * 
  * - Evento Privado (4 músicos + 1 staff + audio propio):
- *   - Músicos: $1,500 c/u base (2h) + $1,000 c/u por cada hora adicional.
- *   - Staff Técnico: $300/hr.
- *   - Vendetta (Renta de Audio + Margen Oficina): Remanente comercial.
+ *   - Músicos: $1,675 c/u base (2h) + $1,000 c/u por cada hora adicional.
+ *   - Staff Técnico: $300/hr ($600 en 2h).
+ *   - Vendetta (Renta de Audio + Margen Oficina): $1,200 en 2h (+ $700 por hora extra).
+ *   - Ingreso Personal Dueño (Músico + Audio/Oficina): $2,875 en 2h, $4,575 en 3h, etc.
  * 
  * - Evento Bar (Showcase / Vitrina a $3,800 con 4 músicos y staff):
  *   - Staff Técnico: $400 (2h @ $200/hr).
  *   - Músicos: $3,400 ÷ 4 = $850 c/u.
  *   - Vendetta: $0 (0 comisión para maximizar la motivación y lealtad del equipo).
+ *   - Ingreso Personal Dueño (como Músico): $850 en bar.
  */
 export function calculateEventCostBreakdown(
   hours: number = 2,
@@ -291,6 +294,7 @@ export function calculateEventCostBreakdown(
     const musicianPayEach = Math.round(remainingForMusicians / musiciansCount)
     const musiciansTotal = musicianPayEach * musiciansCount
     const audioAndOfficeProfit = barTotal - (musiciansTotal + staffPay)
+    const ownerTotalTakeHome = musicianPayEach + audioAndOfficeProfit
 
     return {
       hours: h,
@@ -301,16 +305,18 @@ export function calculateEventCostBreakdown(
       musiciansTotal,
       staffPay,
       audioAndOfficeProfit,
+      ownerTotalTakeHome,
       notes: "Bar: 100% distribuido entre músicos y staff ($0 comisión de oficina Vendetta para motivar al equipo)."
     }
   }
 
   // Evento Privado
   const basePrice = customTotalPrice ?? calculateShowPackageBasePrice("Essential", h)
-  const musicianPayEach = h <= 2 ? 1500 : 1500 + Math.round((h - 2) * 1000)
+  const musicianPayEach = h <= 2 ? 1675 : 1675 + Math.round((h - 2) * 1000)
   const musiciansTotal = musicianPayEach * musiciansCount
   const staffPay = Math.round(h * 300)
   const audioAndOfficeProfit = basePrice - (musiciansTotal + staffPay)
+  const ownerTotalTakeHome = musicianPayEach + audioAndOfficeProfit
 
   return {
     hours: h,
@@ -321,7 +327,8 @@ export function calculateEventCostBreakdown(
     musiciansTotal,
     staffPay,
     audioAndOfficeProfit,
-    notes: "Privado: Músicos $1,500 base + $1,000/hr extra; Staff $300/hr; Renta Audio y Oficina Vendetta (Equipo propio para garantizar fidelidad y calidad de ejecución)."
+    ownerTotalTakeHome,
+    notes: "Privado: Músicos $1,675 base + $1,000/hr extra; Staff $300/hr; Renta Audio y Oficina Vendetta (Equipo propio para garantizar fidelidad y calidad de ejecución)."
   }
 }
 
