@@ -210,7 +210,7 @@ export function calculateEventHours(startTimeStr?: string | null, endTimeStr?: s
 }
 
 /**
- * Retorna la tarifa horaria base según el paquete (catálogo oficial Vendetta).
+ * Retorna la tarifa horaria base referencial según el paquete (catálogo oficial Vendetta).
  * - Essential: $4,250 MXN/hr (min 2 hrs = $8,500)
  * - Experience: $7,750 MXN/hr (min 2 hrs = $15,500)
  * - Festival Premium: $12,750 MXN/hr (min 2 hrs = $25,500)
@@ -220,6 +220,109 @@ export function getShowPackageHourlyRate(packageName?: string | null): number {
   if (name.includes("festival")) return 12750
   if (name.includes("experience")) return 7750
   return 4250 // Essential / Show Versátil por defecto
+}
+
+/**
+ * Calcula el precio base del paquete musical según la duración en horas.
+ * 
+ * Reglas de Negocio Oficiales:
+ * - Essential / Show Versátil:
+ *   - Base 2 Horas: $8,500 MXN (Precio gancho competitivo en Toluca con 4 músicos, staff técnico y audio propio).
+ *   - Horas adicionales: +$5,000 MXN / hora ($1,000 para CADA músico, $300 staff, $700 oficina/audio).
+ *     2 hrs = $8,500 | 3 hrs = $13,500 | 4 hrs = $18,500 | 5 hrs = $23,500.
+ * - Experience:
+ *   - Base 2 Horas: $15,500 MXN | Horas adicionales: +$7,750 MXN / hr.
+ * - Festival Premium:
+ *   - Base 2 Horas: $25,500 MXN | Horas adicionales: +$12,750 MXN / hr.
+ */
+export function calculateShowPackageBasePrice(packageName?: string | null, hours: number = 2): number {
+  const h = Math.max(1, hours)
+  const name = (packageName || "").toLowerCase()
+
+  if (name.includes("festival")) {
+    return h <= 2 ? 25500 : 25500 + Math.round((h - 2) * 12750)
+  }
+  if (name.includes("experience")) {
+    return h <= 2 ? 15500 : 15500 + Math.round((h - 2) * 7750)
+  }
+
+  // Essential / Show Versátil estándar
+  if (h <= 2) return 8500
+  return 8500 + Math.round((h - 2) * 5000)
+}
+
+export interface EventCostBreakdown {
+  hours: number
+  eventType: "privado" | "bar"
+  totalPrice: number
+  musiciansCount: number
+  musicianPayEach: number
+  musiciansTotal: number
+  staffPay: number
+  audioAndOfficeProfit: number
+  notes: string
+}
+
+/**
+ * Calcula el desglose interno de nómina y margen para Vendetta.
+ * 
+ * - Evento Privado (4 músicos + 1 staff + audio propio):
+ *   - Músicos: $1,500 c/u base (2h) + $1,000 c/u por cada hora adicional.
+ *   - Staff Técnico: $300/hr.
+ *   - Vendetta (Renta de Audio + Margen Oficina): Remanente comercial.
+ * 
+ * - Evento Bar (Showcase / Vitrina a $3,800 con 4 músicos y staff):
+ *   - Staff Técnico: $400 (2h @ $200/hr).
+ *   - Músicos: $3,400 ÷ 4 = $850 c/u.
+ *   - Vendetta: $0 (0 comisión para maximizar la motivación y lealtad del equipo).
+ */
+export function calculateEventCostBreakdown(
+  hours: number = 2,
+  eventType: "privado" | "bar" = "privado",
+  customTotalPrice?: number
+): EventCostBreakdown {
+  const h = Math.max(1, hours)
+  const musiciansCount = 4
+
+  if (eventType === "bar") {
+    const barTotal = customTotalPrice ?? 3800
+    const staffPay = Math.round(h * 200)
+    const remainingForMusicians = Math.max(0, barTotal - staffPay)
+    const musicianPayEach = Math.round(remainingForMusicians / musiciansCount)
+    const musiciansTotal = musicianPayEach * musiciansCount
+    const audioAndOfficeProfit = barTotal - (musiciansTotal + staffPay)
+
+    return {
+      hours: h,
+      eventType: "bar",
+      totalPrice: barTotal,
+      musiciansCount,
+      musicianPayEach,
+      musiciansTotal,
+      staffPay,
+      audioAndOfficeProfit,
+      notes: "Bar: 100% distribuido entre músicos y staff ($0 comisión de oficina Vendetta para motivar al equipo)."
+    }
+  }
+
+  // Evento Privado
+  const basePrice = customTotalPrice ?? calculateShowPackageBasePrice("Essential", h)
+  const musicianPayEach = h <= 2 ? 1500 : 1500 + Math.round((h - 2) * 1000)
+  const musiciansTotal = musicianPayEach * musiciansCount
+  const staffPay = Math.round(h * 300)
+  const audioAndOfficeProfit = basePrice - (musiciansTotal + staffPay)
+
+  return {
+    hours: h,
+    eventType: "privado",
+    totalPrice: basePrice,
+    musiciansCount,
+    musicianPayEach,
+    musiciansTotal,
+    staffPay,
+    audioAndOfficeProfit,
+    notes: "Privado: Músicos $1,500 base + $1,000/hr extra; Staff $300/hr; Renta Audio y Oficina Vendetta incluida (Audio Innegociable)."
+  }
 }
 
 

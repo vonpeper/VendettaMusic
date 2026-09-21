@@ -37,6 +37,7 @@ import { MusicianStatusList } from "@/components/admin/MusicianStatusList"
 import { EditEventoButton } from "@/components/admin/EventActions"
 import { EditDepositInline } from "@/components/admin/EditDepositInline"
 import { CancelBookingButton } from "@/components/admin/CancelBookingButton"
+import { calculateEventCostBreakdown } from "@/lib/pricing"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 
@@ -573,6 +574,73 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                         <div className="flex-1"><LiquidarButton bookingId={booking.id} /></div>
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+              )
+            })()}
+
+            {/* Tarjeta de Split Operativo y Nómina (Costos Vendetta) */}
+            {(() => {
+              const hours = booking.bandHours || 2
+              const isBar = (booking.packageName?.toLowerCase().includes("bar") || booking.ceremonyType?.toLowerCase().includes("bar")) ?? false
+              const baseShowPrice = Number(booking.baseAmount || 0)
+              const breakdown = calculateEventCostBreakdown(hours, isBar ? "bar" : "privado", baseShowPrice > 0 ? baseShowPrice : undefined)
+
+              return (
+                <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden border-l-4 border-l-emerald-600">
+                  <CardHeader className="bg-emerald-600/10 border-b border-border/40 p-4 md:p-6">
+                    <CardTitle className="text-lg flex flex-wrap items-center justify-between gap-2 font-black">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-5 h-5 text-emerald-600" /> Desglose Operativo y Nómina Sugerida
+                      </div>
+                      <Badge variant="outline" className="text-[10px] font-black border-emerald-500/30 bg-emerald-500/10 text-emerald-600 uppercase">
+                        {isBar ? "Tarifa Bar (Showcase)" : "Evento Privado (Audio Innegociable)"}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 md:p-6 space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="p-3.5 rounded-xl bg-muted/50 border border-border/40">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                          🎸 4 Músicos ({hours}h)
+                        </div>
+                        <div className="text-base sm:text-lg font-black text-foreground">
+                          {MXN(breakdown.musiciansTotal)}
+                        </div>
+                        <div className="text-[11px] text-emerald-600 font-bold mt-0.5">
+                          {MXN(breakdown.musicianPayEach)} por músico
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-muted/50 border border-border/40">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                          🎧 Staff Técnico de Audio
+                        </div>
+                        <div className="text-base sm:text-lg font-black text-foreground">
+                          {MXN(breakdown.staffPay)}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground font-medium mt-0.5">
+                          {isBar ? "$200/hr en bar" : "$300/hr en privado"}
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">
+                          🏢 Audio + Oficina Vendetta
+                        </div>
+                        <div className="text-base sm:text-lg font-black text-emerald-600">
+                          {MXN(breakdown.audioAndOfficeProfit)}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground font-medium mt-0.5">
+                          Utilidad neta y renta de equipo
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-muted/30 border border-border/30 text-[11px] text-muted-foreground leading-relaxed flex items-start gap-2">
+                      <span className="text-emerald-500 font-bold shrink-0">ℹ️</span>
+                      <span>{breakdown.notes}</span>
+                    </div>
                   </CardContent>
                 </Card>
               )

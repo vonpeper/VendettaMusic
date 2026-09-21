@@ -117,23 +117,66 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
   })
 
   it("debe calcular tarifas horarias y costos base por horas según el paquete", async () => {
-    const { getShowPackageHourlyRate, calculateShowBasePrice } = await import("./pricing")
+    const { getShowPackageHourlyRate, calculateShowPackageBasePrice, calculateShowBasePrice } = await import("./pricing")
 
-    // Tarifas horarias oficiales
+    // Tarifas horarias referenciales oficiales
     assert.equal(getShowPackageHourlyRate("Essential"), 4250)
     assert.equal(getShowPackageHourlyRate(null), 4250)
     assert.equal(getShowPackageHourlyRate("Experience"), 7750)
     assert.equal(getShowPackageHourlyRate("Festival Premium"), 12750)
 
-    // Cálculo por horas para Essential
-    const rate = getShowPackageHourlyRate("Essential")
-    assert.equal(rate * 2, 8500)   // 2 horas = $8,500
-    assert.equal(rate * 3, 12750)  // 3 horas = $12,750
-    assert.equal(rate * 4, 17000)  // 4 horas = $17,000
-    assert.equal(rate * 5, 21250)  // 5 horas = $21,250 (Caso Irina Galo)
+    // Curva oficial de precios: Base 2h = $8,500 | Horas adicionales = +$5,000/hr ($1,000/hr x músico)
+    assert.equal(calculateShowPackageBasePrice("Essential", 2), 8500)   // 2 horas = $8,500
+    assert.equal(calculateShowPackageBasePrice("Essential", 3), 13500)  // 3 horas = $13,500
+    assert.equal(calculateShowPackageBasePrice("Essential", 4), 18500)  // 4 horas = $18,500
+    assert.equal(calculateShowPackageBasePrice("Essential", 5), 23500)  // 5 horas = $23,500
+
+    // Paquetes Experience y Festival
+    assert.equal(calculateShowPackageBasePrice("Experience", 2), 15500)
+    assert.equal(calculateShowPackageBasePrice("Experience", 3), 23250)
+    assert.equal(calculateShowPackageBasePrice("Festival Premium", 2), 25500)
+    assert.equal(calculateShowPackageBasePrice("Festival Premium", 3), 38250)
 
     // Foráneo (+20%)
-    assert.equal(calculateShowBasePrice(rate * 5, true), 25500)
-    assert.equal(calculateShowBasePrice(rate * 2, true), 10200)
+    const price5h = calculateShowPackageBasePrice("Essential", 5)
+    assert.equal(calculateShowBasePrice(price5h, true), 28200) // 23500 * 1.2 = 28200
+    assert.equal(calculateShowBasePrice(8500, true), 10200)   // 8500 * 1.2 = 10200
+  })
+
+  it("debe calcular el split de costos y nómina (calculateEventCostBreakdown) para privados y bares", async () => {
+    const { calculateEventCostBreakdown } = await import("./pricing")
+
+    // Privado 2 Horas ($8,500): Músicos $1,500 c/u, Staff $600, Vendetta $1,900
+    const priv2h = calculateEventCostBreakdown(2, "privado")
+    assert.equal(priv2h.totalPrice, 8500)
+    assert.equal(priv2h.musicianPayEach, 1500)
+    assert.equal(priv2h.musiciansTotal, 6000)
+    assert.equal(priv2h.staffPay, 600)
+    assert.equal(priv2h.audioAndOfficeProfit, 1900)
+
+    // Privado 3 Horas ($13,500): Músicos $2,500 c/u, Staff $900, Vendetta $2,600
+    const priv3h = calculateEventCostBreakdown(3, "privado")
+    assert.equal(priv3h.totalPrice, 13500)
+    assert.equal(priv3h.musicianPayEach, 2500)
+    assert.equal(priv3h.musiciansTotal, 10000)
+    assert.equal(priv3h.staffPay, 900)
+    assert.equal(priv3h.audioAndOfficeProfit, 2600)
+
+    // Privado 5 Horas ($23,500): Músicos $4,500 c/u, Staff $1,500, Vendetta $4,000
+    const priv5h = calculateEventCostBreakdown(5, "privado")
+    assert.equal(priv5h.totalPrice, 23500)
+    assert.equal(priv5h.musicianPayEach, 4500)
+    assert.equal(priv5h.musiciansTotal, 18000)
+    assert.equal(priv5h.staffPay, 1500)
+    assert.equal(priv5h.audioAndOfficeProfit, 4000)
+
+    // Bar 2 Horas ($3,800): Músicos $850 c/u, Staff $400, Vendetta $0 (0 comisión)
+    const bar = calculateEventCostBreakdown(2, "bar")
+    assert.equal(bar.totalPrice, 3800)
+    assert.equal(bar.staffPay, 400)
+    assert.equal(bar.musicianPayEach, 850)
+    assert.equal(bar.musiciansTotal, 3400)
+    assert.equal(bar.audioAndOfficeProfit, 0)
   })
 })
+

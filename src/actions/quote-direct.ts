@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 import { createUnifiedQuote } from "@/lib/quote-service"
-import { calculateShowBasePrice, calculateEventHours, getShowPackageHourlyRate } from "@/lib/pricing"
+import { calculateShowBasePrice, calculateEventHours, calculateShowPackageBasePrice, getShowPackageHourlyRate } from "@/lib/pricing"
 import { sendWhatsApp } from "@/lib/notifications/whatsapp"
 
 export interface SubmitPublicQuoteInput {
@@ -105,7 +105,7 @@ function buildClientWhatsAppMessage(params: {
     "",
     "🚗 *LOGÍSTICA Y VIÁTICOS*",
     `• *Viáticos estimados:* ${textoViaticos}`,
-    "• *Condiciones:* No incluye planta de luz. Viáticos para 2 camionetas (gasolina y casetas únicamente). No incluye alimentos.",
+    "• *Producción:* Audio Electro-Voice e ingeniería incluida (innegociable por estándar acústico, excepto festivales con rider homologado). No incluye planta de luz. Viáticos para 2 camionetas (gasolina y casetas únicamente). No incluye alimentos.",
     ...(params.notas?.trim() ? [`\n📝 *Notas adicionales:* ${params.notas.trim()}`] : []),
   ]
 
@@ -153,8 +153,7 @@ export async function submitPublicQuoteAction(
     // Auto-Landing sólo si: aforo <= 100, sin extras de producción Y duración <= 5 horas
     const isAutoQuote = aforo <= 100 && !tieneExtras && horasShow <= 5
 
-    const hourlyRate = getShowPackageHourlyRate(input.paquete)
-    const baseLocalPrice = hourlyRate * horasShow
+    const baseLocalPrice = calculateShowPackageBasePrice(input.paquete, horasShow)
     const isOutside = input.viaticos?.isOutsideZone ?? false
     const showBasePrice = calculateShowBasePrice(baseLocalPrice, isOutside)
     const viaticosAmount = input.viaticos?.amount || 0

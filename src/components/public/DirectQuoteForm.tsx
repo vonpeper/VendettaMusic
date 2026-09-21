@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
 import { submitContactInquiry } from "@/actions/contact"
 import { submitPublicQuoteAction } from "@/actions/quote-direct"
-import { calculateEventHours, getShowPackageHourlyRate, calculateShowBasePrice } from "@/lib/pricing"
+import { calculateEventHours, getShowPackageHourlyRate, calculateShowPackageBasePrice, calculateShowBasePrice } from "@/lib/pricing"
 import { toast } from "sonner"
 import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import { 
@@ -28,7 +28,8 @@ import {
   Tv,
   Maximize2,
   Lightbulb,
-  Grid
+  Grid,
+  Speaker
 } from "lucide-react"
 
 interface DirectQuoteFormProps {
@@ -185,8 +186,8 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
   const numInvitados = parseInt(invitados, 10) || 0
   const tieneMasDe100Invitados = numInvitados > 100
   const horasShow = calculateEventHours(horaInicio, horaFin)
-  const hourlyRate = getShowPackageHourlyRate(paqueteNombre)
-  const showBasePrice = calculateShowBasePrice(hourlyRate * horasShow, viaticos?.isOutsideZone ?? false)
+  const basePackagePrice = calculateShowPackageBasePrice(paqueteNombre, horasShow)
+  const showBasePrice = calculateShowBasePrice(basePackagePrice, viaticos?.isOutsideZone ?? false)
   const extrasEstimatedTotal = produccionAdicional.reduce((sum, item) => {
     const found = PRODUCCION_ITEMS.find((p) => p.id === item)
     return sum + (found?.refPrice || 0)
@@ -697,6 +698,22 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             ⚠️ Duración extendida (&gt;5 horas de show): Sujeto a coordinación logística especial y revisión personalizada.
           </p>
         )}
+      </div>
+
+      {/* Garantía de Audio Profesional Innegociable */}
+      <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex items-start gap-3 text-xs text-gray-300">
+        <Speaker className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <div className="font-bold text-white flex flex-wrap items-center gap-2">
+            <span>Audio Electro-Voice e Ingeniería de Sala Incluida</span>
+            <span className="text-[10px] uppercase px-2 py-0.5 rounded-full border border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-black">
+              Estándar Innegociable
+            </span>
+          </div>
+          <p className="text-[11px] text-gray-400 leading-relaxed">
+            Todo show de Vendetta incluye de forma innegociable nuestro propio sistema de sonido profesional, microfonía inalámbrica y staff técnico dedicado para garantizar calidad acústica (no conectamos a sistemas externos, excepto en festivales con rider homologado).
+          </p>
+        </div>
       </div>
 
       {/* 4. INVITADOS & PRODUCCIÓN ADICIONAL SI >100 */}

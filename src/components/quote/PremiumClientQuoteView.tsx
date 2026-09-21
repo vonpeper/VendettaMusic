@@ -1074,12 +1074,16 @@ export function PremiumClientQuoteView({
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                     <span><strong className="text-slate-950">Ingeniero de Sonido en Vivo:</strong> Control y balance sonoro continuo durante toda la presentación.</span>
                   </li>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span><strong className="text-slate-950">Estándar Innegociable:</strong> Vendetta opera exclusivamente con su propio sistema de audio y staff técnico para asegurar la fidelidad del show (rider externo únicamente en Festivales homologados).</span>
+                  </li>
                 </ul>
               ) : (
                 <div className="p-4 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-950 leading-relaxed font-medium">
-                  <strong className="text-amber-900">Producción Técnica Provista por el Venue / Cliente:</strong>
+                  <strong className="text-amber-900">Rider Técnico Homologado (Formato Festival):</strong>
                   <p className="mt-1">
-                    La banda se presenta con su backline personal, microfonía y procesadores, conectándose a la consola y sistema de sonido provisto por el salón o recinto.
+                    La banda se presenta con su backline profesional, microfonía y procesadores, operando sobre el sistema PA y consola masiva homologada del festival.
                   </p>
                 </div>
               )}

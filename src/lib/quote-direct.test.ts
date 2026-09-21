@@ -1,36 +1,33 @@
 import { describe, it } from "node:test"
 import assert from "node:assert/strict"
-import { calculateEventHours, getShowPackageHourlyRate, calculateShowBasePrice } from "./pricing"
+import { calculateEventHours, calculateShowPackageBasePrice, calculateShowBasePrice } from "./pricing"
 
 describe("Reglas de Cotizador Directo (Horas, Aforo > 100 y Producción)", () => {
-  it("debe calcular correctamente 5 horas para el caso Irina Galo (04:00 PM a 09:00 PM)", () => {
+  it("debe calcular correctamente 5 horas con la curva oficial ($8,500 + $5,000/hr adicional = $23,500)", () => {
     const horas = calculateEventHours("04:00 PM", "09:00 PM")
     assert.equal(horas, 5)
 
-    const rate = getShowPackageHourlyRate(null) // Essential = 4250
-    assert.equal(rate, 4250)
-
-    const localBase = rate * horas
-    assert.equal(localBase, 21250) // $21,250 MXN
+    const localBase = calculateShowPackageBasePrice(null, horas) // Essential 5h
+    assert.equal(localBase, 23500) // $8,500 + 3 * $5,000 = $23,500 MXN
 
     const showPrice = calculateShowBasePrice(localBase, false)
-    assert.equal(showPrice, 21250)
+    assert.equal(showPrice, 23500)
   })
 
-  it("debe calcular correctamente 2 horas por defecto (08:00 PM a 10:00 PM)", () => {
+  it("debe calcular correctamente 2 horas por defecto ($8,500 MXN)", () => {
     const horas = calculateEventHours("08:00 PM", "10:00 PM")
     assert.equal(horas, 2)
 
-    const rate = getShowPackageHourlyRate("Essential")
-    assert.equal(rate * horas, 8500)
+    const localBase = calculateShowPackageBasePrice("Essential", horas)
+    assert.equal(localBase, 8500)
   })
 
-  it("debe calcular correctamente eventos nocturnos que cruzan medianoche (08:00 PM a 01:00 AM = 5h)", () => {
+  it("debe calcular correctamente eventos nocturnos que cruzan medianoche (08:00 PM a 01:00 AM = 5h -> $23,500)", () => {
     const horas = calculateEventHours("08:00 PM", "01:00 AM")
     assert.equal(horas, 5)
 
-    const rate = getShowPackageHourlyRate("Essential")
-    assert.equal(rate * horas, 21250)
+    const localBase = calculateShowPackageBasePrice("Essential", horas)
+    assert.equal(localBase, 23500)
   })
 
   it("debe identificar cuando un evento califica para auto-landing o para revisión manual", () => {
@@ -71,21 +68,18 @@ describe("Reglas de Cotizador Directo (Horas, Aforo > 100 y Producción)", () =>
   })
 
   it("debe aplicar recargo foráneo (+20%) para eventos fuera de zona local", () => {
-    const rate = getShowPackageHourlyRate("Essential") // 4250
     const horas = 5
-    const local = rate * horas // 21250
+    const local = calculateShowPackageBasePrice("Essential", horas) // 23500
 
     const foraneo = calculateShowBasePrice(local, true)
-    assert.equal(foraneo, 25500) // 21250 * 1.2 = 25500
+    assert.equal(foraneo, 28200) // 23500 * 1.2 = 28200
   })
 
   it("debe calcular paquetes de mayor producción como Experience y Festival", () => {
-    const rateExp = getShowPackageHourlyRate("Experience") // 7750
-    assert.equal(rateExp * 2, 15500)
-    assert.equal(rateExp * 5, 38750)
+    assert.equal(calculateShowPackageBasePrice("Experience", 2), 15500)
+    assert.equal(calculateShowPackageBasePrice("Experience", 5), 38750)
 
-    const rateFest = getShowPackageHourlyRate("Festival Premium") // 12750
-    assert.equal(rateFest * 2, 25500)
-    assert.equal(rateFest * 5, 63750)
+    assert.equal(calculateShowPackageBasePrice("Festival Premium", 2), 25500)
+    assert.equal(calculateShowPackageBasePrice("Festival Premium", 5), 63750)
   })
 })
