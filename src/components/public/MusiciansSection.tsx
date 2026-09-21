@@ -113,7 +113,10 @@ export function MusiciansSection({ musicians = [] }: { musicians?: Musician[] })
         </div>
       )}
 
-      <section id="nosotros" className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#15152B] via-[#07080D] to-[#42112D]/80 border-t border-white/10">
+      <section id="nosotros" className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#15152B] via-[#07080D] to-[#42112D]/80">
+        {/* Máscara de mezcla de gradiente para transición suave */}
+        <div className="section-blend-top bg-gradient-to-b from-[#07080D] to-transparent" />
+
         {/* Stage lighting background elements */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 -left-24 w-96 h-96 bg-[#7777FF]/15 rounded-full blur-[140px]" />

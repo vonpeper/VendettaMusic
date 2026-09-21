@@ -21,7 +21,10 @@ export async function UpcomingGigs() {
   })
 
   return (
-    <section id="fechas" className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#15152B]/70 to-[#07080D] border-t border-white/10">
+    <section id="fechas" className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#15152B]/70 to-[#07080D]">
+      {/* Máscara de mezcla de gradiente para transición suave */}
+      <div className="section-blend-top bg-gradient-to-b from-[#07080D] to-transparent" />
+
       {/* Concert lighting atmosphere */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/3 w-[500px] h-[500px] bg-[#7777FF]/10 rounded-full blur-[140px]" />

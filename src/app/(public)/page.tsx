@@ -2,11 +2,12 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { PaquetesSection } from "@/components/public/PaquetesSection"
 import {
-  Volume2, Cpu, Music2, Star, Clock, ChevronRight, Quote, Zap, Loader2, MapPin
+  Volume2, Cpu, Music2, Star, Clock, ChevronRight, Quote, Zap, Loader2, MapPin, Activity, Flame, Radio, Disc3
 } from "lucide-react"
 import { MusiciansSection } from "@/components/public/MusiciansSection"
 import { UpcomingGigs } from "@/components/public/UpcomingGigs"
 import { VideoSection } from "@/components/public/VideoSection"
+import { CassetteReelsSection } from "@/components/public/CassetteReelsSection"
 import { PhotoGallery } from "@/components/public/PhotoGallery"
 import { NeonBorder } from "@/components/public/NeonBorder"
 import { WhatsAppButton } from "@/components/public/WhatsAppButton"
@@ -34,21 +35,6 @@ export const metadata: Metadata = {
 // estáticamente o queda con el snapshot del build (vacío si la DB se llenó después del deploy).
 export const dynamic = "force-dynamic"
 
-const BADGES = [
-  { icon: Volume2,        label: "Audio de Alta Fidelidad",   desc: "Sistemas Electro-Voice y consola digital en cada concierto." },
-  { icon: Cpu,            label: "Tecnología Digital",         desc: "Monitoreo inalámbrico in-ear, secuencias y mezcla en vivo." },
-  { icon: Music2,         label: "Backline Profesional",       desc: "Instrumentos boutique, amplificadores y batería de gira." },
-  { icon: Star,           label: "Presencia Escénica",         desc: "Look e indumentaria profesional acorde a la ocasión." },
-  { icon: Clock,          label: "Puntualidad de Gira",        desc: "Montaje y soundcheck previo para iniciar con precisión." },
-  { icon: Zap,            label: "Producción de Concierto",    desc: "Iluminación robótica y pantallas LED de alta definición." },
-  { icon: Quote,          label: "Atención Ejecutiva",         desc: "Acompañamiento y coordinación musical personalizada." },
-  { icon: Star,           label: "Energía en la Pista",        desc: "Más de 500 eventos transformados en auténticos conciertos." },
-]
-
-
-
-// Reviews are now managed in the database via /admin/testimoniales
-
 const CLIENTS = [
   "WTC México", "COMEXANE A.C", "Secretaría de Salud Edomex",
   "Ayuntamiento de Toluca", "Ayuntamiento de Ocoyoacac",
@@ -66,6 +52,7 @@ export default async function HomePage() {
     mentiras: allMedia.find((m: any) => m.section === "mentiras")?.url || "/images/shows/mentiras.jpg",
     arma_tu_show: allMedia.find((m: any) => m.section === "arma_tu_show")?.url || "/images/shows/arma-tu-show.jpg",
     video_home: allMedia.find((m: any) => m.section === "video_home")?.url || "",
+    reels: allMedia.filter((m: any) => (m.section === "reels" || m.section === "instagram") && m.url),
     galeria: allMedia.filter((m: any) => m.section === "galeria" && m.url).map((m: any) => m.url as string),
   }
   
@@ -194,8 +181,14 @@ export default async function HomePage() {
       {mediaMap.video_home && <VideoSection videoUrl={mediaMap.video_home} />}
       {!mediaMap.video_home && <VideoSection />}
 
+      {/* -- CASSETTE 80s REELS MIXTAPE ----------------------------------- */}
+      <CassetteReelsSection reels={mediaMap.reels} />
+
       {/* -- TRIBUTO MENTIRAS HERO ------------------------------------------ */}
       <section className="relative py-32 overflow-hidden bg-gradient-to-b from-[#0E0E1A] via-[#2D0F22]/90 to-[#0B0B14]">
+        {/* Máscara de mezcla de gradiente para transición suave */}
+        <div className="section-blend-top bg-gradient-to-b from-[#0E0E1A] to-transparent" />
+
         {/* Glow de concierto detrás del contenido */}
         <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-[#6F0D2B]/25 rounded-full blur-[140px] pointer-events-none" />
         <div className="absolute bottom-10 right-1/4 w-[400px] h-[400px] bg-[#FF5A5F]/15 rounded-full blur-[120px] pointer-events-none" />
@@ -235,10 +228,16 @@ export default async function HomePage() {
             </a>
           </div>
         </div>
+
+        {/* Máscara de mezcla de gradiente para transición suave hacia servicios */}
+        <div className="section-blend-bottom bg-gradient-to-t from-[#0B0B14] to-transparent" />
       </section>
 
-      {/* -- CERTIFICADOS DE CALIDAD (SERVICIOS) --------------------------- */}
-      <section id="servicios" className="py-28 bg-gradient-to-b from-[#0B0B14] via-[#120F24] to-[#0E0E1A] relative overflow-hidden">
+      {/* -- CERTIFICADOS DE CALIDAD (SERVICIOS - BENTO CARDS) ------------- */}
+      <section id="servicios" className="py-28 bg-gradient-to-b from-[#0B0B14] via-[#120F24] to-[#15152B] relative overflow-hidden">
+        {/* Máscara de mezcla de gradiente para transición suave */}
+        <div className="section-blend-top bg-gradient-to-b from-[#0B0B14] to-transparent" />
+
         {/* Luces y retícula escénica */}
         <div className="absolute inset-0 stage-grid-overlay opacity-30 pointer-events-none" />
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#6F0D2B]/15 rounded-full blur-[140px] pointer-events-none" />
@@ -256,31 +255,213 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            {BADGES.map((b, i) => (
-              <div 
-                key={i} 
-                className="group p-8 rounded-3xl border border-white/10 glass-card-hover hover:border-[#FF5A5F]/40 transition-all duration-300 relative overflow-hidden flex flex-col justify-between"
-              >
-                <div className="absolute -top-6 -right-6 w-24 h-24 bg-[#FF5A5F]/10 rounded-full blur-2xl group-hover:bg-[#FF5A5F]/20 transition-colors" />
-                
-                <div>
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#6F0D2B]/30 to-[#FF5A5F]/10 border border-white/10 flex items-center justify-center mb-8 group-hover:scale-105 group-hover:border-[#FF5A5F]/30 transition-all shadow-lg">
-                    <b.icon className="w-8 h-8 text-[#FF5A5F]" />
-                  </div>
-                  
-                  <h4 className="font-bold text-white text-lg mb-3 uppercase tracking-tight group-hover:text-[#FF5A5F] transition-colors">{b.label}</h4>
-                  <p className="text-sm text-[#F2F0EB]/70 leading-relaxed font-normal group-hover:text-[#F2F0EB] transition-colors">{b.desc}</p>
+          {/* -- BENTO GRID -- */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            
+            {/* Bento Card 1: HERO BENTO (Spans 2 cols, 2 rows on lg) */}
+            <div className="lg:col-span-2 lg:row-span-2 rounded-3xl p-8 sm:p-10 border border-white/15 bg-gradient-to-br from-[#2D0F22]/90 via-[#18122B]/90 to-[#0A0A16] relative overflow-hidden flex flex-col justify-between group shadow-2xl glass-card-hover">
+              {/* Glow ambiental */}
+              <div className="absolute -top-12 -right-12 w-64 h-64 bg-[#FF5A5F]/20 rounded-full blur-3xl group-hover:bg-[#FF5A5F]/30 transition-colors pointer-events-none" />
+              <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-[#6F0D2B]/30 rounded-full blur-2xl pointer-events-none" />
+
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-6">
+                  <span className="px-3 py-1 rounded-full bg-[#6F0D2B]/50 border border-[#FF5A5F]/40 text-[#F2F0EB] text-[10px] font-bold uppercase tracking-widest shadow">
+                    🔥 Experiencia Insignia
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#F2F0EB]/70 text-[10px] font-semibold uppercase tracking-wider">
+                    80s · 90s · 2000s
+                  </span>
                 </div>
-                
-                <div className="pt-6 mt-6 border-t border-white/5 flex items-center justify-between">
-                  <div className="text-[10px] font-semibold text-[#FF5A5F]/60 uppercase tracking-widest">Premium Show</div>
-                  <div className="w-2 h-2 rounded-full bg-[#FF5A5F]/40 group-hover:bg-[#FF5A5F] transition-colors" />
+
+                <h3 className="font-heading font-black text-2xl sm:text-3xl lg:text-4xl text-white uppercase tracking-tight leading-tight mb-4">
+                  Concierto Real en Vivo <br />
+                  <span className="text-gradient-encore italic">Cero Poses, Cero Pistas</span>
+                </h3>
+
+                <p className="text-[#F2F0EB]/80 text-sm sm:text-base leading-relaxed mb-6 font-normal">
+                  Erradicamos el cliché del grupo convencional. Tocamos con el pulso, la distorsión, las armonías y el clímax de una banda en gira de estadio. Cada solo, cada coro y cada remate suceden en tiempo real.
+                </p>
+
+                {/* Visualizador de Ecualizador / Soundwave Animado */}
+                <div className="p-4 rounded-2xl bg-black/50 border border-white/10 mb-6">
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#FF5A5F] tracking-widest mb-3">
+                    <span className="flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 animate-pulse" /> Live Sound Spectrum
+                    </span>
+                    <span className="font-mono text-white/50">48kHz · 24-bit Hi-Fi</span>
+                  </div>
+                  <div className="flex items-end gap-1.5 h-12 w-full pt-2">
+                    {[
+                      "animate-vu-1", "animate-vu-2", "animate-vu-3", "animate-vu-1", 
+                      "animate-vu-2", "animate-vu-1", "animate-vu-3", "animate-vu-2",
+                      "animate-vu-1", "animate-vu-3", "animate-vu-2", "animate-vu-1",
+                      "animate-vu-3", "animate-vu-2", "animate-vu-1", "animate-vu-2"
+                    ].map((anim, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`flex-1 rounded-t-sm bg-gradient-to-t from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] ${anim}`}
+                        style={{ minHeight: "15%" }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-            ))}
+
+              <div className="pt-6 border-t border-white/10 flex items-center justify-between text-xs text-[#F2F0EB]/70 font-medium">
+                <span>Garantía de Pista Encendida</span>
+                <span className="text-[#FF5A5F] font-bold uppercase tracking-wider flex items-center gap-1">
+                  <Flame className="w-3.5 h-3.5 fill-[#FF5A5F]" /> 100% Directo
+                </span>
+              </div>
+            </div>
+
+            {/* Bento Card 2: Audio de Alta Fidelidad (lg:col-span-1) */}
+            <div className="rounded-3xl p-6 border border-white/10 glass-card-hover bg-gradient-to-b from-white/[0.04] to-white/[0.01] flex flex-col justify-between group">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6F0D2B]/40 to-[#FF5A5F]/20 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg">
+                  <Volume2 className="w-6 h-6 text-[#FF5A5F]" />
+                </div>
+                <h4 className="font-bold text-white text-lg mb-2 uppercase tracking-tight group-hover:text-[#FF5A5F] transition-colors">
+                  Audio Pro Line Array
+                </h4>
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 leading-relaxed font-normal">
+                  Sistemas Electro-Voice de tiro largo y consolas digitales para un impacto sonoro claro y sin saturación.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-white/50">
+                <span>SPL: 128 dB MAX</span>
+                <span className="text-emerald-400 font-bold">CRYSTAL CLEAR</span>
+              </div>
+            </div>
+
+            {/* Bento Card 3: Monitoreo In-Ear & Sync (lg:col-span-1) */}
+            <div className="rounded-3xl p-6 border border-white/10 glass-card-hover bg-gradient-to-b from-white/[0.04] to-white/[0.01] flex flex-col justify-between group">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#7777FF]/30 to-[#20D5E5]/20 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg">
+                  <Cpu className="w-6 h-6 text-[#20D5E5]" />
+                </div>
+                <h4 className="font-bold text-white text-lg mb-2 uppercase tracking-tight group-hover:text-[#20D5E5] transition-colors">
+                  In-Ear & Cero Ruido
+                </h4>
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 leading-relaxed font-normal">
+                  Monitoreo inalámbrico profesional. Eliminamos monitores ruidosos en el piso: el salón suena impecable.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-white/50">
+                <span>STAGE NOISE: 0 dB</span>
+                <span className="text-[#20D5E5] font-bold">WIRELESS</span>
+              </div>
+            </div>
+
+            {/* Bento Card 4: Iluminación Robótica & Show (lg:col-span-1) */}
+            <div className="rounded-3xl p-6 border border-white/10 glass-card-hover bg-gradient-to-b from-white/[0.04] to-white/[0.01] flex flex-col justify-between group">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/30 to-[#FF5A5F]/20 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg">
+                  <Zap className="w-6 h-6 text-amber-400" />
+                </div>
+                <h4 className="font-bold text-white text-lg mb-2 uppercase tracking-tight group-hover:text-amber-400 transition-colors">
+                  Robótica & Atmósfera
+                </h4>
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 leading-relaxed font-normal">
+                  Cabezas móviles beam, wash y barras perimetrales coreografiadas en vivo con cada cambio de tema.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-white/50">
+                <span>DMX SYNC 512</span>
+                <span className="text-amber-400 font-bold">CONCERT LEVEL</span>
+              </div>
+            </div>
+
+            {/* Bento Card 5: Backline Boutique (lg:col-span-1) */}
+            <div className="rounded-3xl p-6 border border-white/10 glass-card-hover bg-gradient-to-b from-white/[0.04] to-white/[0.01] flex flex-col justify-between group">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6F0D2B]/40 to-[#A91D4D]/20 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform shadow-lg">
+                  <Music2 className="w-6 h-6 text-[#FF5A5F]" />
+                </div>
+                <h4 className="font-bold text-white text-lg mb-2 uppercase tracking-tight group-hover:text-[#FF5A5F] transition-colors">
+                  Backline de Gira
+                </h4>
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 leading-relaxed font-normal">
+                  Batería acústica microfoneada, sintetizadores analógicos, guitarras Fender / Gibson y bajos de precisión.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-white/50">
+                <span>BOUTIQUE GEAR</span>
+                <span className="text-[#FF5A5F] font-bold">100% PRO</span>
+              </div>
+            </div>
+
+            {/* Bento Card 6: Logística & Timeline Cronometrado (lg:col-span-2) */}
+            <div className="lg:col-span-2 rounded-3xl p-8 border border-white/10 glass-card-hover bg-gradient-to-r from-[#15152B]/90 to-[#0F0F1E] flex flex-col justify-between group">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#6F0D2B]/30 border border-[#FF5A5F]/30 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-[#FF5A5F]" />
+                    </div>
+                    <h4 className="font-bold text-white text-lg uppercase tracking-tight">
+                      Logística Impecable & Cero Estrés
+                    </h4>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A5F] px-2.5 py-1 rounded bg-[#6F0D2B]/20 border border-[#FF5A5F]/30">
+                    Puntualidad Absoluta
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 mb-6 font-normal">
+                  Llegamos con 4 horas de anticipación. Coordinamos con tu wedding planner o staff del salón para un montaje silencioso y prueba de sonido invisible.
+                </p>
+
+                {/* Timeline Visual en Línea */}
+                <div className="grid grid-cols-4 gap-2 pt-2">
+                  <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center">
+                    <div className="text-[10px] font-mono text-[#FF5A5F] font-bold">T-4 HORAS</div>
+                    <div className="text-[11px] text-white font-bold mt-0.5">Montaje</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center">
+                    <div className="text-[10px] font-mono text-amber-400 font-bold">T-2 HORAS</div>
+                    <div className="text-[11px] text-white font-bold mt-0.5">Soundcheck</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center">
+                    <div className="text-[10px] font-mono text-emerald-400 font-bold">SHOWTIME</div>
+                    <div className="text-[11px] text-white font-bold mt-0.5">Concierto</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-gradient-to-r from-[#6F0D2B]/40 to-[#FF5A5F]/20 border border-[#FF5A5F]/30 text-center">
+                    <div className="text-[10px] font-mono text-[#FF5A5F] font-bold">ENCORE</div>
+                    <div className="text-[11px] text-white font-bold mt-0.5">Fiesta Total</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bento Card 7: Métrica y Prestigio (lg:col-span-2) */}
+            <div className="lg:col-span-2 rounded-3xl p-8 border border-white/10 glass-card-hover bg-gradient-to-r from-[#101020] via-[#1A0D1E] to-[#120F24] flex flex-col sm:flex-row items-center justify-between gap-6 group">
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold uppercase tracking-wider mb-3">
+                  <Star className="w-3 h-3 fill-amber-400" /> Reputación 5.0 Estrellas
+                </div>
+                <h4 className="font-bold text-white text-xl sm:text-2xl uppercase tracking-tight mb-2">
+                  +500 Eventos que Fueron Leyenda
+                </h4>
+                <p className="text-xs sm:text-sm text-[#F2F0EB]/70 font-normal">
+                  Empresas multinacionales, bodas de ensueño y recintos icónicos respaldan nuestra trayectoria en todo México.
+                </p>
+              </div>
+              <div className="shrink-0 flex sm:flex-col items-center justify-center p-5 rounded-2xl bg-black/50 border border-white/10 text-center w-full sm:w-auto">
+                <div className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#FF5A5F] to-amber-300">
+                  100%
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[#F2F0EB]/60 mt-1">
+                  Recomendados
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
+
+        {/* Máscara de mezcla de gradiente para transición suave */}
+        <div className="section-blend-bottom bg-gradient-to-t from-[#15152B] to-transparent" />
       </section>
 
       {/* -- MÚSICOS (NOSOTROS) ------------------------------------------- */}
@@ -300,7 +481,10 @@ export default async function HomePage() {
       </Suspense>
 
       {/* -- CLIENTES ------------------------------------------------------- */}
-      <section className="py-32 relative overflow-hidden bg-gradient-to-b from-[#0B0B14] via-[#15152B] to-[#0E0E1A]">
+      <section className="py-32 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#15152B] to-[#0E0E1A]">
+        {/* Máscara de mezcla de gradiente para transición suave */}
+        <div className="section-blend-top bg-gradient-to-b from-[#07080D] to-transparent" />
+
         {/* Fondo decorativo con gradientes radiales */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#6F0D2B]/15 rounded-full blur-[140px] opacity-60" />
@@ -330,13 +514,19 @@ export default async function HomePage() {
           </div>
         </div>
         
-        <div id="galeria" className="pt-24 border-t border-white/10 mt-20">
+        <div id="galeria" className="pt-24 mt-20">
           <PhotoGallery images={mediaMap.galeria} />
         </div>
+
+        {/* Máscara de mezcla de gradiente para transición suave */}
+        <div className="section-blend-bottom bg-gradient-to-t from-[#0E0E1A] to-transparent" />
       </section>
 
       {/* -- TESTIMONIOS ---------------------------------------------------- */}
       <section id="testimonios" className="py-32 bg-gradient-to-b from-[#0E0E1A] via-[#120F24] to-[#0B0B14] relative overflow-hidden">
+        {/* Máscara de mezcla de gradiente para transición suave */}
+        <div className="section-blend-top bg-gradient-to-b from-[#0E0E1A] to-transparent" />
+
         {/* Glow ambiental */}
         <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-[#6F0D2B]/15 rounded-full blur-[140px] pointer-events-none" />
 
@@ -386,6 +576,9 @@ export default async function HomePage() {
 
           <ReviewModal />
         </div>
+
+        {/* Máscara de mezcla de gradiente para transición suave */}
+        <div className="section-blend-bottom bg-gradient-to-t from-[#0B0B14] to-transparent" />
       </section>
 
       {/* -- CONSULTA ESTATUS --------------------------------------------- */}
@@ -407,7 +600,10 @@ export default async function HomePage() {
       </section>
 
       {/* -- CTA FINAL ------------------------------------------------------ */}
-      <section className="py-36 relative overflow-hidden bg-gradient-to-b from-[#0B0B14] via-[#42112D]/80 to-[#15152B]">
+      <section className="py-36 relative overflow-hidden bg-gradient-to-b from-[#0B0B14] via-[#42112D]/80 to-[#07080D]">
+        {/* Máscara de mezcla de gradiente para transición suave */}
+        <div className="section-blend-top bg-gradient-to-b from-[#0B0B14] to-transparent" />
+
         {/* Glow y ambiente de concierto */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-[#6F0D2B]/30 rounded-full blur-[150px]" />
@@ -441,6 +637,9 @@ export default async function HomePage() {
               </a>
           </div>
         </div>
+
+        {/* Máscara de mezcla de gradiente para transición suave hacia el footer */}
+        <div className="section-blend-bottom bg-gradient-to-t from-[#07080D] to-transparent" />
       </section>
     </div>
   )
