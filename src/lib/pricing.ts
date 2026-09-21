@@ -152,3 +152,74 @@ export function calculateShowBasePrice(baseLocalPrice: number, isOutsideZone: bo
   return Math.round(price * 1.2)
 }
 
+/**
+ * Parsea un string de hora en formato 12h ("04:00 PM", "8:30 am") o 24h ("16:00", "04:30") a minutos desde medianoche.
+ */
+export function parseTimeToMinutes(timeStr: string): number | null {
+  if (!timeStr) return null
+  const clean = timeStr.trim().toUpperCase()
+
+  // Formato 12 horas: HH:MM AM/PM
+  const match12 = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/)
+  if (match12) {
+    let hours = parseInt(match12[1], 10)
+    const minutes = parseInt(match12[2], 10)
+    const modifier = match12[3]
+
+    if (hours === 12) {
+      hours = modifier === "AM" ? 0 : 12
+    } else if (modifier === "PM") {
+      hours += 12
+    }
+    return hours * 60 + minutes
+  }
+
+  // Formato 24 horas: HH:MM
+  const match24 = clean.match(/^(\d{1,2}):(\d{2})$/)
+  if (match24) {
+    const hours = parseInt(match24[1], 10)
+    const minutes = parseInt(match24[2], 10)
+    return hours * 60 + minutes
+  }
+
+  return null
+}
+
+/**
+ * Calcula la duración en horas entre dos horarios. Si cruza medianoche, suma 24 horas.
+ * Devuelve como mínimo 1 hora y redondea a 1 decimal.
+ */
+export function calculateEventHours(startTimeStr?: string | null, endTimeStr?: string | null): number {
+  if (!startTimeStr || !endTimeStr) return 2
+
+  const startMins = parseTimeToMinutes(startTimeStr)
+  const endMins = parseTimeToMinutes(endTimeStr)
+
+  if (startMins === null || endMins === null) {
+    return 2
+  }
+
+  let diffMins = endMins - startMins
+  if (diffMins <= 0) {
+    diffMins += 24 * 60
+  }
+
+  const hours = diffMins / 60
+  const rounded = Math.round(hours * 10) / 10
+  return Math.max(1, rounded)
+}
+
+/**
+ * Retorna la tarifa horaria base según el paquete (catálogo oficial Vendetta).
+ * - Essential: $4,250 MXN/hr (min 2 hrs = $8,500)
+ * - Experience: $7,750 MXN/hr (min 2 hrs = $15,500)
+ * - Festival Premium: $12,750 MXN/hr (min 2 hrs = $25,500)
+ */
+export function getShowPackageHourlyRate(packageName?: string | null): number {
+  const name = (packageName || "").toLowerCase()
+  if (name.includes("festival")) return 12750
+  if (name.includes("experience")) return 7750
+  return 4250 // Essential / Show Versátil por defecto
+}
+
+

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 import { createUnifiedQuote } from "@/lib/quote-service"
-import { calculateShowBasePrice } from "@/lib/pricing"
+import { calculateShowBasePrice, calculateEventHours, getShowPackageHourlyRate } from "@/lib/pricing"
 import { sendWhatsApp } from "@/lib/notifications/whatsapp"
 
 export interface SubmitPublicQuoteInput {
@@ -12,6 +12,7 @@ export interface SubmitPublicQuoteInput {
   fecha: string // YYYY-MM-DD
   horaInicio: string
   horaFin: string
+  horasShow?: number
   invitados: number
   produccionAdicional: string[]
   estado: string
@@ -62,6 +63,7 @@ function buildClientWhatsAppMessage(params: {
   fecha: string
   horaInicio: string
   horaFin: string
+  horasShow?: number
   invitados: number
   municipio: string
   estado: string
@@ -75,6 +77,7 @@ function buildClientWhatsAppMessage(params: {
 }): string {
   const fechaFormateada = formatFechaEspanol(params.fecha) || params.fecha
   const horario = `${params.horaInicio} a ${params.horaFin}`
+  const duracionText = params.horasShow ? ` (${params.horasShow} Horas de Música en Vivo)` : ""
   const ubicacion = `${params.municipio}, ${params.estado}${params.lugarEvento?.trim() ? ` (${params.lugarEvento.trim()})` : ""}`
 
   let textoViaticos = "Zona local (sin costo adicional de viáticos)"
@@ -90,7 +93,7 @@ function buildClientWhatsAppMessage(params: {
     ...(params.paquete ? [`• *Paquete:* ${params.paquete}`] : []),
     `• *Tipo de Evento:* ${params.tipoEvento}`,
     `• *Fecha:* ${fechaFormateada}`,
-    `• *Horario:* ${horario}`,
+    `• *Horario:* ${horario}${duracionText}`,
     `• *Invitados estimados:* ${params.invitados} personas`,
     `• *Ubicación:* ${ubicacion}`,
     ...(params.mapsLink?.trim() ? [`• *Google Maps:* ${params.mapsLink.trim()}`] : []),
@@ -140,17 +143,28 @@ export async function submitPublicQuoteAction(
       return { success: false, mode: "needs_review", error: "El municipio es obligatorio" }
     }
 
+    const calculatedHours = calculateEventHours(input.horaInicio, input.horaFin)
+    const horasShow = typeof input.horasShow === "number" && input.horasShow >= 1
+      ? input.horasShow
+      : calculatedHours
+
     const tieneExtras = Array.isArray(input.produccionAdicional) && input.produccionAdicional.length > 0
     const aforo = Number(input.invitados) || 50
-    const isAutoQuote = aforo <= 100 && !tieneExtras
+    // Auto-Landing sólo si: aforo <= 100, sin extras de producción Y duración <= 5 horas
+    const isAutoQuote = aforo <= 100 && !tieneExtras && horasShow <= 5
 
-    const baseLocalPrice = 8500
+    const hourlyRate = getShowPackageHourlyRate(input.paquete)
+    const baseLocalPrice = hourlyRate * horasShow
     const isOutside = input.viaticos?.isOutsideZone ?? false
     const showBasePrice = calculateShowBasePrice(baseLocalPrice, isOutside)
     const viaticosAmount = input.viaticos?.amount || 0
 
+    const dynamicPackageName = input.paquete
+      ? `Show Vendetta - ${input.paquete} (${horasShow} Horas)`
+      : `Show Vendetta Versátil (${horasShow} Horas)`
+
     // ──────────────────────────────────────────────────────────────────────────
-    // RAMA 1: Auto-Landing (≤ 100 personas y sin extras de producción)
+    // RAMA 1: Auto-Landing (≤ 100 personas, sin extras de producción y <= 5 horas)
     // ──────────────────────────────────────────────────────────────────────────
     if (isAutoQuote) {
       const result = await db.$transaction(async (tx) => {
@@ -163,6 +177,7 @@ export async function submitPublicQuoteAction(
           eventDate: input.fecha,
           startTime: input.horaInicio,
           endTime: input.horaFin,
+          bandHours: horasShow,
           guestCount: aforo,
           status: "pendiente",
           venueName: input.lugarEvento?.trim() || `${input.municipio.trim()}, ${input.estado.trim()}`,
@@ -171,13 +186,13 @@ export async function submitPublicQuoteAction(
           venueState: input.estado.trim(),
           mapsLink: input.mapsLink?.trim() || null,
           packageId: "61a5477c-de10-4788-a8bd-1dfa8b57d256", // Essential
-          packageName: input.paquete ? `Show Vendetta - ${input.paquete}` : "Show Vendetta Versátil (2 Horas)",
+          packageName: dynamicPackageName,
           basePrice: showBasePrice,
           viaticosAmount: viaticosAmount,
           depositAmount: Math.round((showBasePrice + viaticosAmount) * 0.5),
           paymentMethod: "transferencia",
-          adminNote: `Cotización web automática para ${aforo} invitados (Show estándar).`,
-          musicianNotes: `Cotización web para ${aforo} invitados en ${input.municipio}, ${input.estado}. Horario: ${input.horaInicio} a ${input.horaFin}.${input.notas?.trim() ? ` Notas: ${input.notas.trim()}` : ""}`
+          adminNote: `Cotización web automática para ${aforo} invitados (Show ${horasShow} Horas).`,
+          musicianNotes: `Cotización web para ${aforo} invitados en ${input.municipio}, ${input.estado}. Horario: ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas de Show).${input.notas?.trim() ? ` Notas: ${input.notas.trim()}` : ""}`
         })
       })
 
@@ -191,6 +206,7 @@ export async function submitPublicQuoteAction(
           fecha: input.fecha,
           horaInicio: input.horaInicio,
           horaFin: input.horaFin,
+          horasShow: horasShow,
           invitados: aforo,
           municipio: input.municipio,
           estado: input.estado,
@@ -198,7 +214,7 @@ export async function submitPublicQuoteAction(
           mapsLink: input.mapsLink,
           viaticosAmount: viaticosAmount,
           produccionAdicional: input.produccionAdicional,
-          paquete: input.paquete || "Show Vendetta Versátil (2 Horas)",
+          paquete: dynamicPackageName,
           proposalUrl: proposalFullUrl,
           notas: input.notas
         })
@@ -224,12 +240,14 @@ Se generó una propuesta interactiva para un cliente:
 
 • *Cliente:* ${input.nombre.trim()}
 • *Teléfono:* ${input.telefono.trim()}
-${input.paquete ? `• *Paquete:* ${input.paquete}\n` : ""}• *Evento:* ${input.tipoEvento}
+• *Paquete:* ${dynamicPackageName}
+• *Evento:* ${input.tipoEvento}
 • *Fecha:* ${input.fecha}
-• *Horario:* ${input.horaInicio} a ${input.horaFin}
+• *Horario:* ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas de Show)
 • *Invitados:* ${aforo} personas
 • *Ubicación:* ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}
-${input.mapsLink?.trim() ? `• *Maps:* ${input.mapsLink.trim()}\n` : ""}• *Viáticos:* $${viaticosAmount.toLocaleString("es-MX")} MXN
+${input.mapsLink?.trim() ? `• *Maps:* ${input.mapsLink.trim()}\n` : ""}• *Total Show:* $${showBasePrice.toLocaleString("es-MX")} MXN
+• *Viáticos:* $${viaticosAmount.toLocaleString("es-MX")} MXN
 • *Propuesta en línea:* ${proposalFullUrl}
 
 👉 *Ver en panel administrativo:*
@@ -252,9 +270,14 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // RAMA 2: Requiere Revisión por Administrador (>100 o con extras solicitados)
+    // RAMA 2: Requiere Revisión por Administrador (>100, con extras o >5 horas)
     // ──────────────────────────────────────────────────────────────────────────
     const extrasDetalle = input.produccionAdicional.join(", ")
+    const reasonParts: string[] = []
+    if (aforo > 100) reasonParts.push(`Aforo > 100 (${aforo} personas)`)
+    if (tieneExtras) reasonParts.push(`Producción: ${extrasDetalle}`)
+    if (horasShow > 5) reasonParts.push(`Duración extendida: ${horasShow} Horas`)
+    const reasonText = reasonParts.join(" | ") || "Revisión de producción especial"
 
     // 1. Guardar primero el lead como ContactInquiry
     const pkgLabel = input.paquete ? `Paquete: ${input.paquete}` : "Producción especial"
@@ -265,13 +288,13 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
         email: `cliente_${input.telefono.replace(/\D/g, "") || Date.now()}@cotizacion.vendetta.mx`,
         requestedDate: new Date(`${input.fecha}T12:00:00`),
         eventType: `${input.tipoEvento} (${pkgLabel})`,
-        message: `${input.paquete ? `[${input.paquete}] ` : ""}Horario: ${input.horaInicio} a ${input.horaFin} | Invitados: ${aforo} | Ubicación: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}${input.mapsLink?.trim() ? ` | Maps: ${input.mapsLink.trim()}` : ""} | Extras solicitados: ${extrasDetalle || "Aforo > 100"} | Viáticos: $${viaticosAmount} MXN${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""}`,
+        message: `${input.paquete ? `[${input.paquete}] ` : ""}Horario: ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas) | Invitados: ${aforo} | Ubicación: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}${input.mapsLink?.trim() ? ` | Maps: ${input.mapsLink.trim()}` : ""} | Motivo revisión: ${reasonText} | Viáticos: $${viaticosAmount} MXN${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""}`,
         status: "new"
       }
     })
 
     // 2. Crear la cotización en BookingRequest etiquetada como POR REVISAR
-    const adminNoteText = `⚠️ POR REVISAR POR ADMINISTRADOR: ${input.paquete ? `[Paquete ${input.paquete}] ` : ""}El cliente solicitó producción técnica adicional (${extrasDetalle || "Aforo > 100"}). Aforo: ${aforo} invitados.`
+    const adminNoteText = `⚠️ POR REVISAR POR ADMINISTRADOR: ${input.paquete ? `[Paquete ${input.paquete}] ` : ""}${reasonText}. Aforo: ${aforo} invitados.`
 
     const result = await db.$transaction(async (tx) => {
       return await createUnifiedQuote(tx, {
@@ -284,6 +307,7 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
         eventDate: input.fecha,
         startTime: input.horaInicio,
         endTime: input.horaFin,
+        bandHours: horasShow,
         guestCount: aforo,
         status: "pendiente",
         venueName: input.lugarEvento?.trim() || `${input.municipio.trim()}, ${input.estado.trim()}`,
@@ -291,13 +315,13 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
         venueCity: input.municipio.trim(),
         venueState: input.estado.trim(),
         mapsLink: input.mapsLink?.trim() || null,
-        packageName: input.paquete ? `Show Vendetta - ${input.paquete} (Por revisar)` : "Show Vendetta con Producción Especial (Por revisar)",
+        packageName: input.paquete ? `Show Vendetta - ${input.paquete} (${horasShow} Horas - Por revisar)` : `Show Vendetta con Producción Especial (${horasShow} Horas - Por revisar)`,
         basePrice: showBasePrice,
         viaticosAmount: viaticosAmount,
         depositAmount: 0,
         paymentMethod: "transferencia",
         adminNote: adminNoteText,
-        musicianNotes: `Solicitud con producción especial${input.paquete ? ` (${input.paquete})` : ""}: ${extrasDetalle || "Aforo > 100"}.${input.notas?.trim() ? ` Notas: ${input.notas.trim()}` : ""}`
+        musicianNotes: `Solicitud con producción especial${input.paquete ? ` (${input.paquete})` : ""}: ${reasonText}.${input.notas?.trim() ? ` Notas: ${input.notas.trim()}` : ""}`
       })
     })
 
@@ -321,6 +345,7 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
         fecha: input.fecha,
         horaInicio: input.horaInicio,
         horaFin: input.horaFin,
+        horasShow: horasShow,
         invitados: aforo,
         municipio: input.municipio,
         estado: input.estado,
@@ -328,7 +353,7 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
         mapsLink: input.mapsLink,
         viaticosAmount: viaticosAmount,
         produccionAdicional: input.produccionAdicional,
-        paquete: input.paquete,
+        paquete: dynamicPackageName,
         notas: input.notas
       })
       await sendWhatsApp(input.telefono.trim(), clientMsg, `Confirmación Cliente - ${input.nombre.trim()}`).catch(
@@ -353,14 +378,17 @@ Se registró una solicitud con requerimientos especiales de producción:
 
 • *Cliente:* ${input.nombre.trim()}
 • *Teléfono:* ${input.telefono.trim()}
-${input.paquete ? `• *Paquete:* ${input.paquete}\n` : ""}• *Evento:* ${input.tipoEvento}
+• *Paquete:* ${dynamicPackageName}
+• *Evento:* ${input.tipoEvento}
 • *Fecha:* ${input.fecha}
-• *Horario:* ${input.horaInicio} a ${input.horaFin}
+• *Horario:* ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas de Show)
 • *Invitados:* ${aforo} personas
 • *Ubicación:* ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}
 ${input.mapsLink?.trim() ? `• *Maps:* ${input.mapsLink.trim()}\n` : ""}
-*PRODUCCIÓN SOLICITADA:*
-${input.produccionAdicional.length > 0 ? input.produccionAdicional.map((p) => `• ${p}`).join("\n") : "• Aforo mayor a 100 invitados"}
+*MOTIVO DE REVISIÓN:*
+• ${reasonText}
+${input.produccionAdicional.length > 0 ? `\n*PRODUCCIÓN SOLICITADA:*\n${input.produccionAdicional.map((p) => `• ${p}`).join("\n")}` : ""}
+• *Estimado Base Show:* $${showBasePrice.toLocaleString("es-MX")} MXN
 • *Viáticos calculados:* $${viaticosAmount.toLocaleString("es-MX")} MXN
 
 👉 *Revisar y definir cotización en el sistema:*

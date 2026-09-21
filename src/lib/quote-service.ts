@@ -17,6 +17,7 @@ export interface CreateQuoteInput {
   eventDate: string // YYYY-MM-DD
   startTime?: string | null
   endTime?: string | null
+  bandHours?: number | null
   arrivalTime?: string | null
   setupTime?: string | null
   guestCount?: number
@@ -183,6 +184,7 @@ export async function createUnifiedQuote(
         requestedDate: dateObj,
         startTime: input.startTime || "",
         endTime: input.endTime || "",
+        bandHours: input.bandHours !== undefined && input.bandHours !== null ? input.bandHours : (input.packageId ? 2 : 0),
         arrivalTime: input.arrivalTime || null,
         setupTime: input.setupTime || null,
         guestCount: input.guestCount || 0,

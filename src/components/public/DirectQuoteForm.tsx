@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
 import { submitContactInquiry } from "@/actions/contact"
 import { submitPublicQuoteAction } from "@/actions/quote-direct"
+import { calculateEventHours, getShowPackageHourlyRate, calculateShowBasePrice } from "@/lib/pricing"
 import { toast } from "sonner"
 import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import { 
@@ -48,6 +49,10 @@ const EVENT_TYPES = [
 ]
 
 const TIME_OPTIONS = [
+  "08:00 AM", "08:30 AM",
+  "09:00 AM", "09:30 AM",
+  "10:00 AM", "10:30 AM",
+  "11:00 AM", "11:30 AM",
   "12:00 PM", "12:30 PM",
   "01:00 PM", "01:30 PM",
   "02:00 PM", "02:30 PM",
@@ -65,8 +70,15 @@ const TIME_OPTIONS = [
   "02:00 AM", "02:30 AM",
   "03:00 AM", "03:30 AM",
   "04:00 AM", "04:30 AM",
-  "05:00 AM",
-  "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM"
+  "05:00 AM"
+]
+
+const PRODUCCION_ITEMS = [
+  { id: "Producción más grande", label: "Producción más grande (Audio Pro >100 pax)", refPrice: 7500, refPriceLabel: "+$7,500 MXN", icon: Maximize2 },
+  { id: "Pantalla LED", label: "Pantalla LED gigante", refPrice: 15000, refPriceLabel: "+$15,000 MXN", icon: Tv },
+  { id: "Templete / Escenario", label: "Templete / Escenario para banda", refPrice: 3800, refPriceLabel: "+$3,800 MXN", icon: Grid },
+  { id: "Iluminación adicional", label: "Iluminación robótica adicional", refPrice: 3500, refPriceLabel: "+$3,500 MXN", icon: Lightbulb },
+  { id: "Pista iluminada", label: "Pista iluminada LED", refPrice: 7500, refPriceLabel: "+$7,500 MXN", icon: Sparkles },
 ]
 
 const MXN = (v: number) =>
@@ -116,9 +128,9 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
     }
   }, [initialDate])
 
-  // Horario seleccionable en formato 12h AM/PM
+  // Horario seleccionable en formato 12h AM/PM (Default 2 horas estándar)
   const [horaInicio, setHoraInicio] = useState("08:00 PM")
-  const [horaFin, setHoraFin] = useState("01:00 AM")
+  const [horaFin, setHoraFin] = useState("10:00 PM")
 
   // Invitados y producción adicional (>100)
   const [invitados, setInvitados] = useState(isLargePackage ? "100" : "50")
@@ -168,6 +180,20 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
 
   // Notas
   const [notas, setNotas] = useState("")
+
+  // Cálculos dinámicos en tiempo real
+  const numInvitados = parseInt(invitados, 10) || 0
+  const tieneMasDe100Invitados = numInvitados > 100
+  const horasShow = calculateEventHours(horaInicio, horaFin)
+  const hourlyRate = getShowPackageHourlyRate(paqueteNombre)
+  const showBasePrice = calculateShowBasePrice(hourlyRate * horasShow, viaticos?.isOutsideZone ?? false)
+  const extrasEstimatedTotal = produccionAdicional.reduce((sum, item) => {
+    const found = PRODUCCION_ITEMS.find((p) => p.id === item)
+    return sum + (found?.refPrice || 0)
+  }, 0)
+  const viaticosAmount = viaticos?.amount || 0
+  const totalEstimado = showBasePrice + viaticosAmount + extrasEstimatedTotal
+  const isNeedsReview = numInvitados > 100 || produccionAdicional.length > 0 || horasShow > 5
 
   // Estados de envío
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -258,9 +284,6 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
     )
   }
 
-  const numInvitados = parseInt(invitados, 10) || 0
-  const tieneMasDe100Invitados = numInvitados > 100
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
@@ -312,6 +335,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
         fecha,
         horaInicio,
         horaFin,
+        horasShow,
         invitados: numInvitados,
         produccionAdicional,
         estado,
@@ -332,14 +356,14 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
       if (viaticos.requiresManualQuote) {
         textoViaticos = "Distancia extendida (>250 km, cotización logística personalizada)"
       } else if (viaticos.amount > 0) {
-        textoViaticos = `${MXN(viaticos.amount)} MXN (Incluye casetas ida y vuelta y gasto de gasolina para 2 camionetas y el transporte de 5 personas)`
+        textoViaticos = `$${viaticos.amount.toLocaleString("es-MX")} MXN (Incluye casetas ida y vuelta y gasto de gasolina para 2 camionetas y el transporte de 5 personas)`
       }
     }
 
-    // 3. Formatear producción adicional
+    // 3. Formatear requerimientos de producción adicional
     let textoProduccion = ""
     if (tieneMasDe100Invitados && produccionAdicional.length > 0) {
-      textoProduccion = `\n• *Producción adicional de interés (>100 invitados):*\n${produccionAdicional.map((p) => `  - ${p}`).join("\n")}`
+      textoProduccion = `\n• *Producción adicional seleccionada (>100 invitados):*\n${produccionAdicional.map((p) => `  - ${p}`).join("\n")}`
     }
 
     // 4. Construir mensaje de WhatsApp con formato limpio (sin emojis problemáticos)
@@ -355,9 +379,10 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
       `• *WhatsApp:* ${telefono.trim()}`,
       `• *Tipo de Evento:* ${tipoEventoFinal}`,
       `• *Fecha:* ${fechaFormateada}`,
-      `• *Horario:* ${horarioCompleto}`,
+      `• *Horario:* ${horarioCompleto} (${horasShow} Horas de Música en Vivo)`,
       `• *Invitados estimados:* ${numInvitados} personas`,
       `• *Ubicación:* ${ubicacionCompleta}`,
+      `• *Estimado Base Show:* ${MXN(showBasePrice)} MXN`,
     ]
 
     if (mapsLink.trim()) {
@@ -366,13 +391,15 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
 
     if (textoProduccion) {
       lineasMensaje.push(textoProduccion)
+      lineasMensaje.push(`• *Producción estimada:* +${MXN(extrasEstimatedTotal)} MXN`)
     }
 
     lineasMensaje.push(
       "",
       "*LOGÍSTICA Y VIÁTICOS*",
       `• *Viáticos estimados:* ${textoViaticos}`,
-      "• *Condiciones:* No incluye planta de luz. Viáticos para 2 camionetas (gasolina y casetas únicamente). No incluye alimentos."
+      "• *Condiciones:* No incluye planta de luz. Viáticos para 2 camionetas (gasolina y casetas únicamente). No incluye alimentos.",
+      `• *Total Estimado${isNeedsReview ? " Referencial" : ""}:* ${MXN(totalEstimado)} MXN`
     )
 
     if (notas.trim()) {
@@ -657,9 +684,19 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             </select>
           </div>
         </div>
-        <p className="text-[11px] text-gray-500">
-          Horario seleccionado: <span className="text-primary font-bold">{horaInicio}</span> a <span className="text-primary font-bold">{horaFin}</span>
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <p className="text-[11px] text-gray-400">
+            Horario seleccionado: <span className="text-primary font-bold">{horaInicio}</span> a <span className="text-primary font-bold">{horaFin}</span>
+          </p>
+          <span className="text-[11px] font-bold bg-primary/15 text-primary border border-primary/30 px-2.5 py-0.5 rounded-full">
+            ⏱️ {horasShow} {horasShow === 1 ? "Hora" : "Horas"} de Show en Vivo
+          </span>
+        </div>
+        {horasShow > 5 && (
+          <p className="text-[11px] text-amber-400 font-medium pt-1">
+            ⚠️ Duración extendida (&gt;5 horas de show): Sujeto a coordinación logística especial y revisión personalizada.
+          </p>
+        )}
       </div>
 
       {/* 4. INVITADOS & PRODUCCIÓN ADICIONAL SI >100 */}
@@ -698,30 +735,29 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-              {[
-                { id: "Producción más grande", label: "Producción más grande (Audio de mayor potencia)", icon: Maximize2 },
-                { id: "Pantalla LED", label: "Pantalla LED gigante", icon: Tv },
-                { id: "Templete / Escenario", label: "Templete / Escenario para banda", icon: Grid },
-                { id: "Iluminación adicional", label: "Iluminación adicional (Robóticas)", icon: Lightbulb },
-                { id: "Pista iluminada", label: "Pista iluminada", icon: Sparkles },
-              ].map(({ id, label, icon: Icon }) => {
+              {PRODUCCION_ITEMS.map(({ id, label, refPriceLabel, icon: Icon }) => {
                 const isSelected = produccionAdicional.includes(id)
                 return (
                   <button
                     key={id}
                     type="button"
                     onClick={() => toggleProduccionItem(id)}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer ${
+                    className={`flex items-center justify-between gap-2.5 p-3 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer ${
                       isSelected
                         ? "bg-primary/20 border-primary text-white shadow-sm shadow-primary/20"
                         : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
                     }`}
                   >
-                    <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? "border-primary bg-primary text-black" : "border-white/30"}`}>
-                      {isSelected && <span className="text-[10px] font-black">✓</span>}
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? "border-primary bg-primary text-black" : "border-white/30"}`}>
+                        {isSelected && <span className="text-[10px] font-black">✓</span>}
+                      </div>
+                      <Icon className="w-4 h-4 text-primary shrink-0" />
+                      <span>{label}</span>
                     </div>
-                    <Icon className="w-4 h-4 text-primary shrink-0" />
-                    <span>{label}</span>
+                    <span className="text-[10px] font-mono font-bold text-amber-300/90 shrink-0 ml-1">
+                      {refPriceLabel}
+                    </span>
                   </button>
                 )
               })}
@@ -881,8 +917,66 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
         />
       </div>
 
+      {/* RESUMEN ESTIMADO EN TIEMPO REAL */}
+      <div className="p-5 rounded-2xl bg-zinc-900/90 border border-white/10 space-y-3 mt-4">
+        <div className="flex items-center justify-between text-xs uppercase font-bold tracking-wider text-gray-400">
+          <span>Resumen de Inversión Estimada</span>
+          <span className="text-primary font-black">Vendetta Live</span>
+        </div>
+
+        <div className="space-y-1.5 text-xs text-gray-300">
+          <div className="flex justify-between items-center">
+            <span>
+              🎸 Show {paqueteNombre || "Versátil"} ({horasShow} {horasShow === 1 ? "Hora" : "Horas"}):
+            </span>
+            <span className="font-bold text-white">{MXN(showBasePrice)} MXN</span>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span>🚗 Viáticos de traslado:</span>
+            <span className="font-bold text-white">
+              {viaticos && viaticos.amount > 0 ? `${MXN(viaticos.amount)} MXN` : "$0 MXN (Local)"}
+            </span>
+          </div>
+
+          {extrasEstimatedTotal > 0 && (
+            <div className="flex justify-between items-center text-amber-300">
+              <span>✨ Producción adicional ({produccionAdicional.length} items):</span>
+              <span className="font-bold">+{MXN(extrasEstimatedTotal)} MXN</span>
+            </div>
+          )}
+
+          <div className="pt-2 border-t border-white/10 flex justify-between items-center text-sm sm:text-base font-black text-white">
+            <span>Total Estimado{isNeedsReview ? " Referencial" : ""}:</span>
+            <span className="text-primary text-lg sm:text-xl font-heading">
+              {MXN(totalEstimado)} MXN
+            </span>
+          </div>
+        </div>
+
+        {isNeedsReview ? (
+          <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 flex items-start gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+            <span>
+              {numInvitados > 100
+                ? `Por tu aforo de ${numInvitados} invitados y requerimientos técnicos, tu solicitud será validada con nuestro director de producción por WhatsApp para afinar especificaciones.`
+                : produccionAdicional.length > 0
+                ? "Al seleccionar producción adicional (pantallas, templete o robóticas), un director técnico revisará dimensiones y requerimientos eléctricos."
+                : "Para duraciones extendidas de más de 5 horas, afinaremos la logística y descansos de forma personalizada."}
+            </span>
+          </div>
+        ) : (
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-300 flex items-center gap-2">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span>
+              Generación de propuesta instantánea en línea y confirmación inmediata por WhatsApp.
+            </span>
+          </div>
+        )}
+      </div>
+
       {/* 7. BOTÓN PRINCIPAL */}
-      <div className="pt-4">
+      <div className="pt-2">
         <Button
           type="submit"
           disabled={isSubmitting}

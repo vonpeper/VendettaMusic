@@ -88,7 +88,52 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
   })
 
   it("debe redondear correctamente a 2 decimales", () => {
-    assert.equal(roundCurrency(123.456), 123.46)
-    assert.equal(roundCurrency(123.454), 123.45)
+    assert.equal(roundCurrency(10.555), 10.56)
+    assert.equal(roundCurrency(10.554), 10.55)
+    assert.equal(roundCurrency(null), 0)
+    assert.equal(roundCurrency(undefined), 0)
+  })
+
+  it("debe calcular correctamente la duración en horas entre horarios 12h y 24h", async () => {
+    const { calculateEventHours, parseTimeToMinutes } = await import("./pricing")
+
+    // Formato 12h regular
+    assert.equal(parseTimeToMinutes("04:00 PM"), 16 * 60)
+    assert.equal(parseTimeToMinutes("09:00 PM"), 21 * 60)
+    assert.equal(calculateEventHours("04:00 PM", "09:00 PM"), 5) // Caso Irina Galo
+
+    // Formato medianoche / madrugada
+    assert.equal(calculateEventHours("08:00 PM", "01:00 AM"), 5)
+    assert.equal(calculateEventHours("08:00 PM", "10:00 PM"), 2) // Estándar 2h
+
+    // Formato 24h
+    assert.equal(calculateEventHours("16:00", "21:00"), 5)
+    assert.equal(calculateEventHours("20:00", "01:00"), 5)
+    assert.equal(calculateEventHours("17:00", "19:00"), 2)
+
+    // Defaults y fallbacks
+    assert.equal(calculateEventHours("", ""), 2)
+    assert.equal(calculateEventHours(null, null), 2)
+  })
+
+  it("debe calcular tarifas horarias y costos base por horas según el paquete", async () => {
+    const { getShowPackageHourlyRate, calculateShowBasePrice } = await import("./pricing")
+
+    // Tarifas horarias oficiales
+    assert.equal(getShowPackageHourlyRate("Essential"), 4250)
+    assert.equal(getShowPackageHourlyRate(null), 4250)
+    assert.equal(getShowPackageHourlyRate("Experience"), 7750)
+    assert.equal(getShowPackageHourlyRate("Festival Premium"), 12750)
+
+    // Cálculo por horas para Essential
+    const rate = getShowPackageHourlyRate("Essential")
+    assert.equal(rate * 2, 8500)   // 2 horas = $8,500
+    assert.equal(rate * 3, 12750)  // 3 horas = $12,750
+    assert.equal(rate * 4, 17000)  // 4 horas = $17,000
+    assert.equal(rate * 5, 21250)  // 5 horas = $21,250 (Caso Irina Galo)
+
+    // Foráneo (+20%)
+    assert.equal(calculateShowBasePrice(rate * 5, true), 25500)
+    assert.equal(calculateShowBasePrice(rate * 2, true), 10200)
   })
 })
