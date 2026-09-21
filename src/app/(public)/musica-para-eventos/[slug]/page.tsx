@@ -11,7 +11,7 @@ const LOCATIONS: Record<string, any> = {
     name: "Toluca",
     fullName: "Toluca y Metepec",
     title: "Música en Vivo para Bodas y Eventos en Toluca | Vendetta",
-    description: "El mejor grupo musical versátil en Toluca y Metepec. Show en vivo de alto nivel para bodas, eventos corporativos y fiestas privadas.",
+    description: "La mejor banda de pop & rock en vivo en Toluca y Metepec. Show de alto nivel para bodas, eventos corporativos y fiestas privadas.",
     heroImage: "https://images.unsplash.com/photo-1468359601543-843bfaef291a?q=80&w=2074&auto=format&fit=crop",
   },
   "cdmx": {
@@ -89,7 +89,7 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
             El Show Perfecto <br /> para tu Evento en {loc.name}
           </h1>
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
-            Energía real, talento profesional y el mejor repertorio versátil para bodas y eventos en {loc.fullName}.
+            Energía real, talento profesional y el mejor repertorio de pop y rock en vivo para bodas y eventos en {loc.fullName}.
           </p>
           <a href="/#paquetes">
             <Button size="lg" className="font-black text-lg px-10 h-16 rounded-2xl shadow-xl shadow-primary/25 gap-2">
@@ -104,7 +104,7 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-heading font-black text-white mb-8 uppercase tracking-tight">
-              ¿Buscas el mejor grupo musical para tu boda en {loc.fullName}?
+              ¿Buscas la mejor banda de pop & rock para tu boda en {loc.fullName}?
             </h2>
             <div className="prose prose-invert max-w-none text-gray-400 text-lg leading-relaxed">
               <p className="mb-6">
@@ -118,7 +118,7 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16">
               {[
                 { icon: Star, title: "Experiencia Premium", text: "Cuidamos cada detalle de nuestra presentación para eventos de alta gama." },
-                { icon: Music2, title: "Repertorio Versátil", text: "Desde rock y pop hasta música latina y hits de festival." },
+                { icon: Music2, title: "Repertorio de Concierto", text: "Desde rock y pop hasta hits energéticos de festival." },
                 { icon: Volume2, title: "Audio Profesional", text: "Sistemas Electro-Voice para una claridad de sonido inigualable." },
                 { icon: Clock, title: "Logística Total", text: "Llegamos con anticipación para que tú solo te preocupes por disfrutar." }
               ].map((f, i) => (

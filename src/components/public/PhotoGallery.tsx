@@ -23,7 +23,7 @@ export function PhotoGallery({ images = [] }: { images?: (string | null | undefi
     { src: "/images/galeria/vendetta-saxofonista-metales.jpg", alt: "Sección de Metales Saxofón" },
     { src: "/images/galeria/vendetta-trompetista-show.jpg", alt: "Trompeta en Vivo" },
     { src: "/images/galeria/vendetta-grupo-musical-animacion.jpg", alt: "Animación y Fiesta en Vivo" },
-    { src: "/images/galeria/vendetta-concierto-versatil.jpg", alt: "Concierto Versátil Vendetta" },
+    { src: "/images/galeria/vendetta-concierto-versatil.jpg", alt: "Concierto Pop & Rock en Vivo Vendetta" },
     { src: "/images/galeria/vendetta-musica-corporativo.jpg", alt: "Evento Corporativo de Gala" },
     { src: "/images/galeria/vendetta-vocalista-grupo.jpg", alt: "Vocalistas Vendetta Live" },
   ]
@@ -60,23 +60,29 @@ export function PhotoGallery({ images = [] }: { images?: (string | null | undefi
   }, [nextSlide])
 
   return (
-    <section id="galeria" className="py-24 bg-[#080808] overflow-hidden">
-      <div className="container mx-auto px-4 mb-12 text-center md:text-left">
+    <section id="galeria" className="py-24 md:py-32 bg-gradient-to-b from-[#07080D] via-[#15152B]/80 to-[#07080D] relative overflow-hidden border-t border-white/10">
+      {/* Stage lighting atmosphere */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/4 w-[500px] h-[500px] bg-[#7777FF]/10 rounded-full blur-[140px]" />
+        <div className="absolute bottom-1/3 right-1/4 w-[500px] h-[500px] bg-[#FF5A5F]/10 rounded-full blur-[140px]" />
+      </div>
+
+      <div className="container mx-auto px-4 mb-12 text-center md:text-left relative z-10">
         <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
           <div className="max-w-xl">
-             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-[0.4em] mb-4">
-               <Sparkles className="w-3 h-3" /> Galería Capturada
+             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#FF5A5F]/10 text-[#FF5A5F] text-[10px] font-semibold uppercase tracking-[0.35em] mb-4">
+               <Sparkles className="w-3 h-3" /> Galería en Escena
              </div>
-             <h2 className="text-4xl md:text-6xl font-heading font-black text-white uppercase tracking-tighter leading-none mb-4">
-               Momentos <span className="animated-title italic pr-4">Vendetta</span>
+             <h2 className="text-4xl md:text-6xl font-sans font-black text-[#F2F0EB] uppercase tracking-tight leading-none mb-4">
+               Momentos <span className="text-gradient-encore">Vendetta</span>
              </h2>
-             <p className="text-gray-400 text-sm font-medium">Desliza o arrastra para explorar la energía de nuestros shows.</p>
+             <p className="text-[#F2F0EB]/70 text-sm md:text-base font-normal">Explora la energía y el despliegue técnico de nuestros shows en vivo.</p>
           </div>
           <div className="flex gap-4">
-             <button onClick={prevSlide} className="w-12 h-12 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors text-white shadow-lg">
+             <button onClick={prevSlide} className="w-12 h-12 rounded-xl border border-white/15 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors text-white shadow-lg cursor-pointer">
                 <ChevronLeft className="w-6 h-6" />
              </button>
-             <button onClick={nextSlide} className="w-12 h-12 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors text-white shadow-lg">
+             <button onClick={nextSlide} className="w-12 h-12 rounded-xl border border-white/15 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors text-white shadow-lg cursor-pointer">
                 <ChevronRight className="w-6 h-6" />
              </button>
           </div>

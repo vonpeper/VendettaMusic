@@ -21,54 +21,57 @@ export function VideoSection({ videoUrl = "https://www.youtube.com/watch?v=607_n
   const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
 
   return (
-    <section className="py-24 bg-black relative overflow-hidden">
-      <div className="container mx-auto px-4">
+    <section className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#17132B] via-[#07080D] to-[#15152B] border-t border-white/10">
+      {/* Concert lighting atmosphere */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-[#7777FF]/15 rounded-full blur-[140px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#20D5E5]/10 rounded-full blur-[140px]" />
+        <div className="absolute inset-0 stage-grid-overlay opacity-25" />
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary font-black text-[10px] uppercase tracking-[0.3em] mb-4">
-              <Zap className="w-3 h-3 fill-primary" /> Energía en Vivo
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#FF5A5F]/10 text-[#FF5A5F] font-semibold text-[10px] uppercase tracking-[0.3em] mb-4">
+              <Zap className="w-3.5 h-3.5 fill-[#FF5A5F]" /> Energía en Vivo
             </div>
-            <h2 className="text-4xl md:text-6xl font-heading font-black text-white uppercase tracking-tighter mb-4">
-              Mira a <span className="animated-title italic pr-4">Vendetta</span> en Acción
+            <h2 className="text-4xl md:text-6xl font-sans font-black text-[#F2F0EB] uppercase tracking-tight mb-4">
+              Mira a <span className="text-gradient-encore">Vendetta</span> en Escena
             </h2>
-            <p className="text-gray-400 max-w-xl mx-auto text-sm font-medium">
-              No es solo música, es una producción de primer nivel diseñada para que tu evento sea inolvidable.
+            <p className="text-[#F2F0EB]/70 max-w-xl mx-auto text-sm md:text-base font-normal">
+              No es solo música, es una experiencia de concierto diseñada para que tu evento sea inolvidable.
             </p>
           </div>
 
           <div 
             onClick={() => setIsOpen(true)}
-            className="relative aspect-video rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl group cursor-pointer"
+            className="relative aspect-video rounded-[2rem] overflow-hidden border border-white/20 shadow-[0_24px_60px_-15px_rgba(111,13,43,0.5)] group cursor-pointer backdrop-blur-xl bg-white/[0.03]"
           >
             <Image 
                src={thumbnailUrl} 
-               alt="Video Thumbnail" 
+               alt="Vendetta Pop & Rock en Vivo" 
                fill 
-               className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-80 group-hover:opacity-100" 
+               className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-85 group-hover:opacity-100" 
             />
             
-            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-               <div className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center backdrop-blur-md shadow-[0_0_40px_rgba(220,38,38,0.5)] group-hover:scale-110 transition-transform">
-                  <Play className="w-8 h-8 text-white ml-2" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#07080D]/70 via-[#07080D]/30 to-transparent group-hover:from-[#07080D]/50 transition-colors flex items-center justify-center">
+               <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] flex items-center justify-center backdrop-blur-md shadow-[0_0_40px_rgba(255,90,95,0.6)] group-hover:scale-110 transition-transform border border-white/30">
+                  <Play className="w-8 h-8 text-[#F2F0EB] ml-1 fill-white" />
                </div>
             </div>
           </div>
 
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              "Audio profesional", "Show exclusivo", "Backline de gira", "Experiencia VIP"
+              "Audio Electro-Voice", "Show Exclusivo", "Backline de Gira", "Monitoreo In-Ear"
             ].map((tag, i) => (
-              <div key={i} className="px-4 py-3 rounded-xl border border-white/5 bg-white/[0.02] text-center text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-primary hover:border-primary/20 transition-all">
+              <div key={i} className="glass-card-subtle px-4 py-3.5 rounded-2xl text-center text-[10px] md:text-xs font-semibold uppercase tracking-widest text-[#F2F0EB]/70 hover:text-[#FF5A5F] hover:border-[#FF5A5F]/40 transition-all">
                 {tag}
               </div>
             ))}
           </div>
         </div>
       </div>
-      
-      {/* Decorative Blur */}
-      <div className="absolute top-1/2 left-0 -translate-y-1/2 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600/5 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Video Modal */}
       <AnimatePresence>

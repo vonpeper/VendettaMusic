@@ -20,35 +20,35 @@ export function StatusSearch() {
 
   return (
     <div className="relative group">
-      <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 to-rose-500/50 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
+      <div className="absolute -inset-1 bg-gradient-to-r from-[#6F0D2B]/50 via-[#FF5A5F]/40 to-[#7777FF]/40 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-300" />
       <form 
         onSubmit={handleSearch}
-        className="relative flex flex-col md:flex-row gap-3 bg-black/40 backdrop-blur-xl p-6 rounded-2xl border border-white/10 shadow-2xl"
+        className="relative flex flex-col md:flex-row gap-3 glass-card p-6 md:p-8 rounded-3xl border border-white/20 shadow-2xl"
       >
         <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-muted-foreground">
-            <Ticket className="w-4 h-4" />
+          <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-white/40">
+            <Ticket className="w-4 h-4 text-[#FF5A5F]" />
           </div>
           <Input 
             value={shortId}
             onChange={e => setShortId(e.target.value)}
             placeholder="Ej: ABC123X"
-            className="h-12 pl-10 bg-white/5 border-white/10 text-white font-black tracking-widest uppercase placeholder:normal-case placeholder:font-normal placeholder:tracking-normal"
+            className="h-12 pl-11 bg-white/5 border-white/15 text-[#F2F0EB] font-sans font-semibold tracking-widest uppercase placeholder:normal-case placeholder:font-normal placeholder:tracking-normal rounded-xl focus:border-[#FF5A5F] focus:ring-1 focus:ring-[#FF5A5F]"
           />
         </div>
         <Button 
           type="submit" 
           disabled={loading || !shortId}
-          className="h-12 px-8 font-black gap-2 shadow-lg shadow-primary/20"
+          className="h-12 px-8 font-sans font-semibold text-xs uppercase tracking-wider rounded-xl gap-2 shadow-lg shadow-[#FF5A5F]/25 bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] text-[#F2F0EB] border border-white/20 hover:scale-[1.02] transition-all cursor-pointer"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
           Consultar Estatus
         </Button>
       </form>
-      <div className="mt-4 flex items-center justify-center gap-6 text-[10px] text-muted-foreground font-black uppercase tracking-widest">
-         <div className="flex items-center gap-1.5"><div className="w-1 h-1 rounded-full bg-primary" /> Ver Contrato</div>
-         <div className="flex items-center gap-1.5"><div className="w-1 h-1 rounded-full bg-primary" /> Estado de Pago</div>
-         <div className="flex items-center gap-1.5"><div className="w-1 h-1 rounded-full bg-primary" /> Detalles Logísticos</div>
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-6 text-[10px] md:text-[11px] text-[#F2F0EB]/60 font-semibold uppercase tracking-widest">
+         <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[#FF5A5F]" /> Ver Contrato</div>
+         <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[#20D5E5]" /> Estado de Pago</div>
+         <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[#7777FF]" /> Detalles Logísticos</div>
       </div>
     </div>
   )

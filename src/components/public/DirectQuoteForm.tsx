@@ -944,7 +944,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
         <div className="space-y-1.5 text-xs text-gray-300">
           <div className="flex justify-between items-center">
             <span>
-              🎸 Show {paqueteNombre || "Versátil"} ({horasShow} {horasShow === 1 ? "Hora" : "Horas"}):
+              🎸 Show {paqueteNombre || "Pop & Rock"} ({horasShow} {horasShow === 1 ? "Hora" : "Horas"}):
             </span>
             <span className="font-bold text-white">{MXN(showBasePrice)} MXN</span>
           </div>

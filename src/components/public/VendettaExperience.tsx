@@ -4,27 +4,26 @@ export function VendettaExperience() {
   return (
     <section 
       style={{
-        backgroundColor: "#070707",
         backgroundImage: `
-          radial-gradient(ellipse at 82% 45%, rgba(188, 16, 25, 0.10), transparent 38%),
-          linear-gradient(180deg, #090909 0%, #050505 100%)
+          radial-gradient(ellipse at 82% 45%, rgba(111, 13, 43, 0.35), transparent 50%),
+          radial-gradient(ellipse at 18% 25%, rgba(119, 119, 255, 0.12), transparent 45%),
+          linear-gradient(135deg, #07080D 0%, #15152B 42%, #42112D 72%, #6F0D2B 100%)
         `
       }}
-      className="relative w-full py-[64px] md:py-[72px] lg:py-[88px] px-[22px] md:px-6 overflow-hidden select-none"
+      className="relative w-full py-[68px] md:py-[80px] lg:py-[96px] px-6 overflow-hidden select-none border-y border-white/10"
       aria-label="Experiencia y producción de Vendetta"
     >
-      {/* Subtle Grid Overlay */}
+      {/* Subtle Digital Grid Overlay */}
       <div 
         aria-hidden="true"
         style={{
           position: "absolute",
           inset: 0,
           backgroundImage: `
-            linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px)
+            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)
           `,
-          backgroundSize: "40px 40px",
-          opacity: 0.35,
+          backgroundSize: "48px 48px",
           pointerEvents: "none"
         }}
       />
@@ -32,285 +31,127 @@ export function VendettaExperience() {
       {/* Main Container */}
       <div className="max-w-[1280px] mx-auto relative z-10 flex flex-col items-start">
         
-        {/* Top Accent Red Line */}
+        {/* Top Accent Line */}
         <div 
           aria-hidden="true" 
-          style={{ width: "72px", height: "3px", backgroundColor: "#e31b23" }} 
-          className="mb-[18px] rounded-full"
+          className="w-16 h-[3px] bg-gradient-to-r from-[#FF5A5F] to-[#7777FF] mb-5 rounded-full"
         />
 
         {/* Section Header */}
         <h2 
-          style={{
-            fontFamily: "var(--font-barlow-condensed), 'Barlow Condensed', sans-serif",
-            fontSize: "13px",
-            fontWeight: 800,
-            letterSpacing: ".28em",
-            color: "#e31b23"
-          }}
-          className="uppercase mb-12"
+          className="font-sans font-semibold text-xs md:text-sm tracking-[0.28em] uppercase text-[#FF5A5F] mb-12"
         >
           EXPERIENCIA EN ESCENA
         </h2>
 
         {/* Desktop and responsive Stats Grid */}
         <ul 
-          className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-[48px] md:gap-y-[54px] lg:gap-y-0 lg:gap-x-0 items-end"
-          style={{
-            // Overridden dynamically on LG breakpoint via standard CSS
-            gridTemplateColumns: "var(--grid-cols-desktop, repeat(2, 1fr))"
-          }}
+          className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-12 md:gap-y-14 lg:gap-y-0 items-end"
         >
-          {/* Inject dynamic grid sizing on desktop screens */}
-          <style>{`
-            @media (min-width: 1024px) {
-              ul {
-                grid-template-columns: 1.25fr 1fr 0.8fr 1fr 1.1fr !important;
-                gap: clamp(24px, 4vw, 64px) !important;
-              }
-            }
-          `}</style>
-
           {/* Stat 1: +500 */}
           <li className="relative flex flex-col items-start justify-end h-full">
             <span 
-              style={{
-                fontFamily: 'var(--font-heading), "Montserrat", sans-serif',
-                fontWeight: 900,
-                fontStyle: "normal",
-                color: "#f3f0e9",
-                lineHeight: 0.82,
-                textShadow: "0 5px 18px rgba(0,0,0,.35)",
-                display: "inline-flex",
-                alignItems: "baseline",
-                whiteSpace: "nowrap",
-                letterSpacing: "normal"
-              }}
-              className="text-[clamp(64px,20vw,82px)] lg:text-[104px]"
+              className="font-sans font-black text-[#F2F0EB] text-[clamp(56px,16vw,78px)] lg:text-[96px] leading-[0.85] tracking-tight whitespace-nowrap drop-shadow-[0_6px_20px_rgba(0,0,0,0.6)] inline-flex items-baseline"
             >
-              <span style={{ marginRight: "0.06em" }} aria-hidden="true">+</span>
-              <span style={{ letterSpacing: "-0.045em" }}>500</span>
+              <span className="text-[#FF5A5F] mr-1" aria-hidden="true">+</span>
+              <span>500</span>
             </span>
             <span 
-              style={{
-                fontFamily: "var(--font-barlow-condensed), 'Barlow Condensed', sans-serif",
-                fontSize: "12px",
-                fontWeight: 700,
-                letterSpacing: ".17em",
-                lineHeight: 1.25,
-                color: "rgba(243,240,233,.58)"
-              }}
-              className="mt-3.5 uppercase max-w-[160px]"
+              className="mt-3.5 font-sans font-normal text-xs uppercase tracking-[0.18em] text-[#F2F0EB]/70 max-w-[160px] leading-snug"
             >
               EVENTOS REALIZADOS
             </span>
 
-            {/* Separator on desktop */}
+            {/* Glass separator on desktop */}
             <div 
               aria-hidden="true" 
-              style={{
-                position: "absolute",
-                right: "-12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: "1px",
-                height: "68px",
-                background: "linear-gradient(transparent, rgba(255,255,255,.16), transparent)"
-              }}
-              className="hidden lg:block"
+              className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-[1px] h-16 bg-gradient-to-b from-transparent via-white/20 to-transparent"
             />
           </li>
 
           {/* Stat 2: +15 */}
           <li className="relative flex flex-col items-start justify-end h-full">
             <span 
-              style={{
-                fontFamily: 'var(--font-heading), "Montserrat", sans-serif',
-                fontWeight: 900,
-                fontStyle: "normal",
-                color: "#f3f0e9",
-                lineHeight: 0.82,
-                textShadow: "0 5px 18px rgba(0,0,0,.35)",
-                display: "inline-flex",
-                alignItems: "baseline",
-                whiteSpace: "nowrap",
-                letterSpacing: "normal"
-              }}
-              className="text-[clamp(58px,18vw,72px)] lg:text-[82px]"
+              className="font-sans font-black text-[#F2F0EB] text-[clamp(52px,15vw,68px)] lg:text-[84px] leading-[0.85] tracking-tight whitespace-nowrap drop-shadow-[0_6px_20px_rgba(0,0,0,0.6)] inline-flex items-baseline"
             >
-              <span style={{ marginRight: "0.06em" }} aria-hidden="true">+</span>
-              <span style={{ letterSpacing: "-0.045em" }}>15</span>
+              <span className="text-[#FF5A5F] mr-1" aria-hidden="true">+</span>
+              <span>15</span>
             </span>
             <span 
-              style={{
-                fontFamily: "var(--font-barlow-condensed), 'Barlow Condensed', sans-serif",
-                fontSize: "12px",
-                fontWeight: 700,
-                letterSpacing: ".17em",
-                lineHeight: 1.25,
-                color: "rgba(243,240,233,.58)"
-              }}
-              className="mt-3.5 uppercase max-w-[140px]"
+              className="mt-3.5 font-sans font-normal text-xs uppercase tracking-[0.18em] text-[#F2F0EB]/70 max-w-[140px] leading-snug"
             >
-              AÑOS DE EXPERIENCIA
+              AÑOS DE TRAYECTORIA
             </span>
 
-            {/* Separator on desktop */}
+            {/* Glass separator on desktop */}
             <div 
               aria-hidden="true" 
-              style={{
-                position: "absolute",
-                right: "-12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: "1px",
-                height: "68px",
-                background: "linear-gradient(transparent, rgba(255,255,255,.16), transparent)"
-              }}
-              className="hidden lg:block"
+              className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-[1px] h-16 bg-gradient-to-b from-transparent via-white/20 to-transparent"
             />
           </li>
 
           {/* Stat 3: 5 */}
           <li className="relative flex flex-col items-start justify-end h-full">
             <span 
-              style={{
-                fontFamily: 'var(--font-heading), "Montserrat", sans-serif',
-                fontWeight: 900,
-                fontStyle: "normal",
-                color: "#f3f0e9",
-                lineHeight: 0.82,
-                letterSpacing: "-0.045em",
-                textShadow: "0 5px 18px rgba(0,0,0,.35)"
-              }}
-              className="text-[clamp(58px,18vw,72px)] lg:text-[92px]"
+              className="font-sans font-black text-[#F2F0EB] text-[clamp(52px,15vw,68px)] lg:text-[88px] leading-[0.85] tracking-tight drop-shadow-[0_6px_20px_rgba(0,0,0,0.6)]"
             >
               5
             </span>
             <span 
-              style={{
-                fontFamily: "var(--font-barlow-condensed), 'Barlow Condensed', sans-serif",
-                fontSize: "12px",
-                fontWeight: 700,
-                letterSpacing: ".17em",
-                lineHeight: 1.25,
-                color: "rgba(243,240,233,.58)"
-              }}
-              className="mt-3.5 uppercase max-w-[130px]"
+              className="mt-3.5 font-sans font-normal text-xs uppercase tracking-[0.18em] text-[#F2F0EB]/70 max-w-[130px] leading-snug"
             >
               MÚSICOS EN ESCENA
             </span>
 
-            {/* Separator on desktop */}
+            {/* Glass separator on desktop */}
             <div 
               aria-hidden="true" 
-              style={{
-                position: "absolute",
-                right: "-12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: "1px",
-                height: "68px",
-                background: "linear-gradient(transparent, rgba(255,255,255,.16), transparent)"
-              }}
-              className="hidden lg:block"
+              className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-[1px] h-16 bg-gradient-to-b from-transparent via-white/20 to-transparent"
             />
           </li>
 
           {/* Stat 4: DESDE 2 H */}
           <li className="relative flex flex-col items-start justify-end h-full">
             <span 
-              style={{
-                fontFamily: "var(--font-barlow-condensed), 'Barlow Condensed', sans-serif",
-                fontSize: "13px",
-                fontWeight: 800,
-                letterSpacing: ".22em",
-                color: "#e31b23"
-              }}
-              className="uppercase mb-[9px]"
+              className="font-sans font-light text-[11px] uppercase tracking-[0.24em] text-[#FF5A5F] mb-1 block"
             >
               DESDE
             </span>
             <span 
-              style={{
-                fontFamily: 'var(--font-heading), "Montserrat", sans-serif',
-                fontWeight: 900,
-                fontStyle: "normal",
-                color: "#f3f0e9",
-                lineHeight: 0.82,
-                letterSpacing: "-0.045em",
-                textShadow: "0 5px 18px rgba(0,0,0,.35)"
-              }}
-              className="text-[clamp(58px,18vw,72px)] lg:text-[88px]"
+              className="font-sans font-black text-[#F2F0EB] text-[clamp(52px,15vw,68px)] lg:text-[84px] leading-[0.85] tracking-tight drop-shadow-[0_6px_20px_rgba(0,0,0,0.6)]"
             >
               2 H
             </span>
             <span 
-              style={{
-                fontFamily: "var(--font-barlow-condensed), 'Barlow Condensed', sans-serif",
-                fontSize: "12px",
-                fontWeight: 700,
-                letterSpacing: ".17em",
-                lineHeight: 1.25,
-                color: "rgba(243,240,233,.58)"
-              }}
-              className="mt-3.5 uppercase max-w-[140px]"
+              className="mt-3.5 font-sans font-normal text-xs uppercase tracking-[0.18em] text-[#F2F0EB]/70 max-w-[140px] leading-snug"
             >
               DE SHOW EN VIVO
             </span>
 
-            {/* Separator on desktop */}
+            {/* Glass separator on desktop */}
             <div 
               aria-hidden="true" 
-              style={{
-                position: "absolute",
-                right: "-12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: "1px",
-                height: "68px",
-                background: "linear-gradient(transparent, rgba(255,255,255,.16), transparent)"
-              }}
-              className="hidden lg:block"
+              className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-[1px] h-16 bg-gradient-to-b from-transparent via-white/20 to-transparent"
             />
           </li>
 
           {/* Stat 5: TOUR LEVEL */}
-          <li className="col-span-2 md:col-span-1 flex flex-col items-center md:items-start text-center md:text-left justify-end h-full w-full max-w-[210px] mx-auto md:mx-0 mt-3 md:mt-0">
+          <li className="col-span-2 md:col-span-1 flex flex-col items-center md:items-start text-center md:text-left justify-end h-full w-full max-w-[220px] mx-auto md:mx-0 mt-4 md:mt-0">
             <span 
-              style={{
-                fontFamily: 'var(--font-heading), "Montserrat", sans-serif',
-                fontWeight: 900,
-                fontStyle: "normal",
-                lineHeight: 0.72,
-                color: "#f3f0e9",
-                textShadow: "0 5px 18px rgba(0,0,0,.35)",
-                fontSize: "58px",
-                letterSpacing: "-0.04em",
-                textAlign: "left"
-              }}
-              className="uppercase"
+              className="font-sans font-black text-[#F2F0EB] text-[46px] lg:text-[52px] leading-[0.82] tracking-tight uppercase drop-shadow-[0_6px_20px_rgba(0,0,0,0.6)] text-left"
             >
               TOUR<br />LEVEL
             </span>
             <span 
-              style={{
-                fontFamily: "var(--font-barlow-condensed), 'Barlow Condensed', sans-serif",
-                fontSize: "12px",
-                fontWeight: 800,
-                letterSpacing: ".18em",
-                color: "#e31b23"
-              }}
-              className="mt-[18px] uppercase"
+              className="mt-4 font-sans font-semibold text-xs uppercase tracking-[0.2em] text-[#FF5A5F]"
             >
               PRODUCCIÓN DE GIRA
             </span>
             
-            {/* Stamp Red Line */}
+            {/* Stamp Indicator Line */}
             <div 
               aria-hidden="true" 
-              style={{ width: "44px", height: "2px", backgroundColor: "#e31b23" }} 
-              className="mt-[18px]"
+              className="w-12 h-[2px] bg-[#FF5A5F] mt-3"
             />
           </li>
         </ul>

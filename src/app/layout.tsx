@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Kanit, Plus_Jakarta_Sans, Advent_Pro } from "next/font/google";
+import localFont from "next/font/local";
+import { Plus_Jakarta_Sans, Advent_Pro } from "next/font/google";
 import "./globals.css";
 import { SchemaMarkup } from "@/components/public/SchemaMarkup"
 import { Toaster } from "sonner"
@@ -7,17 +8,26 @@ import { Toaster } from "sonner"
 import { db } from "@/lib/db";
 import { PwaStandaloneRedirect } from "@/components/pwa/PwaStandaloneRedirect";
 
+const nohemi = localFont({
+  src: [
+    { path: "../../public/fonts/nohemi/Nohemi-Thin.woff2", weight: "100", style: "normal" },
+    { path: "../../public/fonts/nohemi/Nohemi-ExtraLight.woff2", weight: "200", style: "normal" },
+    { path: "../../public/fonts/nohemi/Nohemi-Light.woff2", weight: "300", style: "normal" },
+    { path: "../../public/fonts/nohemi/Nohemi-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/nohemi/Nohemi-Medium.woff2", weight: "500", style: "normal" },
+    { path: "../../public/fonts/nohemi/Nohemi-SemiBold.woff2", weight: "600", style: "normal" },
+    { path: "../../public/fonts/nohemi/Nohemi-Bold.woff2", weight: "700", style: "normal" },
+    { path: "../../public/fonts/nohemi/Nohemi-ExtraBold.woff2", weight: "800", style: "normal" },
+    { path: "../../public/fonts/nohemi/Nohemi-Black.woff2", weight: "900", style: "normal" },
+  ],
+  variable: "--font-nohemi",
+  display: "swap",
+});
+
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
-  display: "swap",
-});
-
-const kanit = Kanit({
-  variable: "--font-heading",
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
   display: "swap",
 });
 
@@ -38,8 +48,8 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   });
 
-  const title = config?.ogTitle || "Vendetta | Música en Vivo para Eventos";
-  const description = config?.ogDescription || "Grupo musical versátil de alto nivel para bodas, eventos corporativos y festivales en México. Experiencia premium y energía inigualable.";
+  const title = config?.ogTitle || "Vendetta | Pop & Rock en Vivo para Eventos";
+  const description = config?.ogDescription || "Banda profesional de pop y rock en vivo para bodas, eventos corporativos y celebraciones en México. Experiencia real de concierto con producción premium.";
   const image = config?.ogImage || 'https://vendetta.mx/images/vendetta-hero-og.jpg';
 
   return {
@@ -82,7 +92,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${plusJakartaSans.variable} ${kanit.variable} ${advent.variable} dark antialiased scroll-smooth`}
+      className={`${nohemi.variable} ${plusJakartaSans.variable} ${advent.variable} dark antialiased scroll-smooth`}
     >
       <head>
         <meta name="google-site-verification" content="xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY" />

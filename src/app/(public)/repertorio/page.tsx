@@ -3,7 +3,7 @@ import { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Repertorio Musical | Vendetta Live Music",
-  description: "Explora nuestro repertorio de más de 300 canciones de pop, rock, música versátil y hits de festival para tu boda o evento social.",
+  description: "Explora nuestro repertorio de más de 300 canciones de pop, rock, clásicos y hits de concierto para tu boda o evento social.",
   alternates: {
     canonical: '/repertorio',
   }

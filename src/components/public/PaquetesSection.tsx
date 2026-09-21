@@ -44,33 +44,36 @@ interface PackageData {
   isCustom?: boolean | null
 }
 
-// Estilos visuales por defecto para paquetes
+// Estilos visuales por defecto para paquetes (Glass Card 2026)
 const PACKAGE_STLYES: Record<number, any> = {
-  0: { // Primer paquete
+  0: { // Primer paquete (Essential)
     emoji: "🎸",
-    gradient: "from-violet-900/70 via-violet-800/40 to-violet-900/30",
-    border: "border-violet-500/40 hover:border-violet-400/70",
-    glow: "shadow-violet-500/10",
-    accentColor: "text-violet-300",
-    badgeColor: "bg-violet-500/20 text-violet-200 border-violet-400/30",
+    gradient: "from-white/[0.08] via-white/[0.03] to-[#7777FF]/[0.04]",
+    border: "border-[#7777FF]/30 hover:border-[#7777FF]/60",
+    glow: "shadow-[0_20px_45px_-12px_rgba(119,119,255,0.25)]",
+    accentColor: "text-[#7777FF]",
+    badgeColor: "bg-[#7777FF]/15 text-[#7777FF] border-[#7777FF]/40",
+    buttonClass: "bg-white/10 hover:bg-white/20 text-white border border-white/20",
     highlight: false
   },
-  1: { // Segundo paquete (Highlight)
+  1: { // Segundo paquete (Experience - Highlight)
     emoji: "🎵",
-    gradient: "from-red-900/80 via-rose-800/50 to-red-900/40",
-    border: "border-red-500/60",
-    glow: "shadow-red-500/20",
-    accentColor: "text-red-300",
-    badgeColor: "bg-red-500/20 text-red-200 border-red-400/40",
+    gradient: "from-[#6F0D2B]/35 via-white/[0.05] to-[#FF5A5F]/15",
+    border: "border-[#FF5A5F]/50 hover:border-[#FF5A5F]/80",
+    glow: "shadow-[0_24px_55px_-10px_rgba(255,90,95,0.35)]",
+    accentColor: "text-[#FF5A5F]",
+    badgeColor: "bg-gradient-to-r from-[#6F0D2B] to-[#FF5A5F] text-[#F2F0EB] border-[#FF5A5F]/60 shadow-md shadow-[#FF5A5F]/20",
+    buttonClass: "bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] text-[#F2F0EB] border border-white/25 shadow-lg shadow-[#FF5A5F]/25 hover:shadow-[#FF5A5F]/40",
     highlight: true
   },
-  2: { // Tercer paquete
+  2: { // Tercer paquete (Festival Premium)
     emoji: "🏆",
-    gradient: "from-amber-900/70 via-yellow-800/40 to-amber-900/30",
-    border: "border-amber-500/40 hover:border-amber-400/70",
-    glow: "shadow-amber-500/10",
-    accentColor: "text-amber-300",
-    badgeColor: "bg-amber-500/20 text-amber-200 border-amber-400/30",
+    gradient: "from-[#20D5E5]/15 via-white/[0.04] to-white/[0.01]",
+    border: "border-[#20D5E5]/35 hover:border-[#20D5E5]/65",
+    glow: "shadow-[0_20px_45px_-12px_rgba(32,213,229,0.25)]",
+    accentColor: "text-[#20D5E5]",
+    badgeColor: "bg-[#20D5E5]/15 text-[#20D5E5] border-[#20D5E5]/40",
+    buttonClass: "bg-white/10 hover:bg-white/20 text-white border border-white/20",
     highlight: false
   }
 }
@@ -270,27 +273,24 @@ ${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim(
   }
 
   return (
-    <section id="paquetes" className="py-24 md:py-32 relative overflow-hidden">
-      <div className="absolute inset-0">
-        <Image
-          src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=1600&auto=format&fit=crop"
-          alt=""
-          fill
-          className="object-cover opacity-[0.07]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
+    <section id="paquetes" className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#15152B]/90 to-[#42112D]">
+      {/* Concert ambient lights and grid */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-[#7777FF]/15 rounded-full blur-[140px]" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-[#FF5A5F]/15 rounded-full blur-[140px]" />
+        <div className="absolute inset-0 stage-grid-overlay opacity-30" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#FF5A5F]/10 text-[#FF5A5F] font-semibold text-xs uppercase tracking-widest mb-6">
             <Sparkles className="w-3.5 h-3.5" /> Nuestros Paquetes
           </div>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-black tracking-tight uppercase mb-4 animated-title pr-4">
-            Elige tu Show
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-sans font-black tracking-tight uppercase mb-4 text-[#F2F0EB]">
+            Elige tu <span className="text-gradient-encore">Show en Vivo</span>
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto text-lg font-medium">
-            Producción musical de primer nivel para tu evento. Completa tus datos y cotiza de inmediato por WhatsApp.
+          <p className="text-[#F2F0EB]/70 max-w-xl mx-auto text-base md:text-lg font-normal">
+            Producción musical de gira para tu boda o evento. Consulta disponibilidad y cotiza de inmediato.
           </p>
         </div>
 
@@ -303,7 +303,7 @@ ${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim(
             return (
               <div
                 key={pkg.id}
-                className={`relative flex flex-col rounded-3xl border p-7 transition-all duration-300 bg-gradient-to-br ${style.gradient} ${
+                className={`relative flex flex-col rounded-3xl p-7 transition-all duration-300 backdrop-blur-xl bg-gradient-to-br ${style.gradient} border ${
                   isUnavailable 
                     ? "border-neutral-800 opacity-60 filter grayscale-[40%] cursor-not-allowed" 
                     : style.border
@@ -312,20 +312,20 @@ ${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim(
                 }`}
               >
                 {style.highlight && !isUnavailable && (
-                  <div className={`absolute -top-4 left-1/2 -translate-x-1/2 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full border ${style.badgeColor}`}>
+                  <div className={`absolute -top-4 left-1/2 -translate-x-1/2 text-white text-[10px] font-semibold uppercase tracking-widest px-4 py-1 rounded-full border ${style.badgeColor}`}>
                     ★ Más Solicitado
                   </div>
                 )}
                 {isUnavailable && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-neutral-900 text-neutral-400 text-[9px] font-black uppercase tracking-wider px-3.5 py-0.5 rounded-full border border-neutral-700">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-neutral-900 text-neutral-400 text-[9px] font-semibold uppercase tracking-wider px-3.5 py-0.5 rounded-full border border-neutral-700">
                     No Disponible
                   </div>
                 )}
 
                 <div className="mb-6">
                   <div className="text-3xl mb-2">{style.emoji}</div>
-                  <h3 className={`font-heading font-black text-2xl mb-2 ${style.accentColor}`}>{pkg.name}</h3>
-                  <p className="text-sm text-white/70 leading-relaxed">{pkg.description}</p>
+                  <h3 className={`font-sans font-black text-2xl mb-2 ${style.accentColor}`}>{pkg.name}</h3>
+                  <p className="text-sm text-[#F2F0EB]/80 leading-relaxed font-normal">{pkg.description}</p>
                 </div>
 
                 {/* Precios y Aforo */}
@@ -422,17 +422,17 @@ ${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim(
                 <Button
                   disabled={isUnavailable}
                   onClick={() => handleOpenQuote(pkg)}
-                  className={`w-full h-12 font-black gap-2 cursor-pointer transition-all duration-300 mt-auto group ${
+                  className={`w-full h-12 font-semibold text-xs uppercase tracking-wider rounded-xl gap-2 cursor-pointer transition-all duration-300 mt-auto group ${
                     isUnavailable
                       ? "bg-neutral-800 border border-neutral-700/50 text-neutral-500 cursor-not-allowed"
                       : style.highlight
-                        ? "bg-[#25D366] hover:bg-[#20ba59] text-white shadow-xl shadow-[#25D366]/20 hover:scale-[1.02] active:scale-[0.98]"
-                        : "bg-white/10 hover:bg-[#25D366] text-white hover:text-white border border-white/20 hover:border-[#25D366] hover:scale-[1.01] active:scale-[0.98]"
+                        ? "bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] hover:from-[#7e1032] hover:to-[#ff6d72] text-[#F2F0EB] shadow-xl shadow-[#FF5A5F]/25 hover:scale-[1.02] border border-white/20"
+                        : "bg-white/10 hover:bg-white/20 text-[#F2F0EB] border border-white/20 hover:border-white/40 hover:scale-[1.01]"
                   }`}
                 >
                   {isUnavailable ? "No Disponible" : (
                     <>
-                      <WhatsAppIcon className="w-4 h-4 fill-white transition-transform duration-300 group-hover:scale-110" />
+                      <WhatsAppIcon className="w-4 h-4 fill-current transition-transform duration-300 group-hover:scale-110" />
                       <span>Cotizar Paquete</span>
                       <ArrowUpRight className="w-4 h-4 opacity-70 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </>

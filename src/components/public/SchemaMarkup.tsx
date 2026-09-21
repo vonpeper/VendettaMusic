@@ -35,7 +35,7 @@ export async function SchemaMarkup() {
     "url": "https://vendetta.mx",
     "logo": logo,
     "image": "https://vendetta.mx/images/shows/arma-tu-show.jpg",
-    "description": "Grupo musical versátil de alto nivel para bodas, eventos corporativos y festivales en México.",
+    "description": "Banda profesional de pop y rock en vivo de alto nivel para bodas, eventos corporativos y festivales en México.",
     "email": "rock.vendettamx@gmail.com",
     "sameAs": sameAs,
     "areaServed": [
@@ -55,8 +55,8 @@ export async function SchemaMarkup() {
     "name": "Vendetta Live Music",
     "url": "https://vendetta.mx",
     "logo": logo,
-    "description": "Grupo musical versátil mexicano especializado en shows de pop & rock en vivo para bodas y eventos de alta gama.",
-    "genre": ["Versatile", "Rock", "Pop", "Latin"],
+    "description": "Banda profesional de pop y rock en vivo para bodas y eventos de alta gama.",
+    "genre": ["Pop Rock", "Rock", "Pop", "Concert Experience"],
     "sameAs": sameAs,
     "musicGroupMember": musicians.map(m => ({
       "@type": "OrganizationRole",
@@ -90,7 +90,7 @@ export async function SchemaMarkup() {
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "¿Qué incluye el show versátil de Vendetta Live Music?",
+        "name": "¿Qué incluye el show en vivo de Vendetta Live Music?",
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "Nuestros shows incluyen quinteto o septeto con metales (voz femenina, voz masculina, guitarra, bajo, batería, saxofón y trompeta), sistema de audio profesional de alta gama (Electro-Voice / Line Array), iluminación arquitectónica o robótica y un ingeniero de audio calificado según el paquete seleccionado."
@@ -143,7 +143,7 @@ export async function SchemaMarkup() {
       "@id": "https://vendetta.mx/#product_rating",
       "name": "Servicio de Música en Vivo - Vendetta Live Music",
       "image": "https://vendetta.mx/images/shows/arma-tu-show.jpg",
-      "description": "Show de música versátil en vivo para bodas y eventos corporativos.",
+      "description": "Show de pop & rock en vivo con atmósfera de concierto para bodas y eventos corporativos.",
       "brand": {
         "@id": "https://vendetta.mx/#organization"
       },
@@ -177,7 +177,7 @@ export async function SchemaMarkup() {
     "@context": "https://schema.org",
     "@type": "VideoObject",
     "name": "Vendetta Live Music Show en Acción",
-    "description": "Video promocional de la banda versátil Vendetta Live Music en vivo para eventos sociales y corporativos.",
+    "description": "Video promocional de la banda de pop & rock Vendetta Live Music en vivo para eventos sociales y corporativos.",
     "thumbnailUrl": [
       "https://img.youtube.com/vi/607_nxc0Rqc/maxresdefault.jpg"
     ],
@@ -208,7 +208,7 @@ export async function SchemaMarkup() {
       }
     },
     "image": "https://vendetta.mx/images/shows/arma-tu-show.jpg",
-    "description": evt.musicianNotes || "Show en vivo de pop, rock y música versátil.",
+    "description": evt.musicianNotes || "Show en vivo de pop y rock para conciertos y eventos privados.",
     "performer": {
       "@id": "https://vendetta.mx/#musicgroup"
     }
