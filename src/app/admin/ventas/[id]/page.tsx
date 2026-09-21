@@ -594,7 +594,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                         <CreditCard className="w-5 h-5 text-emerald-600" /> Desglose Operativo y Nómina Sugerida
                       </div>
                       <Badge variant="outline" className="text-[10px] font-black border-emerald-500/30 bg-emerald-500/10 text-emerald-600 uppercase">
-                        {isBar ? "Tarifa Bar (Showcase)" : "Evento Privado (Audio Innegociable)"}
+                        {isBar ? "Tarifa Bar (Showcase)" : "Evento Privado (Audio y Staff Incluido)"}
                       </Badge>
                     </CardTitle>
                   </CardHeader>

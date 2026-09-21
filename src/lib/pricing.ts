@@ -321,7 +321,7 @@ export function calculateEventCostBreakdown(
     musiciansTotal,
     staffPay,
     audioAndOfficeProfit,
-    notes: "Privado: Músicos $1,500 base + $1,000/hr extra; Staff $300/hr; Renta Audio y Oficina Vendetta incluida (Audio Innegociable)."
+    notes: "Privado: Músicos $1,500 base + $1,000/hr extra; Staff $300/hr; Renta Audio y Oficina Vendetta (Equipo propio para garantizar fidelidad y calidad de ejecución)."
   }
 }
 

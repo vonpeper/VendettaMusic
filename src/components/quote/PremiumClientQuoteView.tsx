@@ -1053,13 +1053,13 @@ export function PremiumClientQuoteView({
                     <span>
                       <strong className="text-slate-950">Sistema de Sonido:</strong>{" "}
                       {hasLargeAudio 
-                        ? "Sistema PA de alta potencia y refuerzo sonoro calibrado para aforo masivo y cobertura total del recinto."
-                        : "Sistema de audio profesional Electro-Voice / PA calibrado para cobertura nítida y equilibrada en el espacio del evento."}
+                        ? "Sistema de audio profesional de alta potencia y refuerzo sonoro calibrado para aforo masivo y cobertura total del recinto."
+                        : "Sistema de audio profesional calibrado para una cobertura nítida, equilibrada y de alta fidelidad en el espacio del evento."}
                     </span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span><strong className="text-slate-950">Microfonía & Monitoreo:</strong> Microfonía Shure / Sennheiser inalámbrica para voces e instrumentación completa, con monitoreo de piso.</span>
+                    <span><strong className="text-slate-950">Microfonía & Monitoreo:</strong> Microfonía profesional inalámbrica para voces e instrumentación completa, con monitoreo de piso.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -1076,7 +1076,7 @@ export function PremiumClientQuoteView({
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span><strong className="text-slate-950">Estándar Innegociable:</strong> Vendetta opera exclusivamente con su propio sistema de audio y staff técnico para asegurar la fidelidad del show (rider externo únicamente en Festivales homologados).</span>
+                    <span><strong className="text-slate-950">Garantía de Calidad:</strong> Vendetta cuenta con el equipamiento técnico de audio e ingeniería que la agrupación requiere para asegurar la óptima fidelidad, balance y calidad de ejecución en cada evento (en festivales masivos operamos con rider técnico homologado).</span>
                   </li>
                 </ul>
               ) : (

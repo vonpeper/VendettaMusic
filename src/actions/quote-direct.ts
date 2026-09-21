@@ -105,7 +105,7 @@ function buildClientWhatsAppMessage(params: {
     "",
     "🚗 *LOGÍSTICA Y VIÁTICOS*",
     `• *Viáticos estimados:* ${textoViaticos}`,
-    "• *Producción:* Audio Electro-Voice e ingeniería incluida (innegociable por estándar acústico, excepto festivales con rider homologado). No incluye planta de luz. Viáticos para 2 camionetas (gasolina y casetas únicamente). No incluye alimentos.",
+    "• *Producción:* Incluye el equipamiento de audio profesional e ingeniería de sonido que Vendetta requiere para garantizar la fidelidad y calidad de ejecución en tu evento (en festivales operamos con rider técnico homologado). No incluye planta de luz. Viáticos para 2 camionetas (gasolina y casetas únicamente). No incluye alimentos.",
     ...(params.notas?.trim() ? [`\n📝 *Notas adicionales:* ${params.notas.trim()}`] : []),
   ]
 

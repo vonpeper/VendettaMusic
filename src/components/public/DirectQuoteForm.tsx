@@ -700,18 +700,18 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
         )}
       </div>
 
-      {/* Garantía de Audio Profesional Innegociable */}
+      {/* Garantía de Calidad y Producción Sonora */}
       <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex items-start gap-3 text-xs text-gray-300">
         <Speaker className="w-5 h-5 text-primary shrink-0 mt-0.5" />
         <div className="space-y-1">
           <div className="font-bold text-white flex flex-wrap items-center gap-2">
-            <span>Audio Electro-Voice e Ingeniería de Sala Incluida</span>
+            <span>Audio Profesional e Ingeniería de Sonido Incluida</span>
             <span className="text-[10px] uppercase px-2 py-0.5 rounded-full border border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-black">
-              Estándar Innegociable
+              Garantía de Calidad
             </span>
           </div>
           <p className="text-[11px] text-gray-400 leading-relaxed">
-            Todo show de Vendetta incluye de forma innegociable nuestro propio sistema de sonido profesional, microfonía inalámbrica y staff técnico dedicado para garantizar calidad acústica (no conectamos a sistemas externos, excepto en festivales con rider homologado).
+            Contamos con el equipo técnico de audio, microfonía e ingeniería que Vendetta requiere para garantizar la máxima fidelidad sonora, balance y calidad de ejecución en tu evento (en festivales masivos nos adaptamos al rider técnico homologado).
           </p>
         </div>
       </div>
