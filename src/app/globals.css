@@ -249,9 +249,9 @@
 
   .concert-lighting {
     background-image:
-      radial-gradient(circle at 18% 20%, rgba(119, 119, 255, 0.14) 0%, transparent 45%),
-      radial-gradient(circle at 82% 25%, rgba(255, 90, 95, 0.16) 0%, transparent 50%),
-      radial-gradient(circle at 50% 80%, rgba(32, 213, 229, 0.08) 0%, transparent 50%);
+      radial-gradient(circle at 18% 20%, rgba(119, 119, 255, 0.18) 0%, transparent 45%),
+      radial-gradient(circle at 82% 25%, rgba(255, 90, 95, 0.22) 0%, transparent 50%),
+      radial-gradient(circle at 50% 80%, rgba(32, 213, 229, 0.12) 0%, transparent 50%);
   }
 
   .stage-grid-overlay {
@@ -259,6 +259,136 @@
       linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
     background-size: 48px 48px;
+  }
+
+  /* Aurora Backgrounds & Concert Lights */
+  @keyframes aurora-drift {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+      opacity: 0.6;
+    }
+    50% {
+      transform: translate3d(40px, -30px, 0) scale(1.15) rotate(5deg);
+      opacity: 0.9;
+    }
+    100% {
+      transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+      opacity: 0.6;
+    }
+  }
+
+  @keyframes aurora-wave-reverse {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1.1) rotate(0deg);
+      opacity: 0.7;
+    }
+    50% {
+      transform: translate3d(-35px, 25px, 0) scale(0.95) rotate(-6deg);
+      opacity: 0.45;
+    }
+    100% {
+      transform: translate3d(0, 0, 0) scale(1.1) rotate(0deg);
+      opacity: 0.7;
+    }
+  }
+
+  .animate-aurora-drift {
+    animation: aurora-drift 14s ease-in-out infinite;
+  }
+
+  .animate-aurora-reverse {
+    animation: aurora-wave-reverse 18s ease-in-out infinite;
+  }
+
+  .bg-aurora-stage {
+    position: relative;
+    background-color: #07080D;
+    overflow: hidden;
+  }
+
+  .aurora-layer-1 {
+    position: absolute;
+    width: 650px;
+    height: 650px;
+    border-radius: 9999px;
+    filter: blur(120px);
+    background: radial-gradient(circle, rgba(255, 90, 95, 0.28) 0%, rgba(169, 29, 77, 0.18) 45%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .aurora-layer-2 {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    border-radius: 9999px;
+    filter: blur(130px);
+    background: radial-gradient(circle, rgba(119, 119, 255, 0.22) 0%, rgba(111, 13, 43, 0.25) 50%, transparent 75%);
+    pointer-events: none;
+  }
+
+  .aurora-layer-3 {
+    position: absolute;
+    width: 550px;
+    height: 550px;
+    border-radius: 9999px;
+    filter: blur(110px);
+    background: radial-gradient(circle, rgba(32, 213, 229, 0.16) 0%, rgba(255, 179, 0, 0.12) 50%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Amplifier Jewel Pilot Lights (Classic Marshall/Fender Style) */
+  @keyframes jewel-pulse-ruby {
+    0%, 100% {
+      box-shadow: 0 0 10px rgba(255, 90, 95, 0.8), 0 0 24px rgba(255, 90, 95, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.85);
+      filter: brightness(1);
+    }
+    50% {
+      box-shadow: 0 0 16px rgba(255, 90, 95, 1), 0 0 38px rgba(255, 90, 95, 0.75), inset 0 1px 3px rgba(255, 255, 255, 0.95);
+      filter: brightness(1.25);
+    }
+  }
+
+  @keyframes jewel-pulse-amber {
+    0%, 100% {
+      box-shadow: 0 0 10px rgba(255, 179, 0, 0.75), 0 0 22px rgba(255, 179, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.85);
+      filter: brightness(1);
+    }
+    50% {
+      box-shadow: 0 0 16px rgba(255, 179, 0, 1), 0 0 35px rgba(255, 179, 0, 0.7), inset 0 1px 3px rgba(255, 255, 255, 0.95);
+      filter: brightness(1.25);
+    }
+  }
+
+  @keyframes jewel-pulse-emerald {
+    0%, 100% {
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.75), 0 0 22px rgba(34, 197, 94, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.85);
+    }
+    50% {
+      box-shadow: 0 0 16px rgba(34, 197, 94, 1), 0 0 36px rgba(34, 197, 94, 0.7), inset 0 1px 3px rgba(255, 255, 255, 0.95);
+    }
+  }
+
+  .amp-jewel-ruby {
+    background: radial-gradient(circle at 35% 35%, #fff 0%, #ff5a5f 45%, #8e0e15 85%, #42070b 100%);
+    border: 2px solid #555;
+    animation: jewel-pulse-ruby 2.4s ease-in-out infinite;
+  }
+
+  .amp-jewel-amber {
+    background: radial-gradient(circle at 35% 35%, #fff 0%, #ffb300 45%, #b45309 85%, #451a03 100%);
+    border: 2px solid #555;
+    animation: jewel-pulse-amber 2.8s ease-in-out infinite;
+  }
+
+  .amp-jewel-emerald {
+    background: radial-gradient(circle at 35% 35%, #fff 0%, #22c55e 45%, #15803d 85%, #052e16 100%);
+    border: 2px solid #555;
+    animation: jewel-pulse-emerald 2.2s ease-in-out infinite;
+  }
+
+  /* Vacuum Tube Warm Incandescence */
+  .vacuum-tube-glow {
+    background: radial-gradient(ellipse at 50% 60%, rgba(255, 160, 40, 0.22) 0%, rgba(255, 90, 40, 0.10) 45%, transparent 75%);
   }
 }
 

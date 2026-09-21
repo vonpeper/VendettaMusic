@@ -7,7 +7,7 @@ import {
 import { MusiciansSection } from "@/components/public/MusiciansSection"
 import { UpcomingGigs } from "@/components/public/UpcomingGigs"
 import { VideoSection } from "@/components/public/VideoSection"
-import { CassetteReelsSection } from "@/components/public/CassetteReelsSection"
+import { InstagramReelsSection } from "@/components/public/InstagramReelsSection"
 import { PhotoGallery } from "@/components/public/PhotoGallery"
 import { NeonBorder } from "@/components/public/NeonBorder"
 import { WhatsAppButton } from "@/components/public/WhatsAppButton"
@@ -53,7 +53,9 @@ export default async function HomePage() {
     arma_tu_show: allMedia.find((m: any) => m.section === "arma_tu_show")?.url || "/images/shows/arma-tu-show.jpg",
     video_home: allMedia.find((m: any) => m.section === "video_home")?.url || "",
     reels: allMedia.filter((m: any) => (m.section === "reels" || m.section === "instagram") && m.url),
-    galeria: allMedia.filter((m: any) => m.section === "galeria" && m.url).map((m: any) => m.url as string),
+    galeria: allMedia
+      .filter((m: any) => m.section === "galeria" && m.url && !m.url.includes("_n.jpg"))
+      .map((m: any) => m.url as string),
   }
   
   const liveDbReviews = await db.review.findMany({ 
@@ -78,10 +80,11 @@ export default async function HomePage() {
 
       {/* -- HERO ---------------------------------------------------------- */}
       <section id="inicio" className="relative min-h-screen lg:h-screen flex items-center justify-start overflow-hidden bg-gradient-to-br from-[#07080D] via-[#15152B] to-[#42112D] pt-24 pb-12 lg:py-0">
-        {/* Stage lighting beams in background */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-[#7777FF]/15 rounded-full blur-[150px]" />
-          <div className="absolute bottom-1/3 right-1/4 w-[600px] h-[600px] bg-[#FF5A5F]/15 rounded-full blur-[150px]" />
+        {/* Dynamic Aurora lighting beams in background */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="aurora-layer-1 -top-20 left-10 animate-aurora-drift opacity-70" />
+          <div className="aurora-layer-2 bottom-10 right-20 animate-aurora-reverse opacity-60" />
+          <div className="aurora-layer-3 top-1/2 left-1/3 opacity-40" />
           <div className="absolute inset-0 stage-grid-overlay opacity-30" />
         </div>
 
@@ -103,9 +106,11 @@ export default async function HomePage() {
 
         <div className="container relative z-20 px-4 md:px-8 lg:px-16 mx-auto flex items-center w-full">
           <div className="w-full lg:max-w-[480px] xl:max-w-[540px] 2xl:max-w-[600px] text-left flex flex-col items-start pt-6 lg:pt-0">
-            <span className="text-[#FF5A5F] font-sans font-semibold text-xs md:text-sm tracking-[0.3em] uppercase mb-3 block animate-hero-line-1">
-              VENDETTA LIVE MUSIC
-            </span>
+            {/* Amplifier Pilot Light & Season Pill */}
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 backdrop-blur-md text-[10px] font-semibold uppercase tracking-[0.25em] text-[#F2F0EB] mb-4 animate-hero-line-1">
+              <span className="w-2.5 h-2.5 rounded-full amp-jewel-ruby" />
+              <span>LIVE POP & ROCK CONCERT • 2026</span>
+            </div>
             
             <h1 className="font-sans font-black uppercase text-left tracking-tight leading-[0.92] text-[clamp(2.3rem,5vw,4.2rem)] mb-6 select-none drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
               <span className="block animate-hero-line-1 whitespace-nowrap">
@@ -181,8 +186,8 @@ export default async function HomePage() {
       {mediaMap.video_home && <VideoSection videoUrl={mediaMap.video_home} />}
       {!mediaMap.video_home && <VideoSection />}
 
-      {/* -- CASSETTE 80s REELS MIXTAPE ----------------------------------- */}
-      <CassetteReelsSection reels={mediaMap.reels} />
+      {/* -- INSTAGRAM LIVE REELS ------------------------------------------ */}
+      <InstagramReelsSection reels={mediaMap.reels} />
 
       {/* -- TRIBUTO MENTIRAS HERO ------------------------------------------ */}
       <section className="relative py-32 overflow-hidden bg-gradient-to-b from-[#0E0E1A] via-[#2D0F22]/90 to-[#0B0B14]">
@@ -212,7 +217,8 @@ export default async function HomePage() {
           </div>
           <div className="lg:w-1/2 text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FF5A5F]/30 bg-[#6F0D2B]/20 text-[#FF5A5F] font-bold uppercase tracking-[0.3em] text-xs mb-4">
-              Especiales Vendetta
+              <span className="w-2.5 h-2.5 rounded-full amp-jewel-amber" />
+              <span>HOMENAJE OFICIAL • 80s POP</span>
             </div>
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-heading font-black text-white uppercase tracking-tight leading-tight md:leading-none mb-6">
               Tributo <br />
@@ -234,18 +240,22 @@ export default async function HomePage() {
       </section>
 
       {/* -- CERTIFICADOS DE CALIDAD (SERVICIOS - BENTO CARDS) ------------- */}
-      <section id="servicios" className="py-28 bg-gradient-to-b from-[#0B0B14] via-[#120F24] to-[#15152B] relative overflow-hidden">
+      <section id="servicios" className="py-28 bg-[#0B0B14] relative overflow-hidden">
+        {/* Aurora stage effects */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="aurora-layer-1 -top-32 left-1/4 animate-aurora-drift opacity-45" />
+          <div className="aurora-layer-2 bottom-10 right-1/4 animate-aurora-reverse opacity-40" />
+          <div className="absolute inset-0 stage-grid-overlay opacity-30" />
+        </div>
+
         {/* Máscara de mezcla de gradiente para transición suave */}
         <div className="section-blend-top bg-gradient-to-b from-[#0B0B14] to-transparent" />
-
-        {/* Luces y retícula escénica */}
-        <div className="absolute inset-0 stage-grid-overlay opacity-30 pointer-events-none" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#6F0D2B]/15 rounded-full blur-[140px] pointer-events-none" />
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#FF5A5F]/30 bg-[#6F0D2B]/20 text-[#FF5A5F] font-bold text-xs uppercase tracking-[0.2em] mb-6 shadow-lg shadow-[#6F0D2B]/20">
-              ⚡ Estándar Vendetta
+              <span className="w-2.5 h-2.5 rounded-full amp-jewel-ruby" />
+              <span>ESTÁNDAR VENDETTA • BENTO SHOWCASE</span>
             </div>
             <h2 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl tracking-tighter mb-4 leading-tight md:leading-none uppercase text-white">
               Show de Épocas <br /> <span className="text-gradient-encore italic">Pop & Rock</span>
