@@ -108,7 +108,7 @@ export default async function HomePage() {
         {/* Background Image Container - Desktop (>=lg) */}
         <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[62%] xl:w-[66%] 2xl:w-[70%] z-0 select-none pointer-events-none animate-hero-bg hidden lg:block">
           <Image
-            src="/images/vendetta-web-assets/vendetta-hero.jpg"
+            src="/images/vendetta-web-assets/vendetta-hero.png"
             alt="Banda de pop y rock en vivo Vendetta para eventos sociales y bodas"
             fill
             priority
@@ -143,7 +143,7 @@ export default async function HomePage() {
             {/* Dedicated mobile photo: HD framing with ALL 5 band members completely visible */}
             <div className="w-full relative my-5 rounded-3xl overflow-hidden aspect-[16/9] border border-white/20 shadow-2xl lg:hidden animate-hero-bg backdrop-blur-xl">
               <Image
-                src="/images/vendetta-web-assets/vendetta-hero-mobile.jpg"
+                src="/images/vendetta-web-assets/vendetta-hero-mobile.png"
                 alt="Banda de pop y rock en vivo Vendetta para eventos sociales y bodas"
                 fill
                 priority
