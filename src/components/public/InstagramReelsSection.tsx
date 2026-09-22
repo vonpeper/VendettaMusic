@@ -1,14 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   Play, 
   X, 
   ExternalLink, 
-  Sparkles, 
-  Radio, 
-  Volume2, 
   ChevronRight,
   ChevronLeft
 } from "lucide-react"
@@ -22,7 +19,7 @@ function InstagramIcon({ className = "w-4 h-4" }: { className?: string }) {
   )
 }
 
-interface ReelItem {
+export interface ReelItem {
   id: string
   title: string
   song: string
@@ -41,10 +38,10 @@ const OFFICIAL_REELS: ReelItem[] = [
     title: "Vizzio Metepec — Pop & Rock en Vivo",
     song: "Vendetta en Concierto",
     category: "poprock",
-    duration: "0:30",
+    duration: "0:13",
     views: "18.4K",
     thumbnail: "/images/reels/reel-vizzio.jpg",
-    videoUrl: "https://www.instagram.com/reel/Dc_il-KOqBb/embed/",
+    videoUrl: "/videos/reels/reel-vizzio.mp4",
     instagramUrl: "https://www.instagram.com/reel/Dc_il-KOqBb/",
     tag: "🔥 Vizzio Metepec"
   },
@@ -53,10 +50,10 @@ const OFFICIAL_REELS: ReelItem[] = [
     title: "COMEXANE A.C. — Cena de Gala & Inauguración",
     song: "Cena Anual de Gala",
     category: "bodas",
-    duration: "0:45",
+    duration: "1:19",
     views: "38.2K",
     thumbnail: "/images/reels/reel-comexane.jpg",
-    videoUrl: "https://www.instagram.com/reel/DcYzk_yOy_y/embed/",
+    videoUrl: "/videos/reels/reel-comexane.mp4",
     instagramUrl: "https://www.instagram.com/reel/DcYzk_yOy_y/",
     tag: "💎 Gala COMEXANE"
   },
@@ -65,10 +62,10 @@ const OFFICIAL_REELS: ReelItem[] = [
     title: "Alquimia 73 — Ochenteras, Molotov & Rosa Pastel",
     song: "Disco, 80s, 90s & Rock en Español",
     category: "mentiras",
-    duration: "0:50",
+    duration: "1:41",
     views: "31.4K",
     thumbnail: "/images/reels/reel-alquimia.jpg",
-    videoUrl: "https://www.instagram.com/reel/Da7HQT5gk8J/embed/",
+    videoUrl: "/videos/reels/reel-alquimia.mp4",
     instagramUrl: "https://www.instagram.com/reel/Da7HQT5gk8J/",
     tag: "⚡ Alquimia 73"
   },
@@ -77,12 +74,36 @@ const OFFICIAL_REELS: ReelItem[] = [
     title: "Bruma Memories & Drinks — Gran Noche en Vivo",
     song: "Valle de Bravo Rock & Hits",
     category: "poprock",
-    duration: "0:40",
+    duration: "0:20",
     views: "29.7K",
     thumbnail: "/images/reels/reel-bruma.jpg",
-    videoUrl: "https://www.instagram.com/reel/DYtp2LFum_y/embed/",
+    videoUrl: "/videos/reels/reel-bruma.mp4",
     instagramUrl: "https://www.instagram.com/reel/DYtp2LFum_y/",
     tag: "🍸 Bruma Valle"
+  },
+  {
+    id: "reel-5",
+    title: "Festejo Privado — ¡Muchas Felicidades Imelda!",
+    song: "Banda en Vivo & Clientes Amigos",
+    category: "bodas",
+    duration: "0:30",
+    views: "24.6K",
+    thumbnail: "/images/reels/reel-imelda.jpg",
+    videoUrl: "/videos/reels/reel-imelda.mp4",
+    instagramUrl: "https://www.instagram.com/reel/DdRuHREMPVv/",
+    tag: "❤️ Festejo Imelda"
+  },
+  {
+    id: "reel-6",
+    title: "Celebración Exclusiva — Festejo Frida",
+    song: "Hits en Vivo & Gran Ambiente",
+    category: "poprock",
+    duration: "0:32",
+    views: "27.1K",
+    thumbnail: "/images/reels/reel-frida.jpg",
+    videoUrl: "/videos/reels/reel-frida.mp4",
+    instagramUrl: "https://www.instagram.com/reel/DdMJmI3ON4x/",
+    tag: "🎉 Festejo Frida"
   }
 ]
 
@@ -109,6 +130,35 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
   const filteredItems = selectedCategory === "all" 
     ? items 
     : items.filter(item => item.category === selectedCategory)
+
+  // Carousel navigation within modal
+  const currentIndex = activeModalReel 
+    ? filteredItems.findIndex(item => item.id === activeModalReel.id)
+    : -1
+
+  const handleNextReel = useCallback(() => {
+    if (filteredItems.length === 0) return
+    const nextIdx = (currentIndex + 1) % filteredItems.length
+    setActiveModalReel(filteredItems[nextIdx])
+  }, [currentIndex, filteredItems])
+
+  const handlePrevReel = useCallback(() => {
+    if (filteredItems.length === 0) return
+    const prevIdx = (currentIndex - 1 + filteredItems.length) % filteredItems.length
+    setActiveModalReel(filteredItems[prevIdx])
+  }, [currentIndex, filteredItems])
+
+  // Keyboard navigation (Escape to close, Left/Right arrows to navigate)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!activeModalReel) return
+      if (e.key === "Escape") setActiveModalReel(null)
+      if (e.key === "ArrowRight") handleNextReel()
+      if (e.key === "ArrowLeft") handlePrevReel()
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [activeModalReel, handleNextReel, handlePrevReel])
 
   return (
     <section id="reels" className="py-24 md:py-32 bg-[#07080D] relative overflow-hidden border-t border-white/10">
@@ -150,7 +200,7 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
               REELS & EN VIVO <span className="text-gradient-encore">EN INSTAGRAM</span>
             </h2>
             <p className="text-[#F2F0EB]/70 text-sm md:text-base font-normal">
-              Grabaciones directas desde el escenario y la pista. Sin cortes de estudio: la energía real de nuestra banda tocando en bodas y eventos exclusivos.
+              Grabaciones directas desde el escenario y la pista. Reproduce al instante con audio real de consola o visítanos en Instagram.
             </p>
           </div>
 
@@ -172,10 +222,10 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
         {/* Category Filter Pills */}
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-10 no-scrollbar">
           {[
-            { id: "all", label: "🔥 Todos los Reels" },
+            { id: "all", label: "🔥 Todos los Reels (6)" },
             { id: "poprock", label: "🎸 Pop & Rock en Vivo" },
-            { id: "mentiras", label: "🎭 Ochenteras & Hits" },
-            { id: "bodas", label: "💍 Galas & Eventos" }
+            { id: "mentiras", label: "🎭 Ochenteras & Medleys" },
+            { id: "bodas", label: "💍 Galas & Festejos" }
           ].map(tab => (
             <button
               key={tab.id}
@@ -191,8 +241,8 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
           ))}
         </div>
 
-        {/* Responsive 9:16 Video Reel Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-6">
+        {/* Responsive 9:16 Video Reel Cards Grid (3 columns on desktop for 6 items) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {filteredItems.map((reel) => (
             <motion.div
               key={reel.id}
@@ -205,16 +255,16 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
                 src={reel.thumbnail}
                 alt={reel.title}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-85 group-hover:opacity-100"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
                 unoptimized
               />
 
               {/* Stage Lighting & Vignette Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-black/40" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/40 pointer-events-none" />
 
               {/* Top Meta: Category Badge & Instagram Icon */}
-              <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10">
+              <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
                 <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-black/60 backdrop-blur-md border border-white/20 text-[#F2F0EB]">
                   {reel.tag}
                 </span>
@@ -231,28 +281,35 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
                 </div>
               </div>
 
-              {/* Live Audio Visualizer Bars (Bottom Animated) */}
-              <div className="absolute bottom-24 left-5 right-5 flex items-end gap-1.5 h-6 z-10 pointer-events-none opacity-75 group-hover:opacity-100 transition-opacity">
-                <span className="w-1 rounded-full bg-[#FF5A5F] animate-vu-1" />
-                <span className="w-1 rounded-full bg-[#FF5A5F] animate-vu-2" />
-                <span className="w-1 rounded-full bg-white animate-vu-3" />
-                <span className="w-1 rounded-full bg-white/70 animate-vu-1" />
-                <span className="w-1 rounded-full bg-[#FF5A5F] animate-vu-2" />
-                <span className="text-[10px] font-mono text-white/60 ml-2 uppercase tracking-widest">AUDIO EN VIVO</span>
-              </div>
+              {/* Bottom Content: Title, Sound & Details (Flex structure: absolutely zero overlapping!) */}
+              <div className="absolute bottom-0 inset-x-0 p-5 z-10 bg-gradient-to-t from-black via-black/90 to-transparent pt-14 flex flex-col gap-2 pointer-events-none">
+                {/* Audio label row with integrated VU meter */}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[#FF5A5F] text-[11px] font-semibold uppercase tracking-wider line-clamp-1">
+                    {reel.song}
+                  </span>
+                  
+                  {/* Live Audio Visualizer Bars */}
+                  <div className="flex items-center gap-1.5 shrink-0 px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/10">
+                    <div className="flex items-end gap-0.5 h-3">
+                      <span className="w-0.5 rounded-full bg-[#FF5A5F] animate-vu-1" />
+                      <span className="w-0.5 rounded-full bg-[#FF5A5F] animate-vu-2" />
+                      <span className="w-0.5 rounded-full bg-white animate-vu-3" />
+                      <span className="w-0.5 rounded-full bg-[#FF5A5F] animate-vu-1" />
+                    </div>
+                    <span className="text-[9px] font-mono text-white/80 uppercase tracking-wider">LIVE</span>
+                  </div>
+                </div>
 
-              {/* Bottom Content: Title & Details */}
-              <div className="absolute bottom-5 left-5 right-5 z-10">
-                <p className="text-[#FF5A5F] text-[11px] font-semibold uppercase tracking-wider mb-1 line-clamp-1">
-                  {reel.song}
-                </p>
-                <h3 className="text-white font-sans font-black text-base sm:text-lg leading-tight mb-2 drop-shadow-md line-clamp-2">
+                <h3 className="text-white font-sans font-black text-base sm:text-lg leading-tight drop-shadow-md line-clamp-2">
                   {reel.title}
                 </h3>
                 
                 <div className="flex items-center justify-between text-xs text-white/60 font-mono pt-2 border-t border-white/10">
                   <span>{reel.views} vistas</span>
-                  <span className="text-[#FF5A5F] font-bold">▶ Reproducir</span>
+                  <span className="text-[#FF5A5F] font-bold inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                    <Play className="w-3 h-3 fill-current" /> Reproducir
+                  </span>
                 </div>
               </div>
             </motion.div>
@@ -275,28 +332,60 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
         </div>
       </div>
 
-      {/* Video Player Modal */}
+      {/* Video Player Modal with Native In-Site Playback */}
       <AnimatePresence>
         {activeModalReel && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={() => setActiveModalReel(null)}
             className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 md:p-8"
           >
             {/* Close Button */}
             <button
               onClick={() => setActiveModalReel(null)}
               aria-label="Cerrar reproductor"
-              className="absolute top-6 right-6 w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all text-white z-[110] cursor-pointer"
+              className="absolute top-5 right-5 w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all text-white z-[120] cursor-pointer"
             >
               <X className="w-6 h-6" />
             </button>
 
-            <div className="relative w-full max-w-4xl bg-[#0E1017] rounded-3xl border border-white/20 overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[92vh]">
-              {/* Video Player Container */}
-              <div className="relative w-full md:w-3/5 min-h-[460px] md:min-h-[580px] bg-black flex items-center justify-center overflow-hidden">
-                {activeModalReel.videoUrl ? (
+            {/* Desktop Navigation Arrows */}
+            <button
+              onClick={(e) => { e.stopPropagation(); handlePrevReel() }}
+              aria-label="Video anterior"
+              className="hidden lg:flex absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md items-center justify-center text-white transition-all z-[115] cursor-pointer"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); handleNextReel() }}
+              aria-label="Siguiente video"
+              className="hidden lg:flex absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md items-center justify-center text-white transition-all z-[115] cursor-pointer"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-4xl bg-[#0E1017] rounded-3xl border border-white/20 overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[92vh]"
+            >
+              {/* Native Video Player Container */}
+              <div className="relative w-full md:w-3/5 min-h-[380px] md:min-h-[560px] bg-black flex items-center justify-center overflow-hidden">
+                {activeModalReel.videoUrl?.endsWith(".mp4") ? (
+                  <video
+                    key={activeModalReel.videoUrl}
+                    src={activeModalReel.videoUrl}
+                    poster={activeModalReel.thumbnail}
+                    controls
+                    autoPlay
+                    playsInline
+                    preload="auto"
+                    className="w-full h-full max-h-[55vh] md:max-h-[85vh] object-contain bg-black"
+                  />
+                ) : activeModalReel.videoUrl ? (
                   <iframe
                     src={activeModalReel.videoUrl}
                     title={activeModalReel.title}
@@ -313,12 +402,18 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
               </div>
 
               {/* Sidebar Info & Controls */}
-              <div className="w-full md:w-2/5 p-6 md:p-8 flex flex-col justify-between bg-gradient-to-b from-white/[0.04] to-transparent">
+              <div className="w-full md:w-2/5 p-6 md:p-8 flex flex-col justify-between bg-gradient-to-b from-white/[0.04] to-transparent overflow-y-auto">
                 <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-2.5 h-2.5 rounded-full amp-jewel-ruby" />
-                    <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold">
-                      REEL OFICIAL • INSTAGRAM
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full amp-jewel-ruby" />
+                      <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold">
+                        EN VIVO • REEL {currentIndex >= 0 ? `${currentIndex + 1}/${filteredItems.length}` : ""}
+                      </span>
+                    </div>
+
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-white/70">
+                      {activeModalReel.duration}
                     </span>
                   </div>
 
@@ -340,13 +435,37 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
                       <span className="text-white">{activeModalReel.views}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-white/40">CALIDAD:</span>
-                      <span className="text-emerald-400">Audio Directo de Sala</span>
+                      <span className="text-white/40">AUDIO:</span>
+                      <span className="text-emerald-400">Directo de Consola (Stereo)</span>
                     </div>
+                  </div>
+
+                  {/* Mobile Prev / Next Controls */}
+                  <div className="flex lg:hidden items-center justify-between gap-2 py-2 mb-4">
+                    <button 
+                      onClick={handlePrevReel} 
+                      className="flex-1 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold flex items-center justify-center gap-1 transition-all"
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Anterior
+                    </button>
+                    <button 
+                      onClick={handleNextReel} 
+                      className="flex-1 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold flex items-center justify-center gap-1 transition-all"
+                    >
+                      Siguiente <ChevronRight className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
 
                 <div className="space-y-3 pt-6 border-t border-white/10">
+                  <a
+                    href="#paquetes"
+                    onClick={() => setActiveModalReel(null)}
+                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] text-white text-xs font-bold uppercase tracking-widest border border-white/20 shadow-md shadow-[#FF5A5F]/20 hover:opacity-95 transition-all"
+                  >
+                    <span>Cotizar este Show</span>
+                  </a>
+
                   <a
                     href={activeModalReel.instagramUrl}
                     target="_blank"
@@ -354,16 +473,8 @@ export function InstagramReelsSection({ reels = [] }: { reels?: any[] }) {
                     className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-white text-xs font-bold uppercase tracking-wider transition-all"
                   >
                     <InstagramIcon className="w-4 h-4 text-[#FF5A5F]" />
-                    <span>Abrir en Instagram</span>
+                    <span>Ver en Instagram</span>
                     <ExternalLink className="w-3.5 h-3.5 opacity-75" />
-                  </a>
-
-                  <a
-                    href="#paquetes"
-                    onClick={() => setActiveModalReel(null)}
-                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] text-white text-xs font-bold uppercase tracking-widest border border-white/20 shadow-md shadow-[#FF5A5F]/20 hover:opacity-95 transition-all"
-                  >
-                    <span>Cotizar este Show</span>
                   </a>
                 </div>
               </div>
