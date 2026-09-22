@@ -32,6 +32,28 @@ export const metadata: Metadata = {
   verification: {
     google: 'xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY',
   },
+  openGraph: {
+    title: "Vendetta | Banda de Pop & Rock en Vivo para Bodas y Eventos",
+    description: "Banda profesional de pop y rock en vivo para bodas, eventos corporativos y celebraciones en Toluca, CDMX y Valle de Bravo. Experiencia real de concierto con producción de gira.",
+    url: 'https://vendetta.mx',
+    siteName: 'Vendetta Live Music',
+    images: [
+      {
+        url: 'https://vendetta.mx/images/vendetta-hero-og.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Vendetta Banda de Pop & Rock en Vivo',
+      },
+    ],
+    locale: 'es_MX',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Vendetta | Banda de Pop & Rock en Vivo para Bodas y Eventos",
+    description: "Banda profesional de pop y rock en vivo para bodas, eventos corporativos y celebraciones en Toluca, CDMX y Valle de Bravo. Experiencia real de concierto con producción de gira.",
+    images: ['https://vendetta.mx/images/vendetta-hero-og.jpg'],
+  },
 }
 
 // La home lee paquetes/medios/reseñas de la DB en cada request — no debe pre-renderizarse
@@ -84,14 +106,14 @@ export default async function HomePage() {
         </div>
 
         {/* Background Image Container - Desktop (>=lg) */}
-        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[60%] xl:w-[63%] 2xl:w-[66%] z-0 select-none pointer-events-none animate-hero-bg hidden lg:block">
+        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[62%] xl:w-[66%] 2xl:w-[70%] z-0 select-none pointer-events-none animate-hero-bg hidden lg:block">
           <Image
             src="/images/vendetta-web-assets/vendetta-hero.jpg"
             alt="Banda de pop y rock en vivo Vendetta para eventos sociales y bodas"
             fill
             priority
             unoptimized
-            className="opacity-95 object-contain object-bottom-right"
+            className="opacity-95 object-contain object-right"
           />
           {/* Smooth gradient blend into Midnight Stage background */}
           <div className="absolute inset-y-0 left-0 w-44 bg-gradient-to-r from-[#07080D] via-[#07080D]/85 to-transparent z-10" />
@@ -119,7 +141,7 @@ export default async function HomePage() {
             </h1>
 
             {/* Dedicated mobile photo: HD framing with ALL 5 band members completely visible */}
-            <div className="w-full relative my-5 rounded-3xl overflow-hidden aspect-[195/144] border border-white/20 shadow-2xl lg:hidden animate-hero-bg backdrop-blur-xl">
+            <div className="w-full relative my-5 rounded-3xl overflow-hidden aspect-[16/9] border border-white/20 shadow-2xl lg:hidden animate-hero-bg backdrop-blur-xl">
               <Image
                 src="/images/vendetta-web-assets/vendetta-hero-mobile.jpg"
                 alt="Banda de pop y rock en vivo Vendetta para eventos sociales y bodas"
