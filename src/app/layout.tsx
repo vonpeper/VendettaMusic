@@ -50,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const title = config?.ogTitle || "Vendetta | Pop & Rock en Vivo para Eventos";
   const description = config?.ogDescription || "Banda profesional de pop y rock en vivo para bodas, eventos corporativos y celebraciones en México. Experiencia real de concierto con producción premium.";
-  const image = config?.ogImage || 'https://vendetta.mx/images/vendetta-hero-og.jpg';
+  const image = config?.ogImage || 'https://vendetta.mx/images/vendetta-hero-og-v2.jpg';
 
   return {
     title,
