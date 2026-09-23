@@ -9,8 +9,7 @@ import {
   SkipBack, 
   SkipForward, 
   Volume2, 
-  VolumeX, 
-  ExternalLink 
+  VolumeX 
 } from "lucide-react"
 
 interface VinylTrack {
@@ -449,14 +448,10 @@ export function VinylShowcase() {
                 </button>
               </div>
 
-              {/* Repertorio link */}
-              <a
-                href="/repertorio"
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-sans font-bold text-xs uppercase tracking-wider border border-white/15 flex items-center gap-2 transition-all ml-auto"
-              >
-                <span>Repertorio (+150)</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
+              <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-wider text-white/40">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#20D5E5] animate-pulse" />
+                <span>Audio Oficial Vendetta</span>
+              </div>
             </div>
 
           </div>

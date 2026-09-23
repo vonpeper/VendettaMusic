@@ -18,6 +18,15 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'i.ytimg.com' },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/repertorio',
+        destination: '/',
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {
