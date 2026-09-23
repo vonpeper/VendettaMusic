@@ -26,7 +26,7 @@ const NAV_LINKS = [
 
 export function PublicNavbar() {
   return (
-    <header className="fixed top-0 w-full z-50 border-b border-white/10 bg-[#07080D]/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(7,8,13,0.6)]">
+    <header className="fixed top-0 w-full z-50 border-b border-white/10 bg-[#07080D]/90 md:bg-[#07080D]/75 backdrop-blur-md shadow-[0_8px_32px_rgba(7,8,13,0.6)] transform-gpu">
       {/* Subtle glowing accent line at the top border */}
       <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF5A5F]/40 to-transparent" />
 

@@ -1,7 +1,6 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from "react"
-import { motion } from "framer-motion"
+import React, { useState, useRef, useEffect, useCallback } from "react"
 import { 
   Disc3, 
   Play, 
@@ -77,10 +76,82 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`
 }
 
+/**
+ * Subcomponente de barra de progreso aislado.
+ * Al escuchar 'timeupdate' localmente, evita que el tocadiscos, disco de vinilo,
+ * aguja fonocaptora y lista de canciones se re-rendericen 4 veces por segundo en React.
+ */
+function AudioScrubber({
+  audioRef,
+  duration,
+  activeTrack,
+  isPlaying,
+}: {
+  audioRef: React.RefObject<HTMLAudioElement | null>
+  duration: number
+  activeTrack: VinylTrack
+  isPlaying: boolean
+}) {
+  const [currentTime, setCurrentTime] = useState(0)
+  const isDraggingRef = useRef(false)
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const handleTimeUpdate = () => {
+      if (!isDraggingRef.current) {
+        setCurrentTime(audio.currentTime)
+      }
+    }
+
+    audio.addEventListener("timeupdate", handleTimeUpdate)
+    return () => {
+      audio.removeEventListener("timeupdate", handleTimeUpdate)
+    }
+  }, [audioRef])
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = parseFloat(e.target.value)
+    setCurrentTime(newTime)
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime
+    }
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-[11px] font-mono text-white/60">
+        <span className="flex items-center gap-1.5 font-bold text-white/90 truncate mr-2">
+          <Disc3 className={`w-3.5 h-3.5 shrink-0 ${isPlaying ? "animate-spin text-[#20D5E5]" : ""}`} />
+          <span className="truncate max-w-[180px] sm:max-w-[260px]">{activeTrack.title} — {activeTrack.artist}</span>
+        </span>
+        <span className="shrink-0">{formatTime(currentTime)} / {formatTime(duration)}</span>
+      </div>
+      
+      <div className="relative flex items-center group">
+        <input
+          type="range"
+          min={0}
+          max={duration || 100}
+          step={0.1}
+          value={currentTime}
+          onMouseDown={() => { isDraggingRef.current = true }}
+          onTouchStart={() => { isDraggingRef.current = true }}
+          onMouseUp={() => { isDraggingRef.current = false }}
+          onTouchEnd={() => { isDraggingRef.current = false }}
+          onChange={handleSeek}
+          aria-label="Progreso de la pista"
+          className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#FF5A5F] focus:outline-none"
+        />
+      </div>
+    </div>
+  )
+}
+
 export function VinylShowcase() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeTrackIndex, setActiveTrackIndex] = useState(0)
-  const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
 
@@ -94,7 +165,6 @@ export function VinylShowcase() {
     if (!audioRef.current) return
     audioRef.current.src = TRACKS[activeTrackIndex].audioUrl
     audioRef.current.currentTime = 0
-    setCurrentTime(0)
     setDuration(0)
 
     if (autoPlayRef.current) {
@@ -110,7 +180,7 @@ export function VinylShowcase() {
     }
   }, [activeTrackIndex])
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     if (!audioRef.current) return
     if (isPlaying) {
       audioRef.current.pause()
@@ -128,7 +198,7 @@ export function VinylShowcase() {
           })
       }
     }
-  }
+  }, [isPlaying])
 
   const selectTrack = (index: number) => {
     if (index === activeTrackIndex) {
@@ -149,14 +219,6 @@ export function VinylShowcase() {
     setActiveTrackIndex((prev) => (prev - 1 + TRACKS.length) % TRACKS.length)
   }
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseFloat(e.target.value)
-    if (audioRef.current) {
-      audioRef.current.currentTime = newTime
-      setCurrentTime(newTime)
-    }
-  }
-
   const toggleMute = () => {
     if (!audioRef.current) return
     const nextMuted = !isMuted
@@ -165,19 +227,16 @@ export function VinylShowcase() {
   }
 
   return (
-    <div id="reproductor" className="w-full my-12 p-6 sm:p-8 md:p-12 rounded-[2.5rem] bg-gradient-to-br from-[#0F1118]/95 via-[#08090E]/95 to-[#040507]/95 border-2 border-white/20 relative overflow-hidden shadow-2xl neon-live-cyan scroll-mt-28">
-      
+    <div 
+      id="reproductor" 
+      className="w-full my-12 p-6 sm:p-8 md:p-12 rounded-[2.5rem] bg-gradient-to-br from-[#0F1118]/95 via-[#08090E]/95 to-[#040507]/95 border-2 border-white/20 relative overflow-hidden shadow-2xl neon-live-cyan scroll-mt-28 transform-gpu"
+    >
       {/* Hidden HTML5 Audio Element */}
       <audio
         ref={audioRef}
         preload="metadata"
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
-        onTimeUpdate={() => {
-          if (audioRef.current) {
-            setCurrentTime(audioRef.current.currentTime)
-          }
-        }}
         onLoadedMetadata={() => {
           if (audioRef.current) {
             setDuration(audioRef.current.duration || 0)
@@ -189,24 +248,24 @@ export function VinylShowcase() {
         }}
       />
 
-      {/* Aurora Ambient Background Flare */}
+      {/* Aurora Ambient Background Flare - Optimizado para GPU */}
       <div 
-        className="absolute -top-24 -right-24 w-80 h-80 rounded-full blur-3xl pointer-events-none transition-colors duration-700 opacity-20"
+        className="absolute -top-24 -right-24 w-80 h-80 rounded-full blur-2xl pointer-events-none transition-colors duration-700 opacity-20 transform-gpu"
         style={{ backgroundColor: activeTrack.accentColor }}
       />
-      <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-[#FF5A5F]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-[#FF5A5F]/15 rounded-full blur-2xl pointer-events-none transform-gpu" />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-center relative z-10">
         
         {/* Left Column: Vinyl Turntable Platter */}
-        <div className="lg:col-span-6 flex flex-col items-center justify-center relative select-none">
+        <div className="lg:col-span-6 flex flex-col items-center justify-center relative select-none transform-gpu">
           
           {/* Turntable Platter Deck */}
-          <div className="w-[280px] h-[280px] sm:w-[350px] sm:h-[350px] md:w-[380px] md:h-[380px] rounded-full p-3 bg-gradient-to-br from-[#222] via-[#111] to-[#080808] border-4 border-white/20 shadow-2xl relative flex items-center justify-center">
+          <div className="w-[280px] h-[280px] sm:w-[350px] sm:h-[350px] md:w-[380px] md:h-[380px] rounded-full p-3 bg-gradient-to-br from-[#222] via-[#111] to-[#080808] border-4 border-white/20 shadow-2xl relative flex items-center justify-center transform-gpu">
             
-            {/* Spinning Vinyl Record Disc */}
+            {/* Spinning Vinyl Record Disc (Acelerado por hardware y sin transiciones en conflicto) */}
             <div 
-              className={`w-full h-full rounded-full vinyl-grooves relative flex items-center justify-center cursor-pointer transition-all duration-700 ${
+              className={`w-full h-full rounded-full vinyl-grooves relative flex items-center justify-center cursor-pointer transform-gpu ${
                 isPlaying ? "animate-spin-vinyl" : ""
               }`}
               onClick={togglePlay}
@@ -217,7 +276,7 @@ export function VinylShowcase() {
 
               {/* Center Vinyl Paper Label */}
               <div 
-                className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full border-4 border-[#111] flex flex-col items-center justify-center text-center p-2.5 shadow-inner relative z-10 transition-all duration-700"
+                className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full border-4 border-[#111] flex flex-col items-center justify-center text-center p-2.5 shadow-inner relative z-10 transition-colors duration-500"
                 style={{
                   background: `radial-gradient(circle at center, #151515 0%, #202020 50%, ${activeTrack.accentColor}dd 100%)`
                 }}
@@ -242,7 +301,7 @@ export function VinylShowcase() {
 
             {/* Tone-Arm (Turntable Needle) */}
             <div 
-              className={`absolute top-4 right-4 w-28 h-40 pointer-events-none transition-transform duration-700 origin-top-right z-20 ${
+              className={`absolute top-4 right-4 w-28 h-40 pointer-events-none transition-transform duration-700 origin-top-right z-20 transform-gpu ${
                 isPlaying ? "rotate-[26deg]" : "rotate-[0deg]"
               }`}
             >
@@ -325,21 +384,9 @@ export function VinylShowcase() {
                       >
                         {isThisPlaying ? (
                           <div className="flex items-end justify-center gap-0.5 h-4 w-4">
-                            <motion.span
-                              className="w-1 bg-black rounded-full"
-                              animate={{ height: ["25%", "90%", "35%"] }}
-                              transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut" }}
-                            />
-                            <motion.span
-                              className="w-1 bg-black rounded-full"
-                              animate={{ height: ["60%", "100%", "20%"] }}
-                              transition={{ repeat: Infinity, duration: 0.5, ease: "easeInOut", delay: 0.1 }}
-                            />
-                            <motion.span
-                              className="w-1 bg-black rounded-full"
-                              animate={{ height: ["35%", "85%", "55%"] }}
-                              transition={{ repeat: Infinity, duration: 0.7, ease: "easeInOut", delay: 0.2 }}
-                            />
+                            <span className="w-1 bg-black rounded-full animate-eq-1" />
+                            <span className="w-1 bg-black rounded-full animate-eq-2" />
+                            <span className="w-1 bg-black rounded-full animate-eq-3" />
                           </div>
                         ) : isSelected ? (
                           <Play className="w-3.5 h-3.5 fill-black ml-0.5" />
@@ -377,29 +424,13 @@ export function VinylShowcase() {
 
           {/* Master Transport & Scrubber Bar */}
           <div className="pt-4 border-t border-white/10 flex flex-col gap-3.5">
-            {/* Scrubber / Progress Bar */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] font-mono text-white/60">
-                <span className="flex items-center gap-1.5 font-bold text-white/90 truncate mr-2">
-                  <Disc3 className={`w-3.5 h-3.5 shrink-0 ${isPlaying ? "animate-spin text-[#20D5E5]" : ""}`} />
-                  <span className="truncate max-w-[180px] sm:max-w-[260px]">{activeTrack.title} — {activeTrack.artist}</span>
-                </span>
-                <span className="shrink-0">{formatTime(currentTime)} / {formatTime(duration)}</span>
-              </div>
-              
-              <div className="relative flex items-center group">
-                <input
-                  type="range"
-                  min={0}
-                  max={duration || 100}
-                  step={0.1}
-                  value={currentTime}
-                  onChange={handleSeek}
-                  aria-label="Progreso de la pista"
-                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#FF5A5F] focus:outline-none"
-                />
-              </div>
-            </div>
+            {/* Scrubber / Progress Bar Aislado */}
+            <AudioScrubber 
+              audioRef={audioRef}
+              duration={duration}
+              activeTrack={activeTrack}
+              isPlaying={isPlaying}
+            />
 
             {/* Playback Controls & Links */}
             <div className="flex flex-wrap items-center justify-between gap-3">
