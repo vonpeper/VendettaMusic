@@ -24,18 +24,27 @@ export function ConcertAtmosphere() {
     if (!ctx) return
 
     let animationFrameId: number
-    let width = (canvas.width = window.innerWidth)
-    let height = (canvas.height = window.innerHeight)
+    const isMobile = window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches
 
+    // On mobile devices, avoid heavy 60fps canvas rasterization to protect battery, GPU memory and prevent zoom-out crashes
+    if (isMobile) return
+
+    let width = (canvas.width = Math.min(window.innerWidth, 2560))
+    let height = (canvas.height = Math.min(window.innerHeight, 1600))
+
+    let resizeTimeout: NodeJS.Timeout | null = null
     const handleResize = () => {
-      if (!canvas) return
-      width = canvas.width = window.innerWidth
-      height = canvas.height = window.innerHeight
+      if (resizeTimeout) clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(() => {
+        if (!canvas) return
+        width = canvas.width = Math.min(window.innerWidth, 2560)
+        height = canvas.height = Math.min(window.innerHeight, 1600)
+      }, 150)
     }
-    window.addEventListener("resize", handleResize)
+    window.addEventListener("resize", handleResize, { passive: true })
 
     // Gentle haze/fog particles mimicking stage smoke machines
-    const particleCount = 18
+    const particleCount = 14
     const particles: Array<{
       x: number
       y: number
@@ -50,11 +59,11 @@ export function ConcertAtmosphere() {
       particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        radius: Math.random() * 180 + 120,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: -Math.random() * 0.3 - 0.1, // gently rises like stage smoke
-        alpha: Math.random() * 0.05 + 0.02,
-        targetAlpha: Math.random() * 0.07 + 0.03
+        radius: Math.random() * 140 + 100,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -Math.random() * 0.25 - 0.08, // gently rises like stage smoke
+        alpha: Math.random() * 0.04 + 0.02,
+        targetAlpha: Math.random() * 0.06 + 0.03
       })
     }
 
@@ -89,7 +98,8 @@ export function ConcertAtmosphere() {
     render()
 
     return () => {
-      cancelAnimationFrame(animationFrameId)
+      if (animationFrameId) cancelAnimationFrame(animationFrameId)
+      if (resizeTimeout) clearTimeout(resizeTimeout)
       window.removeEventListener("resize", handleResize)
     }
   }, [isClient])

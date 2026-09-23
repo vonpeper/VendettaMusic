@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Plus_Jakarta_Sans, Advent_Pro } from "next/font/google";
 import "./globals.css";
@@ -6,7 +6,15 @@ import { SchemaMarkup } from "@/components/public/SchemaMarkup"
 import { Toaster } from "sonner"
 
 import { db } from "@/lib/db";
-import { PwaStandaloneRedirect } from "@/components/pwa/PwaStandaloneRedirect";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#07080D",
+};
 
 const nohemi = localFont({
   src: [
@@ -96,26 +104,8 @@ export default function RootLayout({
     >
       <head>
         <meta name="google-site-verification" content="xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY" />
-        {/* En modo PWA standalone (app instalada en Android/iOS), redirige de inmediato a la agenda sin cargar la landing */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                                     window.navigator.standalone === true || 
-                                     (document.referrer && document.referrer.indexOf('android-app://') !== -1);
-                  if (isStandalone && window.location.pathname === '/') {
-                    window.location.replace('/agenda');
-                  }
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
       </head>
       <body className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden max-w-[100vw]">
-        <PwaStandaloneRedirect />
         <Toaster theme="dark" position="bottom-right" richColors />
         <SchemaMarkup />
         {children}

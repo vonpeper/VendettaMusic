@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import Link from "next/link"
 import { AgendaEvent } from "@/actions/agenda"
 import { 
   Calendar as CalendarIcon, 
@@ -306,8 +307,17 @@ export function AgendaCalendarView({ events, adminWhatsapp }: Props) {
         <div className="container mx-auto px-4 max-w-6xl relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary text-[11px] font-black uppercase tracking-[0.25em] mb-2 shadow-sm">
-                <Sparkles className="w-3.5 h-3.5" /> Agenda Oficial Vendetta
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-[11px] font-bold text-gray-200 hover:text-white transition-all shadow-sm active:scale-95 cursor-pointer"
+                >
+                  <ArrowLeft className="w-3 h-3 text-primary" />
+                  <span>Volver al sitio web</span>
+                </Link>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary text-[11px] font-black uppercase tracking-[0.25em] shadow-sm">
+                  <Sparkles className="w-3.5 h-3.5" /> Agenda Oficial Vendetta
+                </div>
               </div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-black text-white uppercase tracking-tight">
                 Calendario de <span className="text-primary italic">Fechas</span>

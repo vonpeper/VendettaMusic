@@ -81,7 +81,10 @@ export function AutographWall() {
         {/* ========================================================================= */}
         {/* RACK UNIT 19" STUDIO ENCLOSURE */}
         {/* ========================================================================= */}
-        <div className="relative mx-auto rounded-3xl border-2 border-zinc-700 bg-gradient-to-b from-[#1C1F28] via-[#13161F] to-[#0A0C11] shadow-[0_35px_100px_rgba(0,0,0,0.95)] overflow-hidden">
+        {/* ========================================================================= */}
+        {/* RACK UNIT 19" STUDIO ENCLOSURE */}
+        {/* ========================================================================= */}
+        <div className="relative mx-auto rounded-3xl border-2 border-zinc-700 bg-gradient-to-b from-[#1C1F28] via-[#13161F] to-[#0A0C11] shadow-[0_35px_100px_rgba(0,0,0,0.95)] overflow-hidden max-w-full">
           
           {/* Brushed Metal Texture */}
           <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
@@ -89,48 +92,60 @@ export function AutographWall() {
           {/* Top Chassis Bevel Metallic Highlight */}
           <div className="h-[2px] w-full bg-gradient-to-r from-zinc-600/10 via-zinc-200/50 to-zinc-600/10" />
 
-          {/* RACK EARS & FACEPLATE WRAPPER */}
-          <div className="flex">
+          {/* MOBILE TOP RACK ACCENT BAR (< sm) */}
+          <div className="flex sm:hidden items-center justify-between px-4 py-2 bg-gradient-to-r from-[#161922] via-[#222733] to-[#161922] border-b border-zinc-800 text-[9px] font-mono text-zinc-400 uppercase tracking-widest">
+            <div className="flex items-center gap-2">
+              <RackScrew />
+              <span className="font-bold text-zinc-300">19" RACK UNIT</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-emerald-400 font-bold">STUDIO MASTER</span>
+              <RackScrew />
+            </div>
+          </div>
 
-            {/* Left Rack Ear with Chrome Hex Screws & Aluminum Handle */}
-            <div className="w-9 sm:w-14 bg-gradient-to-r from-[#222733] to-[#161922] border-r border-zinc-800 flex flex-col justify-between py-8 items-center shrink-0">
+          {/* RACK EARS & FACEPLATE WRAPPER */}
+          <div className="flex w-full overflow-hidden">
+
+            {/* Left Rack Ear with Chrome Hex Screws & Aluminum Handle (Desktop/Tablet >= sm) */}
+            <div className="hidden sm:flex w-10 md:w-14 bg-gradient-to-r from-[#222733] to-[#161922] border-r border-zinc-800 flex-col justify-between py-8 items-center shrink-0">
               <RackScrew />
               <RackHandle />
               <RackScrew />
             </div>
 
             {/* MAIN FACEPLATE PANEL */}
-            <div className="flex-1 p-5 sm:p-8 md:p-12 flex flex-col gap-8 sm:gap-10">
+            <div className="flex-1 p-3.5 sm:p-8 md:p-12 flex flex-col gap-6 sm:gap-10 min-w-0 w-full overflow-hidden">
 
               {/* RACK TOP BAR: BRANDING + VINTAGE DUAL VU METERS */}
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pb-6 border-b border-zinc-800/90">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-5 sm:gap-6 pb-6 border-b border-zinc-800/90 w-full">
                 {/* Brand & Model Serigraphy */}
-                <div className="text-center lg:text-left">
+                <div className="text-center lg:text-left w-full lg:w-auto">
                   <div className="flex items-center justify-center lg:justify-start gap-2.5 mb-1.5">
-                    <span className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_12px_#22c55e] animate-pulse" />
-                    <span className="font-mono text-xs font-black tracking-[0.3em] text-emerald-400 uppercase">
+                    <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-400 shadow-[0_0_12px_#22c55e] animate-pulse" />
+                    <span className="font-mono text-[10px] sm:text-xs font-black tracking-[0.25em] sm:tracking-[0.3em] text-emerald-400 uppercase">
                       VENDETTA AUDIO LABS // MODEL 2026
                     </span>
                   </div>
-                  <div className="text-2xl sm:text-3xl md:text-4xl font-sans font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-100 to-zinc-300 tracking-tight">
+                  <div className="text-xl sm:text-3xl md:text-4xl font-sans font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-100 to-zinc-300 tracking-tight">
                     CLIENTES • SALÓN DE LA FAMA
                   </div>
-                  <div className="text-xs font-mono text-zinc-400 tracking-widest uppercase mt-1">
+                  <div className="text-[10px] sm:text-xs font-mono text-zinc-400 tracking-wider sm:tracking-widest uppercase mt-1">
                     OUTBOARD COMPRESSOR RACK & MATRIZ DE RECINTOS ESTELARES
                   </div>
                 </div>
 
-                {/* DUAL ANALOG VU METERS */}
-                <div className="flex items-center gap-3 sm:gap-5 bg-[#090B0F] p-4 rounded-2xl border border-zinc-800 shadow-inner">
-                  <VuMeter label="CH-L (STAGE GAIN)" angle={vuNeedleLeft} />
-                  <VuMeter label="CH-R (CROWD SAT)" angle={vuNeedleRight} />
+                {/* DUAL ANALOG VU METERS (Responsive & No Overflow) */}
+                <div className="flex items-center justify-center gap-2 sm:gap-4 bg-[#090B0F] p-2.5 sm:p-4 rounded-2xl border border-zinc-800 shadow-inner max-w-full overflow-hidden">
+                  <VuMeter label="CH-L (STAGE)" angle={vuNeedleLeft} />
+                  <VuMeter label="CH-R (CROWD)" angle={vuNeedleRight} />
 
                   {/* Signal Peak LEDs */}
-                  <div className="flex flex-col gap-2 pl-3 border-l border-zinc-800">
-                    <span className="text-[9px] font-mono text-zinc-400 font-bold">PEAK</span>
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 shadow-[0_0_8px_#ef4444]" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400/90 shadow-[0_0_8px_#f59e0b]" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#22c55e] animate-pulse" />
+                  <div className="flex flex-col gap-1.5 sm:gap-2 pl-2 sm:pl-3 border-l border-zinc-800 shrink-0">
+                    <span className="text-[8px] sm:text-[9px] font-mono text-zinc-400 font-bold">PEAK</span>
+                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-red-500/80 shadow-[0_0_6px_#ef4444]" />
+                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-amber-400/90 shadow-[0_0_6px_#f59e0b]" />
+                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#22c55e] animate-pulse" />
                   </div>
                 </div>
               </div>
@@ -146,21 +161,21 @@ export function AutographWall() {
               </div>
 
               {/* =================================================================== */}
-              {/* CLIENT MATRIX: SPACIOUS ELLIPSE BUTTONS WITH BLINKING GREEN LED */}
+              {/* CLIENT MATRIX: SPACIOUS RESPONSIVE BUTTONS WITH BLINKING GREEN LED */}
               {/* =================================================================== */}
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2.5 font-mono text-xs sm:text-sm font-bold text-zinc-300 uppercase tracking-wider">
-                    <Sliders className="w-4 h-4 text-emerald-400" />
-                    <span>Canales Oficiales del Salón de la Fama (Haz click para conectar canal)</span>
+              <div className="w-full">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 mb-5 sm:mb-6">
+                  <div className="flex items-center gap-2 font-mono text-xs sm:text-sm font-bold text-zinc-300 uppercase tracking-wider">
+                    <Sliders className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
+                    <span>Canales Oficiales del Salón de la Fama</span>
                   </div>
-                  <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/25 font-bold">
+                  <span className="text-[11px] sm:text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/25 font-bold self-start sm:self-auto shrink-0">
                     14 CLIENTES CONECTADOS
                   </span>
                 </div>
 
                 {/* 2-Column Responsive Grid: Plenty of space, NO truncated text */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 w-full">
                   {CLIENT_CHANNELS.map((item) => {
                     const isSelected = selectedClient.id === item.id
 
@@ -169,32 +184,32 @@ export function AutographWall() {
                         key={item.id}
                         type="button"
                         onClick={() => setSelectedClient(item)}
-                        className={`group relative flex items-center justify-between px-6 py-4.5 rounded-full border-2 transition-all duration-300 cursor-pointer text-left select-none ${
+                        className={`group relative flex items-center justify-between px-3.5 sm:px-6 py-3 sm:py-4.5 rounded-2xl sm:rounded-full border-2 transition-all duration-300 cursor-pointer text-left select-none w-full ${
                           isSelected
-                            ? "bg-gradient-to-r from-emerald-950/90 via-[#15291E] to-[#101F17] border-emerald-400 shadow-[0_0_25px_rgba(34,197,94,0.35),inset_0_2px_4px_rgba(255,255,255,0.2)] scale-[1.015]"
+                            ? "bg-gradient-to-r from-emerald-950/90 via-[#15291E] to-[#101F17] border-emerald-400 shadow-[0_0_25px_rgba(34,197,94,0.35),inset_0_2px_4px_rgba(255,255,255,0.2)] scale-[1.01]"
                             : "bg-gradient-to-b from-[#1F2430] via-[#161922] to-[#0E1017] border-zinc-700/90 hover:border-emerald-400/70 hover:bg-[#1B202B] shadow-[inset_0_1px_2px_rgba(255,255,255,0.12),0_6px_16px_rgba(0,0,0,0.6)] active:scale-98"
                         }`}
                       >
                         {/* LEFT: BLINKING GREEN LED + CHANNEL BADGE */}
-                        <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                           {/* Dedicated Blinking Green Studio LED */}
-                          <div className="relative flex items-center justify-center w-4 h-4">
-                            <span className="animate-ping absolute inline-flex h-3.5 w-3.5 rounded-full bg-emerald-400 opacity-80" />
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 shadow-[0_0_12px_#22c55e,0_0_4px_#ffffff]" />
+                          <div className="relative flex items-center justify-center w-3.5 h-3.5 sm:w-4 sm:h-4">
+                            <span className="animate-ping absolute inline-flex h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full bg-emerald-400 opacity-80" />
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-emerald-400 shadow-[0_0_10px_#22c55e,0_0_3px_#ffffff]" />
                           </div>
 
                           {/* Channel ID */}
-                          <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-950/70 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+                          <span className="font-mono text-[10px] sm:text-xs font-bold text-emerald-400 bg-emerald-950/70 border border-emerald-500/30 px-1.5 sm:px-2 py-0.5 rounded-md">
                             {item.channel}
                           </span>
                         </div>
 
                         {/* CENTER: CLIENT NAME (FULL, NEVER TRUNCATED) + META */}
-                        <div className="flex-1 min-w-0 pl-3.5 pr-2">
-                          <span className="font-sans font-black text-sm sm:text-base md:text-lg text-white tracking-tight leading-snug group-hover:text-emerald-300 transition-colors block">
+                        <div className="flex-1 min-w-0 px-2.5 sm:px-3.5">
+                          <span className="font-sans font-black text-xs sm:text-base md:text-lg text-white tracking-tight leading-snug group-hover:text-emerald-300 transition-colors block break-words">
                             {item.name}
                           </span>
-                          <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider mt-0.5 flex flex-wrap items-center gap-1.5">
+                          <div className="text-[10px] sm:text-[11px] font-mono text-zinc-400 uppercase tracking-wider mt-0.5 flex flex-wrap items-center gap-1 sm:gap-1.5">
                             <span className="text-zinc-300 font-semibold">{item.type}</span>
                             <span className="text-emerald-400">•</span>
                             <span className="text-zinc-400">{item.city}</span>
@@ -202,10 +217,10 @@ export function AutographWall() {
                         </div>
 
                         {/* RIGHT: GAIN STATUS BADGE */}
-                        <div className="shrink-0 flex items-center gap-2">
-                          <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full border transition-all ${
+                        <div className="shrink-0 flex items-center">
+                          <span className={`text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border transition-all ${
                             isSelected
-                              ? "bg-emerald-400 text-black border-emerald-300 shadow-[0_0_12px_rgba(34,197,94,0.5)]"
+                              ? "bg-emerald-400 text-black border-emerald-300 shadow-[0_0_10px_rgba(34,197,94,0.5)]"
                               : "bg-zinc-800/80 border-zinc-700 text-emerald-400 group-hover:border-emerald-500/50"
                           }`}>
                             {item.gain}
@@ -218,36 +233,36 @@ export function AutographWall() {
               </div>
 
               {/* RACK MONITOR / DIGITAL LCD READOUT — GIVING PROMINENCE TO SELECTED CLIENT */}
-              <div className="p-6 rounded-2xl bg-[#080A0F] border-2 border-zinc-800/90 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 font-mono">
-                <div className="flex items-start gap-4">
-                  <div className="w-4 h-4 rounded-full bg-emerald-400 shadow-[0_0_12px_#22c55e] animate-pulse shrink-0 mt-1" />
-                  <div>
-                    <div className="text-xs text-emerald-400 font-bold uppercase tracking-widest flex items-center gap-2 mb-1">
-                      <span>CANAL SELECCIONADO [{selectedClient.channel}]</span>
+              <div className="p-4 sm:p-6 rounded-2xl bg-[#080A0F] border-2 border-zinc-800/90 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 font-mono w-full">
+                <div className="flex items-start gap-3 sm:gap-4 w-full">
+                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-400 shadow-[0_0_12px_#22c55e] animate-pulse shrink-0 mt-1" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] sm:text-xs text-emerald-400 font-bold uppercase tracking-widest flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
+                      <span>CANAL [{selectedClient.channel}]</span>
                       <span className="text-zinc-600">•</span>
-                      <span className="text-white">GANANCIA DE SALA: {selectedClient.gain}</span>
+                      <span className="text-white">GANANCIA: {selectedClient.gain}</span>
                     </div>
-                    <div className="text-xl sm:text-2xl font-sans font-black text-white tracking-tight">
+                    <div className="text-lg sm:text-2xl font-sans font-black text-white tracking-tight break-words">
                       {selectedClient.name}
                     </div>
-                    <div className="text-xs text-zinc-400 mt-1">
+                    <div className="text-[11px] sm:text-xs text-zinc-400 mt-1 leading-relaxed">
                       {selectedClient.type} • {selectedClient.city} — <span className="text-zinc-200 italic">{selectedClient.highlight}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
-                  <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold uppercase tracking-wider bg-emerald-950/40 border border-emerald-500/30 px-4 py-2 rounded-xl">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <div className="flex items-center gap-3 shrink-0 self-start md:self-center">
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-emerald-400 font-bold uppercase tracking-wider bg-emerald-950/40 border border-emerald-500/30 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl">
+                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
                     <span>SHOW VERIFICADO 100% EN VIVO</span>
                   </div>
                 </div>
               </div>
 
               {/* BOTTOM CTA: CONNECT YOUR EVENT */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-5 pt-5 border-t border-zinc-800/80">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-5 pt-4 sm:pt-5 border-t border-zinc-800/80 w-full">
                 <div className="text-center sm:text-left">
-                  <h4 className="text-white font-sans font-black text-base sm:text-lg">
+                  <h4 className="text-white font-sans font-black text-sm sm:text-lg">
                     ¿Tu evento será el próximo en ingresar a este Salón de la Fama?
                   </h4>
                   <p className="text-[#F2F0EB]/70 text-xs sm:text-sm font-normal">
@@ -257,7 +272,7 @@ export function AutographWall() {
 
                 <a
                   href="#paquetes"
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] hover:from-[#7e1032] hover:to-[#ff6d72] text-white font-sans font-bold text-xs uppercase tracking-widest border border-white/20 shadow-xl shadow-[#FF5A5F]/25 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 shrink-0 cursor-pointer"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] hover:from-[#7e1032] hover:to-[#ff6d72] text-white font-sans font-bold text-xs uppercase tracking-widest border border-white/20 shadow-xl shadow-[#FF5A5F]/25 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 shrink-0 cursor-pointer"
                 >
                   <Zap className="w-4 h-4 fill-white text-white" />
                   <span>Cotizar mi Evento</span>
@@ -267,8 +282,8 @@ export function AutographWall() {
 
             </div>
 
-            {/* Right Rack Ear with Chrome Hex Screws & Aluminum Handle */}
-            <div className="w-9 sm:w-14 bg-gradient-to-l from-[#222733] to-[#161922] border-l border-zinc-800 flex flex-col justify-between py-8 items-center shrink-0">
+            {/* Right Rack Ear with Chrome Hex Screws & Aluminum Handle (Desktop/Tablet >= sm) */}
+            <div className="hidden sm:flex w-10 md:w-14 bg-gradient-to-l from-[#222733] to-[#161922] border-l border-zinc-800 flex-col justify-between py-8 items-center shrink-0">
               <RackScrew />
               <RackHandle />
               <RackScrew />
@@ -291,32 +306,32 @@ export function AutographWall() {
 
 function VuMeter({ label, angle = 0 }: { label: string; angle: number }) {
   return (
-    <div className="w-32 sm:w-40 h-20 sm:h-24 bg-gradient-to-b from-[#2E2519] via-[#1D1710] to-[#0F0C08] rounded-xl border border-amber-900/40 p-2 relative flex flex-col justify-between overflow-hidden shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
+    <div className="w-[105px] xs:w-28 sm:w-40 h-16 sm:h-24 bg-gradient-to-b from-[#2E2519] via-[#1D1710] to-[#0F0C08] rounded-xl border border-amber-900/40 p-1.5 sm:p-2 relative flex flex-col justify-between overflow-hidden shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)] shrink-0">
       {/* Warm Incandescent Lamp Glow */}
       <div className="absolute inset-0 bg-radial from-amber-500/15 via-transparent to-transparent pointer-events-none" />
 
       {/* Meter Scale Arc */}
-      <div className="relative z-10 text-center pt-1">
-        <div className="text-[7px] font-mono tracking-widest text-amber-200/60 uppercase">
-          -20 -10 -7 -5 -3 0 +1 +3
+      <div className="relative z-10 text-center pt-0.5 sm:pt-1">
+        <div className="text-[6px] sm:text-[7px] font-mono tracking-widest text-amber-200/60 uppercase">
+          -20 -10 -7 -3 0 +3
         </div>
         <div className="w-full h-[1px] bg-gradient-to-r from-amber-500/30 via-amber-400/60 to-red-500/80 mt-0.5" />
       </div>
 
       {/* Needle Pivot & Moving Indicator */}
-      <div className="relative h-8 flex items-end justify-center">
+      <div className="relative h-6 sm:h-8 flex items-end justify-center">
         <motion.div
           animate={{ rotate: angle }}
           transition={{ type: "spring", stiffness: 120, damping: 14 }}
-          className="w-[1.5px] h-14 bg-gradient-to-t from-red-600 via-amber-400 to-amber-200 origin-bottom shadow-[0_0_4px_rgba(251,191,36,0.6)]"
+          className="w-[1px] sm:w-[1.5px] h-10 sm:h-14 bg-gradient-to-t from-red-600 via-amber-400 to-amber-200 origin-bottom shadow-[0_0_4px_rgba(251,191,36,0.6)]"
           style={{ transformOrigin: "bottom center" }}
         />
         {/* Pivot Cap */}
-        <div className="absolute bottom-0 w-3 h-3 rounded-full bg-zinc-900 border border-zinc-700 shadow-md" />
+        <div className="absolute bottom-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-zinc-900 border border-zinc-700 shadow-md" />
       </div>
 
       {/* Meter Title */}
-      <div className="text-[8px] font-mono text-center text-amber-400/80 font-bold uppercase tracking-wider relative z-10">
+      <div className="text-[7px] sm:text-[8px] font-mono text-center text-amber-400/80 font-bold uppercase tracking-wider relative z-10 truncate px-1">
         {label}
       </div>
     </div>

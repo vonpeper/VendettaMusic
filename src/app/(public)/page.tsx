@@ -143,7 +143,7 @@ export default async function HomePage() {
             {/* Dedicated mobile photo: HD framing with ALL 5 band members completely visible */}
             <div className="w-full relative my-5 rounded-3xl overflow-hidden aspect-[16/9] border border-white/20 shadow-2xl lg:hidden animate-hero-bg backdrop-blur-xl">
               <Image
-                src="/images/vendetta-web-assets/vendetta-hero-mobile-ultra-4k.png"
+                src="/images/vendetta-web-assets/vendetta-hero-mobile-ultra-4k.webp"
                 alt="Banda de pop y rock en vivo Vendetta para eventos sociales y bodas"
                 fill
                 priority
