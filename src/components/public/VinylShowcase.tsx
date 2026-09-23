@@ -165,7 +165,7 @@ export function VinylShowcase() {
   }
 
   return (
-    <div className="w-full my-12 p-6 sm:p-8 md:p-12 rounded-[2.5rem] bg-gradient-to-br from-[#0F1118]/95 via-[#08090E]/95 to-[#040507]/95 border-2 border-white/20 relative overflow-hidden shadow-2xl neon-live-cyan">
+    <div id="reproductor" className="w-full my-12 p-6 sm:p-8 md:p-12 rounded-[2.5rem] bg-gradient-to-br from-[#0F1118]/95 via-[#08090E]/95 to-[#040507]/95 border-2 border-white/20 relative overflow-hidden shadow-2xl neon-live-cyan scroll-mt-28">
       
       {/* Hidden HTML5 Audio Element */}
       <audio

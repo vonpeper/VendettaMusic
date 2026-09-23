@@ -2,7 +2,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Phone, Calendar, Lock } from "lucide-react"
+import { Menu, X, Phone, Calendar, Lock, Disc3 } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -15,6 +15,7 @@ import {
 const NAV_LINKS = [
   { href: "/#inicio", label: "Inicio" },
   { href: "/#paquetes", label: "Paquetes" },
+  { href: "/#reproductor", label: "Reproductor", isButton: true },
   { href: "/#servicios", label: "Show" },
   { href: "/#nosotros", label: "La Banda" },
   { href: "/#fechas", label: "Fechas" },
@@ -45,16 +46,30 @@ export function PublicNavbar() {
         </Link>
         
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex gap-5 xl:gap-7 items-center">
-          {NAV_LINKS.map((link) => (
-            <Link 
-              key={link.label} 
-              href={link.href} 
-              className="font-sans text-xs font-semibold uppercase tracking-[0.16em] text-[#F2F0EB]/80 hover:text-[#FF5A5F] hover:drop-shadow-[0_0_8px_rgba(255,90,95,0.6)] transition-all whitespace-nowrap"
-            >
-              {link.label}
-            </Link>
-          ))}
+        <nav className="hidden lg:flex gap-4 xl:gap-6 items-center">
+          {NAV_LINKS.map((link) => {
+            if ((link as any).isButton) {
+              return (
+                <Link 
+                  key={link.label} 
+                  href={link.href} 
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#20D5E5]/40 bg-[#20D5E5]/10 text-[#20D5E5] hover:bg-[#20D5E5]/20 hover:border-[#20D5E5]/70 hover:shadow-[0_0_14px_rgba(32,213,229,0.35)] text-xs font-semibold uppercase tracking-wider transition-all duration-300 whitespace-nowrap cursor-pointer"
+                >
+                  <Disc3 className="w-3.5 h-3.5 animate-spin" />
+                  <span>{link.label}</span>
+                </Link>
+              )
+            }
+            return (
+              <Link 
+                key={link.label} 
+                href={link.href} 
+                className="font-sans text-xs font-semibold uppercase tracking-[0.16em] text-[#F2F0EB]/80 hover:text-[#FF5A5F] hover:drop-shadow-[0_0_8px_rgba(255,90,95,0.6)] transition-all whitespace-nowrap"
+              >
+                {link.label}
+              </Link>
+            )
+          })}
           <div className="w-px h-4 bg-white/15 mx-1" />
           <Link href="/cotizar">
             <Button className="bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] hover:from-[#7e1032] hover:to-[#ff6d72] text-[#F2F0EB] font-sans font-semibold text-xs uppercase tracking-wider px-6 h-10 rounded-xl shadow-lg shadow-[#FF5A5F]/25 hover:shadow-[#FF5A5F]/40 hover:scale-[1.03] transition-all duration-300 border border-white/20 cursor-pointer">
@@ -99,17 +114,43 @@ export function PublicNavbar() {
                         render={
                           <Link 
                             href={link.href} 
-                            className="flex items-center py-3.5 text-sm font-semibold uppercase tracking-[0.18em] text-[#F2F0EB]/90 hover:text-[#FF5A5F] transition-all border-b border-white/5 last:border-none"
+                            className={`flex items-center py-3.5 text-sm font-semibold uppercase tracking-[0.18em] transition-all border-b border-white/5 last:border-none ${
+                              (link as any).isButton 
+                                ? "text-[#20D5E5] hover:text-[#20D5E5]/80 font-bold" 
+                                : "text-[#F2F0EB]/90 hover:text-[#FF5A5F]"
+                            }`}
                           />
                         }
                       >
-                        {link.label}
+                        {(link as any).isButton ? (
+                          <div className="flex items-center justify-between w-full">
+                            <span className="flex items-center gap-2">
+                              <Disc3 className="w-4 h-4 text-[#20D5E5] animate-spin" />
+                              <span>{link.label}</span>
+                            </span>
+                            <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#20D5E5]/20 text-[#20D5E5] font-bold border border-[#20D5E5]/30">
+                              EN VIVO
+                            </span>
+                          </div>
+                        ) : (
+                          <span>{link.label}</span>
+                        )}
                       </SheetClose>
                     ))}
                   </div>
                 </div>
                 
-                <div className="p-6 mt-auto space-y-4">
+                <div className="p-6 mt-auto space-y-3">
+                  <SheetClose 
+                    render={
+                      <Link href="/#reproductor" className="block w-full" />
+                    }
+                  >
+                    <Button variant="outline" className="w-full py-5 border-[#20D5E5]/40 bg-[#20D5E5]/10 text-[#20D5E5] hover:bg-[#20D5E5]/20 font-semibold text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2">
+                      <Disc3 className="w-4 h-4 animate-spin text-[#20D5E5]" /> Reproductor en Vivo
+                    </Button>
+                  </SheetClose>
+
                   <SheetClose 
                     render={
                       <Link href="/cotizar" className="block w-full" />

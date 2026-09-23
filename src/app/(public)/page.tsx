@@ -200,8 +200,9 @@ export default async function HomePage() {
       {/* -- VENDETTA EXPERIENCE ------------------------------------------- */}
       <VendettaExperience />
 
-      {mediaMap.video_home && <VideoSection videoUrl={mediaMap.video_home} />}
-      {!mediaMap.video_home && <VideoSection />}
+      {/* -- VIDEO DEMO REEL (OCULTO TEMPORALMENTE) ------------------------ */}
+      {/* {mediaMap.video_home && <VideoSection videoUrl={mediaMap.video_home} />} */}
+      {/* {!mediaMap.video_home && <VideoSection />} */}
 
       {/* -- INSTAGRAM LIVE REELS ------------------------------------------ */}
       <InstagramReelsSection reels={mediaMap.reels} />
