@@ -3,11 +3,12 @@
 import { useActionState, useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClienteAction, updateClienteAction } from "@/actions/clientes"
-import { X, AlertCircle, CheckCircle2 } from "lucide-react"
+import { X, AlertCircle, CheckCircle2, FilePlus2 } from "lucide-react"
 import { toast } from "sonner"
 
 const ESTADOS_MX = [
@@ -80,9 +81,33 @@ export function ClienteForm({ onClose, editing }: ClienteFormProps) {
               {isEditing ? "Actualiza los datos del cliente." : "Completa el registro del nuevo cliente."}
             </p>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted cursor-pointer">
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {isEditing && editing && (
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="border-primary/40 text-primary hover:bg-primary/10 hover:text-primary text-xs font-bold gap-1.5 h-9 rounded-xl"
+              >
+                <Link
+                  href={`/admin/ventas/manual?${new URLSearchParams({
+                    clientId: editing.profileId,
+                    clientName: editing.name,
+                    clientPhone: editing.whatsapp || "",
+                    clientEmail: editing.email || "",
+                    city: editing.city || ""
+                  }).toString()}`}
+                  onClick={onClose}
+                >
+                  <FilePlus2 className="w-3.5 h-3.5" />
+                  + Cotizar
+                </Link>
+              </Button>
+            )}
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {state && !state.success && (

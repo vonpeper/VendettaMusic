@@ -50,6 +50,7 @@ export interface CreateQuoteInput {
   paymentMethod?: string | null
   originInquiryId?: string | null
   adminNote?: string | null
+  source?: string | null
 }
 
 export interface UpdateQuoteInput extends CreateQuoteInput {
@@ -207,7 +208,7 @@ export async function createUnifiedQuote(
         status: quoteStatus,
         adminNote: input.adminNote || null,
         eventId: createdEventId,
-        source: input.originInquiryId ? "contacto" : "admin"
+        source: input.source || (input.originInquiryId ? "contacto" : "admin")
       }
     })
   } catch (err: unknown) {

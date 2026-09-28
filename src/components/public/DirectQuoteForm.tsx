@@ -227,6 +227,19 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
     setMunicipioManual("")
   }
 
+  // Cuando cambia la hora de inicio, asegurar que la hora de término sea de al menos 2 horas
+  const handleHoraInicioChange = (nuevoInicio: string) => {
+    setHoraInicio(nuevoInicio)
+    const startIdx = TIME_OPTIONS.indexOf(nuevoInicio)
+    if (startIdx !== -1) {
+      const defaultEndIdx = (startIdx + 4) % TIME_OPTIONS.length
+      const currentHours = calculateEventHours(nuevoInicio, horaFin)
+      if (currentHours < 2) {
+        setHoraFin(TIME_OPTIONS[defaultEndIdx])
+      }
+    }
+  }
+
   // Cálculo automático de viáticos cuando cambia municipio o estado
   useEffect(() => {
     const muniEfectivo = isMunicipioManual ? municipioManual.trim() : municipio.trim()
@@ -314,6 +327,11 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
 
     if (isLargePackage && numInvitados < 100) {
       toast.error(`El paquete ${paqueteNombre || "seleccionado"} incluye producción diseñada para un aforo mínimo de 100 invitados.`)
+      return
+    }
+
+    if (horasShow < 2) {
+      toast.error("La duración mínima de show para Vendetta Live Music es de 2 horas. Por favor ajusta el horario de tu evento.")
       return
     }
 
@@ -659,7 +677,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             <span className="text-[11px] text-gray-400 font-medium">Hora de inicio:</span>
             <select
               value={horaInicio}
-              onChange={(e) => setHoraInicio(e.target.value)}
+              onChange={(e) => handleHoraInicioChange(e.target.value)}
               className="w-full h-12 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all cursor-pointer font-medium"
             >
               {TIME_OPTIONS.map((time) => (
@@ -689,10 +707,20 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
           <p className="text-[11px] text-gray-400">
             Horario seleccionado: <span className="text-primary font-bold">{horaInicio}</span> a <span className="text-primary font-bold">{horaFin}</span>
           </p>
-          <span className="text-[11px] font-bold bg-primary/15 text-primary border border-primary/30 px-2.5 py-0.5 rounded-full">
+          <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+            horasShow < 2 
+              ? "bg-red-500/15 text-red-400 border-red-500/30" 
+              : "bg-primary/15 text-primary border-primary/30"
+          }`}>
             ⏱️ {horasShow} {horasShow === 1 ? "Hora" : "Horas"} de Show en Vivo
           </span>
         </div>
+        {horasShow < 2 && (
+          <p className="text-[11px] text-red-400 font-bold pt-1 flex items-center gap-1.5 animate-in fade-in-0">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-red-400" />
+            Vendetta Live Music no realiza presentaciones por menos de 2 horas de show. Por favor selecciona al menos 2 horas.
+          </p>
+        )}
         {horasShow > 5 && (
           <p className="text-[11px] text-amber-400 font-medium pt-1">
             ⚠️ Duración extendida (&gt;5 horas de show): Sujeto a coordinación logística especial y revisión personalizada.

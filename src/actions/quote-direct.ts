@@ -58,6 +58,7 @@ function formatFechaEspanol(fechaStr: string): string {
 }
 
 function buildClientWhatsAppMessage(params: {
+  shortId?: string
   nombre: string
   tipoEvento: string
   fecha: string
@@ -90,6 +91,7 @@ function buildClientWhatsAppMessage(params: {
     "Recibimos con éxito tu formulario para personalizar la propuesta de tu evento con Vendetta Live Music:",
     "",
     "📋 *RESUMEN DE TU SOLICITUD*",
+    ...(params.shortId ? [`• *Folio de Cotización:* ${params.shortId}`] : []),
     ...(params.paquete ? [`• *Paquete:* ${params.paquete}`] : []),
     `• *Tipo de Evento:* ${params.tipoEvento}`,
     `• *Fecha:* ${fechaFormateada}`,
@@ -144,9 +146,17 @@ export async function submitPublicQuoteAction(
     }
 
     const calculatedHours = calculateEventHours(input.horaInicio, input.horaFin)
-    const horasShow = typeof input.horasShow === "number" && input.horasShow >= 1
+    const horasShow = typeof input.horasShow === "number" && input.horasShow >= 2
       ? input.horasShow
       : calculatedHours
+
+    if (horasShow < 2) {
+      return {
+        success: false,
+        mode: "needs_review",
+        error: "La duración mínima de contratación para Vendetta Live Music es de 2 horas de show."
+      }
+    }
 
     const tieneExtras = Array.isArray(input.produccionAdicional) && input.produccionAdicional.length > 0
     const aforo = Number(input.invitados) || 50
@@ -168,6 +178,7 @@ export async function submitPublicQuoteAction(
     if (isAutoQuote) {
       const result = await db.$transaction(async (tx) => {
         return await createUnifiedQuote(tx, {
+          source: "web",
           clientName: input.nombre.trim(),
           clientPhone: input.telefono.trim(),
           clientCity: input.municipio.trim(),
@@ -200,6 +211,7 @@ export async function submitPublicQuoteAction(
       // 1. WhatsApp automático al CLIENTE con el resumen y enlace a su propuesta
       try {
         const clientMsg = buildClientWhatsAppMessage({
+          shortId: result.shortId,
           nombre: input.nombre,
           tipoEvento: input.tipoEvento,
           fecha: input.fecha,
@@ -297,6 +309,7 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
 
     const result = await db.$transaction(async (tx) => {
       return await createUnifiedQuote(tx, {
+        source: "web",
         originInquiryId: inquiry.id,
         clientName: input.nombre.trim(),
         clientPhone: input.telefono.trim(),
@@ -338,7 +351,9 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
 
     // 4. Enviar notificación automática por WhatsApp al CLIENTE
     try {
+      const proposalFullUrl = `https://vendetta.mx/propuesta/${result.shortId}`
       const clientMsg = buildClientWhatsAppMessage({
+        shortId: result.shortId,
         nombre: input.nombre,
         tipoEvento: input.tipoEvento,
         fecha: input.fecha,
@@ -353,6 +368,7 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
         viaticosAmount: viaticosAmount,
         produccionAdicional: input.produccionAdicional,
         paquete: dynamicPackageName,
+        proposalUrl: proposalFullUrl,
         notas: input.notas
       })
       await sendWhatsApp(input.telefono.trim(), clientMsg, `Confirmación Cliente - ${input.nombre.trim()}`).catch(

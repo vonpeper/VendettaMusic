@@ -236,7 +236,7 @@ export function getShowPackageHourlyRate(packageName?: string | null): number {
  *   - Base 2 Horas: $25,500 MXN | Horas adicionales: +$12,750 MXN / hr.
  */
 export function calculateShowPackageBasePrice(packageName?: string | null, hours: number = 2): number {
-  const h = Math.max(1, hours)
+  const h = Math.max(2, hours)
   const name = (packageName || "").toLowerCase()
 
   if (name.includes("festival")) {

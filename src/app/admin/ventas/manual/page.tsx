@@ -10,12 +10,22 @@ import { redirect } from "next/navigation"
 interface ManualBookingPageProps {
   searchParams?: Promise<{
     inquiryId?: string
+    clientId?: string
+    clientName?: string
+    clientPhone?: string
+    clientEmail?: string
+    city?: string
   }>
 }
 
 export default async function ManualBookingPage({ searchParams }: ManualBookingPageProps) {
   const resolvedParams = searchParams ? await searchParams : undefined
   const inquiryId = resolvedParams?.inquiryId
+  const clientId = resolvedParams?.clientId
+  const paramClientName = resolvedParams?.clientName
+  const paramClientPhone = resolvedParams?.clientPhone
+  const paramClientEmail = resolvedParams?.clientEmail
+  const paramCity = resolvedParams?.city
 
   let prefillInquiry: {
     clientName: string
@@ -27,6 +37,7 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
     musicianNotes?: string
     originInquiryId?: string
     status?: string
+    city?: string
   } | undefined = undefined
 
   if (inquiryId) {
@@ -52,6 +63,48 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
         originInquiryId: inquiry.id,
         status: "pendiente"
       }
+    }
+  } else if (clientId) {
+    const client = await db.clientProfile.findUnique({
+      where: { id: clientId },
+      include: { user: true }
+    })
+
+    if (client) {
+      prefillInquiry = {
+        clientId: client.id,
+        clientName: client.user?.name || paramClientName || "",
+        clientPhone: client.whatsapp || paramClientPhone || "",
+        clientEmail: client.user?.email || paramClientEmail || "",
+        city: client.city || paramCity || "",
+        status: "pendiente"
+      }
+    }
+  } else if (paramClientName || paramClientPhone || paramClientEmail) {
+    // Si no viene clientId directo pero vienen datos (ej. desde una cotización sin ClientProfile vinculado todavía)
+    let matchedClientId: string | undefined = undefined
+    if (paramClientPhone) {
+      const clean10 = paramClientPhone.replace(/\D/g, "").slice(-10)
+      if (clean10.length === 10) {
+        const found = await db.clientProfile.findFirst({
+          where: {
+            OR: [
+              { whatsapp: { contains: clean10 } },
+              ...(paramClientEmail ? [{ user: { email: paramClientEmail } }] : [])
+            ]
+          }
+        })
+        if (found) matchedClientId = found.id
+      }
+    }
+
+    prefillInquiry = {
+      clientId: matchedClientId,
+      clientName: paramClientName || "",
+      clientPhone: paramClientPhone || "",
+      clientEmail: paramClientEmail || "",
+      city: paramCity || "",
+      status: "pendiente"
     }
   }
 
@@ -114,9 +167,11 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
                 <ShieldCheck className="text-primary w-7 h-7" /> Nueva Cotización / Evento Manual
               </h1>
               <p className="text-muted-foreground text-xs md:text-sm mt-0.5">
-                {prefillInquiry 
+                {prefillInquiry?.originInquiryId
                   ? `Convirtiendo prospecto de contacto de ${prefillInquiry.clientName} a cotización formal.` 
-                  : "Formulario administrativo unificado con precarga de clientes, venues y conceptos adicionales."}
+                  : prefillInquiry?.clientName
+                    ? `Generando nueva cotización para ${prefillInquiry.clientName}.`
+                    : "Formulario administrativo unificado con precarga de clientes, venues y conceptos adicionales."}
               </p>
             </div>
           </div>

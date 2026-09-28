@@ -809,6 +809,69 @@ export async function updateDepositAmountAction(bookingId: string, amount: numbe
   }
 }
 
+export async function updateTotalAmountAction(
+  bookingId: string, 
+  baseAmount: number, 
+  viaticosAmount?: number
+) {
+  try {
+    const booking = await db.bookingRequest.findUnique({
+      where: { id: bookingId },
+      include: { event: true }
+    })
+    if (!booking) return { success: false, error: "Reserva no encontrada" }
+
+    const finalBase = Math.max(0, baseAmount)
+    const finalViaticos = viaticosAmount !== undefined ? Math.max(0, viaticosAmount) : Number(booking.viaticosAmount || 0)
+    const subtotal = finalBase + finalViaticos
+
+    const hasInvoice = Boolean(booking.invoice || booking.event?.invoice)
+    const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
+    const totalWithTax = subtotal + ivaAmount
+    const deposit = Number(booking.depositAmount || 0)
+    const balance = Math.max(0, totalWithTax - deposit)
+
+    // 1. Actualizar BookingRequest
+    await db.bookingRequest.update({
+      where: { id: bookingId },
+      data: {
+        baseAmount: finalBase,
+        viaticosAmount: finalViaticos,
+      }
+    })
+
+    // 2. Si tiene evento sincronizado, actualizarlo también
+    if (booking.eventId) {
+      await db.event.update({
+        where: { id: booking.eventId },
+        data: {
+          amount: subtotal,
+          ivaAmount: ivaAmount,
+          totalWithTax: totalWithTax,
+          balance: balance
+        }
+      })
+
+      const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
+      syncEventToGoogleCalendar(booking.eventId).catch(e => console.error("Error syncing to Google Calendar:", e))
+    }
+
+    revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    if (booking.shortId) {
+      revalidatePath(`/propuesta/${booking.shortId}`)
+      revalidatePath(`/status/${booking.shortId}`)
+    }
+    revalidatePath("/admin/eventualidades")
+    revalidatePath("/admin")
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating total amount:", error)
+    return { success: false, error: "Error al actualizar el total del evento." }
+  }
+}
+
 export async function reportDepositAction(bookingId: string, paymentRef: string) {
   try {
     const booking = await db.bookingRequest.findUnique({

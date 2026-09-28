@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { deleteClienteAction } from "@/actions/clientes"
 import { ClienteForm } from "@/components/admin/ClienteForm"
-import { Pencil, Trash2, History, FileText } from "lucide-react"
+import { Pencil, Trash2, History, FileText, FilePlus2 } from "lucide-react"
 
 interface ClienteActionsProps {
   client: {
@@ -45,6 +46,25 @@ export function ClienteActions({ client }: ClienteActionsProps) {
         />
       )}
       <div className="flex items-center gap-1 justify-end">
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          className="hover:text-primary hover:bg-primary/10 h-8 w-8 text-primary/80"
+          title="Nueva cotización para este cliente"
+        >
+          <Link
+            href={`/admin/ventas/manual?${new URLSearchParams({
+              clientId: client.profileId,
+              clientName: client.name,
+              clientPhone: client.whatsapp || client.phone || "",
+              clientEmail: client.email || "",
+              city: client.city || ""
+            }).toString()}`}
+          >
+            <FilePlus2 className="w-4 h-4" />
+          </Link>
+        </Button>
         <Button
           variant="ghost"
           size="icon"

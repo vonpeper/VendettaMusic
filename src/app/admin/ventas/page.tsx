@@ -120,9 +120,15 @@ export default async function AdminVentasPage() {
     }
   })
 
-  // Filtrado por fuente - Ahora más robusto
-  const webBookings = itemsWithNotifications.filter(b => (b as any).source === "web" || !(b as any).source)
-  const manualQuotes = itemsWithNotifications.filter(b => (b as any).source === "manual" || (b as any).source === "eventualidad")
+  // Filtrado por fuente - Garantiza que ninguna cotización quede huérfana u oculta
+  const manualQuotes = itemsWithNotifications.filter(b => {
+    const s = ((b as any).source || "").toLowerCase()
+    return s === "manual" || s === "eventualidad"
+  })
+  const webBookings = itemsWithNotifications.filter(b => {
+    const s = ((b as any).source || "").toLowerCase()
+    return s !== "manual" && s !== "eventualidad"
+  })
   const confirmed = itemsWithNotifications.filter(b => b.status === "agendado")
   const completados = itemsWithNotifications.filter(b => b.status === "completado")
   

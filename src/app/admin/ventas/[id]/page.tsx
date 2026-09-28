@@ -29,13 +29,15 @@ import {
   Users,
   ChevronRight,
   LayoutList,
-  FileText
+  FileText,
+  FilePlus2
 } from "lucide-react"
 import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
 import { MusicianStatusList } from "@/components/admin/MusicianStatusList"
 import { EditEventoButton } from "@/components/admin/EventActions"
 import { EditDepositInline } from "@/components/admin/EditDepositInline"
+import { EditTotalInline } from "@/components/admin/EditTotalInline"
 import { CancelBookingButton } from "@/components/admin/CancelBookingButton"
 import { calculateEventCostBreakdown } from "@/lib/pricing"
 
@@ -135,6 +137,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     }
   }
 
+  if (!booking) notFound()
+
   const [config, musicianProfiles, clients, locations, packages] = await Promise.all([
     db.globalConfig.findUnique({ where: { id: "vendetta_config" } }),
     db.musicianProfile.findMany({
@@ -152,6 +156,32 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     db.$queryRawUnsafe<any[]>(`SELECT * FROM Location ORDER BY name ASC`),
     db.package.findMany({ orderBy: { name: "asc" } }),
   ])
+
+  // Buscar otras cotizaciones del mismo cliente
+  const phoneClean10 = booking.clientPhone ? booking.clientPhone.replace(/\D/g, "").slice(-10) : ""
+  let otherBookings: Array<{ id: string; shortId: string | null; packageName: string | null; requestedDate: Date | null; status: string; baseAmount: number }> = []
+  
+  if (booking.clientId || (phoneClean10 && phoneClean10.length === 10)) {
+    otherBookings = await db.bookingRequest.findMany({
+      where: {
+        id: { not: booking.id },
+        OR: [
+          ...(booking.clientId ? [{ clientId: booking.clientId }] : []),
+          ...(phoneClean10.length === 10 ? [{ clientPhone: { contains: phoneClean10 } }] : [])
+        ]
+      },
+      select: {
+        id: true,
+        shortId: true,
+        packageName: true,
+        requestedDate: true,
+        status: true,
+        baseAmount: true
+      },
+      orderBy: { requestedDate: "desc" },
+      take: 5
+    })
+  }
 
   // Aplanar para BookingActions (espera m.name, m.instrument)
   const musicians = musicianProfiles.map(m => ({
@@ -184,8 +214,6 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     instrument: p.instrument || "Músico",
     isTitular: p.isTitular
   }))
-
-  if (!booking) notFound()
 
   const notifications = await db.notification.findMany({
     where: {
@@ -504,10 +532,14 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   </CardHeader>
                   <CardContent className="p-4 md:p-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
-                      <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-blue-600/10 border border-blue-600/20">
-                        <div className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 truncate">Total</div>
-                        <div className="text-base md:text-xl font-black text-foreground">{MXN(total)}</div>
-                      </div>
+                      <EditTotalInline 
+                        key={`${booking.id}-total-${total}-${base}-${viaticos}`} 
+                        bookingId={booking.id} 
+                        initialBase={base} 
+                        initialViaticos={viaticos} 
+                        initialTotal={total} 
+                        hasInvoice={hasInvoice} 
+                      />
                       <EditDepositInline key={`${booking.id}-${deposit}`} bookingId={booking.id} initialDeposit={deposit} />
                       <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
                         <div className="text-[9px] md:text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 truncate">Pagado</div>
@@ -696,13 +728,65 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                     <a href={`mailto:${booking.clientEmail}`}>{booking.clientEmail}</a>
                   </div>
                 </div>
-                <div className="pt-2">
+                <div className="pt-2 space-y-3">
                   <ClientWhatsappActions 
                     bookingId={booking.id} 
                     clientPhone={booking.clientPhone} 
                     notifications={(booking as any).notifications || []}
                     bookingStatus={booking.status}
                   />
+
+                  {/* Botón para crear otra cotización para este mismo cliente */}
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full h-10 border-primary/40 text-primary hover:bg-primary/10 hover:text-primary font-bold text-xs gap-2 rounded-xl transition-all shadow-sm"
+                  >
+                    <Link
+                      href={`/admin/ventas/manual?${new URLSearchParams({
+                        ...(booking.clientId ? { clientId: booking.clientId } : {}),
+                        clientName: finalClientName || booking.clientName || "",
+                        clientPhone: booking.clientPhone || "",
+                        clientEmail: booking.clientEmail || "",
+                        city: booking.city || ""
+                      }).toString()}`}
+                    >
+                      <FilePlus2 className="w-4 h-4" />
+                      Nueva Cotización para este Cliente
+                    </Link>
+                  </Button>
+
+                  {/* Listado de otras cotizaciones del mismo cliente si existen */}
+                  {otherBookings.length > 0 && (
+                    <div className="pt-3 border-t border-border/40 space-y-2">
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
+                        <span>Otras cotizaciones ({otherBookings.length})</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {otherBookings.map(ob => (
+                          <Link
+                            key={ob.id}
+                            href={`/admin/ventas/${ob.id}`}
+                            className="flex items-center justify-between p-2 rounded-lg bg-muted/40 hover:bg-muted text-xs border border-border/40 transition-colors group"
+                          >
+                            <div className="min-w-0 pr-2">
+                              <div className="font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                                {ob.shortId || ob.id.slice(0, 8)} • {ob.packageName || "Show Vendetta"}
+                              </div>
+                              <div className="text-[10px] text-muted-foreground">
+                                {ob.requestedDate ? formatDateMX(ob.requestedDate) : "Sin fecha"}
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <Badge variant="outline" className="text-[9px] uppercase">
+                                {ob.status}
+                              </Badge>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

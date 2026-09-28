@@ -245,7 +245,7 @@ export function ClientesTableClient({ items }: ClientesTableClientProps) {
               <TableHead className="font-bold text-foreground text-xs uppercase tracking-wider">Contacto</TableHead>
               <TableHead className="font-bold text-foreground text-xs uppercase tracking-wider">Ubicación</TableHead>
               <TableHead className="font-bold text-foreground text-xs uppercase tracking-wider text-center">Actividad</TableHead>
-              <TableHead className="w-20 text-right"></TableHead>
+              <TableHead className="w-28 text-right"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
