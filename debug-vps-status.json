@@ -1,9 +1,9 @@
 {
   "compose_status": {
-    "error": "HTTP Error 522: <none>"
+    "error": "<urlopen error [Errno -2] Name or service not known>"
   },
   "recent_deployments": {
-    "error": "HTTP Error 522: <none>"
+    "error": "<urlopen error [Errno -2] Name or service not known>"
   },
   "latest_deployment_logs": null
 }
