@@ -15,7 +15,8 @@ import {
   Clock,
   Plus,
   Calendar,
-  Download
+  Download,
+  LayoutList
 } from "lucide-react"
 import { VentasTableClient } from "@/components/admin/VentasTableClient"
 import { MarkCompletedButton } from "@/components/admin/MarkCompletedButton"
@@ -193,21 +194,28 @@ export default async function AdminVentasPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="bookings" className="space-y-6">
+      <Tabs defaultValue="todas" className="space-y-6">
         <TabsList className="flex w-full bg-card border border-border/40 !h-auto p-1.5 mb-8 rounded-2xl gap-2 justify-start overflow-x-auto overflow-y-hidden no-scrollbar">
+          <TabsTrigger value="todas" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold transition-all">
+            <LayoutList className="w-4 h-4 mr-2" /> Todas ({itemsWithNotifications.length})
+          </TabsTrigger>
           <TabsTrigger value="bookings" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold transition-all">
-            <ShoppingBag className="w-4 h-4 mr-2" /> Pedidos Web
+            <ShoppingBag className="w-4 h-4 mr-2" /> Pedidos Web ({webBookings.length})
           </TabsTrigger>
           <TabsTrigger value="cotizaciones" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold transition-all">
-            <FileText className="w-4 h-4 mr-2" /> Ventas Manuales
+            <FileText className="w-4 h-4 mr-2" /> Ventas Manuales ({manualQuotes.length})
           </TabsTrigger>
           <TabsTrigger value="contratos" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 font-bold transition-all">
-            <CheckCircle2 className="w-4 h-4 mr-2" /> Contratos
+            <CheckCircle2 className="w-4 h-4 mr-2" /> Contratos ({confirmed.length})
           </TabsTrigger>
           <TabsTrigger value="completados" className="!h-auto shrink-0 snap-center rounded-xl px-5 py-2.5 data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 font-bold transition-all">
-            <CheckCircle2 className="w-4 h-4 mr-2" /> Completados
+            <CheckCircle2 className="w-4 h-4 mr-2" /> Completados ({completados.length})
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="todas" className="space-y-4">
+          <VentasTableClient items={itemsWithNotifications} followUpTemplate={config?.msgTemplateFollowUp} />
+        </TabsContent>
 
         <TabsContent value="bookings" className="space-y-4">
           <VentasTableClient items={webBookings} followUpTemplate={config?.msgTemplateFollowUp} />

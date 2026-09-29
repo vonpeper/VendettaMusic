@@ -58,6 +58,7 @@ interface Booking {
   id: string
   shortId: string | null
   clientName: string
+  customName?: string | null
   requestedDate: Date | string
   packageName: string
   baseAmount: number
@@ -69,6 +70,9 @@ interface Booking {
   followUpCount: number
   clientEmail?: string | null
   mapsLink?: string | null
+  city?: string | null
+  state?: string | null
+  address?: string | null
   event?: {
     customName?: string | null
     location?: { mapsLink?: string | null } | null
@@ -136,15 +140,33 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
 
   const filtered = items
     .filter(b => {
-      const name = (b.event?.customName || b.clientName).toLowerCase()
+      const eventTitle = (b.event?.customName || b.customName || "").toLowerCase()
+      const clientName = (b.clientName || "").toLowerCase()
       const sid = (b.shortId || "").toLowerCase()
-      const q = search.toLowerCase()
+      const phoneDigits = (b.clientPhone || b.client?.whatsapp || "").replace(/\D/g, "")
+      const email = (b.clientEmail || "").toLowerCase()
+      const city = (b.city || b.address || "").toLowerCase()
+      const pkg = (b.packageName || "").toLowerCase()
+      const note = (b.adminNote || "").toLowerCase()
+
+      const q = search.toLowerCase().trim()
+      const qDigits = q.replace(/\D/g, "")
       
-      // Global search
-      const matchGlobal = !q || name.includes(q) || sid.includes(q)
+      // Global search: coincide con nombre, evento, id, teléfono, correo, ciudad, paquete o nota
+      const matchGlobal = !q || 
+        eventTitle.includes(q) || 
+        clientName.includes(q) || 
+        sid.includes(q) || 
+        (qDigits.length >= 3 && phoneDigits.includes(qDigits)) ||
+        email.includes(q) ||
+        city.includes(q) ||
+        pkg.includes(q) ||
+        note.includes(q)
       
       // Column filters
-      const matchCliente = !columnFilters.cliente || name.includes(columnFilters.cliente.toLowerCase())
+      const matchCliente = !columnFilters.cliente || 
+        clientName.includes(columnFilters.cliente.toLowerCase()) || 
+        eventTitle.includes(columnFilters.cliente.toLowerCase())
       const matchId = !columnFilters.id || sid.includes(columnFilters.id.toLowerCase())
       
       const matchStatus = statusFilter === "all" || b.status === statusFilter
@@ -154,7 +176,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
     .sort((a, b) => {
       let cmp = 0
       if (sortKey === "fecha") cmp = new Date(a.requestedDate).getTime() - new Date(b.requestedDate).getTime()
-      else if (sortKey === "cliente") cmp = (a.event?.customName || a.clientName).localeCompare(b.event?.customName || b.clientName)
+      else if (sortKey === "cliente") cmp = (a.event?.customName || a.customName || a.clientName).localeCompare(b.event?.customName || b.customName || b.clientName)
       else if (sortKey === "monto") cmp = (Number(a.baseAmount) + Number(a.viaticosAmount || 0)) - (Number(b.baseAmount) + Number(b.viaticosAmount || 0))
       else if (sortKey === "estado") cmp = a.status.localeCompare(b.status)
       return sortDir === "asc" ? cmp : -cmp
@@ -366,20 +388,25 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                   <Link 
                     href={`/admin/ventas/${reserva.id}`}
                     className="font-bold text-foreground hover:text-primary hover:underline transition-colors block truncate max-w-[200px] md:max-w-none"
-                    title={reserva.event?.customName || reserva.clientName}
+                    title={reserva.event?.customName || reserva.customName || reserva.clientName}
                   >
-                    {reserva.event?.customName || reserva.clientName}
+                    {reserva.event?.customName || reserva.customName || reserva.clientName}
                   </Link>
-                  {reserva.event?.customName && (
-                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px] md:max-w-none" title={reserva.clientName}>{reserva.clientName}</div>
+                  {Boolean(reserva.event?.customName || reserva.customName) && (reserva.event?.customName || reserva.customName) !== reserva.clientName && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px] md:max-w-none" title={reserva.clientName}>
+                      👤 {reserva.clientName}
+                    </div>
                   )}
                   <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
                     {(() => {
                       const phone = getValidWhatsappPhone(reserva?.client?.whatsapp || reserva?.clientPhone || "");
-                      return phone ? phone : "El teléfono del cliente no es válido o está vacío. Revisa el número en el detalle de la venta.";
+                      return phone ? phone : (reserva.clientPhone || "Sin teléfono");
                     })()}
                   </div>
-                  <div className="text-[10px] text-muted-foreground font-mono mt-0.5">{reserva.shortId || "S/F"}</div>
+                  <div className="text-[10px] text-primary font-mono mt-0.5 font-bold">{reserva.shortId || "S/F"}</div>
+                  {reserva.city && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5">📍 {reserva.city}</div>
+                  )}
                   {reserva.adminNote?.includes("POR REVISAR") && (
                     <div className="mt-1">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 border border-amber-500/40 text-amber-300">
