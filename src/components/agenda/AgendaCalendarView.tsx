@@ -309,7 +309,12 @@ export function AgendaCalendarView({ events, adminWhatsapp }: Props) {
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <Link
-                  href="/"
+                  href="/?view=web"
+                  onClick={() => {
+                    try {
+                      sessionStorage.setItem('pwa_view_web', '1')
+                    } catch (e) {}
+                  }}
                   className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-[11px] font-bold text-gray-200 hover:text-white transition-all shadow-sm active:scale-95 cursor-pointer"
                 >
                   <ArrowLeft className="w-3 h-3 text-primary" />

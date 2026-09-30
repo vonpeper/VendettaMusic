@@ -2,10 +2,10 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Vendetta Live Music',
+    name: 'Vendetta Live Music - Agenda',
     short_name: 'Vendetta',
     description: 'Banda de pop y rock en vivo para bodas y eventos exclusivos. Agenda oficial, cotizaciones y repertorio.',
-    start_url: '/',
+    start_url: '/agenda',
     scope: '/',
     display: 'standalone',
     background_color: '#07080D',

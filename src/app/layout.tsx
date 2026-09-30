@@ -6,6 +6,7 @@ import { SchemaMarkup } from "@/components/public/SchemaMarkup"
 import { Toaster } from "sonner"
 
 import { db } from "@/lib/db";
+import { PwaStandaloneRedirect } from "@/components/pwa/PwaStandaloneRedirect";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -104,8 +105,27 @@ export default function RootLayout({
     >
       <head>
         <meta name="google-site-verification" content="xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY" />
+        {/* Redirección instantánea a la agenda si la app se abre en modo standalone (PWA en Android / iOS) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                     window.navigator.standalone === true || 
+                                     (document.referrer && document.referrer.indexOf('android-app://') !== -1);
+                  var isExplicitWeb = window.location.search.indexOf('view=web') !== -1 || window.sessionStorage.getItem('pwa_view_web') === '1';
+                  if (isStandalone && window.location.pathname === '/' && !isExplicitWeb) {
+                    window.location.replace('/agenda');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden max-w-[100vw]">
+        <PwaStandaloneRedirect />
         <Toaster theme="dark" position="bottom-right" richColors />
         <SchemaMarkup />
         {children}
