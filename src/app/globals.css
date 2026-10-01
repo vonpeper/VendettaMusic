@@ -486,7 +486,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-nohemi), var(--font-sans), sans-serif;
+  --font-sans: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-heading: var(--font-nohemi), var(--font-heading), sans-serif;
   --font-nohemi: var(--font-nohemi), sans-serif;
   --font-advent: var(--font-advent);
@@ -622,6 +622,9 @@
   --sidebar-accent-foreground: oklch(0 0 0);
   --sidebar-border: oklch(0.85 0 0); /* Light gray borders */
   --sidebar-ring: oklch(0.55 0.20 250);
+
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: 0;
 }
 
 @layer base {
@@ -629,7 +632,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply text-foreground tracking-tight;
+    @apply text-foreground;
     background: var(--gradient-midnight-stage);
     background-attachment: fixed;
     color: var(--color-blanco-nube);
