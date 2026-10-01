@@ -25,6 +25,7 @@ export interface ContactInquiryItem {
   status: string
   matchedClientId?: string | null
   convertedBookingId?: string | null
+  convertedBookingShortId?: string | null
   createdAt: Date
 }
 
@@ -43,9 +44,14 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 export function ProspectosClient({ initialInquiries }: ProspectosClientProps) {
   const [inquiries, setInquiries] = useState<ContactInquiryItem[]>(initialInquiries)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [statusFilter, setStatusFilter] = useState<string>("pending")
   const [selectedInquiry, setSelectedInquiry] = useState<ContactInquiryItem | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  const pendingCount = inquiries.filter(i => i.status !== "converted" && i.status !== "discarded").length
+  const newCount = inquiries.filter(i => i.status === "new").length
+  const convertedCount = inquiries.filter(i => i.status === "converted").length
+  const discardedCount = inquiries.filter(i => i.status === "discarded").length
 
   const filteredInquiries = inquiries.filter(item => {
     const matchesSearch = 
@@ -54,7 +60,21 @@ export function ProspectosClient({ initialInquiries }: ProspectosClientProps) {
       (item.phone && item.phone.includes(searchTerm)) ||
       (item.eventType && item.eventType.toLowerCase().includes(searchTerm.toLowerCase()))
 
-    const matchesStatus = statusFilter === "all" || item.status === statusFilter
+    let matchesStatus = true
+    if (statusFilter === "pending") {
+      matchesStatus = item.status !== "converted" && item.status !== "discarded"
+    } else if (statusFilter === "new") {
+      matchesStatus = item.status === "new"
+    } else if (statusFilter === "contacted") {
+      matchesStatus = item.status === "contacted" || item.status === "reviewing"
+    } else if (statusFilter === "converted") {
+      matchesStatus = item.status === "converted"
+    } else if (statusFilter === "discarded") {
+      matchesStatus = item.status === "discarded"
+    } else if (statusFilter === "all") {
+      matchesStatus = true
+    }
+
     return matchesSearch && matchesStatus
   })
 
@@ -101,39 +121,65 @@ export function ProspectosClient({ initialInquiries }: ProspectosClientProps) {
           />
         </div>
 
-        {/* Filtro por estado */}
+        {/* Filtro por estado / pestañas */}
         <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           <Button
             size="sm"
-            variant={statusFilter === "all" ? "default" : "outline"}
-            onClick={() => setStatusFilter("all")}
-            className="text-xs h-8"
+            variant={statusFilter === "pending" ? "default" : "outline"}
+            onClick={() => setStatusFilter("pending")}
+            className="text-xs h-8 font-semibold gap-1.5"
           >
-            Todos ({inquiries.length})
+            <span>Por Atender</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-primary/20 text-primary border-none font-bold">
+              {pendingCount}
+            </Badge>
           </Button>
-          <Button
-            size="sm"
-            variant={statusFilter === "new" ? "default" : "outline"}
-            onClick={() => setStatusFilter("new")}
-            className="text-xs h-8 text-blue-400"
-          >
-            Nuevos ({inquiries.filter(i => i.status === "new").length})
-          </Button>
-          <Button
-            size="sm"
-            variant={statusFilter === "contacted" ? "default" : "outline"}
-            onClick={() => setStatusFilter("contacted")}
-            className="text-xs h-8 text-purple-400"
-          >
-            Contactados
-          </Button>
+
           <Button
             size="sm"
             variant={statusFilter === "converted" ? "default" : "outline"}
             onClick={() => setStatusFilter("converted")}
-            className="text-xs h-8 text-emerald-400"
+            className="text-xs h-8 text-emerald-400 gap-1.5"
           >
-            Convertidos
+            <span>Convertidos</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-emerald-500/20 text-emerald-400 border-none font-bold">
+              {convertedCount}
+            </Badge>
+          </Button>
+
+          <Button
+            size="sm"
+            variant={statusFilter === "new" ? "default" : "outline"}
+            onClick={() => setStatusFilter("new")}
+            className="text-xs h-8 text-blue-400 gap-1.5"
+          >
+            <span>Nuevos</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-blue-500/20 text-blue-400 border-none font-bold">
+              {newCount}
+            </Badge>
+          </Button>
+
+          <Button
+            size="sm"
+            variant={statusFilter === "discarded" ? "default" : "outline"}
+            onClick={() => setStatusFilter("discarded")}
+            className="text-xs h-8 text-muted-foreground gap-1.5"
+          >
+            <span>Descartados</span>
+            {discardedCount > 0 && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-muted text-muted-foreground border-none font-medium">
+                {discardedCount}
+              </Badge>
+            )}
+          </Button>
+
+          <Button
+            size="sm"
+            variant={statusFilter === "all" ? "default" : "outline"}
+            onClick={() => setStatusFilter("all")}
+            className="text-xs h-8 text-muted-foreground"
+          >
+            Todos ({inquiries.length})
           </Button>
         </div>
       </div>
@@ -142,11 +188,21 @@ export function ProspectosClient({ initialInquiries }: ProspectosClientProps) {
       {filteredInquiries.length === 0 ? (
         <Card className="p-12 text-center bg-card/50 border-dashed">
           <div className="w-12 h-12 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-3 text-muted-foreground">
-            <MessageSquare className="w-6 h-6" />
+            {statusFilter === "pending" ? (
+              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+            ) : (
+              <MessageSquare className="w-6 h-6" />
+            )}
           </div>
-          <h3 className="text-base font-semibold text-foreground">No se encontraron prospectos</h3>
+          <h3 className="text-base font-semibold text-foreground">
+            {statusFilter === "pending"
+              ? "¡Bandeja al día! No hay prospectos pendientes"
+              : "No se encontraron prospectos"}
+          </h3>
           <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-            {searchTerm || statusFilter !== "all" 
+            {statusFilter === "pending"
+              ? "Todos los prospectos web han sido atendidos y graduados con cotización en el Centro de Ventas."
+              : searchTerm || statusFilter !== "all" 
               ? "Prueba cambiando los filtros o el término de búsqueda." 
               : "Las consultas enviadas desde el formulario de contacto aparecerán aquí."}
           </p>
@@ -171,10 +227,15 @@ export function ProspectosClient({ initialInquiries }: ProspectosClientProps) {
                     <div className="space-y-2 min-w-0 flex-1">
                       {/* Cabecera del Lead: Nombre y Badges */}
                       <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="font-bold text-base sm:text-[17px] text-foreground tracking-normal">{item.name}</span>
-                        <Badge variant="outline" className={`text-xs px-2.5 py-0.5 font-medium tracking-normal border ${statusInfo.color}`}>
-                          {statusInfo.label}
-                        </Badge>
+                        {item.convertedBookingId ? (
+                          <Badge variant="outline" className="text-xs px-2.5 py-0.5 font-medium border-emerald-500/40 bg-emerald-500/10 text-emerald-400 gap-1 flex items-center">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Cotización {item.convertedBookingShortId ? `#${item.convertedBookingShortId}` : "en Ventas"}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className={`text-xs px-2.5 py-0.5 font-medium tracking-normal border ${statusInfo.color}`}>
+                            {statusInfo.label}
+                          </Badge>
+                        )}
                         {item.eventType && (
                           <Badge variant="secondary" className="text-xs px-2.5 py-0.5 font-normal tracking-normal text-muted-foreground bg-muted/60 border border-border/50">
                             {item.eventType}
@@ -182,7 +243,7 @@ export function ProspectosClient({ initialInquiries }: ProspectosClientProps) {
                         )}
                         {item.matchedClientId && (
                           <Badge variant="outline" className="text-xs px-2 py-0.5 font-medium border-emerald-500/30 text-emerald-600 dark:text-emerald-400 gap-1 flex items-center">
-                            <UserCheck className="w-3.5 h-3.5" /> Cliente Previo
+                            <UserCheck className="w-3.5 h-3.5" /> Cliente Registrado
                           </Badge>
                         )}
                       </div>
@@ -338,18 +399,29 @@ export function ProspectosClient({ initialInquiries }: ProspectosClientProps) {
                 {/* Acción de Conversión a Cotización */}
                 <div className="pt-3 border-t border-border space-y-2">
                   {selectedInquiry.convertedBookingId ? (
-                    <Button
-                      asChild
-                      className="w-full h-10 gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer"
-                    >
-                      <Link href={`/admin/ventas/${selectedInquiry.convertedBookingId}`}>
-                        <CheckCircle2 className="w-4 h-4" /> Ver Cotización Creada <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </Button>
+                    <div className="space-y-2">
+                      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-start gap-2.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <div className="space-y-0.5">
+                          <p className="font-semibold text-emerald-400">Graduado a Centro de Ventas</p>
+                          <p className="text-emerald-300/80 leading-relaxed">
+                            Este prospecto ya cuenta con cotización formal {selectedInquiry.convertedBookingShortId ? `con folio #${selectedInquiry.convertedBookingShortId}` : ""}.
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        asChild
+                        className="w-full h-10 gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer shadow-md shadow-emerald-950/20"
+                      >
+                        <Link href={`/admin/ventas/${selectedInquiry.convertedBookingId}`}>
+                          <CheckCircle2 className="w-4 h-4" /> Ver en Centro de Ventas <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      </Button>
+                    </div>
                   ) : (
                     <Button
                       asChild
-                      className="w-full h-10 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold cursor-pointer"
+                      className="w-full h-10 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold cursor-pointer shadow-md shadow-primary/20"
                     >
                       <Link href={`/admin/ventas/manual?inquiryId=${selectedInquiry.id}`}>
                         <ArrowRight className="w-4 h-4" /> 

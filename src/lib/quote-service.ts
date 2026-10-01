@@ -249,12 +249,13 @@ export async function createUnifiedQuote(
     })
   }
 
-  // 8. Marcar ContactInquiry como convertido
+  // 8. Marcar ContactInquiry como convertido y enlazar al cliente generado
   if (input.originInquiryId) {
     await tx.contactInquiry.update({
       where: { id: input.originInquiryId },
       data: {
-        status: "converted"
+        status: "converted",
+        ...(finalClientId ? { matchedClientId: finalClientId } : {})
       }
     }).catch(() => null)
   }

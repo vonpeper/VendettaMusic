@@ -14,7 +14,7 @@ export default async function AdminProspectosPage() {
 
   const rawInquiries = await db.contactInquiry.findMany({
     orderBy: { createdAt: "desc" },
-    include: { convertedBooking: { select: { id: true } } }
+    include: { convertedBooking: { select: { id: true, shortId: true } } }
   })
 
   const inquiries = rawInquiries.map(item => ({
@@ -28,6 +28,7 @@ export default async function AdminProspectosPage() {
     status: item.status,
     matchedClientId: item.matchedClientId,
     convertedBookingId: item.convertedBooking?.id || null,
+    convertedBookingShortId: item.convertedBooking?.shortId || null,
     createdAt: item.createdAt
   }))
 

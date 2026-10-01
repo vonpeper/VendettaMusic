@@ -1210,6 +1210,8 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
 
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/ventas")
+    revalidatePath("/admin/prospectos")
+    revalidatePath("/admin/clientes")
     revalidatePath("/agenda")
     revalidatePath("/fechas")
     revalidatePath("/")
