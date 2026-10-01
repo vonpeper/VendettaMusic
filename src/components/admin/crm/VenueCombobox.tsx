@@ -223,18 +223,46 @@ export function VenueCombobox({
               )}
             </div>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              onSelectVenue(null)
-              setIsOpen(true)
-            }}
-            className="text-xs cursor-pointer"
-          >
-            Cambiar Lugar
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                onSelectVenue(null)
+                setIsOpen(true)
+              }}
+              className="text-xs cursor-pointer"
+            >
+              Cambiar Lugar
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                onSelectVenue(null, "Pendiente por confirmar")
+                setIsOpen(false)
+              }}
+              className="text-xs text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 cursor-pointer"
+              title="Desvincular el venue y marcar como pendiente de confirmar"
+            >
+              Marcar Pendiente
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                onSelectVenue(null, "")
+                setIsOpen(false)
+              }}
+              className="text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10 cursor-pointer h-8 px-2"
+              title="Quitar este venue de la cotización"
+            >
+              <X className="w-4 h-4 mr-1" /> Quitar
+            </Button>
+          </div>
         </div>
       ) : (
         <div ref={containerRef} className="relative">

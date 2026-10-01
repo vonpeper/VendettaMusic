@@ -48,7 +48,7 @@ describe("Parser de Prospectos (inquiry-parser.ts)", () => {
     assert.strictEqual(parsed.setupTime, "18:00")
     assert.strictEqual(parsed.guestCount, 70)
     assert.strictEqual(parsed.city, "Huixquilucan de degollado")
-    assert.strictEqual(parsed.venueName, "Huixquilucan de degollado")
+    assert.strictEqual(parsed.venueName, "", "No debe inventar venue si solo era municipio")
   })
 
   it("caso real 2: Lead de Isac De Anda (cumpleaños con temática rock)", () => {
@@ -68,6 +68,7 @@ describe("Parser de Prospectos (inquiry-parser.ts)", () => {
     assert.strictEqual(parsed.endTime, "00:00")
     assert.strictEqual(parsed.guestCount, 75)
     assert.strictEqual(parsed.city, "Toluca")
+    assert.strictEqual(parsed.venueName, "", "No debe asignar Toluca como nombre de salón/venue")
     assert.strictEqual(parsed.notes, "Temática de rock en español y Ska")
   })
 
@@ -86,8 +87,29 @@ describe("Parser de Prospectos (inquiry-parser.ts)", () => {
     assert.strictEqual(parsed.endTime, "15:30")
     assert.strictEqual(parsed.guestCount, 150)
     assert.strictEqual(parsed.venueName, "Estevez Jor.Servicos")
-    assert.strictEqual(parsed.city, "Tlalnepantla de Baz, Estado de México")
+    assert.strictEqual(parsed.city, "Tlalnepantla de Baz")
+    assert.strictEqual(parsed.state, "Estado de México")
     assert.strictEqual(parsed.mapsLink, "https://www.google.com/maps/place/Estevez")
     assert.strictEqual(parsed.viaticosAmount, 1600)
+  })
+
+  it("caso 4: Formulario estructurado con dropdown de Estado y Municipio y Maps pendiente", () => {
+    const parsed = parseInquiryDetails({
+      name: "Ana Lucía Mora",
+      phone: "7221234567",
+      email: "ana@ejemplo.com",
+      eventType: "Boda - Paquete: Experience",
+      message: "Hora: 19:00 | Invitados: 120 | Ubicación: Metepec, Estado de México | Maps: Pendiente por confirmar | Notas: Requiere iluminación especial",
+    })
+
+    assert.strictEqual(parsed.cleanEmail, "ana@ejemplo.com")
+    assert.strictEqual(parsed.ceremonyType, "boda")
+    assert.strictEqual(parsed.packageKeyword, "Experience")
+    assert.strictEqual(parsed.city, "Metepec")
+    assert.strictEqual(parsed.state, "Estado de México")
+    assert.strictEqual(parsed.venueName, "", "No debe inventar venue cuando solo se seleccionó estado y municipio")
+    assert.strictEqual(parsed.mapsLink, null, "No debe asignar 'Pendiente por confirmar' como link url de Maps")
+    assert.strictEqual(parsed.guestCount, 120)
+    assert.strictEqual(parsed.notes, "Requiere iluminación especial")
   })
 })

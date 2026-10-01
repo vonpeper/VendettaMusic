@@ -14,6 +14,7 @@ export interface ParsedInquiryData {
   setupTime: string
   guestCount: number | null
   city: string
+  state?: string
   venueName: string
   mapsLink: string | null
   viaticosAmount: number | null
@@ -182,18 +183,26 @@ export function parseInquiryDetails(params: {
 
   // 6. Ubicación / Ciudad / Venue
   let city = ""
+  let state = ""
   let venueName = ""
   const ubicacionMatch = message?.match(/Ubicaci(?:o|ó)n:\s*([^|]+)/i)
   if (ubicacionMatch) {
     const rawLoc = ubicacionMatch[1].trim()
+    let locationString = rawLoc
     // Si contiene paréntesis ej. "Tlalnepantla de Baz, Estado de México (Estevez Jor.Servicos)"
     const venueInsideParen = rawLoc.match(/\(([^)]+)\)/)
     if (venueInsideParen) {
       venueName = venueInsideParen[1].trim()
-      city = rawLoc.replace(/\([^)]+\)/, "").trim().replace(/,\s*$/, "")
+      locationString = rawLoc.replace(/\([^)]+\)/, "").trim().replace(/,\s*$/, "")
+    }
+
+    // Separar ciudad y estado si vienen separados por coma (ej. "Metepec, Estado de México")
+    if (locationString.includes(",")) {
+      const parts = locationString.split(",").map(p => p.trim())
+      city = parts[0]
+      state = parts.slice(1).join(", ")
     } else {
-      city = rawLoc
-      venueName = rawLoc
+      city = locationString
     }
   }
 
@@ -229,6 +238,7 @@ export function parseInquiryDetails(params: {
     setupTime,
     guestCount,
     city,
+    state,
     venueName,
     mapsLink,
     viaticosAmount,

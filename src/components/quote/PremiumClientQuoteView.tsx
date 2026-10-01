@@ -449,7 +449,7 @@ export function PremiumClientQuoteView({
               <div className="text-sm font-bold text-slate-950 leading-snug line-clamp-2" title={fullAddress}>
                 {booking.city ? `${booking.city}, ${booking.state}` : fullAddress}
               </div>
-              {booking.mapsLink ? (
+              {booking.mapsLink && !booking.mapsLink.includes("vendetta.mx") ? (
                 <a 
                   href={booking.mapsLink} 
                   target="_blank" 
@@ -459,8 +459,8 @@ export function PremiumClientQuoteView({
                   Abrir en Google Maps <ExternalLink className="w-3 h-3 ml-1" />
                 </a>
               ) : (
-                <div className="text-[11px] text-slate-500 font-medium">
-                  {cleanAddressParts || "Ubicación confirmada"}
+                <div className="text-[11px] text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg font-medium inline-block mt-0.5">
+                  📍 Dirección exacta y Maps: Pendientes por definir
                 </div>
               )}
             </div>

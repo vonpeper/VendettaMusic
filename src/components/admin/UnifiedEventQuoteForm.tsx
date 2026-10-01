@@ -13,9 +13,23 @@ import { QuoteLineItems } from "@/components/admin/crm/QuoteLineItems"
 import { FinancialSummary } from "@/components/admin/crm/FinancialSummary"
 import { calculateQuoteTotals, calculateShowBasePrice, formatCurrencyMXN, AdditionalLineItem } from "@/lib/pricing"
 import { isLocalCity } from "@/lib/viaticos"
+import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import { saveUnifiedEventQuoteAction } from "@/actions/events"
 import { Toggle } from "@/components/ui/Toggle"
 import { toast } from "sonner"
+
+function normalizeStateName(rawState?: string): string {
+  if (!rawState) return "Estado de México"
+  const s = rawState.toLowerCase().trim()
+  if (s.includes("cdmx") || s.includes("ciudad de m") || s.includes("distrito federal") || s === "df") {
+    return "Ciudad de México"
+  }
+  if (s.includes("méxico") || s.includes("mexico") || s.includes("edomex")) {
+    return "Estado de México"
+  }
+  const matched = Object.keys(ESTADOS_MUNICIPIOS).find(k => k.toLowerCase() === s)
+  return matched || rawState
+}
 import { 
   Calendar, 
   Users, 
@@ -174,14 +188,48 @@ export function UnifiedEventQuoteForm({
     initialData?.venueAddress || initialData?.address || initialData?.location?.address || ""
   )
   const [venueCity, setVenueCity] = useState<string>(
-    initialData?.venueCity || initialData?.city || initialData?.location?.city || ""
+    initialData?.venueCity || initialData?.city || initialData?.location?.city || "Toluca"
   )
   const [venueState, setVenueState] = useState<string>(
-    initialData?.venueState || initialData?.state || initialData?.location?.state || ""
+    initialData?.venueState || initialData?.state || initialData?.location?.state || "Estado de México"
   )
   const [mapsLink, setMapsLink] = useState<string>(
     initialData?.mapsLink || initialData?.location?.mapsLink || ""
   )
+
+  const [isCustomCity, setIsCustomCity] = useState(false)
+
+  const selectedStateKey = useMemo(() => {
+    return normalizeStateName(venueState)
+  }, [venueState])
+
+  const availableMunicipios = useMemo(() => {
+    return ESTADOS_MUNICIPIOS[selectedStateKey] || [
+      "Otro municipio / cotización manual",
+    ]
+  }, [selectedStateKey])
+
+  const isCityInList = useMemo(() => {
+    return availableMunicipios.some(m => m.toLowerCase() === venueCity.toLowerCase())
+  }, [availableMunicipios, venueCity])
+
+  function handleStateChange(newState: string) {
+    setVenueState(newState)
+    setIsCustomCity(false)
+    const list = ESTADOS_MUNICIPIOS[newState]
+    const defaultMuni = list && list.length > 0 ? list[0] : "Toluca"
+    setVenueCity(defaultMuni)
+    if (defaultMuni && defaultMuni !== "Otro municipio / cotización manual") {
+      handleAutoCalculateViaticos(`${defaultMuni}, ${newState}`)
+    }
+  }
+
+  function handleCityChange(newCity: string) {
+    setVenueCity(newCity)
+    if (newCity && newCity !== "Otro municipio / cotización manual" && newCity !== "__custom__") {
+      handleAutoCalculateViaticos(`${newCity}, ${venueState}`)
+    }
+  }
 
   // 4. Estado Cotización y Paquete
   const [packageId, setPackageId] = useState<string>(
@@ -368,10 +416,16 @@ export function UnifiedEventQuoteForm({
     } else {
       setSelectedVenueId(null)
       setVenueName("")
-      setVenueAddress(pendingAddress ?? "")
-      setVenueCity("")
-      setVenueState("")
+      if (pendingAddress !== undefined) {
+        setVenueAddress(pendingAddress)
+      } else if (!venueAddress) {
+        setVenueAddress("Pendiente por confirmar")
+      }
       setMapsLink("")
+      // Preservar ciudad y estado para mantener el cálculo de viáticos
+      const fallbackCity = venueCity || clientCity || "Toluca"
+      const fallbackState = venueState || "Estado de México"
+      handleAutoCalculateViaticos(`${fallbackCity}, ${fallbackState}`)
     }
   }
 
@@ -1016,40 +1070,101 @@ export function UnifiedEventQuoteForm({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-border/40">
                   <div className="sm:col-span-2">
-                    <Label className="text-xs font-semibold text-muted-foreground">Dirección Completa / Referencia</Label>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label className="text-xs font-semibold text-muted-foreground">Dirección Completa / Referencia</Label>
+                      <button
+                        type="button"
+                        onClick={() => setVenueAddress("Pendiente por confirmar")}
+                        className="text-xs text-primary hover:underline font-semibold cursor-pointer"
+                      >
+                        Marcar como Pendiente
+                      </button>
+                    </div>
                     <Input
                       value={venueAddress}
                       onChange={e => setVenueAddress(e.target.value)}
-                      placeholder="Calle, número, colonia..."
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground">Municipio o Ciudad</Label>
-                    <Input
-                      value={venueCity}
-                      onChange={e => setVenueCity(e.target.value)}
-                      placeholder="ej. Metepec, Valle de Bravo..."
-                      className="mt-1"
+                      placeholder="Calle, número, colonia o 'Pendiente por confirmar'..."
                     />
                   </div>
                   <div>
                     <Label className="text-xs font-semibold text-muted-foreground">Estado</Label>
-                    <Input
-                      value={venueState}
-                      onChange={e => setVenueState(e.target.value)}
-                      placeholder="ej. México, CDMX..."
-                      className="mt-1"
-                    />
+                    <select
+                      value={Object.keys(ESTADOS_MUNICIPIOS).find(k => k.toLowerCase() === selectedStateKey.toLowerCase()) || (venueState ? "Otro" : "Estado de México")}
+                      onChange={e => {
+                        const val = e.target.value
+                        if (val === "Otro") {
+                          setVenueState("Otro")
+                        } else {
+                          handleStateChange(val)
+                        }
+                      }}
+                      className="w-full h-10 px-3 mt-1 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      {Object.keys(ESTADOS_MUNICIPIOS).map(st => (
+                        <option key={st} value={st}>{st}</option>
+                      ))}
+                      <option value="Otro">Otro Estado (Cotización manual)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label className="text-xs font-semibold text-muted-foreground">Municipio o Alcaldía</Label>
+                      {isCustomCity && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCustomCity(false)
+                            const first = availableMunicipios[0] || "Toluca"
+                            handleCityChange(first)
+                          }}
+                          className="text-xs text-primary hover:underline font-semibold cursor-pointer"
+                        >
+                          Ver Lista
+                        </button>
+                      )}
+                    </div>
+                    {isCustomCity ? (
+                      <Input
+                        value={venueCity}
+                        onChange={e => setVenueCity(e.target.value)}
+                        onBlur={() => {
+                          if (venueCity) handleAutoCalculateViaticos(`${venueCity}, ${venueState}`)
+                        }}
+                        placeholder="Escribe el nombre del municipio..."
+                        className="h-10"
+                      />
+                    ) : (
+                      <select
+                        value={isCityInList ? venueCity : "__custom__"}
+                        onChange={e => {
+                          if (e.target.value === "__custom__") {
+                            setIsCustomCity(true)
+                          } else {
+                            handleCityChange(e.target.value)
+                          }
+                        }}
+                        className="w-full h-10 px-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        {availableMunicipios.map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                        <option value="__custom__">Otro municipio / Escribir a mano...</option>
+                      </select>
+                    )}
                   </div>
                   <div className="sm:col-span-2">
-                    <Label className="text-xs font-semibold text-muted-foreground">Enlace de Google Maps</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">Enlace de Google Maps (Opcional)</Label>
                     <Input
                       value={mapsLink}
                       onChange={e => setMapsLink(e.target.value)}
-                      placeholder="https://maps.app.goo.gl/..."
+                      placeholder="https://maps.app.goo.gl/... (opcional si el cliente aún no define ubicación)"
                       className="mt-1"
                     />
+                    {!mapsLink && (
+                      <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                        ℹ️ Enlace opcional. Si el cliente tiene desconfianza o aún no tiene lugar, se le indicará que esta información queda pendiente por definir.
+                      </p>
+                    )}
                   </div>
                 </div>
 

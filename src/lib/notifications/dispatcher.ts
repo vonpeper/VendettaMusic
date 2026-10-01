@@ -115,8 +115,8 @@ export async function dispatchNotification({
         date: formatDateMX(booking.requestedDate, "d 'de' MMMM"),
         fullDate: formatDateMX(booking.requestedDate, "EEEE, d 'de' MMMM"),
         time: booking.startTime || "Por confirmar",
-        location: booking.event?.location?.name || booking.address || "Por confirmar",
-        address: booking.event?.location?.address || booking.address || "Por confirmar",
+        location: booking.event?.location?.name || (booking as any).venueName || booking.city || "Por confirmar",
+        address: booking.event?.location?.address || (booking.address && !booking.address.toLowerCase().includes("no especificada") ? booking.address : "Pendiente por confirmar"),
         package: booking.event?.package?.name || booking.packageName || "Personalizado",
         ceremony: booking.venueType || booking.event?.ceremonyType || "Show",
         isBarEvent: [
@@ -140,7 +140,7 @@ export async function dispatchNotification({
         adminLink: `${baseUrl}/admin/ventas/${bookingId}`,
         statusLink: `${baseUrl}/status/${booking.shortId}`,
         bookingLink: `${baseUrl}/status/${booking.shortId}`,
-        mapsLink: getValidMapsLink(booking.event?.location?.mapsLink || booking.event?.mapsLink || booking.mapsLink, booking.event?.location?.address || booking.address),
+        mapsLink: getValidMapsLink(booking.event?.location?.mapsLink || booking.event?.mapsLink || booking.mapsLink, booking.event?.location?.address || booking.address) || "Pendiente por confirmar",
         total: booking.baseAmount?.toLocaleString("es-MX") || "0"
       }
       if (!recipient && type.startsWith("CLIENT")) recipient = booking.clientPhone
@@ -166,7 +166,7 @@ export async function dispatchNotification({
         time: event.performanceStart || event.startTime || "Por confirmar",
         location: event.location?.name || event.bookingRequest?.city || "Por confirmar",
         address: event.location?.address || event.bookingRequest?.address || "No especificada",
-        mapsLink: getValidMapsLink(event.location?.mapsLink || event.bookingRequest?.mapsLink || event.mapsLink, event.location?.address || event.bookingRequest?.address),
+        mapsLink: getValidMapsLink(event.location?.mapsLink || event.bookingRequest?.mapsLink || event.mapsLink, event.location?.address || event.bookingRequest?.address) || "Pendiente por confirmar",
         setupTime: event.setupTime || event.bookingRequest?.setupTime || "Por definir",
         arrivalTime: event.arrivalTime || event.bookingRequest?.arrivalTime || "Por definir",
         performanceStart: event.performanceStart || "Por definir",

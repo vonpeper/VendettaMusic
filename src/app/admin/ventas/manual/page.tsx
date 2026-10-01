@@ -155,17 +155,18 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
 
       // Resolver Venue / Ubicación en catálogo
       let matchedLocationId: string | undefined = undefined
-      let venueName = parsed.venueName || parsed.city || ""
-      let venueAddress = parsed.city || ""
+      let venueName = parsed.venueName || ""
       let venueCity = parsed.city || ""
-      let venueState = "México"
+      let venueState = parsed.state || "Estado de México"
+      let venueAddress = venueName ? venueName : (venueCity ? "Pendiente por confirmar" : "")
 
-      if (parsed.venueName || parsed.city) {
-        const targetSearch = (parsed.venueName || parsed.city).toLowerCase()
+      // Solo emparejar con el catálogo de venues si el lead especificó un NOMBRE DE LUGAR real (no solo municipio/ciudad)
+      if (parsed.venueName && parsed.venueName.trim().length > 2) {
+        const targetSearch = parsed.venueName.toLowerCase().trim()
         const foundLoc = formattedVenues.find(v =>
+          v.name.toLowerCase() === targetSearch ||
           v.name.toLowerCase().includes(targetSearch) ||
-          targetSearch.includes(v.name.toLowerCase()) ||
-          (v.city && targetSearch.includes(v.city.toLowerCase()))
+          targetSearch.includes(v.name.toLowerCase())
         )
         if (foundLoc) {
           matchedLocationId = foundLoc.id

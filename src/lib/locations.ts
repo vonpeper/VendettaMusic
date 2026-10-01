@@ -7,14 +7,22 @@ import { db } from "./db"
  */
 export function getValidMapsLink(mapsLink?: string | null, address?: string | null): string {
   const cleanLink = mapsLink?.trim()
-  if (cleanLink && (cleanLink.startsWith("http://") || cleanLink.startsWith("https://"))) {
+  if (cleanLink && (cleanLink.startsWith("http://") || cleanLink.startsWith("https://")) && !cleanLink.includes("vendetta.mx")) {
     return cleanLink
   }
   const cleanAddr = address?.trim()
-  if (cleanAddr && cleanAddr !== "No especificada" && cleanAddr !== "Dirección no especificada" && cleanAddr.length > 0) {
+  const isInvalidAddr = !cleanAddr || 
+    cleanAddr.toLowerCase().includes("no especificada") ||
+    cleanAddr.toLowerCase().includes("pendiente") ||
+    cleanAddr.toLowerCase().includes("por confirmar") ||
+    cleanAddr.toLowerCase().includes("por definir") ||
+    cleanAddr === "null" ||
+    cleanAddr === "undefined"
+
+  if (!isInvalidAddr && cleanAddr.length > 3) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanAddr)}`
   }
-  return "https://www.vendetta.mx"
+  return ""
 }
 
 import { Prisma, PrismaClient } from "@prisma/client"

@@ -440,7 +440,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                       <div>
                         <div className="font-black">{booking.city}, {booking.state}</div>
                         <div className="text-sm text-muted-foreground mt-1 leading-relaxed font-medium">{booking.address}</div>
-                        {booking.mapsLink && (
+                        {booking.mapsLink && !booking.mapsLink.includes("vendetta.mx") ? (
                           <div className="mt-2">
                              <a 
                                href={booking.mapsLink} 
@@ -449,6 +449,12 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                              >
                                <ExternalLink className="w-3 h-3" /> Ver en Google Maps
                              </a>
+                          </div>
+                        ) : (
+                          <div className="mt-2">
+                            <span className="text-[10px] text-amber-500 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 inline-block">
+                              Maps / Dirección pendiente por confirmar
+                            </span>
                           </div>
                         )}
                       </div>

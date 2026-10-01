@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
 
 import { submitContactInquiry } from "@/actions/contact"
+import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 
 const {
   Check, X, Sparkles, Music2,
@@ -150,7 +151,11 @@ export function PaquetesSection({ dbPackages, adminWhatsapp }: PaquetesSectionPr
     fecha: "",
     hora: "",
     invitados: "",
-    ubicacion: "",
+    estado: "Estado de México",
+    municipio: "Metepec",
+    municipioOtro: "",
+    lugar: "",
+    mapsLink: "",
     notas: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -206,10 +211,17 @@ export function PaquetesSection({ dbPackages, adminWhatsapp }: PaquetesSectionPr
       return
     }
 
-    if (!formData.ubicacion.trim()) {
-      toast.error("Por favor indica la ubicación o municipio del evento")
+    const finalMuni = formData.municipio === "Otro municipio / cotización manual"
+      ? (formData.municipioOtro.trim() || "Otro municipio")
+      : formData.municipio
+
+    if (!finalMuni.trim()) {
+      toast.error("Por favor selecciona o especifica tu municipio")
       return
     }
+
+    const venuePlace = formData.lugar.trim()
+    const finalUbicacion = `${finalMuni}, ${formData.estado}${venuePlace ? ` (${venuePlace})` : ""}`
 
     setIsSubmitting(true)
 
@@ -223,16 +235,32 @@ export function PaquetesSection({ dbPackages, adminWhatsapp }: PaquetesSectionPr
       inquiryForm.set("email", formData.email?.trim() || "contacto@vendetta.mx")
       inquiryForm.set("fecha", formData.fecha)
       inquiryForm.set("tipo", `${formData.motivo} - Paquete: ${pkgName}`)
-      inquiryForm.set(
-        "mensaje",
-        `Hora: ${formData.hora.trim()} | Invitados: ${formData.invitados.trim()} | Ubicación: ${formData.ubicacion.trim()}${formData.notas.trim() ? ` | Notas: ${formData.notas.trim()}` : ""}`
-      )
+
+      const msgParts = [
+        `Hora: ${formData.hora.trim()}`,
+        `Invitados: ${formData.invitados.trim()}`,
+        `Ubicación: ${finalUbicacion}`,
+      ]
+      if (formData.mapsLink.trim()) {
+        msgParts.push(`Maps: ${formData.mapsLink.trim()}`)
+      } else {
+        msgParts.push(`Maps: Pendiente por confirmar`)
+      }
+      if (formData.notas.trim()) {
+        msgParts.push(`Notas: ${formData.notas.trim()}`)
+      }
+
+      inquiryForm.set("mensaje", msgParts.join(" | "))
       await submitContactInquiry(inquiryForm).catch((e) => console.warn("Could not save contact inquiry:", e))
     } catch (inqErr) {
       console.warn("Inquiry error:", inqErr)
     }
 
     // 2. Formatear mensaje para WhatsApp prellenado
+    const mapsSection = formData.mapsLink.trim()
+      ? `🗺️ *Google Maps:* ${formData.mapsLink.trim()}\n`
+      : `🗺️ *Dirección exacta y Maps:* Pendientes por confirmar más adelante\n`
+
     const waMessage = 
 `¡Hola Vendetta Live Music! 🎸⚡
 Me gustaría solicitar una cotización formal para mi evento:
@@ -244,8 +272,8 @@ ${formData.email.trim() ? `📧 *Correo:* ${formData.email.trim()}\n` : ""}🎉 
 📅 *Fecha:* ${formData.fecha}
 ⏰ *Hora estimada:* ${formData.hora.trim()}
 👥 *Invitados:* ${formData.invitados.trim()} personas
-📍 *Ubicación / Ciudad:* ${formData.ubicacion.trim()}
-${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim()}\n` : ""}
+📍 *Ubicación / Ciudad:* ${finalUbicacion}
+${mapsSection}${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim()}\n` : ""}
 ¿Tienen disponibilidad para esta fecha? ¡Muchas gracias!`
 
     const rawNumber =
@@ -581,42 +609,130 @@ ${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim(
                 </div>
               </div>
 
-              {/* Invitados y Ubicación */}
+              {/* Invitados */}
+              <div>
+                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-primary" /> No. de Invitados *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={selectedPkg && isLargePackage(selectedPkg.name) ? 100 : 10}
+                  placeholder={selectedPkg && isLargePackage(selectedPkg.name) ? "Mínimo 100 invitados" : "Ej: 50"}
+                  value={formData.invitados}
+                  onChange={(e) => setFormData({ ...formData, invitados: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                />
+                {selectedPkg && isLargePackage(selectedPkg.name) && (
+                  <p className="text-[11px] text-amber-400 font-semibold mt-1.5">
+                    ⚠️ Mínimo 100 invitados por la dimensión de este paquete.
+                  </p>
+                )}
+              </div>
+
+              {/* Estado y Municipio (Dropdowns para viáticos automáticos) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-primary" /> No. de Invitados *
+                    <MapPin className="w-3.5 h-3.5 text-primary" /> Estado *
                   </label>
-                  <input
-                    type="number"
-                    required
-                    min={selectedPkg && isLargePackage(selectedPkg.name) ? 100 : 10}
-                    placeholder={selectedPkg && isLargePackage(selectedPkg.name) ? "Mínimo 100 invitados" : "Ej: 50"}
-                    value={formData.invitados}
-                    onChange={(e) => setFormData({ ...formData, invitados: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  />
-                  {selectedPkg && isLargePackage(selectedPkg.name) && (
-                    <p className="text-[11px] text-amber-400 font-semibold mt-1.5">
-                      ⚠️ Mínimo 100 invitados por la dimensión de este paquete.
-                    </p>
-                  )}
+                  <div className="relative">
+                    <select
+                      value={formData.estado}
+                      onChange={(e) => {
+                        const newEstado = e.target.value
+                        const list = ESTADOS_MUNICIPIOS[newEstado] || ["Otro municipio / cotización manual"]
+                        setFormData({
+                          ...formData,
+                          estado: newEstado,
+                          municipio: list[0] || "",
+                          municipioOtro: "",
+                        })
+                      }}
+                      className="w-full h-11 px-4 rounded-xl bg-zinc-900 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
+                    >
+                      {Object.keys(ESTADOS_MUNICIPIOS).map((st) => (
+                        <option key={st} value={st} className="bg-zinc-900 text-white">
+                          {st}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-white/40">
+                      <ArrowUpRight className="w-4 h-4 rotate-90" />
+                    </div>
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-primary" /> Ubicación / Municipio *
+                    <MapPin className="w-3.5 h-3.5 text-primary" /> Municipio / Alcaldía *
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={formData.municipio}
+                      onChange={(e) => setFormData({ ...formData, municipio: e.target.value })}
+                      className="w-full h-11 px-4 rounded-xl bg-zinc-900 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
+                    >
+                      {(ESTADOS_MUNICIPIOS[formData.estado] || ["Otro municipio / cotización manual"]).map((m) => (
+                        <option key={m} value={m} className="bg-zinc-900 text-white">
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-white/40">
+                      <ArrowUpRight className="w-4 h-4 rotate-90" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {formData.municipio === "Otro municipio / cotización manual" && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                    Nombre de tu Municipio o Ciudad *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Ej: Valle de Bravo / Metepec"
-                    value={formData.ubicacion}
-                    onChange={(e) => setFormData({ ...formData, ubicacion: e.target.value })}
+                    placeholder="Ej: San Juan del Río, Taxco..."
+                    value={formData.municipioOtro}
+                    onChange={(e) => setFormData({ ...formData, municipioOtro: e.target.value })}
+                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  />
+                </div>
+              )}
+
+              {/* Lugar / Salón y Enlace Google Maps (Opcionales con aviso de privacidad) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                    Lugar o Salón (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Hacienda o Salón tentativo"
+                    value={formData.lugar}
+                    onChange={(e) => setFormData({ ...formData, lugar: e.target.value })}
+                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                    Link de Google Maps (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="https://maps.app.goo.gl/..."
+                    value={formData.mapsLink}
+                    onChange={(e) => setFormData({ ...formData, mapsLink: e.target.value })}
                     className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
                 </div>
               </div>
+              <p className="text-[11px] text-gray-400">
+                🔒 <em>Si aún no tienes salón definido o prefieres compartir tu dirección exacta más adelante, puedes dejarlo en blanco.</em>
+              </p>
 
               {/* Notas opcionales */}
               <div>
