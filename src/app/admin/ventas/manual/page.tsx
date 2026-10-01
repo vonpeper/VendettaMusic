@@ -6,6 +6,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 import { redirect } from "next/navigation"
+import { parseInquiryDetails } from "@/lib/inquiry-parser"
+import { isLocalCity } from "@/lib/viaticos"
+import { calculateShowBasePrice } from "@/lib/pricing"
 
 interface ManualBookingPageProps {
   searchParams?: Promise<{
@@ -27,13 +30,72 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
   const paramClientEmail = resolvedParams?.clientEmail
   const paramCity = resolvedParams?.city
 
+  const [packages, clients, locations] = await Promise.all([
+    db.package.findMany({
+      orderBy: { baseCostPerHour: "asc" }
+    }),
+    db.clientProfile.findMany({
+      include: { user: true },
+      orderBy: { user: { name: "asc" } }
+    }),
+    db.location.findMany({
+      orderBy: { name: "asc" }
+    })
+  ])
+
+  const formattedPackages = packages.map(p => ({
+    id: p.id,
+    name: p.name,
+    baseCostPerHour: p.baseCostPerHour,
+    minDuration: p.minDuration,
+    description: p.description,
+    includes: p.includes
+  }))
+
+  const formattedClients = clients
+    .filter(c => c.user)
+    .map(c => ({
+      id: c.id,
+      name: c.user.name || "Sin Nombre",
+      phone: c.whatsapp || "",
+      email: c.user.email || "",
+      city: c.city || "Toluca / CDMX",
+      state: c.state || "México"
+    }))
+
+  const formattedVenues = locations.map(l => ({
+    id: l.id,
+    name: l.name,
+    address: l.address,
+    city: l.city,
+    state: l.state,
+    mapsLink: l.mapsLink,
+    phone: l.phone
+  }))
+
   let prefillInquiry: {
     clientName: string
     clientPhone?: string
     clientEmail?: string
     clientId?: string
     customName?: string
+    ceremonyType?: string
     eventDate?: string
+    startTime?: string
+    endTime?: string
+    arrivalTime?: string
+    setupTime?: string
+    guestCount?: number | null
+    locationId?: string
+    venueName?: string
+    venueAddress?: string
+    venueCity?: string
+    venueState?: string
+    mapsLink?: string
+    packageId?: string
+    packageName?: string
+    basePrice?: number
+    viaticosAmount?: number
     musicianNotes?: string
     originInquiryId?: string
     status?: string
@@ -52,14 +114,104 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
         redirect(`/admin/ventas/${inquiry.convertedBooking.id}`)
       }
 
+      const parsed = parseInquiryDetails({
+        name: inquiry.name,
+        email: inquiry.email,
+        phone: inquiry.phone,
+        eventType: inquiry.eventType,
+        message: inquiry.message,
+        defaultDurationHours: 2,
+      })
+
+      // Resolver Cliente Previo si coincide el teléfono
+      let resolvedClientId = inquiry.matchedClientId || undefined
+      if (!resolvedClientId && inquiry.phone) {
+        const clean10 = inquiry.phone.replace(/\D/g, "").slice(-10)
+        if (clean10.length === 10) {
+          const matchClient = formattedClients.find(
+            c => c.phone && c.phone.replace(/\D/g, "").slice(-10) === clean10
+          )
+          if (matchClient) resolvedClientId = matchClient.id
+        }
+      }
+
+      // Resolver Paquete seleccionado
+      let matchedPackageId: string | undefined = undefined
+      let matchedPackageName: string | undefined = undefined
+      let initialBasePrice: number | undefined = undefined
+
+      if (parsed.packageKeyword) {
+        const foundPkg = formattedPackages.find(p =>
+          p.name.toLowerCase().includes(parsed.packageKeyword!.toLowerCase())
+        )
+        if (foundPkg) {
+          matchedPackageId = foundPkg.id
+          matchedPackageName = foundPkg.name
+          const isOutside = parsed.city ? !isLocalCity(parsed.city) : false
+          const localBase = foundPkg.baseCostPerHour * (foundPkg.minDuration || 2)
+          initialBasePrice = calculateShowBasePrice(localBase, isOutside)
+        }
+      }
+
+      // Resolver Venue / Ubicación en catálogo
+      let matchedLocationId: string | undefined = undefined
+      let venueName = parsed.venueName || parsed.city || ""
+      let venueAddress = parsed.city || ""
+      let venueCity = parsed.city || ""
+      let venueState = "México"
+
+      if (parsed.venueName || parsed.city) {
+        const targetSearch = (parsed.venueName || parsed.city).toLowerCase()
+        const foundLoc = formattedVenues.find(v =>
+          v.name.toLowerCase().includes(targetSearch) ||
+          targetSearch.includes(v.name.toLowerCase()) ||
+          (v.city && targetSearch.includes(v.city.toLowerCase()))
+        )
+        if (foundLoc) {
+          matchedLocationId = foundLoc.id
+          venueName = foundLoc.name
+          venueAddress = foundLoc.address || foundLoc.name
+          venueCity = foundLoc.city || venueCity
+          venueState = foundLoc.state || venueState
+        }
+      }
+
+      // Fecha del evento formateada YYYY-MM-DD
+      const eventDate = inquiry.requestedDate
+        ? inquiry.requestedDate.toISOString().split("T")[0]
+        : ""
+
+      // Notas consolidadas
+      const noteParts: string[] = []
+      if (inquiry.message) noteParts.push(`Solicitud original: ${inquiry.message}`)
+      if (parsed.notes) noteParts.push(`Requerimientos: ${parsed.notes}`)
+      const musicianNotes = noteParts.join(" | ") || `Solicitud Web (${inquiry.eventType || "General"})`
+
       prefillInquiry = {
+        clientId: resolvedClientId,
         clientName: inquiry.name,
         clientPhone: inquiry.phone || "",
-        clientEmail: inquiry.email || "",
-        clientId: inquiry.matchedClientId || undefined,
-        customName: inquiry.eventType ? `Consulta: ${inquiry.eventType}` : "",
-        eventDate: inquiry.requestedDate ? inquiry.requestedDate.toISOString().split("T")[0] : "",
-        musicianNotes: inquiry.message ? `Solicitud Web (${inquiry.eventType || "General"}): ${inquiry.message}` : "",
+        clientEmail: parsed.cleanEmail,
+        city: parsed.city || venueCity,
+        customName: parsed.customName,
+        ceremonyType: parsed.ceremonyType,
+        eventDate,
+        startTime: parsed.startTime,
+        endTime: parsed.endTime,
+        arrivalTime: parsed.arrivalTime,
+        setupTime: parsed.setupTime,
+        guestCount: parsed.guestCount,
+        locationId: matchedLocationId,
+        venueName,
+        venueAddress,
+        venueCity,
+        venueState,
+        mapsLink: parsed.mapsLink || undefined,
+        packageId: matchedPackageId,
+        packageName: matchedPackageName,
+        basePrice: initialBasePrice,
+        viaticosAmount: parsed.viaticosAmount || undefined,
+        musicianNotes,
         originInquiryId: inquiry.id,
         status: "pendiente"
       }
@@ -107,49 +259,6 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
       status: "pendiente"
     }
   }
-
-  const [packages, clients, locations] = await Promise.all([
-    db.package.findMany({
-      orderBy: { baseCostPerHour: "asc" }
-    }),
-    db.clientProfile.findMany({
-      include: { user: true },
-      orderBy: { user: { name: "asc" } }
-    }),
-    db.location.findMany({
-      orderBy: { name: "asc" }
-    })
-  ])
-
-  const formattedPackages = packages.map(p => ({
-    id: p.id,
-    name: p.name,
-    baseCostPerHour: p.baseCostPerHour,
-    minDuration: p.minDuration,
-    description: p.description,
-    includes: p.includes
-  }))
-
-  const formattedClients = clients
-    .filter(c => c.user)
-    .map(c => ({
-      id: c.id,
-      name: c.user.name || "Sin Nombre",
-      phone: c.whatsapp || "",
-      email: c.user.email || "",
-      city: c.city || "Toluca / CDMX",
-      state: c.state || "México"
-    }))
-
-  const formattedVenues = locations.map(l => ({
-    id: l.id,
-    name: l.name,
-    address: l.address,
-    city: l.city,
-    state: l.state,
-    mapsLink: l.mapsLink,
-    phone: l.phone
-  }))
 
   return (
     <div className="p-4 md:p-8 bg-background min-h-screen">

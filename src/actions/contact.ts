@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 
 import { contactSchema } from "@/lib/schemas/contact"
+import { sendWhatsApp } from "@/lib/notifications/whatsapp"
 
 /**
  * Registra una consulta de contacto pública exclusivamente como ContactInquiry (lead).
@@ -80,6 +81,36 @@ export async function submitContactInquiry(formData: FormData) {
         matchedClientId
       }
     })
+
+    // Notificar al administrador por WhatsApp
+    try {
+      const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
+      const adminPhone =
+        config?.adminWhatsapp ||
+        process.env.ADMIN_WHATSAPP_NUMBER ||
+        process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
+        "5217222880045"
+
+      const fechaTxt = val.fecha || (parsedDate ? parsedDate.toLocaleDateString("es-MX", { timeZone: "UTC" }) : "No especificada")
+      const avisoAdmin = 
+`🔔 *NUEVO PROSPECTO REGISTRADO EN WEB*
+
+• *Nombre:* ${val.nombre.trim()}
+• *Teléfono:* ${val.telefono.trim()}
+${val.email && val.email !== "contacto@vendetta.mx" ? `• *Correo:* ${val.email.trim()}\n` : ""}• *Tipo / Paquete:* ${val.tipo || "General"}
+• *Fecha Tentativa:* ${fechaTxt}
+${val.mensaje ? `• *Detalles:* ${val.mensaje.trim()}\n` : ""}
+👉 *Ver y convertir en panel:*
+https://vendetta.mx/admin/prospectos`
+
+      if (adminPhone) {
+        await sendWhatsApp(adminPhone, avisoAdmin, `Aviso Admin - Nuevo Prospecto ${val.nombre.trim()}`).catch(
+          (err) => console.warn("Aviso WhatsApp admin nuevo prospecto no enviado:", err)
+        )
+      }
+    } catch (waErr) {
+      console.warn("Error al enviar alerta WhatsApp de prospecto al admin:", waErr)
+    }
 
     return { success: true, inquiryId: inquiry.id }
   } catch (err: unknown) {

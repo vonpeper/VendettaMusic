@@ -9,25 +9,30 @@ export const metadata: Metadata = {
   }
 }
 
+import Link from "next/link"
+
 export default function ServiciosPage() {
   const servicios = [
     {
-      title: "Bodas de Lujo",
-      description: "Tu gran día merece una fiesta épica. Ofrecemos paquetes que cubren desde el cocktail hasta el último minuto en la pista de baile, con repertorio personalizable.",
-      image: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1000&auto=format&fit=crop",
-      tag: "Sociales"
-    },
-    {
       title: "Eventos Corporativos",
-      description: "La música perfecta para tus cenas de fin de año, aniversarios o lanzamientos. Impactamos a tus colaboradores y clientes con producciones nivel concierto.",
+      description: "La música perfecta para tus cenas de fin de año, aniversarios o lanzamientos. Impactamos a tus colaboradores y clientes con producciones nivel concierto. Facturación CFDI 4.0.",
       image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1000&auto=format&fit=crop",
-      tag: "Empresas"
+      tag: "Empresas",
+      href: "/eventos-corporativos"
     },
     {
-      title: "Fiestas Privadas",
-      description: "Cumpleaños, aniversarios o cualquier pretexto para celebrar. Llevamos toda la infraestructura al jardín de tu casa o al salón de tu elección.",
+      title: "Cumpleaños & Fiestas Privadas",
+      description: "Celebra tus 30, 40 o 50 años con un concierto real de pop & rock en tu jardín, rancho o salón. Cero grupo versátil aburrido: metales en vivo y pura adrenalina.",
       image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000&auto=format&fit=crop",
-      tag: "Privados"
+      tag: "Privados & Cumpleaños",
+      href: "/happenings-y-cumpleanos"
+    },
+    {
+      title: "Happenings & Conciertos en Vivo",
+      description: "El momento cumbre donde la fiesta explota. Intervenciones de 2 a 3 horas continuas sin pistas pregrabadas en CDMX, Toluca, Valle de Bravo, Cuernavaca y Querétaro.",
+      image: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1000&auto=format&fit=crop",
+      tag: "Show Estelar",
+      href: "/musica-para-eventos/cdmx"
     }
   ]
 
@@ -39,7 +44,7 @@ export default function ServiciosPage() {
             Nuestros <span className="text-primary italic">Servicios</span>
           </h1>
           <p className="max-w-2xl mx-auto text-lg text-muted-foreground">
-            Diseñamos la banda sonora perfecta para cualquier tipo de celebración.
+            Shows de pop & rock en vivo y producción de alta fidelidad para celebraciones inolvidables.
           </p>
         </div>
       </section>
@@ -48,22 +53,30 @@ export default function ServiciosPage() {
         <div className="container px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {servicios.map((src, idx) => (
-              <div key={idx} className="group relative rounded-xl overflow-hidden border border-white/10 bg-card hover:border-primary/50 transition-colors">
-                <div className="aspect-[4/3] w-full overflow-hidden relative">
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors z-10" />
-                  <img src={src.image} alt={src.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" />
-                  <div className="absolute top-4 left-4 z-20">
-                    <span className="bg-primary px-3 py-1 text-xs font-bold uppercase rounded-md text-primary-foreground">
-                      {src.tag}
-                    </span>
+              <div key={idx} className="group relative rounded-xl overflow-hidden border border-white/10 bg-card hover:border-primary/50 transition-colors flex flex-col justify-between">
+                <div>
+                  <div className="aspect-[4/3] w-full overflow-hidden relative">
+                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors z-10" />
+                    <img src={src.image} alt={src.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" />
+                    <div className="absolute top-4 left-4 z-20">
+                      <span className="bg-primary px-3 py-1 text-xs font-bold uppercase rounded-md text-primary-foreground">
+                        {src.tag}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-8 pb-4">
+                    <h3 className="text-2xl font-bold font-heading text-white mb-3">{src.title}</h3>
+                    <p className="text-muted-foreground mb-6 line-clamp-3">
+                      {src.description}
+                    </p>
                   </div>
                 </div>
-                <div className="p-8">
-                  <h3 className="text-2xl font-bold font-heading text-white mb-3">{src.title}</h3>
-                  <p className="text-muted-foreground mb-6 line-clamp-3">
-                    {src.description}
-                  </p>
-                  <Button variant="outline" className="w-full">Conoce más detalles</Button>
+                <div className="p-8 pt-0">
+                  <Link href={src.href}>
+                    <Button variant="outline" className="w-full border-white/20 hover:border-primary/50 hover:bg-primary/10">
+                      Conoce más detalles
+                    </Button>
+                  </Link>
                 </div>
               </div>
             ))}

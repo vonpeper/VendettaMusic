@@ -9,7 +9,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: baseUrl,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 1,
+      priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/eventos-corporativos`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/happenings-y-cumpleanos`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/cotizar`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/paquetes`,
@@ -19,12 +37,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/servicios`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/paquetes`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
@@ -42,6 +54,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${baseUrl}/musica-para-eventos/metepec`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/musica-para-eventos/toluca`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
@@ -55,6 +73,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/musica-para-eventos/valle-de-bravo`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/musica-para-eventos/avandaro`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/musica-para-eventos/cuernavaca`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/musica-para-eventos/queretaro`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.9,

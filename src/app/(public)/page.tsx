@@ -23,9 +23,17 @@ import { StatusSearch } from "@/components/public/StatusSearch"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Vendetta | Banda de Pop & Rock en Vivo para Bodas y Eventos",
-  description: "Banda profesional de pop y rock en vivo para bodas, eventos corporativos y celebraciones en Toluca, CDMX y Valle de Bravo. Experiencia real de concierto con producción de gira.",
-  keywords: ["música en vivo bodas", "banda pop rock eventos", "show pop rock en vivo toluca", "concierto eventos cdmx", "música para eventos valle de bravo"],
+  title: "Vendetta | Show de Pop & Rock en Vivo para Eventos y Corporativos",
+  description: "Banda profesional de pop & rock en vivo para eventos corporativos, cumpleaños, festivales y fiestas privadas en Metepec, Toluca, Valle de Bravo, CDMX, Cuernavaca y Querétaro. Cero grupo versátil, experiencia real de concierto.",
+  keywords: [
+    "show pop rock en vivo", 
+    "banda para eventos corporativos", 
+    "musica en vivo metepec toluca", 
+    "happening musical eventos cdmx", 
+    "banda de rock para fiestas de cumpleaños", 
+    "musica para eventos valle de bravo avandaro",
+    "banda en vivo cuernavaca queretaro"
+  ],
   alternates: {
     canonical: '/',
   },
@@ -33,8 +41,8 @@ export const metadata: Metadata = {
     google: 'xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY',
   },
   openGraph: {
-    title: "Vendetta | Banda de Pop & Rock en Vivo para Bodas y Eventos",
-    description: "Banda profesional de pop y rock en vivo para bodas, eventos corporativos y celebraciones en Toluca, CDMX y Valle de Bravo. Experiencia real de concierto con producción de gira.",
+    title: "Vendetta | Show de Pop & Rock en Vivo para Eventos y Corporativos",
+    description: "Banda profesional de pop & rock en vivo para eventos corporativos, cumpleaños, festivales y celebraciones en Metepec, Toluca, CDMX, Valle de Bravo, Cuernavaca y Querétaro.",
     url: 'https://vendetta.mx',
     siteName: 'Vendetta Live Music',
     images: [
@@ -50,8 +58,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vendetta | Banda de Pop & Rock en Vivo',
-    description: 'La mejor experiencia musical en vivo para bodas y eventos sociales.',
+    title: 'Vendetta | Show de Pop & Rock en Vivo',
+    description: 'La mejor experiencia musical en vivo para eventos corporativos, cumpleaños y fiestas privadas.',
     images: ['https://vendetta.mx/images/vendetta-hero-og-v2.jpg'],
   },
 }
@@ -130,6 +138,10 @@ export default async function HomePage() {
             </div>
             
             <h1 className="font-sans font-black uppercase text-left tracking-tight leading-[0.92] text-[clamp(2.3rem,5vw,4.2rem)] mb-6 select-none drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+              {/* Texto semántico accesible para motores de búsqueda */}
+              <span className="sr-only">
+                Vendetta Live Music | Show de Pop & Rock en Vivo y Happenings para Eventos Corporativos, Cumpleaños, Festivales y Fiestas Privadas en Metepec, Toluca, Valle de Bravo, CDMX, Cuernavaca y Querétaro
+              </span>
               <span className="block animate-hero-line-1 whitespace-nowrap">
                 <span className="text-[#F2F0EB]">EL </span>
                 <span className="text-gradient-encore">SOUNDTRACK</span>
@@ -144,7 +156,7 @@ export default async function HomePage() {
             <div className="w-full relative my-5 rounded-3xl overflow-hidden aspect-[16/9] border border-white/20 shadow-2xl lg:hidden animate-hero-bg backdrop-blur-xl">
               <Image
                 src="/images/vendetta-web-assets/vendetta-hero-mobile-ultra-4k.webp"
-                alt="Banda de pop y rock en vivo Vendetta para eventos sociales y bodas"
+                alt="Show de pop y rock en vivo Vendetta para eventos corporativos, cumpleaños y fiestas privadas"
                 fill
                 priority
                 unoptimized
@@ -155,10 +167,10 @@ export default async function HomePage() {
 
             <div className="animate-hero-cta flex flex-col items-start w-full">
               <p className="text-sm md:text-base text-[#F2F0EB]/80 max-w-md mb-8 md:mb-10 font-sans font-normal leading-relaxed text-left">
-                Pop y rock en vivo con energía real de concierto para bodas, eventos corporativos y celebraciones inolvidables.
+                Pop y rock 100% en vivo con energía real de concierto para eventos corporativos, fiestas de cumpleaños, happenings y festivales. Cero grupo versátil, pura adrenalina.
               </p>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
-                <a href="#paquetes" className="w-full sm:w-auto">
+                <a href="/cotizar" className="w-full sm:w-auto">
                   <Button 
                     size="lg" 
                     className="w-full sm:w-auto font-sans font-semibold text-xs md:text-sm px-8 h-12 md:h-14 rounded-xl uppercase tracking-wider bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] hover:from-[#7e1032] hover:to-[#ff6d72] text-[#F2F0EB] shadow-xl shadow-[#FF5A5F]/25 hover:shadow-[#FF5A5F]/40 hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-white/20"
@@ -178,13 +190,19 @@ export default async function HomePage() {
                 </a>
               </div>
               
-              <div className="flex items-center gap-2.5 mt-8 md:mt-12 text-[10px] md:text-xs font-sans font-semibold uppercase tracking-[0.22em] text-[#F2F0EB]/70">
+              <div className="flex flex-wrap items-center gap-2 mt-8 md:mt-12 text-[10px] md:text-xs font-sans font-semibold uppercase tracking-[0.2em] text-[#F2F0EB]/70">
                 <MapPin className="w-4 h-4 text-[#FF5A5F] shrink-0" />
+                <span>METEPEC</span>
+                <span className="text-[#FF5A5F] font-bold">•</span>
                 <span>TOLUCA</span>
                 <span className="text-[#FF5A5F] font-bold">•</span>
                 <span>CDMX</span>
                 <span className="text-[#FF5A5F] font-bold">•</span>
-                <span>VALLE DE BRAVO Y ALREDEDORES</span>
+                <span>VALLE DE BRAVO</span>
+                <span className="text-[#FF5A5F] font-bold">•</span>
+                <span>CUERNAVACA</span>
+                <span className="text-[#FF5A5F] font-bold">•</span>
+                <span>QUERÉTARO</span>
               </div>
             </div>
           </div>
@@ -321,7 +339,7 @@ export default async function HomePage() {
                 </h3>
 
                 <p className="text-[#F2F0EB]/90 text-sm sm:text-base leading-relaxed mb-6 font-normal">
-                  Erradicamos el cliché del grupo convencional. Tocamos con el pulso, la distorsión, las armonías y el clímax de una banda en gira de estadio. Cada solo, cada coro y cada remate suceden en tiempo real.
+                  Erradicamos el cliché del grupo versátil tradicional: cero pistas pregrabadas, cero sombreros de foami ni dinámicas aburridas. Tocamos con el pulso, la distorsión, las armonías y el clímax de una banda en gira de festival para eventos corporativos, cumpleaños VIP, happenings y celebraciones privadas.
                 </p>
 
                 {/* Visualizador de Ecualizador / Soundwave Animado */}

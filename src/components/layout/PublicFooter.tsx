@@ -50,18 +50,19 @@ export async function PublicFooter() {
             </div>
           </div>
 
-          {/* Column 2: Quick Navigation */}
+          {/* Column 2: Quick Navigation & Services */}
           <div>
             <h4 className="text-[11px] font-semibold text-[#FF5A5F] uppercase tracking-[0.35em] mb-10 relative inline-block">
-              Navegación
+              Formatos & Shows
               <span className="absolute -bottom-2 left-0 w-8 h-[2px] bg-[#FF5A5F]/60" />
             </h4>
             <ul className="space-y-4">
               {[
-                ["Inicio", "/"],
-                ["Servicios", "/servicios"],
-                ["Paquetes", "/#paquetes"],
-                ["Fechas", "/noticias"],
+                ["Eventos Corporativos", "/eventos-corporativos"],
+                ["Cumpleaños & Fiestas", "/happenings-y-cumpleanos"],
+                ["Todos los Servicios", "/servicios"],
+                ["Paquetes & Precios", "/#paquetes"],
+                ["Cotizador en Línea", "/cotizar"],
               ].map(([label, href]) => (
                 <li key={label}>
                   <Link href={href} className="text-sm text-[#F2F0EB]/70 hover:text-white hover:translate-x-2 transition-all flex items-center gap-3 group font-normal">
@@ -85,8 +86,8 @@ export async function PublicFooter() {
                   <MapPin className="w-3.5 h-3.5 text-[#FF5A5F]" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-[#F2F0EB]/40 font-semibold uppercase tracking-widest mb-0.5">Ubicación</span>
-                  <span className="text-sm text-[#F2F0EB]/80 font-normal">Toluca · CDMX · Valle de Bravo</span>
+                  <span className="text-[10px] text-[#F2F0EB]/40 font-semibold uppercase tracking-widest mb-0.5">Base & Cobertura</span>
+                  <span className="text-sm text-[#F2F0EB]/80 font-normal">Metepec · Toluca · CDMX · Valle de Bravo · Cuernavaca · Querétaro</span>
                 </div>
               </div>
 
@@ -138,12 +139,34 @@ export async function PublicFooter() {
               ))}
             </div>
             <Link
-              href="/#paquetes"
+              href="/cotizar"
               className="group relative flex items-center justify-center gap-2 bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] text-[#F2F0EB] font-semibold text-xs uppercase tracking-widest px-6 py-4 rounded-xl shadow-lg shadow-[#FF5A5F]/20 hover:shadow-[#FF5A5F]/40 hover:scale-[1.02] transition-all duration-300 border border-white/20"
             >
               <span>Cotizar mi Evento</span>
               <ChevronRight className="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform" />
             </Link>
+          </div>
+        </div>
+
+        {/* SEO Locations Bar */}
+        <div className="pt-8 pb-10 border-t border-white/10 text-left">
+          <span className="text-[10px] font-semibold text-[#FF5A5F] uppercase tracking-[0.25em] block mb-4">
+            Zonas de Cobertura para Shows en Vivo:
+          </span>
+          <div className="flex flex-wrap gap-x-6 gap-y-2.5 text-xs text-[#F2F0EB]/70">
+            <Link href="/musica-para-eventos/metepec" className="hover:text-[#FF5A5F] transition-colors">Música en Vivo en Metepec</Link>
+            <span className="text-white/20">•</span>
+            <Link href="/musica-para-eventos/toluca" className="hover:text-[#FF5A5F] transition-colors">Banda de Rock en Toluca</Link>
+            <span className="text-white/20">•</span>
+            <Link href="/musica-para-eventos/cdmx" className="hover:text-[#FF5A5F] transition-colors">Eventos Corporativos en CDMX</Link>
+            <span className="text-white/20">•</span>
+            <Link href="/musica-para-eventos/valle-de-bravo" className="hover:text-[#FF5A5F] transition-colors">Show en Valle de Bravo</Link>
+            <span className="text-white/20">•</span>
+            <Link href="/musica-para-eventos/avandaro" className="hover:text-[#FF5A5F] transition-colors">Fiestas Privadas en Avándaro</Link>
+            <span className="text-white/20">•</span>
+            <Link href="/musica-para-eventos/cuernavaca" className="hover:text-[#FF5A5F] transition-colors">Música para Jardines en Cuernavaca</Link>
+            <span className="text-white/20">•</span>
+            <Link href="/musica-para-eventos/queretaro" className="hover:text-[#FF5A5F] transition-colors">Eventos y Viñedos en Querétaro</Link>
           </div>
         </div>
 

@@ -132,11 +132,14 @@ export function UnifiedEventQuoteForm({
     initialData?.ceremonyType || ""
   )
   const [eventDate, setEventDate] = useState<string>(() => {
+    if (initialData?.eventDate) {
+      return typeof initialData.eventDate === "string" ? initialData.eventDate.split("T")[0] : new Date(initialData.eventDate).toISOString().split("T")[0]
+    }
     if (initialData?.date) {
-      return new Date(initialData.date).toISOString().split("T")[0]
+      return typeof initialData.date === "string" ? initialData.date.split("T")[0] : new Date(initialData.date).toISOString().split("T")[0]
     }
     if (initialData?.requestedDate) {
-      return new Date(initialData.requestedDate).toISOString().split("T")[0]
+      return typeof initialData.requestedDate === "string" ? initialData.requestedDate.split("T")[0] : new Date(initialData.requestedDate).toISOString().split("T")[0]
     }
     return ""
   })
@@ -165,16 +168,16 @@ export function UnifiedEventQuoteForm({
     initialData?.locationId || initialData?.location?.id || null
   )
   const [venueName, setVenueName] = useState<string>(
-    initialData?.location?.name || initialData?.venueName || ""
+    initialData?.venueName || initialData?.location?.name || ""
   )
   const [venueAddress, setVenueAddress] = useState<string>(
-    initialData?.address || initialData?.location?.address || ""
+    initialData?.venueAddress || initialData?.address || initialData?.location?.address || ""
   )
   const [venueCity, setVenueCity] = useState<string>(
-    initialData?.city || initialData?.location?.city || ""
+    initialData?.venueCity || initialData?.city || initialData?.location?.city || ""
   )
   const [venueState, setVenueState] = useState<string>(
-    initialData?.state || initialData?.location?.state || ""
+    initialData?.venueState || initialData?.state || initialData?.location?.state || ""
   )
   const [mapsLink, setMapsLink] = useState<string>(
     initialData?.mapsLink || initialData?.location?.mapsLink || ""
@@ -203,8 +206,15 @@ export function UnifiedEventQuoteForm({
   }, [selectedPackage, isOutsideZone])
 
   const [basePrice, setBasePrice] = useState<number | null>(() => {
+    if (initialData?.basePrice !== undefined && initialData?.basePrice !== null) return Number(initialData.basePrice)
     if (initialData?.amount !== undefined && initialData?.amount !== null) return Number(initialData.amount)
     if (initialData?.baseAmount !== undefined && initialData?.baseAmount !== null) return Number(initialData.baseAmount)
+    if (initialData?.packageId) {
+      const pkg = packages.find(p => p.id === initialData.packageId)
+      if (pkg) {
+        return pkg.baseCostPerHour * (pkg.minDuration || 1)
+      }
+    }
     return null
   })
 

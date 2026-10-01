@@ -35,15 +35,19 @@ export async function SchemaMarkup() {
     "url": "https://vendetta.mx",
     "logo": logo,
     "image": "https://vendetta.mx/images/shows/arma-tu-show.jpg",
-    "description": "Banda profesional de pop y rock en vivo de alto nivel para bodas, eventos corporativos y festivales en México.",
+    "description": "Banda profesional de pop y rock en vivo de alto impacto para eventos corporativos, fiestas de cumpleaños, happenings, festivales y celebraciones exclusivas en México.",
     "email": "rock.vendettamx@gmail.com",
     "sameAs": sameAs,
     "areaServed": [
-      { "@type": "Place", "name": "Toluca" },
       { "@type": "Place", "name": "Metepec" },
+      { "@type": "Place", "name": "Toluca" },
       { "@type": "Place", "name": "Valle de Bravo" },
+      { "@type": "Place", "name": "Avándaro" },
+      { "@type": "Place", "name": "Ciudad de México" },
+      { "@type": "Place", "name": "Cuernavaca" },
+      { "@type": "Place", "name": "Querétaro" },
       { "@type": "Place", "name": "Estado de México" },
-      { "@type": "Place", "name": "Ciudad de México" }
+      { "@type": "Place", "name": "Morelos" }
     ]
   }
 
@@ -55,8 +59,8 @@ export async function SchemaMarkup() {
     "name": "Vendetta Live Music",
     "url": "https://vendetta.mx",
     "logo": logo,
-    "description": "Banda profesional de pop y rock en vivo para bodas y eventos de alta gama.",
-    "genre": ["Pop Rock", "Rock", "Pop", "Concert Experience"],
+    "description": "Show de pop & rock en vivo con formato de concierto de gira para eventos corporativos, cumpleaños, bodas y festivales.",
+    "genre": ["Pop Rock", "Rock", "Pop", "Concert Experience", "80s Pop", "90s Rock"],
     "sameAs": sameAs,
     "musicGroupMember": musicians.map(m => ({
       "@type": "OrganizationRole",
@@ -83,25 +87,68 @@ export async function SchemaMarkup() {
     }
   }
 
-  // 5. Esquema de FAQPage
+  // 5. Esquemas de Servicios (Services)
+  const servicesSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "itemListElement": [
+      {
+        "@type": "Service",
+        "@id": "https://vendetta.mx/#servicio-corporativo",
+        "name": "Música en Vivo para Eventos Corporativos y Cenas de Gala",
+        "serviceType": "Corporate Event Entertainment",
+        "provider": { "@id": "https://vendetta.mx/#organization" },
+        "description": "Show musical en vivo de pop & rock para congresos, aniversarios de marcas, kick-offs y cenas de fin de año con facturación CFDI 4.0 y audio profesional.",
+        "areaServed": ["Ciudad de México", "Toluca", "Metepec", "Valle de Bravo", "Cuernavaca", "Querétaro"]
+      },
+      {
+        "@type": "Service",
+        "@id": "https://vendetta.mx/#servicio-cumpleanos",
+        "name": "Show de Pop & Rock para Cumpleaños y Fiestas Privadas",
+        "serviceType": "Private Party & Birthday Live Band",
+        "provider": { "@id": "https://vendetta.mx/#organization" },
+        "description": "Concierto real en vivo para fiestas de 30, 40 y 50 años o aniversarios privados. Cero grupo versátil, sonido de festival con metales y voces.",
+        "areaServed": ["Metepec", "Toluca", "Avándaro", "Valle de Bravo", "CDMX", "Cuernavaca", "Querétaro"]
+      },
+      {
+        "@type": "Service",
+        "@id": "https://vendetta.mx/#servicio-happening",
+        "name": "Happening y Show Estelar de Concierto en Vivo",
+        "serviceType": "Live Music Happening",
+        "provider": { "@id": "https://vendetta.mx/#organization" },
+        "description": "Intervención cumbre de 2 a 3 horas continuas de adrenalina sin pausas ni pistas pregrabadas.",
+        "areaServed": ["Toluca", "Metepec", "CDMX", "Valle de Bravo", "Cuernavaca", "Querétaro"]
+      }
+    ]
+  }
+
+  // 6. Esquema de FAQPage
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "¿Qué incluye el show en vivo de Vendetta Live Music?",
+        "name": "¿Vendetta es un grupo versátil tradicional?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Nuestros shows incluyen quinteto o septeto con metales (voz femenina, voz masculina, guitarra, bajo, batería, saxofón y trompeta), sistema de audio profesional de alta gama (Electro-Voice / Line Array), iluminación arquitectónica o robótica y un ingeniero de audio calificado según el paquete seleccionado."
+          "text": "No. Vendetta no es una orquesta o grupo versátil convencional. No usamos pistas pregrabadas, sombreros de hule espuma ni dinámicas trilladas. Somos una banda de concierto en vivo con un potente ensamble de pop & rock, sección de metales, dos vocalistas y una producción de audio e iluminación robótica de nivel festival."
         }
       },
       {
         "@type": "Question",
-        "name": "¿Con cuánta anticipación se debe reservar la fecha del evento?",
+        "name": "¿Emiten factura fiscal (CFDI 4.0) para eventos empresariales y corporativos?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Se recomienda reservar la fecha con al menos 3 a 6 meses de anticipación, ya que la agenda de fines de semana para bodas y eventos corporativos suele llenarse rápido. Puedes verificar disponibilidad y cotizar directamente en línea."
+          "text": "Sí, emitimos facturación electrónica formal con CFDI 4.0 y contamos con constancia de situación fiscal al día para cumplir con los requerimientos contables y de compras de empresas y agencias de eventos."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué incluye el show en vivo de Vendetta Live Music?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Nuestros shows incluyen quinteto o septeto con metales (voz femenina, voz masculina, guitarra eléctrica, bajo, batería acústica, saxofón y trompeta), sistema de audio profesional de alta gama (Electro-Voice / Line Array), iluminación robótica DMX e ingeniero de audio en sala."
         }
       },
       {
@@ -109,7 +156,15 @@ export async function SchemaMarkup() {
         "name": "¿Cuál es su área de cobertura para eventos?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Vendetta Live Music ofrece cobertura en Toluca, Metepec, Valle de Bravo, el Estado de México, y la Ciudad de México (CDMX)."
+          "text": "Vendetta Live Music ofrece cobertura en Metepec, Toluca, Valle de Bravo, Avándaro, Ciudad de México (CDMX), Cuernavaca (Morelos) y Querétaro."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Con cuánta anticipación se debe reservar la fecha del evento?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Se recomienda reservar con al menos 2 a 6 meses de anticipación, especialmente para temporadas altas de fin de año corporativo y fines de semana de eventos sociales."
         }
       },
       {
@@ -117,15 +172,7 @@ export async function SchemaMarkup() {
         "name": "¿Cuentan con servicio de DJ para los recesos de la banda?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Sí, en nuestro paquete Premium incluimos servicio de DJ profesional para mantener la pista de baile encendida durante los intermedios del show en vivo."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "¿Pueden preparar canciones especiales para el evento?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Sí, si la canción del vals, primer baile o momento estelar no se encuentra en nuestro repertorio de más de 300 temas, la ensayamos y la preparamos exclusivamente para tu día sin costo adicional."
+          "text": "Sí, en nuestros paquetes incluimos servicio de DJ profesional para mantener la pista de baile encendida durante los intermedios del show en vivo."
         }
       }
     ]
@@ -230,6 +277,11 @@ export async function SchemaMarkup() {
         id="website-schema"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+      <Script
+        id="services-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(servicesSchema) }}
       />
       <Script
         id="faq-schema"
