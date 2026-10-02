@@ -11,7 +11,7 @@ import { ClientCombobox, ClientData } from "@/components/admin/crm/ClientCombobo
 import { VenueCombobox, VenueData } from "@/components/admin/crm/VenueCombobox"
 import { QuoteLineItems } from "@/components/admin/crm/QuoteLineItems"
 import { FinancialSummary } from "@/components/admin/crm/FinancialSummary"
-import { calculateQuoteTotals, calculateShowBasePrice, formatCurrencyMXN, AdditionalLineItem } from "@/lib/pricing"
+import { calculateQuoteTotals, calculateShowBasePrice, formatCurrencyMXN, calculateEventHours, AdditionalLineItem } from "@/lib/pricing"
 import { isLocalCity } from "@/lib/viaticos"
 import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import { saveUnifiedEventQuoteAction } from "@/actions/events"
@@ -199,6 +199,11 @@ export function UnifiedEventQuoteForm({
 
   const [startTime, setStartTime] = useState<string>(initialNormStart)
   const [endTime, setEndTime] = useState<string>(initialNormEnd)
+
+  const showDuration = useMemo(() => {
+    if (!startTime || !endTime) return null
+    return calculateEventHours(startTime, endTime)
+  }, [startTime, endTime])
 
   const [arrivalTime, setArrivalTime] = useState<string>(() => {
     const rawArrival = initialData?.arrivalTime || initialData?.bookingRequest?.arrivalTime
@@ -927,21 +932,6 @@ export function UnifiedEventQuoteForm({
                   onAddNewClient={handleAddNewClient}
                 />
 
-                {selectedClientId && (
-                  <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-2.5 text-emerald-400 font-semibold">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>
-                        Cliente titular asignado: <strong className="text-white font-bold">{clientName || initialPreselectedClient?.name || "Cliente seleccionado"}</strong>.
-                        Los datos están vinculados directamente a su ficha y <span className="underline decoration-emerald-500/50">no se creará ningún duplicado</span>.
-                      </span>
-                    </div>
-                    <Badge variant="outline" className="text-[10px] uppercase font-bold border-emerald-500/40 text-emerald-400 bg-emerald-500/10 shrink-0">
-                      Asignado
-                    </Badge>
-                  </div>
-                )}
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-border/40">
                   <div>
                     <Label className="text-xs font-semibold text-muted-foreground">
@@ -1175,71 +1165,117 @@ export function UnifiedEventQuoteForm({
                 )}
 
                 {/* Módulo Especial de Horarios Operativos */}
-                <div className="p-4 rounded-2xl bg-muted/30 border border-border/70 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-border/40">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-primary" />
-                      <Label className="text-xs font-bold text-foreground">
-                        Horarios del Evento y Montaje
-                      </Label>
+                <div className="p-5 rounded-2xl bg-muted/20 border border-border/80 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/50">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                        <Clock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-bold text-foreground block">
+                          Horarios del Evento y Montaje
+                        </Label>
+                        <span className="text-xs text-muted-foreground">
+                          Organiza los tiempos de actuación de la banda y la logística técnica previa.
+                        </span>
+                      </div>
                     </div>
                     <button
                       type="button"
                       onClick={handleSyncDefaultSchedules}
-                      className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1.5 cursor-pointer bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors"
+                      className="text-xs font-semibold text-primary hover:text-primary/90 flex items-center gap-1.5 cursor-pointer bg-primary/10 hover:bg-primary/20 border border-primary/20 px-3 py-1.5 rounded-xl transition-all shadow-xs active:scale-95"
                       title="Calcula automáticamente: Músicos 1h antes y Montaje 10m antes del show"
                     >
-                      <Sparkles className="w-3 h-3" />
+                      <Sparkles className="w-3.5 h-3.5" />
                       Auto-calcular horarios (-1h músicos / -10m montaje)
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
-                    <div>
-                      <Label className="text-xs font-semibold text-muted-foreground">Hora Inicio Show *</Label>
-                      <Input
-                        type="time"
-                        value={startTime}
-                        onChange={e => handleStartTimeChange(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold text-muted-foreground">Hora Fin Show</Label>
-                      <Input
-                        type="time"
-                        value={endTime}
-                        onChange={e => setEndTime(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs font-semibold text-muted-foreground">Llegada de Músicos</Label>
-                        <span className="text-[10px] text-primary/80 font-mono font-medium">1h antes</span>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Bloque 1: Show / Actuación Musical */}
+                    <div className="p-4 rounded-xl bg-card border border-border/70 space-y-3.5 shadow-xs">
+                      <div className="flex items-center justify-between pb-2 border-b border-border/40">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-foreground">
+                            🎸 Show en Vivo
+                          </span>
+                          {showDuration !== null && (
+                            <Badge variant="outline" className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10">
+                              {showDuration} {showDuration === 1 ? "hora" : "horas"} de música
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-muted-foreground">
+                          Horario de actuación
+                        </span>
                       </div>
-                      <Input
-                        type="time"
-                        value={arrivalTime}
-                        onChange={e => setArrivalTime(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs font-semibold text-muted-foreground">Término del Montaje</Label>
-                        <span className="text-[10px] text-primary/80 font-mono font-medium">10m antes</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-xs font-semibold text-muted-foreground">Hora Inicio Show *</Label>
+                          <Input
+                            type="time"
+                            value={startTime}
+                            onChange={e => handleStartTimeChange(e.target.value)}
+                            className="mt-1.5 h-11 text-sm font-medium"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs font-semibold text-muted-foreground">Hora Fin Show</Label>
+                          <Input
+                            type="time"
+                            value={endTime}
+                            onChange={e => setEndTime(e.target.value)}
+                            className="mt-1.5 h-11 text-sm font-medium"
+                          />
+                        </div>
                       </div>
-                      <Input
-                        type="time"
-                        value={setupTime}
-                        onChange={e => setSetupTime(e.target.value)}
-                        className="mt-1"
-                      />
+                    </div>
+
+                    {/* Bloque 2: Logística y Montaje */}
+                    <div className="p-4 rounded-xl bg-card border border-border/70 space-y-3.5 shadow-xs">
+                      <div className="flex items-center justify-between pb-2 border-b border-border/40">
+                        <span className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                          🚚 Logística Previa
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">
+                          Preparación en el recinto
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-semibold text-muted-foreground">Llegada Músicos</Label>
+                            <Badge variant="outline" className="text-[10px] font-mono text-primary border-primary/30 bg-primary/10 py-0.5 px-2 font-bold">
+                              1h antes
+                            </Badge>
+                          </div>
+                          <Input
+                            type="time"
+                            value={arrivalTime}
+                            onChange={e => setArrivalTime(e.target.value)}
+                            className="mt-1.5 h-11 text-sm font-medium"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-semibold text-muted-foreground">Término Montaje</Label>
+                            <Badge variant="outline" className="text-[10px] font-mono text-primary border-primary/30 bg-primary/10 py-0.5 px-2 font-bold">
+                              10m antes
+                            </Badge>
+                          </div>
+                          <Input
+                            type="time"
+                            value={setupTime}
+                            onChange={e => setSetupTime(e.target.value)}
+                            className="mt-1.5 h-11 text-sm font-medium"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground pt-1">
-                    💡 Por default la hora de llegada de músicos es 1 hora antes del evento y el término del montaje es 10 minutos antes del show. Puedes modificarlos con total libertad.
+
+                  <p className="text-[11px] text-muted-foreground/80 flex items-center gap-1.5 pt-0.5">
+                    <span>💡</span> Por default la llegada de músicos es 1 hora antes del show y el término del montaje es 10 minutos antes. Puedes ajustarlos con total libertad.
                   </p>
                 </div>
 
