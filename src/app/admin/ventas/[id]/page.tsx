@@ -280,22 +280,58 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
 
             {/* Acceso rápido a Editar Evento (Pencil Icon) */}
             <EditEventoButton 
-              eventId={booking.event?.id || ""}
-              initialData={booking.event || {
+              eventId={booking.event?.id || booking.id}
+              initialData={booking.event ? {
+                ...booking.event,
+                id: booking.event.id,
+                targetId: booking.event.id,
+                client: booking.client,
+                clientId: booking.clientId || booking.client?.id,
+                clientName: booking.clientName || booking.client?.user?.name || "",
+                clientPhone: booking.clientPhone || booking.client?.whatsapp || "",
+                clientEmail: booking.clientEmail || booking.client?.user?.email || "",
+                city: booking.city || booking.client?.city || "",
+                venueName: booking.event.location?.name || booking.venueType || booking.address || "",
+                venueAddress: booking.event.location?.address || booking.address || "",
+                venueCity: booking.event.location?.city || booking.city || "Toluca",
+                venueState: booking.event.location?.state || booking.state || "Estado de México",
+                mapsLink: booking.event.mapsLink || booking.event.location?.mapsLink || booking.mapsLink || "",
+                startTime: booking.event.performanceStart || (booking.event as any).startTime || booking.startTime,
+                endTime: booking.event.performanceEnd || (booking.event as any).endTime || booking.endTime,
+                arrivalTime: booking.event.arrivalTime || booking.arrivalTime,
+                setupTime: booking.event.setupTime || booking.setupTime,
                 bookingRequest: booking,
-                clientId: booking.clientId,
+              } : {
+                id: booking.id,
+                targetId: booking.id,
+                bookingId: booking.id,
+                bookingRequest: booking,
+                clientId: booking.clientId || booking.client?.id,
+                client: booking.client,
+                clientName: booking.clientName || booking.client?.user?.name || "",
+                clientPhone: booking.clientPhone || booking.client?.whatsapp || "",
+                clientEmail: booking.clientEmail || booking.client?.user?.email || "",
+                city: booking.city || booking.client?.city || "",
                 packageId: booking.packageId,
                 date: booking.requestedDate,
+                eventDate: booking.requestedDate,
                 amount: booking.baseAmount,
                 deposit: booking.depositAmount,
                 paymentMethod: booking.paymentMethod,
                 ceremonyType: booking.ceremonyType || booking.venueType || "otro",
+                venueName: booking.venueType || booking.address || "",
+                venueAddress: booking.address || "",
+                venueCity: booking.city || "Toluca",
+                venueState: booking.state || "Estado de México",
+                mapsLink: booking.mapsLink || "",
                 guestCount: booking.guestCount || 0,
                 performanceStart: booking.startTime,
                 performanceEnd: booking.endTime,
+                startTime: booking.startTime,
+                endTime: booking.endTime,
                 status: booking.status === "pendiente" ? "pendiente" : "agendado",
                 invoice: booking.invoice || false,
-                customName: booking.customName || (booking.clientName ? `Evento de ${booking.clientName}` : ""),
+                customName: booking.customName || (booking.clientName ? `Evento de ${booking.clientName}` : "Evento Vendetta"),
                 arrivalTime: booking.arrivalTime,
                 setupTime: booking.setupTime,
                 dressCode: booking.dressCode,
@@ -511,7 +547,16 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             {(() => {
               const base = Number(booking.baseAmount || 0);
               const viaticos = Number(booking.viaticosAmount || 0);
-              const subtotal = base + viaticos;
+              const discount = Number(booking.discountAmount || 0);
+              const lineItems = (booking.lineItems || []).map((it: any) => ({
+                id: it.id,
+                description: it.description,
+                quantity: it.quantity,
+                unitCost: it.unitCost,
+                lineTotal: Number(it.lineTotal || (it.quantity * it.unitCost) || 0)
+              }));
+              const lineItemsTotal = lineItems.reduce((acc: number, it: any) => acc + it.lineTotal, 0);
+              const subtotal = Math.max(0, base + viaticos + lineItemsTotal - discount);
 
               // Si requiere factura, calculamos el IVA si no está guardado en el evento
               const hasInvoice = booking.invoice || booking.event?.invoice || false;
@@ -539,10 +584,12 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   <CardContent className="p-4 md:p-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
                       <EditTotalInline 
-                        key={`${booking.id}-total-${total}-${base}-${viaticos}`} 
+                        key={`${booking.id}-total-${total}-${base}-${viaticos}-${discount}-${lineItemsTotal}`} 
                         bookingId={booking.id} 
                         initialBase={base} 
                         initialViaticos={viaticos} 
+                        initialDiscount={discount}
+                        initialLineItemsTotal={lineItemsTotal}
                         initialTotal={total} 
                         hasInvoice={hasInvoice} 
                       />
@@ -569,24 +616,31 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                           <span className="text-foreground font-bold">{MXN(viaticos)}</span>
                         </div>
                       )}
-                      {hasInvoice && (
-                        <>
-                          <div className="flex justify-between pt-1 border-t border-border/20">
-                            <span>Subtotal:</span>
-                            <span className="text-foreground font-bold">{MXN(subtotal)}</span>
-                          </div>
-                          <div className="flex justify-between text-amber-600 dark:text-amber-500 font-bold">
-                            <span>IVA (16% - Factura):</span>
-                            <span>{MXN(iva)}</span>
-                          </div>
-                        </>
+                      {lineItemsTotal > 0 && (
+                        <div className="flex justify-between">
+                          <span>Servicios Adicionales:</span>
+                          <span className="text-foreground font-bold">+{MXN(lineItemsTotal)}</span>
+                        </div>
                       )}
-                      {booking.discountAmount && Number(booking.discountAmount) > 0 ? (
+                      {discount > 0 ? (
                         <div className="flex justify-between text-blue-600 dark:text-blue-400">
                           <span>Descuento aplicado:</span>
-                          <span>-{MXN(Number(booking.discountAmount))} (Precio Lista: {MXN(Number(booking.originalPrice || 0))})</span>
+                          <span>
+                            -{MXN(discount)}
+                            {booking.originalPrice && Number(booking.originalPrice) > 0 ? ` (Precio Lista: ${MXN(Number(booking.originalPrice))})` : ""}
+                          </span>
                         </div>
                       ) : null}
+                      <div className="flex justify-between pt-1 border-t border-border/20">
+                        <span>Subtotal:</span>
+                        <span className="text-foreground font-bold">{MXN(subtotal)}</span>
+                      </div>
+                      {hasInvoice && (
+                        <div className="flex justify-between text-amber-600 dark:text-amber-500 font-bold">
+                          <span>IVA (16% - Factura):</span>
+                          <span>{MXN(iva)}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-sm font-black text-foreground pt-2 border-t border-border/40">
                         <span>Total Final:</span>
                         <span className="text-blue-600 dark:text-blue-400 font-black">{MXN(total)}</span>

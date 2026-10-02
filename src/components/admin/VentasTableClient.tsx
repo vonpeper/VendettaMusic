@@ -63,7 +63,11 @@ interface Booking {
   packageName: string
   baseAmount: number
   viaticosAmount: number
+  discountAmount?: number | null
   depositAmount: number
+  lineItems?: any[]
+  invoice?: boolean
+  originalPrice?: number | null
   status: string
   paymentStatus?: string
   clientPhone: string
@@ -77,6 +81,7 @@ interface Booking {
     customName?: string | null
     location?: { mapsLink?: string | null } | null
     musicians?: any[]
+    invoice?: boolean | null
   } | null
   notifications?: {
     admin: string
@@ -89,6 +94,15 @@ interface Booking {
   adminNote?: string | null
 }
 
+export const calculateBookingFinancials = (r: Booking) => {
+  const lineItemsTotal = (r.lineItems || []).reduce((acc: number, it: any) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
+  const subtotal = Math.max(0, Number(r.baseAmount || 0) + Number(r.viaticosAmount || 0) + lineItemsTotal - Number(r.discountAmount || 0))
+  const hasInvoice = Boolean(r.event?.invoice || r.invoice)
+  const iva = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
+  const total = subtotal + iva
+  return { subtotal, iva, total, lineItemsTotal }
+}
+
 const formatTotal = (r: any) => {
   const base = Number(r.agreedAmount || r.packagePrice || 0)
   const iva = r.requiresInvoice ? Number(r.ivaAmount || 0) : 0
@@ -96,7 +110,7 @@ const formatTotal = (r: any) => {
 }
 
 const getDynamicPaymentStatus = (r: Booking) => {
-  const total = Number(r.baseAmount) + Number(r.viaticosAmount || 0);
+  const { total } = calculateBookingFinancials(r);
   const deposit = Number(r.depositAmount || 0);
   const paid = (r.payments || []).filter((p: any) => p.status === 'completed' || p.status === 'paid').reduce((sum: number, p: any) => sum + Number(p.amount), 0);
   const balance = total - paid;
@@ -177,7 +191,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
       let cmp = 0
       if (sortKey === "fecha") cmp = new Date(a.requestedDate).getTime() - new Date(b.requestedDate).getTime()
       else if (sortKey === "cliente") cmp = (a.event?.customName || a.customName || a.clientName).localeCompare(b.event?.customName || b.customName || b.clientName)
-      else if (sortKey === "monto") cmp = (Number(a.baseAmount) + Number(a.viaticosAmount || 0)) - (Number(b.baseAmount) + Number(b.viaticosAmount || 0))
+      else if (sortKey === "monto") cmp = calculateBookingFinancials(a).total - calculateBookingFinancials(b).total
       else if (sortKey === "estado") cmp = a.status.localeCompare(b.status)
       return sortDir === "asc" ? cmp : -cmp
     })
@@ -424,7 +438,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                 </td>
                 <td className="flex flex-row md:table-cell p-4 md:py-4 md:px-6 border-b border-border/10 md:border-none items-center md:items-start font-mono gap-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="text-sm font-black text-foreground">{formatCurrency(Number(reserva.baseAmount) + Number(reserva.viaticosAmount || 0))}</div>
+                    <div className="text-sm font-black text-foreground">{formatCurrency(calculateBookingFinancials(reserva).total)}</div>
                     {(() => {
                       const st = getDynamicPaymentStatus(reserva)
                       return (

@@ -16,7 +16,9 @@ import { isLocalCity } from "@/lib/viaticos"
 import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import { saveUnifiedEventQuoteAction } from "@/actions/events"
 import { Toggle } from "@/components/ui/Toggle"
+import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
+import { normalizeTimeTo24h, addMinutesToTime } from "@/lib/inquiry-parser"
 
 function normalizeStateName(rawState?: string): string {
   if (!rawState) return "Estado de México"
@@ -44,7 +46,8 @@ import {
   CalendarPlus,
   X,
   Car,
-  Navigation
+  Navigation,
+  Clock
 } from "lucide-react"
 
 const CEREMONY_TYPES = [
@@ -108,7 +111,8 @@ export function UnifiedEventQuoteForm({
   venues,
   packages,
   staff = [],
-  onSuccess
+  onSuccess,
+  onCancel
 }: UnifiedEventQuoteFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -116,34 +120,57 @@ export function UnifiedEventQuoteForm({
 
   // 1. Estado Cliente
   const [selectedClientId, setSelectedClientId] = useState<string | null>(
-    initialData?.clientId || initialData?.client?.id || null
+    initialData?.clientId || initialData?.client?.id || initialData?.bookingRequest?.clientId || initialData?.bookingRequest?.client?.id || null
   )
+
+  const initialPreselectedClient = useMemo(() => {
+    const rawId = initialData?.clientId || initialData?.client?.id || initialData?.bookingRequest?.clientId || initialData?.bookingRequest?.client?.id
+    if (!rawId || !clients) return null
+    return clients.find(c => c.id === rawId) || null
+  }, [initialData, clients])
+
   const [clientName, setClientName] = useState<string>(
-    initialData?.clientName || initialData?.client?.user?.name || ""
+    initialData?.clientName || initialData?.client?.user?.name || initialData?.bookingRequest?.clientName || initialData?.bookingRequest?.client?.user?.name || initialPreselectedClient?.name || ""
   )
   const [clientPhone, setClientPhone] = useState<string>(
-    initialData?.clientPhone || initialData?.client?.whatsapp || ""
+    initialData?.clientPhone || initialData?.client?.whatsapp || initialData?.bookingRequest?.clientPhone || initialData?.bookingRequest?.client?.whatsapp || initialPreselectedClient?.phone || ""
   )
   const [clientEmail, setClientEmail] = useState<string>(
-    initialData?.clientEmail || initialData?.client?.user?.email || ""
+    initialData?.clientEmail || initialData?.client?.user?.email || initialData?.bookingRequest?.clientEmail || initialData?.bookingRequest?.client?.user?.email || initialPreselectedClient?.email || ""
   )
   const [clientCity, setClientCity] = useState<string>(
-    initialData?.city || initialData?.client?.city || ""
+    initialData?.city || initialData?.clientCity || initialData?.client?.city || initialData?.bookingRequest?.city || initialData?.bookingRequest?.clientCity || initialData?.bookingRequest?.client?.city || initialPreselectedClient?.city || ""
   )
+
+  // Sincronizar automáticamente datos del cliente si selectedClientId existe pero los campos de texto están vacíos
+  useEffect(() => {
+    if (selectedClientId && clients && clients.length > 0) {
+      const match = clients.find(c => c.id === selectedClientId)
+      if (match) {
+        setClientName(prev => (!prev?.trim() && match.name ? match.name : prev))
+        setClientPhone(prev => (!prev?.trim() && match.phone ? match.phone : prev))
+        setClientEmail(prev => (!prev?.trim() && match.email ? match.email : prev))
+        setClientCity(prev => (!prev?.trim() && match.city ? match.city : prev))
+      }
+    }
+  }, [selectedClientId, clients])
 
   // 2. Estado Operativo del Evento
   const [customName, setCustomName] = useState<string>(
-    initialData?.customName || ""
+    initialData?.customName || initialData?.bookingRequest?.customName || ""
   )
   const [isPublic, setIsPublic] = useState<boolean>(() => {
     if (initialData?.isPublic !== undefined && initialData?.isPublic !== null) {
       return Boolean(initialData.isPublic)
     }
-    const cType = initialData?.ceremonyType || ""
+    if (initialData?.bookingRequest?.isPublic !== undefined && initialData?.bookingRequest?.isPublic !== null) {
+      return Boolean(initialData.bookingRequest.isPublic)
+    }
+    const cType = initialData?.ceremonyType || initialData?.bookingRequest?.ceremonyType || ""
     return cType === "bar" || cType === "festival"
   })
   const [ceremonyType, setCeremonyType] = useState<string>(
-    initialData?.ceremonyType || ""
+    initialData?.ceremonyType || initialData?.bookingRequest?.ceremonyType || ""
   )
   const [eventDate, setEventDate] = useState<string>(() => {
     if (initialData?.eventDate) {
@@ -155,27 +182,57 @@ export function UnifiedEventQuoteForm({
     if (initialData?.requestedDate) {
       return typeof initialData.requestedDate === "string" ? initialData.requestedDate.split("T")[0] : new Date(initialData.requestedDate).toISOString().split("T")[0]
     }
+    if (initialData?.bookingRequest?.requestedDate) {
+      return typeof initialData.bookingRequest.requestedDate === "string" ? initialData.bookingRequest.requestedDate.split("T")[0] : new Date(initialData.bookingRequest.requestedDate).toISOString().split("T")[0]
+    }
     return ""
   })
   const [additionalDates, setAdditionalDates] = useState<string[]>([])
   const [newAdditionalDate, setNewAdditionalDate] = useState<string>("")
-  const [startTime, setStartTime] = useState<string>(
-    initialData?.startTime || initialData?.performanceStart || ""
+
+  // Horarios Operativos Normalizados
+  const initialRawStart = initialData?.startTime || initialData?.performanceStart || initialData?.bookingRequest?.startTime || ""
+  const initialNormStart = initialRawStart ? normalizeTimeTo24h(initialRawStart) : ""
+
+  const initialRawEnd = initialData?.endTime || initialData?.performanceEnd || initialData?.bookingRequest?.endTime || ""
+  const initialNormEnd = initialRawEnd ? normalizeTimeTo24h(initialRawEnd) : (initialNormStart ? addMinutesToTime(initialNormStart, 120) : "")
+
+  const [startTime, setStartTime] = useState<string>(initialNormStart)
+  const [endTime, setEndTime] = useState<string>(initialNormEnd)
+
+  const [arrivalTime, setArrivalTime] = useState<string>(() => {
+    const rawArrival = initialData?.arrivalTime || initialData?.bookingRequest?.arrivalTime
+    if (rawArrival) return normalizeTimeTo24h(rawArrival)
+    if (initialNormStart) return addMinutesToTime(initialNormStart, -60)
+    return ""
+  })
+
+  const [setupTime, setSetupTime] = useState<string>(() => {
+    const rawSetup = initialData?.setupTime || initialData?.bookingRequest?.setupTime
+    if (rawSetup) return normalizeTimeTo24h(rawSetup)
+    if (initialNormStart) return addMinutesToTime(initialNormStart, -10)
+    return ""
+  })
+
+  const [guestCount, setGuestCount] = useState<number | null>(() => {
+    const g = initialData?.guestCount !== undefined && initialData?.guestCount !== null
+      ? initialData.guestCount
+      : initialData?.bookingRequest?.guestCount
+    return g !== undefined && g !== null ? Number(g) : null
+  })
+  const [dressCode, setDressCode] = useState<string>(
+    initialData?.dressCode || initialData?.bookingRequest?.dressCode || ""
   )
-  const [endTime, setEndTime] = useState<string>(
-    initialData?.endTime || initialData?.performanceEnd || ""
+  const [status, setStatus] = useState<string>(() => {
+    const s = initialData?.status || initialData?.bookingRequest?.status || "pendiente"
+    return s === "scheduled" ? "agendado" : s
+  })
+  const [musicianNotes, setMusicianNotes] = useState<string>(
+    initialData?.musicianNotes || initialData?.bookingRequest?.musicianNotes || ""
   )
-  const [arrivalTime, setArrivalTime] = useState<string>(initialData?.arrivalTime || "")
-  const [setupTime, setSetupTime] = useState<string>(initialData?.setupTime || "")
-  const [guestCount, setGuestCount] = useState<number | null>(
-    initialData?.guestCount !== undefined && initialData?.guestCount !== null ? Number(initialData.guestCount) : null
+  const [audioEngineer, setAudioEngineer] = useState<string>(
+    initialData?.audioEngineer || initialData?.bookingRequest?.audioEngineer || ""
   )
-  const [dressCode, setDressCode] = useState<string>(initialData?.dressCode || "")
-  const [status, setStatus] = useState<string>(
-    initialData?.status === "scheduled" ? "agendado" : initialData?.status || "pendiente"
-  )
-  const [musicianNotes, setMusicianNotes] = useState<string>(initialData?.musicianNotes || "")
-  const [audioEngineer, setAudioEngineer] = useState<string>(initialData?.audioEngineer || "")
 
   // 3. Estado Venue
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(
@@ -332,6 +389,8 @@ export function UnifiedEventQuoteForm({
           if (saved.eventDate) setEventDate(saved.eventDate)
           if (saved.startTime) setStartTime(saved.startTime)
           if (saved.endTime) setEndTime(saved.endTime)
+          if (saved.arrivalTime) setArrivalTime(saved.arrivalTime)
+          if (saved.setupTime) setSetupTime(saved.setupTime)
           if (saved.guestCount !== undefined) setGuestCount(saved.guestCount)
           if (saved.venueName) setVenueName(saved.venueName)
           if (saved.venueAddress) setVenueAddress(saved.venueAddress)
@@ -515,6 +574,63 @@ export function UnifiedEventQuoteForm({
     setAdditionalDates(additionalDates.filter(d => d !== dateToRemove))
   }
 
+  function handleStartTimeChange(newStart: string) {
+    setStartTime(newStart)
+    const norm = normalizeTimeTo24h(newStart)
+    if (norm && /^\d{2}:\d{2}$/.test(norm)) {
+      // Auto-actualizar fin si estaba vacío o correspondía al default 2h
+      setEndTime(prev => {
+        if (!prev || (startTime && prev === addMinutesToTime(normalizeTimeTo24h(startTime), 120))) {
+          return addMinutesToTime(norm, 120)
+        }
+        return prev
+      })
+      // Auto-actualizar llegada de músicos (-60m) si estaba vacía o correspondía al default anterior
+      setArrivalTime(prev => {
+        if (!prev || (startTime && prev === addMinutesToTime(normalizeTimeTo24h(startTime), -60))) {
+          return addMinutesToTime(norm, -60)
+        }
+        return prev
+      })
+      // Auto-actualizar término de montaje (-10m) si estaba vacío o correspondía al default anterior
+      setSetupTime(prev => {
+        if (!prev || (startTime && prev === addMinutesToTime(normalizeTimeTo24h(startTime), -10))) {
+          return addMinutesToTime(norm, -10)
+        }
+        return prev
+      })
+    }
+  }
+
+  function handleSyncDefaultSchedules() {
+    const norm = normalizeTimeTo24h(startTime || "21:00")
+    if (!startTime) {
+      setStartTime(norm)
+    }
+    setArrivalTime(addMinutesToTime(norm, -60))
+    setSetupTime(addMinutesToTime(norm, -10))
+    if (!endTime) {
+      setEndTime(addMinutesToTime(norm, 120))
+    }
+    toast.success("Horarios sincronizados: Llegada 1h antes, Montaje 10m antes")
+  }
+
+  function handleGoToEventStep() {
+    let effectiveName = clientName.trim()
+    if (!effectiveName && selectedClientId && clients && clients.length > 0) {
+      const match = clients.find(c => c.id === selectedClientId)
+      if (match?.name) {
+        effectiveName = match.name
+        setClientName(effectiveName)
+      }
+    }
+    if (!effectiveName && !selectedClientId) {
+      toast.error("Por favor ingresa o selecciona el titular del evento")
+      return
+    }
+    setActiveStep(2)
+  }
+
   function handleGoToVenueStep() {
     if (!customName.trim()) {
       toast.error("El nombre o motivo del show es obligatorio (ej. Boda, XV Años, Vizzio Metepec, Terraza 609)")
@@ -531,16 +647,69 @@ export function UnifiedEventQuoteForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    if (!clientName.trim()) {
+    // 1. Fallback de cliente si clientName estuviera vacío pero hay selectedClientId
+    let effectiveClientName = clientName.trim()
+    let effectiveClientPhone = clientPhone.trim()
+    let effectiveClientEmail = clientEmail.trim()
+    let effectiveClientCity = clientCity.trim()
+
+    if (selectedClientId) {
+      if (clients && clients.length > 0) {
+        const match = clients.find(c => c.id === selectedClientId)
+        if (match) {
+          if (!effectiveClientName && match.name) {
+            effectiveClientName = match.name.trim()
+            setClientName(effectiveClientName)
+          }
+          if (!effectiveClientPhone && match.phone) {
+            effectiveClientPhone = match.phone.trim()
+            setClientPhone(effectiveClientPhone)
+          }
+          if (!effectiveClientEmail && match.email) {
+            effectiveClientEmail = match.email.trim()
+            setClientEmail(effectiveClientEmail)
+          }
+          if (!effectiveClientCity && match.city) {
+            effectiveClientCity = match.city.trim()
+            setClientCity(effectiveClientCity)
+          }
+        }
+      }
+      if (!effectiveClientName && initialData?.clientName) {
+        effectiveClientName = initialData.clientName.trim()
+        setClientName(effectiveClientName)
+      }
+      if (!effectiveClientName && initialData?.client?.user?.name) {
+        effectiveClientName = initialData.client.user.name.trim()
+        setClientName(effectiveClientName)
+      }
+      if (!effectiveClientName && initialData?.bookingRequest?.clientName) {
+        effectiveClientName = initialData.bookingRequest.clientName.trim()
+        setClientName(effectiveClientName)
+      }
+      if (!effectiveClientName && initialData?.bookingRequest?.client?.user?.name) {
+        effectiveClientName = initialData.bookingRequest.client.user.name.trim()
+        setClientName(effectiveClientName)
+      }
+    }
+
+    // SI HAY CLIENTE ASIGNADO, NUNCA BLOQUEAR:
+    if (!effectiveClientName && !selectedClientId) {
       toast.error("Por favor ingresa o selecciona el titular del evento")
       setActiveStep(1)
       return
     }
 
-    if (!customName.trim()) {
-      toast.error("El nombre o motivo del show es obligatorio (ej. Boda, XV Años, Vizzio Metepec, Terraza 609)")
-      setActiveStep(2)
-      return
+    if (!effectiveClientName && selectedClientId) {
+      effectiveClientName = "Cliente Asignado"
+      setClientName(effectiveClientName)
+    }
+
+    // 2. Fallback de nombre o motivo de show si estuviera vacío
+    let effectiveCustomName = customName.trim()
+    if (!effectiveCustomName) {
+      effectiveCustomName = effectiveClientName && effectiveClientName !== "Cliente Asignado" ? `Evento de ${effectiveClientName}` : "Evento Vendetta"
+      setCustomName(effectiveCustomName)
     }
 
     if (!eventDate) {
@@ -571,20 +740,20 @@ export function UnifiedEventQuoteForm({
           mode,
           targetId,
           clientId: selectedClientId?.startsWith("client-new-") ? null : selectedClientId,
-          clientName: clientName.trim(),
-          clientPhone: clientPhone.trim() || null,
-          clientEmail: clientEmail.trim().toLowerCase() || null,
-          clientCity: clientCity.trim() || null,
+          clientName: effectiveClientName,
+          clientPhone: effectiveClientPhone || null,
+          clientEmail: effectiveClientEmail ? effectiveClientEmail.toLowerCase() : null,
+          clientCity: effectiveClientCity || null,
           
-          customName: customName.trim(),
+          customName: effectiveCustomName,
           isPublic,
           ceremonyType: ceremonyType || null,
           eventDate,
           additionalDates: mode === "create" ? additionalDates : [],
-          startTime: startTime.trim() || null,
-          endTime: endTime.trim() || null,
-          arrivalTime: arrivalTime.trim() || null,
-          setupTime: setupTime.trim() || null,
+          startTime: startTime.trim() ? normalizeTimeTo24h(startTime.trim()) : null,
+          endTime: endTime.trim() ? normalizeTimeTo24h(endTime.trim()) : null,
+          arrivalTime: arrivalTime.trim() ? normalizeTimeTo24h(arrivalTime.trim()) : null,
+          setupTime: setupTime.trim() ? normalizeTimeTo24h(setupTime.trim()) : null,
           guestCount: guestCount !== null ? guestCount : 0,
           dressCode: dressCode || null,
           status,
@@ -657,6 +826,35 @@ export function UnifiedEventQuoteForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-6xl mx-auto">
+      {/* Barra Superior de Acción y Guardado Rápido */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-card/70 backdrop-blur-xs p-3.5 rounded-2xl border border-border shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <Badge variant={mode === "edit" ? "default" : "secondary"} className="uppercase font-bold text-[10px] tracking-wider px-2 py-0.5">
+            {mode === "edit" ? "Modo Edición Rápida" : "Nueva Cotización / Evento"}
+          </Badge>
+          <span className="text-xs text-muted-foreground hidden md:inline">
+            {mode === "edit"
+              ? "Guarda tus modificaciones directamente desde cualquier paso con el botón de guardar."
+              : "Completa la información o navega entre los pasos requeridos."}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          {onCancel && (
+            <Button type="button" variant="outline" size="sm" onClick={onCancel} className="text-xs h-9 cursor-pointer">
+              Cancelar
+            </Button>
+          )}
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="gap-2 font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 cursor-pointer h-9 px-4 text-xs"
+          >
+            {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            {mode === "edit" ? "Guardar Cambios" : "Guardar Cotización"}
+          </Button>
+        </div>
+      </div>
+
       {/* Navegación por Pasos / Pestañas */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-muted/40 p-1.5 rounded-2xl border border-border text-xs font-bold">
         <button
@@ -729,16 +927,37 @@ export function UnifiedEventQuoteForm({
                   onAddNewClient={handleAddNewClient}
                 />
 
+                {selectedClientId && (
+                  <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2.5 text-emerald-400 font-semibold">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>
+                        Cliente titular asignado: <strong className="text-white font-bold">{clientName || initialPreselectedClient?.name || "Cliente seleccionado"}</strong>.
+                        Los datos están vinculados directamente a su ficha y <span className="underline decoration-emerald-500/50">no se creará ningún duplicado</span>.
+                      </span>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] uppercase font-bold border-emerald-500/40 text-emerald-400 bg-emerald-500/10 shrink-0">
+                      Asignado
+                    </Badge>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-border/40">
                   <div>
-                    <Label className="text-xs font-semibold text-muted-foreground">Nombre del Titular *</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      {selectedClientId ? "Nombre del Titular (Asignado)" : "Nombre del Titular *"}
+                    </Label>
                     <Input
                       value={clientName}
                       onChange={e => setClientName(e.target.value)}
                       placeholder="Nombre del cliente"
-                      required
                       className="mt-1"
                     />
+                    {selectedClientId && (
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Vinculado al perfil del cliente. Puedes ajustar este contacto sin duplicar registros.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label className="text-xs font-semibold text-muted-foreground">Teléfono de Contacto</Label>
@@ -770,10 +989,23 @@ export function UnifiedEventQuoteForm({
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-4">
-                  <Button type="button" onClick={() => setActiveStep(2)} className="gap-2 cursor-pointer font-bold">
-                    Siguiente: Datos del Evento <ArrowRight className="w-4 h-4" />
-                  </Button>
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border/40">
+                  <span className="text-xs text-muted-foreground">
+                    Paso 1 de 5: Datos del Cliente
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="submit"
+                      disabled={isPending}
+                      className="gap-2 font-bold cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
+                    >
+                      {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      {mode === "edit" ? "Guardar Cambios" : "Guardar Cotización"}
+                    </Button>
+                    <Button type="button" onClick={handleGoToEventStep} className="gap-2 cursor-pointer font-bold" variant="outline">
+                      Siguiente: Datos del Evento <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -800,7 +1032,6 @@ export function UnifiedEventQuoteForm({
                       value={customName}
                       onChange={e => setCustomName(e.target.value)}
                       placeholder="ej. Boda Mariana & Carlos, Vizzio Metepec, Terraza 609"
-                      required
                       className={`mt-1 ${!customName.trim() ? "border-amber-500/60 focus:border-amber-500" : ""}`}
                     />
                     {!customName.trim() && (
@@ -858,32 +1089,24 @@ export function UnifiedEventQuoteForm({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-xs font-semibold text-muted-foreground">Fecha del Evento *</Label>
                     <Input
                       type="date"
                       value={eventDate}
                       onChange={e => setEventDate(e.target.value)}
-                      required
                       className="mt-1"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold text-muted-foreground">Hora Inicio Show</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">No. Estimado de Invitados</Label>
                     <Input
-                      type="time"
-                      value={startTime}
-                      onChange={e => setStartTime(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground">Hora Fin Show</Label>
-                    <Input
-                      type="time"
-                      value={endTime}
-                      onChange={e => setEndTime(e.target.value)}
+                      type="number"
+                      min="0"
+                      value={guestCount === null ? "" : guestCount}
+                      onChange={e => setGuestCount(e.target.value ? parseInt(e.target.value) : null)}
+                      placeholder="ej. 150"
                       className="mt-1"
                     />
                   </div>
@@ -951,36 +1174,73 @@ export function UnifiedEventQuoteForm({
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground">Llegada Staff</Label>
-                    <Input
-                      type="time"
-                      value={arrivalTime}
-                      onChange={e => setArrivalTime(e.target.value)}
-                      className="mt-1"
-                    />
+                {/* Módulo Especial de Horarios Operativos */}
+                <div className="p-4 rounded-2xl bg-muted/30 border border-border/70 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-border/40">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-primary" />
+                      <Label className="text-xs font-bold text-foreground">
+                        Horarios del Evento y Montaje
+                      </Label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSyncDefaultSchedules}
+                      className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1.5 cursor-pointer bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors"
+                      title="Calcula automáticamente: Músicos 1h antes y Montaje 10m antes del show"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      Auto-calcular horarios (-1h músicos / -10m montaje)
+                    </button>
                   </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground">Montaje Listo</Label>
-                    <Input
-                      type="time"
-                      value={setupTime}
-                      onChange={e => setSetupTime(e.target.value)}
-                      className="mt-1"
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+                    <div>
+                      <Label className="text-xs font-semibold text-muted-foreground">Hora Inicio Show *</Label>
+                      <Input
+                        type="time"
+                        value={startTime}
+                        onChange={e => handleStartTimeChange(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold text-muted-foreground">Hora Fin Show</Label>
+                      <Input
+                        type="time"
+                        value={endTime}
+                        onChange={e => setEndTime(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold text-muted-foreground">Llegada de Músicos</Label>
+                        <span className="text-[10px] text-primary/80 font-mono font-medium">1h antes</span>
+                      </div>
+                      <Input
+                        type="time"
+                        value={arrivalTime}
+                        onChange={e => setArrivalTime(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold text-muted-foreground">Término del Montaje</Label>
+                        <span className="text-[10px] text-primary/80 font-mono font-medium">10m antes</span>
+                      </div>
+                      <Input
+                        type="time"
+                        value={setupTime}
+                        onChange={e => setSetupTime(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground">No. Estimado de Invitados</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={guestCount === null ? "" : guestCount}
-                      onChange={e => setGuestCount(e.target.value ? parseInt(e.target.value) : null)}
-                      placeholder="ej. 150"
-                      className="mt-1"
-                    />
-                  </div>
+                  <p className="text-[10px] text-muted-foreground pt-1">
+                    💡 Por default la hora de llegada de músicos es 1 hora antes del evento y el término del montaje es 10 minutos antes del show. Puedes modificarlos con total libertad.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1036,13 +1296,23 @@ export function UnifiedEventQuoteForm({
                   />
                 </div>
 
-                <div className="flex justify-between pt-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border/40">
                   <Button type="button" variant="outline" onClick={() => setActiveStep(1)} className="gap-2 cursor-pointer">
                     <ArrowLeft className="w-4 h-4" /> Anterior
                   </Button>
-                  <Button type="button" onClick={handleGoToVenueStep} className="gap-2 cursor-pointer font-bold">
-                    Siguiente: Venue <ArrowRight className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="submit"
+                      disabled={isPending}
+                      className="gap-2 font-bold cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
+                    >
+                      {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      {mode === "edit" ? "Guardar Cambios" : "Guardar Cotización"}
+                    </Button>
+                    <Button type="button" onClick={handleGoToVenueStep} className="gap-2 cursor-pointer font-bold" variant="outline">
+                      Siguiente: Venue <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1200,13 +1470,23 @@ export function UnifiedEventQuoteForm({
                   </Button>
                 </div>
 
-                <div className="flex justify-between pt-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border/40">
                   <Button type="button" variant="outline" onClick={() => setActiveStep(2)} className="gap-2 cursor-pointer">
                     <ArrowLeft className="w-4 h-4" /> Anterior
                   </Button>
-                  <Button type="button" onClick={handleGoToPricingStep} className="gap-2 cursor-pointer font-bold">
-                    Siguiente: Cotización y Precios <ArrowRight className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="submit"
+                      disabled={isPending}
+                      className="gap-2 font-bold cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
+                    >
+                      {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      {mode === "edit" ? "Guardar Cambios" : "Guardar Cotización"}
+                    </Button>
+                    <Button type="button" onClick={handleGoToPricingStep} className="gap-2 cursor-pointer font-bold" variant="outline">
+                      Siguiente: Cotización y Precios <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1333,13 +1613,23 @@ export function UnifiedEventQuoteForm({
                   onChange={setAdditionalItems}
                 />
 
-                <div className="flex justify-between pt-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border/40">
                   <Button type="button" variant="outline" onClick={() => setActiveStep(3)} className="gap-2 cursor-pointer">
                     <ArrowLeft className="w-4 h-4" /> Anterior
                   </Button>
-                  <Button type="button" onClick={() => setActiveStep(5)} className="gap-2 cursor-pointer font-bold">
-                    Siguiente: Resumen y Confirmar <ArrowRight className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="submit"
+                      disabled={isPending}
+                      className="gap-2 font-bold cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
+                    >
+                      {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      {mode === "edit" ? "Guardar Cambios" : "Guardar Cotización"}
+                    </Button>
+                    <Button type="button" onClick={() => setActiveStep(5)} className="gap-2 cursor-pointer font-bold" variant="outline">
+                      Siguiente: Resumen y Confirmar <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

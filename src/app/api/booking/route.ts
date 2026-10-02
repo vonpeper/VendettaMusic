@@ -8,6 +8,7 @@ import { formatDateMX } from "@/lib/utils"
 import crypto from "crypto"
 import { getAppUrl } from "@/lib/url"
 import { requireAdminApi as requireAdmin } from "@/lib/auth-guards"
+import { generateUniqueShortId } from "@/lib/folios"
 
 // --- 🛡️ IN-MEMORY RATE LIMITER (Anti-Spam) ---
 const bookingAttempts = new Map<string, { count: number; firstAttempt: number }>()
@@ -47,8 +48,8 @@ export async function POST(req: NextRequest) {
       isPublic, clientProvidesAudio, invoice,
       vehicleType } = body
 
-    // 1. Generar Short ID amigable
-    const shortId = `VND-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+    // 1. Generar Short ID amigable oficial con garantía de unicidad en BD
+    const shortId = await generateUniqueShortId(db)
 
     // Calcular viáticos usando Google Maps y vehículo seleccionado
     const vehicleKey = vehicleType || "escape_2014";
@@ -586,9 +587,9 @@ export async function PUT(req: NextRequest) {
           guestCount:       booking.guestCount,
           performanceStart: booking.startTime,
           performanceEnd:   booking.endTime,
-          amount:           booking.baseAmount,
+          amount:           Math.max(0, booking.baseAmount + (booking.viaticosAmount || 0) - (booking.discountAmount || 0)),
           deposit:          booking.depositAmount,
-          balance:          booking.baseAmount - booking.depositAmount,
+          balance:          Math.max(0, (booking.baseAmount + (booking.viaticosAmount || 0) - (booking.discountAmount || 0)) - booking.depositAmount),
           venueType:        booking.venueType,
           mapsLink:         booking.mapsLink,
           isPublic:         booking.isPublic,

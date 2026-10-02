@@ -198,6 +198,12 @@ export async function POST(req: NextRequest) {
 
       // Si está confirmado por anticipo, crear el Evento inmediatamente para que salga en Agenda/Shows
       if (depositConfirmed) {
+        const finalViaticos = parseFloat(viaticosAmount) || 0
+        const finalDiscount = parseFloat(discountAmount) || 0
+        const eventSubtotal = Math.max(0, normalizedBaseAmount + finalViaticos - finalDiscount)
+        const eventIva = Boolean(invoice) ? Math.round(eventSubtotal * 0.16 * 100) / 100 : 0
+        const eventTotal = eventSubtotal + eventIva
+
         await db.event.create({
           data: {
             id:               eventId,
@@ -207,15 +213,15 @@ export async function POST(req: NextRequest) {
             startTime:        startTime || "21:00",
             performanceStart: startTime || "21:00",
             performanceEnd:   endTime || "23:00",
-            amount:           normalizedBaseAmount,
+            amount:           eventSubtotal,
             deposit:          normalizedDepositAmount,
-            balance:          normalizedBaseAmount - normalizedDepositAmount,
+            balance:          Math.max(0, eventTotal - normalizedDepositAmount),
             depositMethod:    paymentMethod,
             status:           "agendado",
             venueType:        venueType || "salon",
             mapsLink:         mapsLink || null,
             ceremonyType:     ceremonyType || venueType || "show",
-            totalIncome:      normalizedBaseAmount,
+            totalIncome:      eventSubtotal,
             clientId:         clientId,
             locationId:       finalLocationId || null,
             isPublic:         Boolean(isPublic),
@@ -226,7 +232,8 @@ export async function POST(req: NextRequest) {
             customName:       customName || null,
             musicianNotes:    musicianNotes || adminNote || null,
             invoice:          Boolean(invoice),
-            ivaAmount:        Boolean(invoice) ? Math.round((normalizedBaseAmount + (parseFloat(viaticosAmount) || 0)) * 0.16 * 100) / 100 : 0,
+            ivaAmount:        eventIva,
+            totalWithTax:     eventTotal,
           }
         })
 

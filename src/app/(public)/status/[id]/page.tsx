@@ -8,23 +8,63 @@ import type { Metadata } from "next"
 
 export const dynamic = 'force-dynamic'
 
+function buildLookupCandidates(rawIdInput: string) {
+  const rawId = decodeURIComponent(rawIdInput || "").trim()
+  const lookupUpper = rawId.toUpperCase()
+  const normalizedWithPrefix = lookupUpper.startsWith("VND-")
+    ? lookupUpper
+    : `VND-${lookupUpper.replace(/^-+/, "")}`
+  const bareId = lookupUpper.replace(/^VND-/, "").replace(/^-+/, "")
+
+  return {
+    rawId,
+    lookupUpper,
+    normalizedWithPrefix,
+    bareId
+  }
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const lookupId = (id || "").trim().toUpperCase()
+  const { rawId, lookupUpper, normalizedWithPrefix, bareId } = buildLookupCandidates(id)
 
-  if (!isValidShortIdFormat(lookupId)) {
+  if (!isValidShortIdFormat(lookupUpper)) {
     return { title: "No encontrado | Vendetta Live Music" }
   }
 
-  const booking = await db.bookingRequest.findFirst({
+  let booking = await db.bookingRequest.findFirst({
     where: {
       OR: [
-        { shortId: lookupId },
-        { id: id.trim() },
-        { adminNote: { contains: lookupId } }
+        { shortId: lookupUpper },
+        { shortId: normalizedWithPrefix },
+        { shortId: bareId },
+        { shortId: lookupUpper.toLowerCase() },
+        { shortId: normalizedWithPrefix.toLowerCase() },
+        { shortId: bareId.toLowerCase() },
+        { id: rawId },
+        { id: rawId.toLowerCase() },
+        { eventId: rawId },
+        { eventId: rawId.toLowerCase() },
+        { adminNote: { contains: lookupUpper } },
+        { adminNote: { contains: bareId } }
       ]
     }
   })
+
+  if (!booking) {
+    const eventMatch = await db.event.findFirst({
+      where: {
+        OR: [
+          { id: rawId },
+          { quoteId: rawId }
+        ]
+      },
+      include: { bookingRequest: true }
+    })
+    if (eventMatch?.bookingRequest) {
+      booking = eventMatch.bookingRequest
+    }
+  }
 
   if (!booking) {
     return {
@@ -36,12 +76,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const dateStr = booking.requestedDate ? formatDateMX(booking.requestedDate, "d 'de' MMMM") : ""
   
   const title = isConfirmed 
-    ? `✍️ Firma de Contrato & Estatus (${booking.shortId}) | Vendetta Live Music`
-    : `🎸 Cotización & Propuesta Exclusiva (${booking.shortId}) | Vendetta Live Music`
+    ? `✍️ Firma de Contrato & Estatus (${booking.shortId || 'Show'}) | Vendetta Live Music`
+    : `🎸 Cotización & Propuesta Exclusiva (${booking.shortId || 'Show'}) | Vendetta Live Music`
     
   const ogTitle = isConfirmed
-    ? `✍️ Contrato Digital & Confirmación de Show (${booking.shortId})`
-    : `🎸 Cotización de Show: ${booking.clientName} (${booking.shortId})`
+    ? `✍️ Contrato Digital & Confirmación de Show (${booking.shortId || 'Show'})`
+    : `🎸 Cotización de Show: ${booking.clientName} (${booking.shortId || 'Show'})`
 
   const description = isConfirmed
     ? `¡Fecha confirmada para ${booking.clientName} el ${dateStr}! Entra para consultar la ficha técnica y firmar digitalmente tu contrato de prestación de servicios.`
@@ -65,7 +105,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     openGraph: {
       title: ogTitle,
       description,
-      url: `https://vendetta.mx/status/${booking.shortId}`,
+      url: `https://vendetta.mx/status/${booking.shortId || booking.id}`,
       siteName: 'Vendetta Live Music',
       images: [
         {
@@ -73,7 +113,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
           secureUrl: ogImage,
           width: 1200,
           height: 630,
-          alt: `Cotización de Show: ${booking.clientName} (${booking.shortId})`,
+          alt: `Cotización de Show: ${booking.clientName} (${booking.shortId || 'Show'})`,
           type: 'image/jpeg',
         },
       ],
@@ -91,45 +131,79 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function StatusDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const lookupId = (id || "").trim().toUpperCase()
+  const { rawId, lookupUpper, normalizedWithPrefix, bareId } = buildLookupCandidates(id)
 
-  if (!isValidShortIdFormat(lookupId)) {
+  if (!isValidShortIdFormat(lookupUpper)) {
     return notFound()
   }
 
-  const mainBooking = await db.bookingRequest.findFirst({
-    where: {
-      OR: [
-        { shortId: lookupId },
-        { id: id.trim() },
-        { adminNote: { contains: lookupId } }
-      ]
-    },
-    include: { 
-      client: true,
-      lineItems: { orderBy: { order: "asc" } },
-      event: {
-        include: {
-          contracts: true,
-          musicians: {
-            include: {
-              musician: {
-                include: { user: true }
-              }
+  const includeConfig = { 
+    client: true,
+    lineItems: { orderBy: { order: "asc" as const } },
+    event: {
+      include: {
+        contracts: true,
+        musicians: {
+          include: {
+            musician: {
+              include: { user: true }
             }
           }
         }
       }
     }
+  }
+
+  let mainBooking = await db.bookingRequest.findFirst({
+    where: {
+      OR: [
+        { shortId: lookupUpper },
+        { shortId: normalizedWithPrefix },
+        { shortId: bareId },
+        { shortId: lookupUpper.toLowerCase() },
+        { shortId: normalizedWithPrefix.toLowerCase() },
+        { shortId: bareId.toLowerCase() },
+        { id: rawId },
+        { id: rawId.toLowerCase() },
+        { eventId: rawId },
+        { eventId: rawId.toLowerCase() },
+        { adminNote: { contains: lookupUpper } },
+        { adminNote: { contains: bareId } }
+      ]
+    },
+    include: includeConfig
   })
+
+  // Si no se encontró por booking directo, intentar por Event o Quote vinculado
+  if (!mainBooking) {
+    const eventMatch = await db.event.findFirst({
+      where: {
+        OR: [
+          { id: rawId },
+          { quoteId: rawId }
+        ]
+      },
+      select: {
+        bookingRequest: {
+          select: { id: true }
+        }
+      }
+    })
+    if (eventMatch?.bookingRequest?.id) {
+      mainBooking = await db.bookingRequest.findUnique({
+        where: { id: eventMatch.bookingRequest.id },
+        include: includeConfig
+      })
+    }
+  }
 
   if (!mainBooking) {
     return notFound()
   }
 
-  // Si se accedió por un folio largo legacy pero la cotización tiene un folio estándar corto oficial,
-  // redirigir canónicamente a la URL del folio estándar
-  if (mainBooking.shortId && lookupId !== mainBooking.shortId.toUpperCase() && lookupId.startsWith("VND-") && lookupId.length > 10) {
+  // Redirección canónica: Si se accedió por un folio sin prefijo (ej. 4A0F), por ID interno (UUID)
+  // o por un folio largo legacy, redirigir canónicamente a la URL oficial del shortId
+  if (mainBooking.shortId && lookupUpper !== mainBooking.shortId.toUpperCase()) {
     redirect(`/status/${mainBooking.shortId}`)
   }
 
@@ -144,7 +218,7 @@ export default async function StatusDetailPage({ params }: { params: Promise<{ i
   return (
     <PremiumClientQuoteView
       booking={mainBooking}
-      lineItems={mainBooking.lineItems}
+      lineItems={mainBooking.lineItems || []}
       globalConfig={globalConfig}
       downloadQuoteUrl={downloadQuoteUrl}
       downloadContractUrl={downloadContractUrl}

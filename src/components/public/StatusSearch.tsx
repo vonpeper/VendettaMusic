@@ -13,9 +13,13 @@ export function StatusSearch() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    if (!shortId.trim()) return
+    const cleaned = shortId.trim()
+    if (!cleaned) return
     setLoading(true)
-    router.push(`/status/${shortId.toUpperCase().trim()}`)
+    const targetId = cleaned.toUpperCase().startsWith("VND-")
+      ? cleaned.toUpperCase()
+      : `VND-${cleaned.toUpperCase().replace(/^-+/, "")}`
+    router.push(`/status/${targetId}`)
   }
 
   return (

@@ -28,8 +28,8 @@ export function normalizeTimeTo24h(timeStr: string): string {
   if (!timeStr) return ""
   const trimmed = timeStr.trim().toLowerCase()
 
-  // Coincide "02:00 pm", "2:00pm", "10:30 am", etc.
-  const match12h = trimmed.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/)
+  // Coincide "02:00 pm", "2:00pm", "10:30 am", "02:00:00 pm", etc.
+  const match12h = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(am|pm)$/)
   if (match12h) {
     let hours = parseInt(match12h[1], 10)
     const minutes = match12h[2]
@@ -41,8 +41,8 @@ export function normalizeTimeTo24h(timeStr: string): string {
     return `${hours.toString().padStart(2, "0")}:${minutes}`
   }
 
-  // Coincide "20:00", "8:30"
-  const match24h = trimmed.match(/^(\d{1,2}):(\d{2})$/)
+  // Coincide "20:00", "8:30", "20:00:00", "08:30:00"
+  const match24h = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/)
   if (match24h) {
     const hours = parseInt(match24h[1], 10)
     const minutes = match24h[2]
@@ -58,9 +58,10 @@ export function normalizeTimeTo24h(timeStr: string): string {
  * Suma o resta minutos a una hora "HH:mm" (24h).
  */
 export function addMinutesToTime(time24h: string, minutesToAdd: number): string {
-  if (!/^\d{2}:\d{2}$/.test(time24h)) return ""
-  const [hStr, mStr] = time24h.split(":")
-  const totalMins = (parseInt(hStr, 10) * 60 + parseInt(mStr, 10) + minutesToAdd + 24 * 60) % (24 * 60)
+  const norm = normalizeTimeTo24h(time24h)
+  if (!/^\d{2}:\d{2}$/.test(norm)) return ""
+  const [hStr, mStr] = norm.split(":")
+  const totalMins = ((parseInt(hStr, 10) * 60 + parseInt(mStr, 10) + minutesToAdd) % (24 * 60) + 24 * 60) % (24 * 60)
   const newH = Math.floor(totalMins / 60)
   const newM = totalMins % 60
   return `${newH.toString().padStart(2, "0")}:${newM.toString().padStart(2, "0")}`
@@ -170,8 +171,8 @@ export function parseInquiryDetails(params: {
   let arrivalTime = ""
   let setupTime = ""
   if (startTime) {
-    arrivalTime = addMinutesToTime(startTime, -90) // 1.5 horas antes
-    setupTime = addMinutesToTime(startTime, -120)  // 2 horas antes
+    arrivalTime = addMinutesToTime(startTime, -60) // 1 hora antes (llegada de músicos)
+    setupTime = addMinutesToTime(startTime, -10)   // 10 minutos antes (término del montaje)
   }
 
   // 5. Invitados / Aforo

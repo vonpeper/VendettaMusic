@@ -1,8 +1,11 @@
 import crypto from "crypto"
 
 function getAuthSecret(): string {
-  const secret = process.env.AUTH_SECRET?.trim()
+  const secret = process.env.AUTH_SECRET?.trim() || process.env.NEXTAUTH_SECRET?.trim()
   if (!secret) {
+    if (process.env.NODE_ENV !== "production") {
+      return "fallback_secret_vendetta_music_app_2026"
+    }
     throw new Error("AUTH_SECRET environment variable is not configured.")
   }
   return secret

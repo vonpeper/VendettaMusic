@@ -93,6 +93,64 @@ const PACKAGE_TO_SERVICE: Record<string, string[]> = {
   ],
 }
 
+const PUBLIC_BAND_MEMBERS = [
+  {
+    id: "uuid-1",
+    name: "Pepe Bautista",
+    role: "Guitarra & Voz Líder",
+    emoji: "🎤",
+    img: "/images/musicians/pepe.jpg",
+    shortBio: "Fundador de Vendetta con más de 15 años en la escena musical.",
+    fullBio: "Músico multi-instrumentista y productor. Líder del proyecto y responsable de la dirección artística que hace de cada show una experiencia única.",
+    ig: "https://instagram.com/pp.bau",
+    order: 1,
+  },
+  {
+    id: "016417cc-8620-4728-8196-0baae75ec9a6",
+    name: "Brenda Menel",
+    role: "Cantante",
+    emoji: "✨",
+    img: "/images/musicians/maryx.jpg",
+    shortBio: "Voz femenina principal con tesitura versátil y dinamismo escénico.",
+    fullBio: "Vocalista líder de Vendetta, especialista en encender al público con los mejores himnos de pop y rock en inglés y español.",
+    ig: null,
+    order: 2,
+  },
+  {
+    id: "uuid-3",
+    name: "Edgar Mariaud",
+    role: "Bajo",
+    emoji: "🎸",
+    img: "/images/musicians/edgar.jpg",
+    shortBio: "El alma rítmica y la profundidad del sonido de Vendetta.",
+    fullBio: "Bajista con un Groove impecable y gran presencia escénica. Su precisión en las frecuencias bajas es el cimiento de nuestra energía en vivo.",
+    ig: "https://www.instagram.com/elpipolisimo",
+    order: 3,
+  },
+  {
+    id: "uuid-4",
+    name: "Diego Piña",
+    role: "Batería",
+    emoji: "🥁",
+    img: "/images/musicians/diego.jpg",
+    shortBio: "Precisión y potencia que mantienen el beat de la fiesta arriba.",
+    fullBio: "Baterista de sesión con una energía inagotable. Es el motor rítmico que impulsa cada canción del repertorio.",
+    ig: "https://www.instagram.com/diego.gopi",
+    order: 4,
+  },
+  {
+    id: "uuid-5",
+    name: "Alekz",
+    role: "Teclado",
+    emoji: "🎹",
+    img: "/images/musicians/alex.jpg",
+    shortBio: "Melodías y atmósferas que completan el sonido premium de Vendetta.",
+    fullBio: "Especialista en síntesis y diseño sonoro. Aporta la capa moderna y orquestal que hace que nuestros covers suenen como el disco.",
+    ig: "https://www.instagram.com/alekz_hr/",
+    order: 5,
+  },
+]
+
 async function main() {
   console.log("🎸 Restaurando paquetes históricos...")
 
@@ -130,6 +188,67 @@ async function main() {
     })
     console.log(`  🔗 ${pkgId.slice(0, 8)}… → ${serviceIds.length} bullets`)
   }
+
+  console.log("👥 Restaurando y sincronizando alineación de músicos...")
+  for (const m of PUBLIC_BAND_MEMBERS) {
+    await prisma.publicBandMember.upsert({
+      where: { id: m.id },
+      update: {
+        name: m.name,
+        role: m.role,
+        emoji: m.emoji,
+        img: m.img,
+        shortBio: m.shortBio,
+        fullBio: m.fullBio,
+        ig: m.ig,
+        order: m.order,
+      },
+      create: { ...m },
+    })
+    console.log(`  👤 ${m.name} -> ${m.ig ?? "(sin link de IG)"}`)
+  }
+
+  // Sincronizar enlaces oficiales de Instagram por nombre
+  await prisma.publicBandMember.updateMany({
+    where: { name: { contains: "Pepe" } },
+    data: { ig: "https://www.instagram.com/pp.bau" },
+  })
+
+  await prisma.publicBandMember.updateMany({
+    where: { name: { contains: "Edgar" } },
+    data: { ig: "https://www.instagram.com/elpipolisimo" },
+  })
+
+  await prisma.publicBandMember.updateMany({
+    where: { name: { contains: "Diego" } },
+    data: { ig: "https://www.instagram.com/diego.gopi" },
+  })
+
+  await prisma.publicBandMember.updateMany({
+    where: {
+      OR: [
+        { name: { contains: "Alex" } },
+        { name: { contains: "Alekz" } },
+      ],
+    },
+    data: { ig: "https://www.instagram.com/alekz_hr/" },
+  })
+
+  // Asegurar que el resto de los integrantes no tengan links erróneos
+  await prisma.publicBandMember.updateMany({
+    where: {
+      AND: [
+        { NOT: { name: { contains: "Pepe" } } },
+        { NOT: { name: { contains: "Edgar" } } },
+        { NOT: { name: { contains: "Diego" } } },
+        { NOT: { name: { contains: "Alex" } } },
+        { NOT: { name: { contains: "Alekz" } } },
+      ],
+    },
+    data: {
+      ig: null,
+    },
+  })
 
   await prisma.globalConfig.upsert({
     where:  { id: "vendetta_config" },

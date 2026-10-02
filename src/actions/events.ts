@@ -863,6 +863,7 @@ import { getValidMapsLink } from "@/lib/locations"
 import { auth } from "@/lib/auth"
 import { createUnifiedQuote, convertQuoteToEvent } from "@/lib/quote-service"
 import { saveUnifiedEventQuoteSchema, type SaveUnifiedEventQuotePayload } from "@/lib/schemas/events"
+import { normalizeTimeTo24h, addMinutesToTime } from "@/lib/inquiry-parser"
 
 export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
   try {
@@ -986,6 +987,11 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
         const bookingId = existingBooking?.id || existingEvent?.bookingRequest?.id
         const eventId = existingBooking?.eventId || existingEvent?.id
 
+        const normStart = val.startTime ? normalizeTimeTo24h(val.startTime) : "21:00"
+        const normEnd = val.endTime ? normalizeTimeTo24h(val.endTime) : (normStart ? addMinutesToTime(normStart, 120) : "23:00")
+        const finalArrival = val.arrivalTime?.trim() ? normalizeTimeTo24h(val.arrivalTime) : (normStart ? addMinutesToTime(normStart, -60) : "20:00")
+        const finalSetup = val.setupTime?.trim() ? normalizeTimeTo24h(val.setupTime) : (normStart ? addMinutesToTime(normStart, -10) : "20:50")
+
         if (bookingId) {
           // Actualizar BookingRequest
           await tx.bookingRequest.update({
@@ -999,10 +1005,10 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               isPublic: Boolean(val.isPublic),
               ceremonyType: val.ceremonyType || "boda",
               requestedDate: dateObj,
-              startTime: val.startTime || "21:00",
-              endTime: val.endTime || "23:00",
-              arrivalTime: val.arrivalTime || "19:00",
-              setupTime: val.setupTime || "17:00",
+              startTime: normStart,
+              endTime: normEnd,
+              arrivalTime: finalArrival,
+              setupTime: finalSetup,
               guestCount: val.guestCount || 0,
               dressCode: val.dressCode || "formal",
               musicianNotes: val.musicianNotes || null,
@@ -1051,11 +1057,11 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               isPublic: Boolean(val.isPublic),
               ceremonyType: val.ceremonyType || "boda",
               date: dateObj,
-              startTime: val.startTime || "21:00",
-              performanceStart: val.startTime || "21:00",
-              performanceEnd: val.endTime || "23:00",
-              arrivalTime: val.arrivalTime || "19:00",
-              setupTime: val.setupTime || "17:00",
+              startTime: normStart,
+              performanceStart: normStart,
+              performanceEnd: normEnd,
+              arrivalTime: finalArrival,
+              setupTime: finalSetup,
               guestCount: val.guestCount || 0,
               dressCode: val.dressCode || "formal",
               musicianNotes: val.musicianNotes || null,
@@ -1081,11 +1087,11 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               isPublic: Boolean(val.isPublic),
               ceremonyType: val.ceremonyType || "boda",
               date: dateObj,
-              startTime: val.startTime || "21:00",
-              performanceStart: val.startTime || "21:00",
-              performanceEnd: val.endTime || "23:00",
-              arrivalTime: val.arrivalTime || "19:00",
-              setupTime: val.setupTime || "17:00",
+              startTime: normStart,
+              performanceStart: normStart,
+              performanceEnd: normEnd,
+              arrivalTime: finalArrival,
+              setupTime: finalSetup,
               guestCount: val.guestCount || 0,
               dressCode: val.dressCode || "formal",
               musicianNotes: val.musicianNotes || null,
@@ -1120,6 +1126,11 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
           ...(val.additionalDates || [])
         ].filter((d, idx, arr) => d && arr.indexOf(d) === idx)
 
+        const createNormStart = val.startTime ? normalizeTimeTo24h(val.startTime) : ""
+        const createNormEnd = val.endTime ? normalizeTimeTo24h(val.endTime) : (createNormStart ? addMinutesToTime(createNormStart, 120) : "")
+        const createArrival = val.arrivalTime?.trim() ? normalizeTimeTo24h(val.arrivalTime) : (createNormStart ? addMinutesToTime(createNormStart, -60) : null)
+        const createSetup = val.setupTime?.trim() ? normalizeTimeTo24h(val.setupTime) : (createNormStart ? addMinutesToTime(createNormStart, -10) : null)
+
         if (datesToCreate.length === 1) {
           return await createUnifiedQuote(tx, {
             clientId: finalClientId,
@@ -1131,10 +1142,10 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
             isPublic: Boolean(val.isPublic),
             ceremonyType: val.ceremonyType,
             eventDate: val.eventDate,
-            startTime: val.startTime,
-            endTime: val.endTime,
-            arrivalTime: val.arrivalTime,
-            setupTime: val.setupTime,
+            startTime: createNormStart,
+            endTime: createNormEnd,
+            arrivalTime: createArrival,
+            setupTime: createSetup,
             guestCount: val.guestCount,
             dressCode: val.dressCode,
             status: val.status,
@@ -1172,10 +1183,10 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
             isPublic: Boolean(val.isPublic),
             ceremonyType: val.ceremonyType,
             eventDate: d,
-            startTime: val.startTime,
-            endTime: val.endTime,
-            arrivalTime: val.arrivalTime,
-            setupTime: val.setupTime,
+            startTime: createNormStart,
+            endTime: createNormEnd,
+            arrivalTime: createArrival,
+            setupTime: createSetup,
             guestCount: val.guestCount,
             dressCode: val.dressCode,
             status: val.status,
@@ -1210,6 +1221,9 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
 
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/ventas")
+    if (result && typeof result === "object" && "bookingId" in result && result.bookingId) {
+      revalidatePath(`/admin/ventas/${result.bookingId}`)
+    }
     revalidatePath("/admin/prospectos")
     revalidatePath("/admin/clientes")
     revalidatePath("/agenda")

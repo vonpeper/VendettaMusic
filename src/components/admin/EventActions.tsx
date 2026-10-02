@@ -67,6 +67,12 @@ export function EditEventoButton({ eventId, initialData, clients, locations, pac
 }) {
   const [showForm, setShowForm] = useState(false)
 
+  const resolvedId = initialData?.id || initialData?.targetId || eventId || initialData?.bookingRequest?.id || initialData?.bookingId
+  const preparedData = {
+    ...initialData,
+    ...(resolvedId ? { id: resolvedId, targetId: resolvedId } : {})
+  }
+
   return (
     <>
       {showForm && (
@@ -77,7 +83,7 @@ export function EditEventoButton({ eventId, initialData, clients, locations, pac
           packages={packages}
           staff={staff}
           allMusicians={allMusicians}
-          initialData={initialData}
+          initialData={preparedData}
         />
       )}
       <Button 

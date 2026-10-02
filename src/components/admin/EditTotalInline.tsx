@@ -26,6 +26,8 @@ interface EditTotalInlineProps {
   bookingId: string
   initialBase: number
   initialViaticos: number
+  initialDiscount?: number
+  initialLineItemsTotal?: number
   initialTotal: number
   hasInvoice?: boolean
 }
@@ -34,6 +36,8 @@ export function EditTotalInline({
   bookingId,
   initialBase,
   initialViaticos,
+  initialDiscount = 0,
+  initialLineItemsTotal = 0,
   initialTotal,
   hasInvoice = false
 }: EditTotalInlineProps) {
@@ -44,7 +48,7 @@ export function EditTotalInline({
 
   const numBase = parseFloat(baseValue) || 0
   const numViaticos = parseFloat(viaticosValue) || 0
-  const previewSubtotal = numBase + numViaticos
+  const previewSubtotal = Math.max(0, numBase + numViaticos + initialLineItemsTotal - initialDiscount)
   const previewIva = hasInvoice ? Math.round(previewSubtotal * 0.16 * 100) / 100 : 0
   const previewTotal = previewSubtotal + previewIva
 
@@ -140,7 +144,23 @@ export function EditTotalInline({
               {/* Vista Previa en Tiempo Real */}
               <div className="p-3.5 rounded-xl bg-blue-600/10 border border-blue-600/20 space-y-1.5 text-xs">
                 <div className="flex justify-between text-muted-foreground font-medium">
-                  <span>Subtotal Show + Viáticos:</span>
+                  <span>Monto Base + Viáticos:</span>
+                  <span className="font-bold text-foreground">{MXN(numBase + numViaticos)}</span>
+                </div>
+                {initialLineItemsTotal > 0 && (
+                  <div className="flex justify-between text-muted-foreground font-medium">
+                    <span>Adicionales:</span>
+                    <span className="font-bold text-foreground">+{MXN(initialLineItemsTotal)}</span>
+                  </div>
+                )}
+                {initialDiscount > 0 && (
+                  <div className="flex justify-between text-blue-500 font-medium">
+                    <span>Descuento aplicado:</span>
+                    <span className="font-bold">-{MXN(initialDiscount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-muted-foreground font-medium pt-1 border-t border-border/20">
+                  <span>Subtotal:</span>
                   <span className="font-bold text-foreground">{MXN(previewSubtotal)}</span>
                 </div>
                 {hasInvoice && (

@@ -13,8 +13,12 @@ export default function StatusLookupPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (shortId.trim()) {
-      router.push(`/status/${shortId.trim().toUpperCase()}`)
+    const cleaned = shortId.trim()
+    if (cleaned) {
+      const targetId = cleaned.toUpperCase().startsWith("VND-")
+        ? cleaned.toUpperCase()
+        : `VND-${cleaned.toUpperCase().replace(/^-+/, "")}`
+      router.push(`/status/${targetId}`)
     }
   }
 

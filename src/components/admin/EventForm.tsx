@@ -55,6 +55,14 @@ export function EventForm({
 
   if (!mounted) return null
 
+  const isEditMode = Boolean(
+    initialData?.id ||
+    initialData?.targetId ||
+    initialData?.bookingRequest?.id ||
+    initialData?.bookingId
+  )
+  const targetId = initialData?.id || initialData?.targetId || initialData?.bookingRequest?.id || initialData?.bookingId
+
   return createPortal(
     <div className="admin-theme fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="relative w-full max-w-5xl bg-background border border-border rounded-3xl p-6 md:p-8 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
@@ -68,17 +76,21 @@ export function EventForm({
 
         <div className="mb-6 pb-4 border-b border-border/40">
           <h2 className="text-xl font-bold font-heading text-foreground">
-            {initialData?.id ? "Editar Evento / Cotización" : "Nuevo Evento Maestro"}
+            {isEditMode ? "Editar Evento / Cotización" : "Nuevo Evento Maestro"}
           </h2>
           <p className="text-xs text-muted-foreground mt-1">
-            {initialData?.id ? "Modifica los datos operativos, locación y montos del registro." : "Registra un nuevo show en el calendario maestro."}
+            {isEditMode ? "Modifica los datos operativos, locación y montos del registro." : "Registra un nuevo show en el calendario maestro."}
           </p>
         </div>
 
         <UnifiedEventQuoteForm
-          mode={initialData?.id ? "edit" : "create"}
-          targetId={initialData?.id}
-          initialData={initialData}
+          mode={isEditMode ? "edit" : "create"}
+          targetId={targetId}
+          initialData={initialData ? {
+            ...initialData,
+            id: targetId || initialData.id,
+            targetId: targetId || initialData.targetId,
+          } : initialData}
           clients={formattedClients}
           venues={formattedVenues}
           packages={packages}

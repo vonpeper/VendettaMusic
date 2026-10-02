@@ -182,5 +182,19 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
     assert.equal(bar.audioAndOfficeProfit, 0)
     assert.equal(bar.ownerTotalTakeHome, 850)
   })
+
+  it("debe calcular correctamente el caso del screenshot (Base: $10,200, Viáticos: $1,400, Descuento: $1,000 -> Total: $10,600)", () => {
+    const result = calculateQuoteTotals({
+      basePrice: 10200,
+      viaticosAmount: 1400,
+      discountAmount: 1000,
+      depositAmount: 0,
+      invoice: false
+    })
+
+    assert.equal(result.subtotal, 10600)
+    assert.equal(result.totalAmount, 10600)
+    assert.equal(result.balanceAmount, 10600)
+  })
 })
 

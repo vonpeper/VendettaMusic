@@ -6,18 +6,21 @@ describe("Parser de Prospectos (inquiry-parser.ts)", () => {
   it("debe normalizar correctamente horas en formato 12h y 24h", () => {
     assert.strictEqual(normalizeTimeTo24h("02:00 PM"), "14:00")
     assert.strictEqual(normalizeTimeTo24h("2:00pm"), "14:00")
+    assert.strictEqual(normalizeTimeTo24h("02:00:00 PM"), "14:00")
     assert.strictEqual(normalizeTimeTo24h("10:30 AM"), "10:30")
     assert.strictEqual(normalizeTimeTo24h("12:00 PM"), "12:00")
     assert.strictEqual(normalizeTimeTo24h("12:00 AM"), "00:00")
     assert.strictEqual(normalizeTimeTo24h("20:00"), "20:00")
+    assert.strictEqual(normalizeTimeTo24h("20:00:00"), "20:00")
     assert.strictEqual(normalizeTimeTo24h("08:15"), "08:15")
   })
 
   it("debe calcular sumas y restas de tiempo seguras", () => {
     assert.strictEqual(addMinutesToTime("20:00", 120), "22:00")
-    assert.strictEqual(addMinutesToTime("20:00", -90), "18:30")
-    assert.strictEqual(addMinutesToTime("20:00", -120), "18:00")
+    assert.strictEqual(addMinutesToTime("20:00", -60), "19:00")
+    assert.strictEqual(addMinutesToTime("20:00", -10), "19:50")
     assert.strictEqual(addMinutesToTime("23:30", 90), "01:00")
+    assert.strictEqual(addMinutesToTime("00:05", -10), "23:55")
   })
 
   it("debe mapear tipos de ceremonia de manera canónica", () => {
@@ -44,8 +47,8 @@ describe("Parser de Prospectos (inquiry-parser.ts)", () => {
     assert.strictEqual(parsed.packageKeyword, "Essential")
     assert.strictEqual(parsed.startTime, "20:00")
     assert.strictEqual(parsed.endTime, "22:00")
-    assert.strictEqual(parsed.arrivalTime, "18:30")
-    assert.strictEqual(parsed.setupTime, "18:00")
+    assert.strictEqual(parsed.arrivalTime, "19:00", "Llegada de músicos por default debe ser 1h antes (19:00)")
+    assert.strictEqual(parsed.setupTime, "19:50", "Término de montaje por default debe ser 10 min antes (19:50)")
     assert.strictEqual(parsed.guestCount, 70)
     assert.strictEqual(parsed.city, "Huixquilucan de degollado")
     assert.strictEqual(parsed.venueName, "", "No debe inventar venue si solo era municipio")

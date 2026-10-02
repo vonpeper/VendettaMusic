@@ -737,7 +737,8 @@ export async function deleteContractAction(bookingId: string) {
 export async function updateDepositAmountAction(bookingId: string, amount: number) {
   try {
     const booking = await db.bookingRequest.findUnique({
-      where: { id: bookingId }
+      where: { id: bookingId },
+      include: { event: true, lineItems: true }
     })
     if (!booking) return { success: false, error: "Reserva no encontrada" }
 
@@ -752,11 +753,19 @@ export async function updateDepositAmountAction(bookingId: string, amount: numbe
 
     // 2. Si tiene evento sincronizado, actualizarlo también
     if (booking.eventId) {
+      const discount = Number(booking.discountAmount || 0)
+      const lineItemsTotal = (booking.lineItems || []).reduce((acc: number, it: any) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
+      const subtotal = Math.max(0, Number(booking.baseAmount || 0) + Number(booking.viaticosAmount || 0) + lineItemsTotal - discount)
+      const hasInvoice = Boolean(booking.invoice || booking.event?.invoice)
+      const ivaAmount = hasInvoice ? (booking.event?.ivaAmount || Math.round(subtotal * 0.16 * 100) / 100) : 0
+      const totalWithTax = subtotal + ivaAmount
+      const balance = Math.max(0, totalWithTax - amount)
+
       await db.event.update({
         where: { id: booking.eventId },
         data: {
           deposit: amount,
-          balance: booking.baseAmount - amount
+          balance: balance
         }
       })
 
@@ -817,13 +826,15 @@ export async function updateTotalAmountAction(
   try {
     const booking = await db.bookingRequest.findUnique({
       where: { id: bookingId },
-      include: { event: true }
+      include: { event: true, lineItems: true }
     })
     if (!booking) return { success: false, error: "Reserva no encontrada" }
 
     const finalBase = Math.max(0, baseAmount)
     const finalViaticos = viaticosAmount !== undefined ? Math.max(0, viaticosAmount) : Number(booking.viaticosAmount || 0)
-    const subtotal = finalBase + finalViaticos
+    const discount = Number(booking.discountAmount || 0)
+    const lineItemsTotal = (booking.lineItems || []).reduce((acc: number, it: any) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
+    const subtotal = Math.max(0, finalBase + finalViaticos + lineItemsTotal - discount)
 
     const hasInvoice = Boolean(booking.invoice || booking.event?.invoice)
     const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0

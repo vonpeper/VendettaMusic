@@ -168,9 +168,9 @@ export async function generateContractPdf(
 
   const isEarlySoundcheck = (data as any).adminNote?.toLowerCase().includes("soundcheck") || false
   const extraSoundcheck = isEarlySoundcheck ? 2000 : 0
-  // fullAddress se define abajo para evitar ReferenceError en algunos entornos de ejecución
+  const discount = Number((data as any).discountAmount || 0)
   const baseTotal = data.packagePrice + (data.viaticosAmount || 0)
-  const subtotal = baseTotal + extraSoundcheck
+  const subtotal = Math.max(0, baseTotal + extraSoundcheck - discount)
   const ivaAmount = (isHappening || (data as any).invoice) ? Math.round(subtotal * 0.16 * 100) / 100 : ((data as any).ivaAmount || 0)
   const total = subtotal + ivaAmount
 
@@ -294,6 +294,14 @@ export async function generateContractPdf(
         no: String(tableRows.length + 1),
         desc: isHappening ? "Viáticos de traslado" : (data.viaticosLabel || "Viáticos y gastos logísticos"),
         pu: MXN(data.viaticosAmount)
+      });
+    }
+
+    if (data.discountAmount && data.discountAmount > 0) {
+      tableRows.push({ 
+        no: String(tableRows.length + 1), 
+        desc: "Descuento especial aplicado", 
+        pu: `-${MXN(data.discountAmount as number)}` 
       });
     }
   } else {

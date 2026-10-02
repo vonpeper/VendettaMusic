@@ -15,51 +15,70 @@ interface Musician {
   ig: string | null
 }
 
+function getInstagramUrl(ig: string | null | undefined): string | null {
+  if (!ig) return null
+  let trimmed = ig.trim()
+  if (!trimmed || trimmed === "#") return null
+
+  if (trimmed.startsWith("@")) {
+    trimmed = trimmed.slice(1).trim()
+  }
+  if (!trimmed) return null
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed
+  }
+  if (trimmed.startsWith("instagram.com/") || trimmed.startsWith("www.instagram.com/")) {
+    return `https://${trimmed}`
+  }
+  return `https://instagram.com/${trimmed}`
+}
+
 const DEFAULT_MUSICIANS: Musician[] = [
   {
-    name: "Diego",
-    role: "Voz Principal",
+    name: "Pepe Bautista",
+    role: "Guitarra & Voz Líder",
     emoji: "🎤",
-    img: "/images/musicians/diego.jpg",
-    shortBio: "Voz líder con gran potencia escénica, energía y carisma en vivo.",
-    fullBio: "Líder vocal de Vendetta Music, especialista en prender al público y dominar los himnos de pop y rock en español e inglés.",
-    ig: "https://instagram.com/vendettamusica"
+    img: "/images/musicians/pepe.jpg",
+    shortBio: "Fundador de Vendetta con más de 15 años en la escena musical.",
+    fullBio: "Músico multi-instrumentista y productor. Líder del proyecto y responsable de la dirección artística que hace de cada show una experiencia única.",
+    ig: "https://instagram.com/pp.bau"
   },
   {
-    name: "Maryx",
-    role: "Voz Femenina",
+    name: "Brenda Menel",
+    role: "Cantante",
     emoji: "✨",
     img: "/images/musicians/maryx.jpg",
-    shortBio: "Voz femenina de gran tesitura, elegancia y potencia escénica.",
-    fullBio: "Cantante profesional con amplia trayectoria en shows de alto nivel y producciones de gala.",
-    ig: "https://instagram.com/vendettamusica"
+    shortBio: "Voz femenina principal con tesitura versátil y dinamismo escénico.",
+    fullBio: "Vocalista líder de Vendetta, especialista en encender al público con los mejores himnos de pop y rock en inglés y español.",
+    ig: null
   },
   {
-    name: "Pepe",
-    role: "Guitarra & Dirección",
+    name: "Edgar Mariaud",
+    role: "Bajo",
     emoji: "🎸",
-    img: "/images/musicians/pepe.jpg",
-    shortBio: "Guitarrista y director musical, arreglista del show.",
-    fullBio: "Más de 15 años en producción musical, diseño sonoro y ejecución en vivo de pop, funk y rock.",
-    ig: "https://instagram.com/vendettamusica"
-  },
-  {
-    name: "Alex",
-    role: "Batería & Percusión",
-    emoji: "🥁",
-    img: "/images/musicians/alex.jpg",
-    shortBio: "El motor rítmico que mantiene la pista encendida.",
-    fullBio: "Baterista de sesión con precisión y pegada para hacer vibrar a todos en cualquier fiesta.",
-    ig: "https://instagram.com/vendettamusica"
-  },
-  {
-    name: "Edgar",
-    role: "Bajo Eléctrico",
-    emoji: "⚡",
     img: "/images/musicians/edgar.jpg",
-    shortBio: "Solidez y groove en cada compás del concierto.",
-    fullBio: "Bajista profesional encargado de la base armónica y rítmica del sonido en vivo de Vendetta.",
-    ig: "https://instagram.com/vendettamusica"
+    shortBio: "El alma rítmica y la profundidad del sonido de Vendetta.",
+    fullBio: "Bajista con un Groove impecable y gran presencia escénica. Su precisión en las frecuencias bajas es el cimiento de nuestra energía en vivo.",
+    ig: "https://www.instagram.com/elpipolisimo"
+  },
+  {
+    name: "Diego Piña",
+    role: "Batería",
+    emoji: "🥁",
+    img: "/images/musicians/diego.jpg",
+    shortBio: "Precisión y potencia que mantienen el beat de la fiesta arriba.",
+    fullBio: "Baterista de sesión con una energía inagotable. Es el motor rítmico que impulsa cada canción del repertorio.",
+    ig: "https://www.instagram.com/diego.gopi"
+  },
+  {
+    name: "Alekz",
+    role: "Teclado",
+    emoji: "🎹",
+    img: "/images/musicians/alex.jpg",
+    shortBio: "Melodías y atmósferas que completan el sonido premium de Vendetta.",
+    fullBio: "Especialista en síntesis y diseño sonoro. Aporta la capa moderna y orquestal que hace que nuestros covers suenen como el disco.",
+    ig: "https://www.instagram.com/alekz_hr/"
   }
 ]
 
@@ -102,11 +121,17 @@ export function MusiciansSection({ musicians = [] }: { musicians?: Musician[] })
                 </div>
                 <h3 className="text-3xl font-sans font-black text-[#F2F0EB] mb-3">{activeMuso.name}</h3>
                 <p className="text-[#F2F0EB]/80 text-sm leading-relaxed mb-6 font-normal">"{activeMuso.fullBio}"</p>
-                <a href={activeMuso.ig ?? "#"} target="_blank" rel="noopener noreferrer">
-                  <Button className="w-full gap-2 font-semibold text-xs uppercase tracking-wider h-11 rounded-xl bg-gradient-to-r from-[#6F0D2B] to-[#FF5A5F] text-[#F2F0EB] shadow-lg shadow-[#FF5A5F]/20 hover:shadow-[#FF5A5F]/40 border border-white/20">
-                    <ExternalLink className="w-4 h-4" /> Seguir en Instagram
-                  </Button>
-                </a>
+                {(() => {
+                  const igUrl = getInstagramUrl(activeMuso.ig)
+                  if (!igUrl) return null
+                  return (
+                    <a href={igUrl} target="_blank" rel="noopener noreferrer">
+                      <Button className="w-full gap-2 font-semibold text-xs uppercase tracking-wider h-11 rounded-xl bg-gradient-to-r from-[#6F0D2B] to-[#FF5A5F] text-[#F2F0EB] shadow-lg shadow-[#FF5A5F]/20 hover:shadow-[#FF5A5F]/40 border border-white/20">
+                        <ExternalLink className="w-4 h-4" /> Seguir en Instagram
+                      </Button>
+                    </a>
+                  )
+                })()}
               </div>
             </div>
           </div>

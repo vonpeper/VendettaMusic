@@ -43,6 +43,7 @@ export default async function AdminVentasPage() {
       orderBy: { createdAt: "desc" },
       include: {
         client: { include: { user: true } },
+        lineItems: true,
         payments: true,
         event: {
           include: {
@@ -403,9 +404,10 @@ function ContratosGrid({
                         <div className="flex items-center justify-between">
                           <div className="text-sm font-black text-foreground">
                              {(() => {
-                              const base = c.baseAmount + (c.viaticosAmount || 0)
-                              const ivaAmt = (c.event?.invoice || c.invoice) ? (c.event?.ivaAmount || base * 0.16) : 0
-                              return MXN(base + ivaAmt)
+                              const lineItemsTotal = ((c as any).lineItems || []).reduce((acc: number, it: any) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
+                              const subtotal = Math.max(0, Number(c.baseAmount || 0) + Number(c.viaticosAmount || 0) + lineItemsTotal - Number(c.discountAmount || 0))
+                              const ivaAmt = (c.event?.invoice || c.invoice) ? (c.event?.ivaAmount || Math.round(subtotal * 0.16 * 100) / 100) : 0
+                              return MXN(subtotal + ivaAmt)
                              })()}
                           </div>
                           <ContractStatusSwitcher bookingId={c.id} status={c.contractStatus || "pending"} />
@@ -440,7 +442,20 @@ function ContratosGrid({
                           {c.event && (
                             <EditEventoButton 
                               eventId={c.event.id}
-                              initialData={c.event}
+                              initialData={{
+                                ...c.event,
+                                client: c.client,
+                                clientId: c.clientId || c.client?.id,
+                                clientName: c.clientName || c.client?.user?.name,
+                                clientPhone: c.clientPhone || c.client?.whatsapp,
+                                clientEmail: c.clientEmail || c.client?.user?.email,
+                                city: c.city || c.client?.city,
+                                startTime: c.event.performanceStart || (c.event as any).startTime || c.startTime,
+                                endTime: c.event.performanceEnd || (c.event as any).endTime || c.endTime,
+                                arrivalTime: c.event.arrivalTime || c.arrivalTime,
+                                setupTime: c.event.setupTime || c.setupTime,
+                                bookingRequest: c,
+                              }}
                               clients={clients}
                               locations={locations}
                               packages={packages}

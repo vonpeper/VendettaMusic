@@ -39,6 +39,13 @@ describe("Generación y Validación de Folios Criptográficos (folios.ts)", () =
     assert.equal(isValidShortIdFormat("VND-E4F8"), true)
     assert.equal(isValidShortIdFormat("VND-A1B2-V2"), true) // Versión de cotización histórica
     assert.equal(isValidShortIdFormat("550e8400-e29b-41d4-a716-446655440000"), true) // UUID directo
+    assert.equal(isValidShortIdFormat("VND-C2RS"), true) // Folio real en BD con caracteres Base36
+    assert.equal(isValidShortIdFormat("VND--KBS"), true) // Folio real en BD con doble guión
+    assert.equal(isValidShortIdFormat("VND-7K8P"), true) // Folio real en BD alfanumérico
+    assert.equal(isValidShortIdFormat("4A2B"), true) // Consulta directa sin prefijo VND-
+    assert.equal(isValidShortIdFormat("C2RS"), true) // Consulta directa sin prefijo VND-
+    assert.equal(isValidShortIdFormat("ABC123X"), true) // Formato de ejemplo de búsqueda
+    assert.equal(isValidShortIdFormat("fixed-codere-metepec-2026"), true) // Slug de evento especial
   })
 
   it("debe rechazar IDs malformados o con inyecciones", () => {

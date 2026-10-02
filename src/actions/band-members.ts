@@ -11,12 +11,15 @@ const BandMemberSchema = z.object({
   img: z.string().min(1),
   shortBio: z.string(),
   fullBio: z.string(),
-  ig: z.string().optional(),
+  ig: z.string().nullable().optional(),
   order: z.number().default(0)
 })
 
 export async function createBandMemberAction(formData: FormData) {
   try {
+    const rawIg = formData.get("ig")?.toString().trim()
+    const ig = rawIg && rawIg !== "#" ? rawIg : null
+
     const data = {
       name: formData.get("name")?.toString() || "",
       role: formData.get("role")?.toString() || "",
@@ -24,7 +27,7 @@ export async function createBandMemberAction(formData: FormData) {
       img: formData.get("img")?.toString() || "/images/branding/logo-vendetta.png",
       shortBio: formData.get("shortBio")?.toString() || "",
       fullBio: formData.get("fullBio")?.toString() || "",
-      ig: formData.get("ig")?.toString() || "",
+      ig,
       order: Number(formData.get("order")) || 0
     }
     
@@ -42,6 +45,9 @@ export async function createBandMemberAction(formData: FormData) {
 
 export async function updateBandMemberAction(id: string, formData: FormData) {
   try {
+    const rawIg = formData.get("ig")?.toString().trim()
+    const ig = rawIg && rawIg !== "#" ? rawIg : null
+
     const data = {
       name: formData.get("name")?.toString() || "",
       role: formData.get("role")?.toString() || "",
@@ -49,7 +55,7 @@ export async function updateBandMemberAction(id: string, formData: FormData) {
       img: formData.get("img")?.toString() || "/images/branding/logo-vendetta.png",
       shortBio: formData.get("shortBio")?.toString() || "",
       fullBio: formData.get("fullBio")?.toString() || "",
-      ig: formData.get("ig")?.toString() || "",
+      ig,
       order: Number(formData.get("order")) || 0
     }
     

@@ -56,21 +56,36 @@ export function isValidShortIdFormat(id?: string | null): boolean {
   if (!id || typeof id !== "string") return false
   const trimmed = id.trim().toUpperCase()
 
-  // 1. Formato estándar oficial: VND- + 4 a 8 caracteres hexadecimales (con o sin versión -V1, -V2)
-  const isStandardFormat = /^VND-[0-9A-F]{4,8}(-V\d+)?$/.test(trimmed)
-  if (isStandardFormat) return true
+  // Bloquear caracteres peligrosos de inyección o formatos corruptos
+  if (/[<>;'"\s()!]/.test(trimmed)) return false
+  if (trimmed.length < 4 || trimmed.length > 64) return false
 
-  // 2. Soporte retrocompatible para folios largos previos de 16 caracteres Base32
-  const isLongFormat = /^VND-[0-9A-HJKMNP-Z]{4}(-[0-9A-HJKMNP-Z]{4}){3}$/.test(trimmed)
+  // 1. Formato estándar oficial y alfanumérico Base36: VND- + 4 a 12 caracteres (con o sin versión -V1, -V2)
+  const isStandardOrBase36 = /^VND-[0-9A-Z]{4,12}(-V\d+)?$/.test(trimmed)
+  if (isStandardOrBase36) return true
+
+  // 2. Soporte para folios con doble guión histórico (ej. VND--KBS)
+  const isDoubleHyphen = /^VND--[0-9A-Z]{3,12}(-V\d+)?$/.test(trimmed)
+  if (isDoubleHyphen) return true
+
+  // 3. Formato alfanumérico directo sin prefijo VND- (ej. 4A2B, C2RS, ABC123X, 4 a 12 caracteres)
+  const isBareAlphanumeric = /^[0-9A-Z]{4,12}(-V\d+)?$/.test(trimmed)
+  if (isBareAlphanumeric) return true
+
+  // 4. Soporte retrocompatible para folios largos previos (ej. Base32 segmentado)
+  const isLongFormat = /^VND-[0-9A-Z]{4}(-[0-9A-Z]{4}){1,4}$/.test(trimmed)
   if (isLongFormat) return true
 
-  // 3. Formato personalizado por palabra clave (ej. VND-COLEGIO, mínimo 5 letras)
-  const isNamedCustom = /^VND-[A-Z]{5,15}$/.test(trimmed)
+  // 5. Formato personalizado por palabra clave (ej. VND-COLEGIO o COLEGIO, mínimo 5 letras)
+  const isNamedCustom = /^(VND-)?[A-Z]{5,20}$/.test(trimmed)
   if (isNamedCustom) return true
 
-  // 4. Formato UUID directo (soporte retrocompatible para consultas directas por ID interno)
+  // 6. Formato UUID directo (soporte retrocompatible para consultas directas por ID interno)
   const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(trimmed)
   if (isUuid) return true
+
+  // 7. Slugs compuestos con guiones (ej. fixed-codere-metepec-2026)
+  if (/^[A-Z0-9]+(-[A-Z0-9]+){2,}$/.test(trimmed) && trimmed.length >= 10) return true
 
   return false
 }

@@ -100,9 +100,12 @@ export function PremiumClientQuoteView({
   const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
   const totalAmount = subtotal + ivaAmount
 
-  // Anticipo requerido (Esquema estricto 50% / 50%)
-  const depositAmount = Math.round(totalAmount * 0.5)
+  // Anticipo requerido (Si está configurado un anticipo específico se respeta; sino por defecto 50%)
+  const explicitDeposit = Number(booking.depositAmount || 0)
+  const depositAmount = explicitDeposit > 0 ? explicitDeposit : Math.round(totalAmount * 0.5)
   const remainingAmount = Math.max(0, totalAmount - depositAmount)
+  const depositPercent = totalAmount > 0 ? Math.round((depositAmount / totalAmount) * 100) : 50
+  const remainingPercent = 100 - depositPercent
 
   const formatMXN = (val: number) => {
     return new Intl.NumberFormat("es-MX", {
@@ -720,11 +723,11 @@ export function PremiumClientQuoteView({
           </div>
 
           {/* -------------------------------------------------------- */}
-          {/* ESQUEMA DE PAGO 50 / 50 */}
+          {/* ESQUEMA DE PAGO */}
           {/* -------------------------------------------------------- */}
           <div className="mt-8 pt-6 border-t-2 border-slate-100">
             <div className="text-xs font-black uppercase tracking-widest text-red-600 mb-4 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-red-600" /> Esquema de Pago Oficial para Bloqueo de Fecha (50% / 50%)
+              <Shield className="w-4 h-4 text-red-600" /> Esquema de Pago Oficial para Bloqueo de Fecha ({depositPercent}% / {remainingPercent}%)
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -732,7 +735,7 @@ export function PremiumClientQuoteView({
               <div className="p-6 rounded-2xl bg-red-50/80 border-2 border-red-500 space-y-3 relative overflow-hidden shadow-lg shadow-red-500/10">
                 <div className="flex items-center justify-between">
                   <div className="text-xs font-black uppercase tracking-wider text-red-700 flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-red-600" /> 1. Anticipo para Congelar Fecha (50%)
+                    <ShieldCheck className="w-4 h-4 text-red-600" /> 1. Anticipo para Congelar Fecha ({depositPercent}%)
                   </div>
                   <Badge className="text-[10px] bg-red-600 text-white font-black uppercase tracking-wider">
                     Paso Inicial
@@ -763,7 +766,7 @@ export function PremiumClientQuoteView({
               <div className="p-6 rounded-2xl bg-slate-50 border-2 border-slate-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="text-xs font-black uppercase tracking-wider text-slate-700">
-                    2. Finiquito el Día del Show (50%)
+                    2. Finiquito el Día del Show ({remainingPercent}%)
                   </div>
                   <Badge variant="outline" className="text-[10px] border-2 border-slate-300 text-slate-700 font-bold">
                     El Día del Show
