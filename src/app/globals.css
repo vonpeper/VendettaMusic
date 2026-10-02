@@ -116,6 +116,21 @@
     background: rgba(255, 255, 255, 0.2);
   }
 
+  .custom-scrollbar-slate::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar-slate::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+  }
+  .custom-scrollbar-slate::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.4);
+    border-radius: 10px;
+  }
+  .custom-scrollbar-slate::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.7);
+  }
+
   /* Vendetta 2026 Gradients and Glass Cards */
   .bg-midnight-stage {
     background: var(--gradient-midnight-stage);

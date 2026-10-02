@@ -113,7 +113,7 @@ export function AdminSignatureManager({ initialSignature }: { initialSignature: 
           
           <div className="p-1 sm:p-2">
             <div className="rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden" style={{ touchAction: "none" }}>
-              <SignaturePad onSave={handleSave} placeholder="Firma con trazo blanco" disabled={loading} />
+              <SignaturePad onSave={handleSave} placeholder="Firma del Administrador" disabled={loading} />
             </div>
           </div>
         </DialogContent>

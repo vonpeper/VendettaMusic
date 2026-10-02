@@ -826,6 +826,7 @@ export function PremiumClientQuoteView({
                     eventAmount={totalAmount}
                     packageName={booking.packageName}
                     eventAddress={fullAddress}
+                    downloadContractUrl={downloadContractUrl}
                   />
                 </div>
               </div>

@@ -25,6 +25,7 @@ interface ContractSignerProps {
   eventAmount?: number
   packageName?: string
   eventAddress?: string
+  downloadContractUrl?: string
 }
 
 export function ContractSigner({ 
@@ -41,7 +42,8 @@ export function ContractSigner({
   eventEndTime,
   eventAmount,
   packageName,
-  eventAddress
+  eventAddress,
+  downloadContractUrl
 }: ContractSignerProps) {
   const [loading, setLoading] = useState(false)
   const [showPad, setShowPad] = useState(false)
@@ -131,64 +133,85 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
     }
   }
 
-    if (isSigned) {
+  if (isSigned) {
     return (
-      <div className="bg-card/40 border border-border/40 rounded-[2rem] overflow-hidden">
-        <div className="p-6 bg-green-500/10 border-b border-border/40 flex items-center justify-between">
+      <div className="bg-white border-2 border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+        <div className="p-5 sm:p-6 bg-emerald-50 border-b-2 border-emerald-100 flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5 text-green-500" />
-            <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Contrato Firmado Digitalmente</h3>
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                Contrato Firmado Digitalmente
+              </h3>
+              <p className="text-[11px] text-slate-500 font-medium">Acuerdo formal de prestación de servicios</p>
+            </div>
           </div>
-          <div className="text-[10px] font-bold text-green-500 uppercase tracking-tighter">Legalmente Vinculante</div>
+          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300">
+            Legalmente Vinculante
+          </span>
         </div>
         
-        <div className="p-8 space-y-8">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="p-6 sm:p-8 space-y-6">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Firma Cliente */}
-              <div className="space-y-4">
-                 <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2">Firma del Cliente: {clientName}</div>
-                 <div className="bg-foreground/5 rounded-2xl p-4 flex items-center justify-center min-h-[120px]">
+              <div className="space-y-3 p-4 rounded-2xl bg-slate-50 border-2 border-slate-200">
+                 <div className="text-xs font-black text-slate-900 uppercase tracking-wider border-b border-slate-200 pb-2">
+                   Firma del Cliente: {clientName}
+                 </div>
+                 <div className="bg-white rounded-xl p-4 flex items-center justify-center min-h-[120px] border border-slate-200">
                     {clientSignature ? (
-                      <img src={clientSignature} alt="Firma Cliente" className="max-h-24 invert opacity-80" />
+                      <img src={clientSignature} alt="Firma Cliente" className="max-h-24 object-contain" />
                     ) : (
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <CheckCircle2 className="w-8 h-8 opacity-20" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">Verificado Administrativamente</span>
+                      <div className="flex flex-col items-center gap-2 text-slate-400">
+                        <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          Verificado Digitalmente
+                        </span>
                       </div>
                     )}
                  </div>
-                 <div className="flex items-center gap-2 text-[9px] text-muted-foreground font-bold uppercase italic">
-                    <Clock className="w-3 h-3" /> Firmado el {signedAt ? new Date(signedAt).toLocaleString() : "N/A"}
+                 <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" /> 
+                    Firmado el {signedAt ? new Date(signedAt).toLocaleString("es-MX") : "N/A"}
                  </div>
               </div>
 
               {/* Firma Vendetta */}
-              <div className="space-y-4">
-                 <div className="text-[10px] font-black text-primary uppercase tracking-widest border-b border-border/40 pb-2">Firma Vendetta Live Music</div>
-                 <div className="bg-foreground/5 rounded-2xl p-4 flex items-center justify-center min-h-[120px]">
+              <div className="space-y-3 p-4 rounded-2xl bg-slate-50 border-2 border-slate-200">
+                 <div className="text-xs font-black text-red-600 uppercase tracking-wider border-b border-slate-200 pb-2">
+                   Firma Vendetta Live Music
+                 </div>
+                 <div className="bg-white rounded-xl p-4 flex items-center justify-center min-h-[120px] border border-slate-200">
                     {adminSignature ? (
-                      <img src={adminSignature} alt="Firma Vendetta" className="max-h-24 invert opacity-80" />
+                      <img src={adminSignature} alt="Firma Vendetta" className="max-h-24 object-contain" />
                     ) : (
-                      <div className="text-[10px] text-muted-foreground italic">Sello Digital Corporativo</div>
+                      <div className="flex flex-col items-center gap-2 text-slate-400">
+                        <CheckCircle2 className="w-8 h-8 text-red-500" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          Sello Digital Corporativo
+                        </span>
+                      </div>
                     )}
                  </div>
-                 <div className="flex items-center gap-2 text-[9px] text-primary font-black uppercase">
-                    <CheckCircle2 className="w-3 h-3" /> Verificado por Vendetta
+                 <div className="flex items-center gap-2 text-[10px] text-red-600 font-black uppercase">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Verificado por Vendetta
                  </div>
               </div>
            </div>
 
-           <div className="p-4 rounded-xl bg-foreground/[0.03] border border-border/40 space-y-4">
-              <p className="text-[10px] text-muted-foreground leading-relaxed text-center italic">
-                Este documento constituye un acuerdo legal entre las partes. La firma digital ha sido verificada mediante IP y sello de tiempo.
+           <div className="p-5 rounded-2xl bg-slate-50 border-2 border-slate-200 space-y-4">
+              <p className="text-xs text-slate-600 leading-relaxed text-center font-medium">
+                Este documento constituye un acuerdo legal vinculante entre las partes. La firma digital ha sido registrada y respaldada con sello de tiempo e IP.
               </p>
               
-              <div className="flex justify-center pt-2">
+              <div className="flex justify-center pt-1">
                 <Button 
                   asChild
-                  className="bg-primary/20 text-primary hover:bg-primary/30 border border-primary/50 text-[10px] font-black uppercase tracking-widest h-10 px-6 rounded-xl transition-all gap-2"
+                  className="bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider h-11 px-6 rounded-xl shadow-md transition-all gap-2"
                 >
-                  <a href={`/api/admin/contract/${bookingId}?t=${Date.now()}`} target="_blank" rel="noreferrer">
+                  <a href={downloadContractUrl || `/api/admin/contract/${bookingId}?t=${Date.now()}`} target="_blank" rel="noreferrer">
                     <FileText className="w-4 h-4" />
                     Descargar Contrato PDF
                   </a>
@@ -201,49 +224,74 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
   }
 
   return (
-    <div className="bg-card/40 border border-border/40 rounded-[2rem] overflow-hidden">
-       <div className="p-6 border-b border-border/40 flex items-center gap-3">
-          <FileText className="w-5 h-5 text-primary" />
-          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Formalización de Contrato</h3>
+    <div className="bg-white border-2 border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+       <div className="p-5 sm:p-6 border-b-2 border-slate-100 bg-slate-50/50 flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-red-50 border border-red-200 text-red-600">
+            <FileText className="w-5 h-5 text-red-600" />
+          </div>
+          <div>
+            <h3 className="text-base font-black text-slate-950 uppercase tracking-tight">Formalización de Contrato</h3>
+            <p className="text-xs text-slate-500 font-medium">Revisa las cláusulas y firma digitalmente para asegurar el evento</p>
+          </div>
        </div>
 
-       <div className="p-8 space-y-6">
+       <div className="p-6 sm:p-8 space-y-6">
           <div className="space-y-2">
-             <p className="text-sm text-muted-foreground leading-relaxed">
-               Hola <span className="text-foreground font-bold">{clientName}</span>, para finalizar el proceso de reserva, es necesario que leas y firmes digitalmente el contrato de prestación de servicios musicales.
+             <p className="text-sm text-slate-800 leading-relaxed font-medium">
+               Hola <span className="text-slate-950 font-black">{clientName}</span>, para finalizar el proceso de reserva, es necesario que leas y firmes digitalmente el contrato de prestación de servicios musicales.
              </p>
-             <p className="text-xs text-muted-foreground italic">
-               Al firmar, aceptas los términos y condiciones de Vendetta para tu evento el próximo día.
+             <p className="text-xs text-slate-500 font-medium">
+               Al firmar en pantalla, aceptas en su totalidad los términos y condiciones de Vendetta para la fecha de tu evento.
              </p>
           </div>
 
           {!showPad ? (
             <Button 
               onClick={() => setShowPad(true)}
-              className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/20"
+              className="w-full h-14 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-[0.15em] rounded-2xl shadow-lg shadow-red-600/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2"
             >
+              <FileText className="w-5 h-5" />
               Leer y Firmar Contrato
             </Button>
           ) : (
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-               <div className="p-4 rounded-xl bg-foreground/5 border border-border/40 max-h-[60vh] overflow-y-auto text-[11px] text-muted-foreground space-y-3 leading-relaxed">
-                  {processedLegalText.split("\n").filter(p => p.trim()).map((para, idx) => (
-                    <p key={idx}>{para}</p>
-                  ))}
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               <div>
+                  <div className="flex items-center justify-between mb-2">
+                     <span className="text-xs font-black uppercase tracking-wider text-slate-900">
+                       Términos y Cláusulas Contractuales
+                     </span>
+                     <span className="text-[11px] font-bold text-slate-500">
+                       Desliza para leer completo
+                     </span>
+                  </div>
+                  <div className="p-5 sm:p-6 rounded-2xl bg-slate-50 border-2 border-slate-200 max-h-[50vh] overflow-y-auto text-xs text-slate-900 font-medium space-y-3 leading-relaxed shadow-inner custom-scrollbar-slate">
+                     {processedLegalText.split("\n").filter(p => p.trim()).map((para, idx) => (
+                       <p key={idx} className="text-slate-900 leading-relaxed">{para}</p>
+                     ))}
+                  </div>
                </div>
                
-               <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Traza tu firma aquí</Label>
+               <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                     <Label className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                       Traza tu firma digital aquí
+                     </Label>
+                     <span className="text-[11px] text-slate-500 font-semibold">
+                       Usa tu dedo en móvil o puntero en desktop
+                     </span>
+                  </div>
                   <SignaturePad onSave={handleSign} placeholder="Firma del cliente" disabled={loading} />
                </div>
 
-               <Button 
-                variant="ghost" 
-                onClick={() => setShowPad(false)}
-                className="w-full text-muted-foreground hover:text-foreground text-[10px] font-bold uppercase"
-               >
-                Cancelar
-               </Button>
+               <div className="pt-2 flex justify-center">
+                 <Button 
+                   variant="ghost" 
+                   onClick={() => setShowPad(false)}
+                   className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-bold uppercase tracking-wider rounded-xl h-10 px-6 transition-colors"
+                 >
+                   Cancelar
+                 </Button>
+               </div>
             </div>
           )}
        </div>

@@ -209,22 +209,22 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí", disabled = f
   return (
     <div className="space-y-4 relative">
       <div 
-        className="relative border-4 border-primary rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-2xl transition-all w-full h-64 sm:h-[350px] landscape:h-[160px]"
-        style={{ touchAction: "none", backgroundColor: '#f8fafc' }}
+        className="relative border-2 border-slate-300 focus-within:border-red-500 rounded-2xl overflow-hidden shadow-sm transition-all w-full h-64 sm:h-[300px] landscape:h-[160px] bg-white"
+        style={{ touchAction: "none" }}
       >
         {!hasSignature && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-white/5 gap-6 select-none">
-            <MousePointer2 className="w-16 h-16 opacity-5 animate-pulse text-slate-900" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-2 select-none">
+            <MousePointer2 className="w-8 h-8 text-slate-300 animate-pulse" />
             <div className="text-center">
-              <span className="font-black uppercase tracking-[0.6em] text-[10px] block mb-2 text-slate-400">{placeholder}</span>
-              <span className="text-[9px] font-medium opacity-30 italic text-slate-500">Trazo negro sólido</span>
+              <span className="font-black uppercase tracking-widest text-xs block text-slate-500">{placeholder}</span>
+              <span className="text-[11px] font-medium text-slate-400">Trazo digital con tu dedo o puntero</span>
             </div>
           </div>
         )}
 
         <canvas
           ref={canvasRef}
-          className="w-full h-full block cursor-crosshair"
+          className="w-full h-full block cursor-crosshair bg-white"
           style={{ touchAction: "none" }}
         />
       </div>
@@ -237,8 +237,9 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí", disabled = f
             type="button"
             onClick={clear}
             disabled={disabled}
-            className="w-full border-border bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted rounded-[1.25rem] px-4 h-14 text-xs font-black uppercase tracking-widest transition-all"
+            className="w-full border-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl px-4 h-12 text-xs font-black uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-2"
           >
+            <Eraser className="w-4 h-4 text-slate-500" />
             Limpiar
           </Button>
           <Button 
@@ -248,8 +249,9 @@ export function SignaturePad({ onSave, placeholder = "Firma aquí", disabled = f
               save();
             }}
             disabled={disabled || !hasSignature}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-[0.20em] rounded-[1.25rem] px-4 h-14 shadow-md active:scale-95 transition-all disabled:opacity-20"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-wider rounded-xl px-4 h-12 shadow-md active:scale-95 transition-all disabled:bg-slate-200 disabled:text-slate-400 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
+            <Check className="w-4 h-4" />
             {disabled ? "Guardando..." : "Guardar Firma"}
           </Button>
         </div>
