@@ -269,7 +269,7 @@ export async function generateContractPdf(
     if (!data.clientProvidesAudio) {
       tableRows.push({
         no: String(tableRows.length + 1),
-        desc: "Producción Técnica Integral de Audio e Iluminación\n• Sistema de audio profesional calibrado según la acústica y aforo del evento.\n• Microfonía profesional e instrumentación completa con monitoreo de escenario.\n• Iluminación escénica para el área de la banda.\n• Personal para montaje, desmontaje y operación técnica sonora.",
+        desc: "Producción Técnica de Audio e Iluminación\n• Sistema de audio profesional calibrado para el área del show.\n• Microfonía profesional e instrumentación requerida para la presentación de la banda.\n• Iluminación de escenario con luces RGB para el área de la agrupación.\n• Personal para montaje, operación técnica sonora y desmontaje.",
         pu: "INCLUIDO"
       });
     }

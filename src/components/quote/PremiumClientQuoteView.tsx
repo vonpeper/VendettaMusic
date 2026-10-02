@@ -1055,32 +1055,32 @@ export function PremiumClientQuoteView({
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                     <span>
-                      <strong className="text-slate-950">Sistema de Sonido:</strong>{" "}
+                      <strong className="text-slate-950">Sistema de Audio:</strong>{" "}
                       {hasLargeAudio 
-                        ? "Sistema de audio profesional de alta potencia y refuerzo sonoro calibrado para aforo masivo y cobertura total del recinto."
-                        : "Sistema de audio profesional calibrado para una cobertura nítida, equilibrada y de alta fidelidad en el espacio del evento."}
+                        ? "Sistema de audio profesional de alta potencia calibrado para el aforo y recinto del evento."
+                        : "Sistema de audio profesional calibrado para una cobertura equilibrada y clara en el área del show."}
                     </span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span><strong className="text-slate-950">Microfonía & Monitoreo:</strong> Microfonía profesional inalámbrica para voces e instrumentación completa, con monitoreo de piso.</span>
+                    <span><strong className="text-slate-950">Microfonía & Captación:</strong> Microfonía profesional para voces, instrumentos y amplificación de la banda en vivo.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                     <span>
-                      <strong className="text-slate-950">Iluminación Escénica:</strong>{" "}
+                      <strong className="text-slate-950">Iluminación de Escenario:</strong>{" "}
                       {hasRobotics 
-                        ? "Cabezas móviles robóticas DMX, barras LED y efectos de iluminación sincronizados con la música."
-                        : "Iluminación escénica LED para ambientación visual del área del show."}
+                        ? "Luces robóticas e iluminación RGB para ambientación visual dinámica del área del show."
+                        : "Luces de escenario RGB para ambientación visual del área del show."}
                     </span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span><strong className="text-slate-950">Ingeniero de Sonido en Vivo:</strong> Control y balance sonoro continuo durante toda la presentación.</span>
+                    <span><strong className="text-slate-950">Operación Sonora:</strong> Control y balance de audio en vivo durante la presentación de la banda.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span><strong className="text-slate-950">Garantía de Calidad:</strong> Vendetta cuenta con el equipamiento técnico de audio e ingeniería que la agrupación requiere para asegurar la óptima fidelidad, balance y calidad de ejecución en cada evento (en festivales masivos operamos con rider técnico homologado).</span>
+                    <span><strong className="text-slate-950">Garantía de Calidad:</strong> Vendetta cuenta con el equipamiento técnico de audio y operación que la agrupación requiere para la óptima ejecución de su show (en festivales masivos operamos con rider técnico homologado).</span>
                   </li>
                 </ul>
               ) : (

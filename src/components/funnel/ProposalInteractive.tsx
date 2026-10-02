@@ -169,7 +169,7 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
                 <span className="text-[10px] font-black uppercase bg-primary/20 text-primary px-2 py-0.5 rounded">Opcional</span>
               </div>
               <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-                Sistema de audio principal Line Array Yamaha/DM3, microfonía, instrumentación completa, sistemas de monitoreo in-ear Shure (PSM900/PSM300), iluminación robótica y paneles wash LED con truss de aluminio, y equipo técnico para el montaje, operación y desmontaje.
+                Sistema de audio profesional, microfonía e instrumentación completa para la banda, iluminación de escenario RGB y equipo técnico para el montaje, operación y desmontaje.
               </p>
             </div>
             <div className="flex items-center gap-4 shrink-0 justify-between sm:justify-end">
