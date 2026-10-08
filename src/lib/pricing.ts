@@ -262,6 +262,10 @@ export interface EventCostBreakdown {
   audioAndOfficeProfit: number
   ownerTotalTakeHome: number
   notes: string
+  isCustomMusicianPay?: boolean
+  isCustomStaffPay?: boolean
+  defaultMusicianPayEach?: number
+  defaultStaffPay?: number
 }
 
 /**
@@ -278,23 +282,37 @@ export interface EventCostBreakdown {
  *   - Músicos: $3,400 ÷ 4 = $850 c/u.
  *   - Vendetta: $0 (0 comisión para maximizar la motivación y lealtad del equipo).
  *   - Ingreso Personal Dueño (como Músico): $850 en bar.
+ *
+ * Permite montos personalizados opcionales (customMusicianPay y customStaffPay)
+ * recalculando automáticamente el remanente de Audio/Oficina y el ingreso del dueño.
  */
 export function calculateEventCostBreakdown(
   hours: number = 2,
   eventType: "privado" | "bar" = "privado",
-  customTotalPrice?: number
+  customTotalPrice?: number,
+  customMusicianPay?: number | null,
+  customStaffPay?: number | null
 ): EventCostBreakdown {
   const h = Math.max(1, hours)
   const musiciansCount = 4
 
+  const isCustomMusician = customMusicianPay !== undefined && customMusicianPay !== null && !isNaN(customMusicianPay) && customMusicianPay > 0
+  const isCustomStaff = customStaffPay !== undefined && customStaffPay !== null && !isNaN(customStaffPay) && customStaffPay >= 0
+
   if (eventType === "bar") {
     const barTotal = customTotalPrice ?? 3800
-    const staffPay = Math.round(h * 200)
-    const remainingForMusicians = Math.max(0, barTotal - staffPay)
-    const musicianPayEach = Math.round(remainingForMusicians / musiciansCount)
+    const defaultStaffPay = Math.round(h * 200)
+    const staffPay = isCustomStaff ? Math.round(customStaffPay!) : defaultStaffPay
+    const remainingForMusicians = Math.max(0, barTotal - defaultStaffPay)
+    const defaultMusicianPayEach = Math.round(remainingForMusicians / musiciansCount)
+    const musicianPayEach = isCustomMusician ? Math.round(customMusicianPay!) : defaultMusicianPayEach
     const musiciansTotal = musicianPayEach * musiciansCount
     const audioAndOfficeProfit = barTotal - (musiciansTotal + staffPay)
     const ownerTotalTakeHome = musicianPayEach + audioAndOfficeProfit
+
+    const notes = (isCustomMusician || isCustomStaff)
+      ? "Desglose con nómina ajustada manualmente (cálculo de remanente y dueño automático)."
+      : "Bar: 100% distribuido entre músicos y staff ($0 comisión de oficina Vendetta para motivar al equipo)."
 
     return {
       hours: h,
@@ -306,17 +324,27 @@ export function calculateEventCostBreakdown(
       staffPay,
       audioAndOfficeProfit,
       ownerTotalTakeHome,
-      notes: "Bar: 100% distribuido entre músicos y staff ($0 comisión de oficina Vendetta para motivar al equipo)."
+      notes,
+      isCustomMusicianPay: isCustomMusician,
+      isCustomStaffPay: isCustomStaff,
+      defaultMusicianPayEach,
+      defaultStaffPay,
     }
   }
 
   // Evento Privado
   const basePrice = customTotalPrice ?? calculateShowPackageBasePrice("Essential", h)
-  const musicianPayEach = h <= 2 ? 1675 : 1675 + Math.round((h - 2) * 1000)
+  const defaultMusicianPayEach = h <= 2 ? 1675 : 1675 + Math.round((h - 2) * 1000)
+  const musicianPayEach = isCustomMusician ? Math.round(customMusicianPay!) : defaultMusicianPayEach
   const musiciansTotal = musicianPayEach * musiciansCount
-  const staffPay = Math.round(h * 300)
+  const defaultStaffPay = Math.round(h * 300)
+  const staffPay = isCustomStaff ? Math.round(customStaffPay!) : defaultStaffPay
   const audioAndOfficeProfit = basePrice - (musiciansTotal + staffPay)
   const ownerTotalTakeHome = musicianPayEach + audioAndOfficeProfit
+
+  const notes = (isCustomMusician || isCustomStaff)
+    ? "Desglose con nómina ajustada manualmente (cálculo de remanente y dueño automático)."
+    : "Privado: Músicos $1,675 base + $1,000/hr extra; Staff $300/hr; Renta Audio y Oficina Vendetta (Equipo propio para garantizar fidelidad y calidad de ejecución)."
 
   return {
     hours: h,
@@ -328,7 +356,11 @@ export function calculateEventCostBreakdown(
     staffPay,
     audioAndOfficeProfit,
     ownerTotalTakeHome,
-    notes: "Privado: Músicos $1,675 base + $1,000/hr extra; Staff $300/hr; Renta Audio y Oficina Vendetta (Equipo propio para garantizar fidelidad y calidad de ejecución)."
+    notes,
+    isCustomMusicianPay: isCustomMusician,
+    isCustomStaffPay: isCustomStaff,
+    defaultMusicianPayEach,
+    defaultStaffPay,
   }
 }
 

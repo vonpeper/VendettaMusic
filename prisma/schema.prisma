@@ -334,6 +334,8 @@ model Event {
   updatedAt           DateTime        @default(now()) @updatedAt
   bitacora            String?
   audioEngineer       String?
+  customMusicianPay   Float?
+  customStaffPay      Float?
   bookingRequest      BookingRequest?
   contracts           Contract[]
   package             Package?        @relation(fields: [packageId], references: [id])
@@ -486,6 +488,8 @@ model BookingRequest {
   setupTime             String?
   dressCode             String?
   musicianNotes         String?
+  customMusicianPay     Float?
+  customStaffPay        Float?
   sourceInquiryId       String?           @unique
   lineItems             BookingLineItem[]
   event                 Event?            @relation(fields: [eventId], references: [id])

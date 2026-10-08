@@ -19,7 +19,6 @@ import { VendettaExperience } from "@/components/public/VendettaExperience"
 import { Suspense } from "react"
 import Image from "next/image"
 import { db } from "@/lib/db"
-import { StatusSearch } from "@/components/public/StatusSearch"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -629,24 +628,6 @@ export default async function HomePage() {
 
       {/* -- TESTIMONIOS EN SCROLL HORIZONTAL ------------------------------- */}
       <TestimonialsScroll reviews={liveDbReviews} />
-
-      {/* -- CONSULTA ESTATUS --------------------------------------------- */}
-      <section id="estatus" className="py-24 relative overflow-hidden bg-gradient-to-b from-[#0B0B14] via-[#15152B]/60 to-[#0B0B14]">
-        <div className="container mx-auto px-4 max-w-4xl relative z-10">
-           <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[#FF5A5F] font-bold uppercase tracking-[0.3em] text-xs mb-4">
-                Zona de Clientes
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-white uppercase tracking-tight leading-tight md:leading-none mb-4">
-                Consulta tu <span className="text-gradient-encore italic pr-4">Estatus</span>
-              </h2>
-              <p className="text-[#F2F0EB]/70 text-sm font-normal">
-                ¿Ya apartaste tu fecha? Ingresa el ID de tu reserva para ver detalles, pagos y contrato.
-              </p>
-           </div>
-           <StatusSearch />
-        </div>
-      </section>
 
       {/* -- CTA FINAL ------------------------------------------------------ */}
       <section className="py-36 relative overflow-hidden bg-gradient-to-b from-[#0B0B14] via-[#42112D]/80 to-[#07080D]">

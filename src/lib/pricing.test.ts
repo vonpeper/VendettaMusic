@@ -183,6 +183,46 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
     assert.equal(bar.ownerTotalTakeHome, 850)
   })
 
+  it("debe permitir montos personalizados para músicos y staff y recalcular automáticamente remanentes", async () => {
+    const { calculateEventCostBreakdown } = await import("./pricing")
+
+    // Privado 2 Horas ($8,500) con sueldo personalizado por músico ($2,000 c/u) y staff ($700)
+    // Músicos: 4 * $2,000 = $8,000
+    // Staff: $700
+    // Total costos: $8,700 -> Margen oficina: $8,500 - $8,700 = -$200
+    // Ingreso dueño: $2,000 (músico) + (-$200) (oficina) = $1,800
+    const customPriv = calculateEventCostBreakdown(2, "privado", 8500, 2000, 700)
+    assert.equal(customPriv.isCustomMusicianPay, true)
+    assert.equal(customPriv.isCustomStaffPay, true)
+    assert.equal(customPriv.musicianPayEach, 2000)
+    assert.equal(customPriv.musiciansTotal, 8000)
+    assert.equal(customPriv.staffPay, 700)
+    assert.equal(customPriv.audioAndOfficeProfit, -200)
+    assert.equal(customPriv.ownerTotalTakeHome, 1800)
+
+    // Privado 2 Horas ($8,500) con solo sueldo de músico personalizado ($1,500 c/u) y staff por defecto ($600)
+    // Músicos: 4 * $1,500 = $6,000
+    // Staff: $600
+    // Oficina/Audio: $8,500 - $6,600 = $1,900
+    // Ingreso dueño: $1,500 + $1,900 = $3,400
+    const onlyMusician = calculateEventCostBreakdown(2, "privado", 8500, 1500, null)
+    assert.equal(onlyMusician.isCustomMusicianPay, true)
+    assert.equal(onlyMusician.isCustomStaffPay, false)
+    assert.equal(onlyMusician.musicianPayEach, 1500)
+    assert.equal(onlyMusician.musiciansTotal, 6000)
+    assert.equal(onlyMusician.staffPay, 600)
+    assert.equal(onlyMusician.audioAndOfficeProfit, 1900)
+    assert.equal(onlyMusician.ownerTotalTakeHome, 3400)
+
+    // Caso Bar con staff personalizado ($500) y sueldo de músico personalizado ($900 c/u)
+    const customBar = calculateEventCostBreakdown(2, "bar", 4500, 900, 500)
+    assert.equal(customBar.musicianPayEach, 900)
+    assert.equal(customBar.musiciansTotal, 3600)
+    assert.equal(customBar.staffPay, 500)
+    assert.equal(customBar.audioAndOfficeProfit, 400)
+    assert.equal(customBar.ownerTotalTakeHome, 1300)
+  })
+
   it("debe calcular correctamente el caso del screenshot (Base: $10,200, Viáticos: $1,400, Descuento: $1,000 -> Total: $10,600)", () => {
     const result = calculateQuoteTotals({
       basePrice: 10200,

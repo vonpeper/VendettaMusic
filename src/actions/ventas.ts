@@ -930,3 +930,90 @@ export async function reportDepositAction(bookingId: string, paymentRef: string)
     return { success: false, error: "Error al reportar el depósito." }
   }
 }
+
+export async function updateEventOperationalCostsAction(
+  bookingId: string,
+  customMusicianPay: number | null,
+  customStaffPay: number | null
+) {
+  try {
+    const trimmedId = bookingId?.trim()
+    if (!trimmedId) return { success: false, error: "ID de reserva no proporcionado" }
+
+    const cleanMusicianPay = customMusicianPay !== null && customMusicianPay !== undefined && !isNaN(customMusicianPay)
+      ? Math.max(0, customMusicianPay)
+      : null
+
+    const cleanStaffPay = customStaffPay !== null && customStaffPay !== undefined && !isNaN(customStaffPay)
+      ? Math.max(0, customStaffPay)
+      : null
+
+    // 1. Buscar BookingRequest
+    const booking = await db.bookingRequest.findFirst({
+      where: {
+        OR: [
+          { id: trimmedId },
+          { shortId: trimmedId.toUpperCase() }
+        ]
+      },
+      include: { event: true }
+    })
+
+    if (booking) {
+      await db.bookingRequest.update({
+        where: { id: booking.id },
+        data: {
+          customMusicianPay: cleanMusicianPay,
+          customStaffPay: cleanStaffPay
+        }
+      })
+
+      if (booking.eventId) {
+        await db.event.update({
+          where: { id: booking.eventId },
+          data: {
+            customMusicianPay: cleanMusicianPay,
+            customStaffPay: cleanStaffPay
+          }
+        })
+      }
+
+      revalidatePath("/admin/ventas")
+      revalidatePath(`/admin/ventas/${booking.id}`)
+      if (booking.shortId) revalidatePath(`/admin/ventas/${booking.shortId}`)
+      revalidatePath("/admin/eventos")
+      revalidatePath("/admin/eventualidades")
+      revalidatePath("/admin")
+
+      return { success: true }
+    }
+
+    // 2. Soporte para cotizaciones legacy (Quote)
+    const quote = await db.quote.findFirst({
+      where: { id: trimmedId },
+      include: { event: true }
+    })
+
+    if (quote && quote.event) {
+      await db.event.update({
+        where: { id: quote.event.id },
+        data: {
+          customMusicianPay: cleanMusicianPay,
+          customStaffPay: cleanStaffPay
+        }
+      })
+
+      revalidatePath("/admin/ventas")
+      revalidatePath(`/admin/ventas/${quote.id}`)
+      revalidatePath("/admin/eventos")
+      revalidatePath("/admin")
+
+      return { success: true }
+    }
+
+    return { success: false, error: "Reserva o evento no encontrado" }
+  } catch (error: any) {
+    console.error("Error updating operational costs:", error)
+    return { success: false, error: error?.message || "Error al actualizar los costos operativos." }
+  }
+}

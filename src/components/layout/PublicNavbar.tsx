@@ -21,7 +21,6 @@ const NAV_LINKS = [
   { href: "/#fechas", label: "Fechas" },
   { href: "/#galeria", label: "Galería" },
   { href: "/#testimonios", label: "Opiniones" },
-  { href: "/#estatus", label: "Estatus" },
 ]
 
 export function PublicNavbar() {
