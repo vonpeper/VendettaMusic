@@ -19,6 +19,19 @@ def redeploy():
 
         compose_path = "/etc/dokploy/compose/vendetta-prod-gcqoaf/code/docker-compose.yml"
         
+        # 0. Ensure SQLite columns are present in VPS database
+        db_path = "/opt/vendetta/prisma/prod.db"
+        mig_sql = (
+            "ALTER TABLE BookingRequest ADD COLUMN customMusicianPay REAL; "
+            "ALTER TABLE BookingRequest ADD COLUMN customStaffPay REAL; "
+            "ALTER TABLE Event ADD COLUMN customMusicianPay REAL; "
+            "ALTER TABLE Event ADD COLUMN customStaffPay REAL;"
+        )
+        mig_cmd = f'sqlite3 {db_path} "{mig_sql}" 2>&1 || true'
+        print(f"Applying database schema update: {mig_cmd}")
+        stdin, stdout, stderr = ssh.exec_command(mig_cmd)
+        print(stdout.read().decode('utf-8', errors='ignore'))
+
         # 1. Pull latest image
         pull_cmd = f"docker compose -f {compose_path} pull"
         print(f"Running: {pull_cmd}")
