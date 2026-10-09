@@ -5,7 +5,7 @@ import path from "path"
 
 async function generate() {
   // Concert background photo
-  const bgPhotoPath = path.join(process.cwd(), "public", "images", "galeria", "vendetta-concierto-versatil.jpg")
+  const bgPhotoPath = path.join(process.cwd(), "public", "images", "galeria", "vendetta-concierto-pop-rock.jpg")
   const bgBase64 = fs.existsSync(bgPhotoPath)
     ? `data:image/jpeg;base64,${fs.readFileSync(bgPhotoPath).toString("base64")}`
     : ""
@@ -202,7 +202,7 @@ async function generate() {
               lineHeight: 1.35,
             }}
           >
-            Banda de Rock & Pop Versátil en Vivo • Ficha Técnica, Rider de Audio & Esquema de Pago
+            Banda de Pop Rock en Vivo en Inglés y Español • Ficha Técnica, Rider de Audio & Esquema de Pago
           </div>
         </div>
 

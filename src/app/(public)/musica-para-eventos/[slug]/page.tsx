@@ -11,7 +11,7 @@ const LOCATIONS: Record<string, any> = {
     name: "Metepec",
     fullName: "Metepec y Alrededores",
     title: "Música en Vivo y Shows para Fiestas y Eventos en Metepec | Vendetta",
-    description: "El mejor show de pop & rock en vivo para fiestas privadas, cumpleaños, eventos corporativos y celebraciones en Metepec. Cero grupo versátil, experiencia real de concierto.",
+    description: "El mejor show de pop & rock en vivo en inglés y español para fiestas privadas, cumpleaños, eventos corporativos y celebraciones en Metepec. Experiencia real de concierto.",
     heroImage: "https://images.unsplash.com/photo-1468359601543-843bfaef291a?q=80&w=2074&auto=format&fit=crop",
   },
   "toluca": {
@@ -121,7 +121,7 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
             El Show Perfecto <br /> para tu Evento en {loc.name}
           </h1>
           <p className="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto mb-10 font-normal leading-relaxed">
-            Energía real de concierto, metales en vivo y los mejores himnos de pop & rock. Cero grupo versátil, 100% adrenalina para celebraciones en {loc.fullName}.
+            Energía real de concierto, metales en vivo y los mejores himnos de pop & rock en inglés y español. Cero pistas pregrabadas, 100% adrenalina para celebraciones en {loc.fullName}.
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <a href="/cotizar">
@@ -138,7 +138,7 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
         </div>
       </section>
 
-      {/* -- MANIFIESTO ANTI-VERSÁTIL & CONTENIDO SEO ----------------------- */}
+      {/* -- MANIFIESTO POP ROCK EN VIVO & CONTENIDO SEO ----------------------- */}
       <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
@@ -146,11 +146,11 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
               Cero Pistas • Sonido de Gira
             </div>
             <h2 className="text-3xl md:text-5xl font-heading font-black text-white mb-8 uppercase tracking-tight">
-              ¿Por qué elegir un show de pop & rock en lugar del típico grupo versátil en {loc.fullName}?
+              ¿Por qué elegir un show de pop & rock en lugar de la banda tradicional en {loc.fullName}?
             </h2>
             <div className="prose prose-invert max-w-none text-gray-300 text-lg leading-relaxed space-y-6">
               <p>
-                En <strong>Vendetta</strong> entendemos que en una gran celebración no hay espacio para la monotonía. Erradicamos el cliché del grupo versátil tradicional: no usamos pistas pregrabadas, sombreros de hule espuma ni coreografías acartonadas.
+                En <strong>Vendetta</strong> entendemos que en una gran celebración no hay espacio para la monotonía. Ofrecemos un show auténtico de pop & rock en inglés y español: no usamos pistas pregrabadas, sombreros de hule espuma ni coreografías acartonadas.
               </p>
               <p>
                 Tocamos con la fuerza, distorsión, armonías vocales y clímax de una <strong>banda en gira de festival</strong>. Ya sea para un <strong>happening estelar</strong>, una <strong>fiesta de cumpleaños inolvidable (30, 40 o 50 años)</strong>, una <strong>gala o cena corporativa</strong>, o un <strong>festival en {loc.name}</strong>, llevamos un concierto real que pone a todos a cantar a todo pulmón.

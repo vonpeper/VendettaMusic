@@ -23,7 +23,7 @@ const DEFAULT_PHOTOS = [
   { src: "/images/galeria/vendetta-saxofonista-metales.jpg", alt: "Sección de Metales Saxofón", tag: "Metales en Vivo" },
   { src: "/images/galeria/vendetta-trompetista-show.jpg", alt: "Trompeta en Vivo", tag: "Potencia Sonora" },
   { src: "/images/galeria/vendetta-grupo-musical-animacion.jpg", alt: "Animación y Fiesta en Vivo", tag: "Pista Llena" },
-  { src: "/images/galeria/vendetta-concierto-versatil.jpg", alt: "Concierto Pop & Rock en Vivo Vendetta", tag: "Atmósfera Live" },
+  { src: "/images/galeria/vendetta-concierto-pop-rock.jpg", alt: "Concierto Pop & Rock en Vivo Vendetta", tag: "Atmósfera Live" },
   { src: "/images/galeria/vendetta-musica-corporativo.jpg", alt: "Evento Corporativo de Gala", tag: "Gala & Corporativo" },
   { src: "/images/galeria/vendetta-vocalista-grupo.jpg", alt: "Vocalistas Vendetta Live", tag: "Dueto Vocal" },
 ]

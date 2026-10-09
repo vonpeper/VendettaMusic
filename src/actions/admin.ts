@@ -60,7 +60,7 @@ export async function repairOrphanedEvents() {
     let mediaMigratedCount = 0
     const renameMap: Record<string, string> = {
       "465316690_17947480430893604_4895218138077391354_n.jpeg": "vendetta-live-music-show-boda.jpeg",
-      "480443072_617491504550335_3034048089450482085_n.jpg": "vendetta-concierto-versatil.jpg",
+      "480443072_617491504550335_3034048089450482085_n.jpg": "vendetta-concierto-pop-rock.jpg",
       "481504769_629534706679348_1561716134611844203_n.jpg": "vendetta-banda-en-vivo-evento.jpg",
       "514286757_724509610515190_4657541336968800422_n.jpg": "vendetta-cantante-escenario.jpg",
       "515963015_724509627181855_2465529527478650196_n.jpg": "vendetta-guitarrista-solo.jpg",

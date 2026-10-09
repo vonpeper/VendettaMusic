@@ -49,7 +49,7 @@ const DEFAULT_MUSICIANS: Musician[] = [
     role: "Cantante",
     emoji: "✨",
     img: "/images/musicians/maryx.jpg",
-    shortBio: "Voz femenina principal con tesitura versátil y dinamismo escénico.",
+    shortBio: "Voz femenina principal con gran potencia vocal y dinamismo escénico.",
     fullBio: "Vocalista líder de Vendetta, especialista en encender al público con los mejores himnos de pop y rock en inglés y español.",
     ig: null
   },

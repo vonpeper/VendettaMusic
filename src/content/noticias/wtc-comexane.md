@@ -21,7 +21,7 @@ La protagonista: Vendetta, una banda que no solo toca covers, reinterpreta clás
 
 ### 🎸 Vendetta: talento real sobre el escenario
 El corazón de esta experiencia estuvo en cada nota, cada voz y cada golpe de batería que surgió de un ensamble profesional, carismático y perfectamente sincronizado:
-- Maryx Rojas – Voz femenina: poderosa, versátil y emocional.
+- Maryx Rojas – Voz femenina: poderosa, de gran potencia vocal y emocional.
 - Pepe Bautista – Guitarra líder y voz principal: interpretación auténtica y conexión total con el público.
 - Edgar Mariaud – Bajo eléctrico: firme, elegante y contundente.
 - Dieño Piña – Batería: precisión rítmica y groove en cada compás.
@@ -46,7 +46,7 @@ Detrás de la excelencia en vivo hay un equipo técnico que respalda cada nota c
 - Daniela Carbajal – Imagen y medios: encargada del registro fotográfico y audiovisual del evento.
 Gracias a ellos, la experiencia no solo fue musical, sino visual, técnica y emocionalmente poderosa.
 
-Vendetta Live Music es una banda profesional con experiencia en eventos corporativos, congresos médicos, cenas de gala, bodas y celebraciones privadas.Ofrecemos un show versátil, técnicamente impecable, emocionalmente potente y con una vibra que deja huella.
+Vendetta Live Music es una banda profesional con experiencia en eventos corporativos, congresos médicos, cenas de gala, bodas y celebraciones privadas. Ofrecemos un show de pop rock en vivo en inglés y español, técnicamente impecable, emocionalmente potente y con una vibra que deja huella.
 🎤 Repertorio curado para cada tipo de público🔊 Producción profesional (audio, luces, imagen)🎸 Músicos en vivo de primer nivel📍 Disponibilidad nacional
 Haz que tu evento sea inolvidable.📩 Contáctanos. Llevamos Vendetta a tu escenario.
 [34](https://vendetta.mx/vendetta-en-vivo-en-el-wtc-acompanamos-al-colegio-mexicano-de-anestesiologia-por-su-li-curso-anual/)

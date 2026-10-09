@@ -351,7 +351,7 @@ export function VinylShowcase() {
             </h3>
 
             <p className="text-[#F2F0EB]/70 text-xs sm:text-sm mb-5 leading-relaxed">
-              Grabaciones en vivo reales interpretadas por Vendetta. Selecciona una pista para escuchar nuestra versatilidad musical:
+              Grabaciones en vivo reales interpretadas por Vendetta. Selecciona una pista para escuchar nuestro show de pop rock en vivo en inglés y español:
             </p>
 
             {/* Tracklist selection */}

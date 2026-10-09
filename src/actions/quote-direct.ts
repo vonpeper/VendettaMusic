@@ -170,7 +170,7 @@ export async function submitPublicQuoteAction(
 
     const dynamicPackageName = input.paquete
       ? `Show Vendetta - ${input.paquete} (${horasShow} Horas)`
-      : `Show Vendetta Versátil (${horasShow} Horas)`
+      : `Show Vendetta Pop Rock en Inglés y Español (${horasShow} Horas)`
 
     // ──────────────────────────────────────────────────────────────────────────
     // RAMA 1: Auto-Landing (≤ 100 personas, sin extras de producción y <= 5 horas)

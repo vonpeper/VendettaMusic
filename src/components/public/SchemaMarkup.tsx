@@ -107,7 +107,7 @@ export async function SchemaMarkup() {
         "name": "Show de Pop & Rock para Cumpleaños y Fiestas Privadas",
         "serviceType": "Private Party & Birthday Live Band",
         "provider": { "@id": "https://vendetta.mx/#organization" },
-        "description": "Concierto real en vivo para fiestas de 30, 40 y 50 años o aniversarios privados. Cero grupo versátil, sonido de festival con metales y voces.",
+        "description": "Concierto real en vivo para fiestas de 30, 40 y 50 años o aniversarios privados. Show de pop rock en vivo en inglés y español con sonido de festival, metales y voces.",
         "areaServed": ["Metepec", "Toluca", "Avándaro", "Valle de Bravo", "CDMX", "Cuernavaca", "Querétaro"]
       },
       {
@@ -132,7 +132,7 @@ export async function SchemaMarkup() {
         "name": "¿Vendetta es un grupo versátil tradicional?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No. Vendetta no es una orquesta o grupo versátil convencional. No usamos pistas pregrabadas, sombreros de hule espuma ni dinámicas trilladas. Somos una banda de concierto en vivo con un potente ensamble de pop & rock, sección de metales, dos vocalistas y una producción de audio e iluminación robótica de nivel festival."
+          "text": "No. Vendetta no es una orquesta o grupo versátil convencional. Somos una banda de concierto en vivo con un potente show de pop & rock en inglés y español, sección de metales, dos vocalistas y una producción de audio e iluminación robótica de nivel festival, sin pistas pregrabadas ni sombreros de hule espuma."
         }
       },
       {

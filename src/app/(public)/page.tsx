@@ -23,7 +23,7 @@ import { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Vendetta | Show de Pop & Rock en Vivo para Eventos y Corporativos",
-  description: "Banda profesional de pop & rock en vivo para eventos corporativos, cumpleaños, festivales y fiestas privadas en Metepec, Toluca, Valle de Bravo, CDMX, Cuernavaca y Querétaro. Cero grupo versátil, experiencia real de concierto.",
+  description: "Banda profesional de pop & rock en vivo en inglés y español para eventos corporativos, cumpleaños, festivales y fiestas privadas en Metepec, Toluca, Valle de Bravo, CDMX, Cuernavaca y Querétaro. Experiencia real de concierto.",
   keywords: [
     "show pop rock en vivo", 
     "banda para eventos corporativos", 
@@ -166,7 +166,7 @@ export default async function HomePage() {
 
             <div className="animate-hero-cta flex flex-col items-start w-full">
               <p className="text-sm md:text-base text-[#F2F0EB]/80 max-w-md mb-8 md:mb-10 font-sans font-normal leading-relaxed text-left">
-                Pop y rock 100% en vivo con energía real de concierto para eventos corporativos, fiestas de cumpleaños, happenings y festivales. Cero grupo versátil, pura adrenalina.
+                Show de pop rock en vivo en inglés y español con energía real de concierto para eventos corporativos, fiestas de cumpleaños, happenings y festivales. Cero pistas pregrabadas, pura adrenalina.
               </p>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
                 <a href="/cotizar" className="w-full sm:w-auto">
@@ -338,7 +338,7 @@ export default async function HomePage() {
                 </h3>
 
                 <p className="text-[#F2F0EB]/90 text-sm sm:text-base leading-relaxed mb-6 font-normal">
-                  Erradicamos el cliché del grupo versátil tradicional: cero pistas pregrabadas, cero sombreros de foami ni dinámicas aburridas. Tocamos con el pulso, la distorsión, las armonías y el clímax de una banda en gira de festival para eventos corporativos, cumpleaños VIP, happenings y celebraciones privadas.
+                  Erradicamos el cliché del show de eventos tradicional: cero pistas pregrabadas, cero sombreros de foami ni dinámicas aburridas. Tocamos los mejores himnos de pop y rock en inglés y español con el pulso, la distorsión, las armonías y el clímax de una banda en gira de festival para eventos corporativos, cumpleaños VIP, happenings y celebraciones privadas.
                 </p>
 
                 {/* Visualizador de Ecualizador / Soundwave Animado */}
@@ -556,7 +556,7 @@ export default async function HomePage() {
             <div className="lg:col-span-2 rounded-3xl p-8 border border-white/15 bg-black/50 backdrop-blur-md relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 group glass-card-hover neon-live-cyan">
               <div className="absolute inset-0 z-0">
                 <Image
-                  src="/images/galeria/vendetta-concierto-versatil.jpg"
+                  src="/images/galeria/vendetta-concierto-pop-rock.jpg"
                   alt="Prestigio y Reputación Vendetta"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"

@@ -11,13 +11,13 @@ import {
 
 export const metadata: Metadata = {
   title: "Show de Pop & Rock para Fiestas de Cumpleaños y Happenings | Vendetta",
-  description: "Lleva un concierto real en vivo a tu fiesta de cumpleaños (30, 40 o 50 años) o happening de evento privado. Cero grupo versátil genérico: sonido de festival, metales y pura adrenalina.",
+  description: "Lleva un concierto real en vivo a tu fiesta de cumpleaños (30, 40 o 50 años) o happening de evento privado. Show de pop & rock en vivo en inglés y español: sonido de festival, metales y pura adrenalina.",
   alternates: {
     canonical: "/happenings-y-cumpleanos",
   },
   openGraph: {
     title: "Show de Pop & Rock para Cumpleaños y Fiestas Privadas | Vendetta",
-    description: "¿Cansado del grupo versátil de siempre? Celebra tu cumpleaños con un concierto en vivo en Metepec, Toluca, Avándaro, CDMX, Cuernavaca o Querétaro.",
+    description: "Celebra tu cumpleaños con un concierto de pop & rock en vivo en inglés y español en Metepec, Toluca, Avándaro, CDMX, Cuernavaca o Querétaro.",
     url: "https://vendetta.mx/happenings-y-cumpleanos",
     images: [{ url: "https://vendetta.mx/images/galeria/vendetta-cantante-escenario.jpg" }],
   },
@@ -44,7 +44,7 @@ export default function HappeningsCumpleanosPage() {
 
         <div className="container relative z-20 px-4 text-center flex flex-col items-center max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF5A5F]/40 bg-[#6F0D2B]/30 text-[#FF5A5F] text-xs font-black uppercase tracking-[0.25em] mb-6 backdrop-blur-md">
-            <Flame className="w-3.5 h-3.5" /> El Show que Reemplaza al Grupo Versátil
+            <Flame className="w-3.5 h-3.5" /> Show Pop Rock en Vivo • En Inglés y Español
           </div>
 
           <h1 className="font-heading font-black text-4xl sm:text-6xl md:text-7xl tracking-tighter uppercase mb-6 leading-[0.95] drop-shadow-2xl">
@@ -90,7 +90,7 @@ export default function HappeningsCumpleanosPage() {
         </div>
       </section>
 
-      {/* -- MANIFIESTO: POR QUÉ NO SOMOS GRUPO VERSÁTIL -------------------- */}
+      {/* -- MANIFIESTO: POR QUÉ NO SOMOS EL TÍPICO GRUPO DE EVENTOS -------------------- */}
       <section className="py-20 bg-[#0B0B14] border-y border-white/10">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="text-center max-w-2xl mx-auto mb-16">
@@ -98,7 +98,7 @@ export default function HappeningsCumpleanosPage() {
               La Diferencia Vendetta
             </div>
             <h2 className="text-3xl sm:text-5xl font-heading font-black text-white uppercase tracking-tight mb-4">
-              ¿Por qué decir adiós al grupo versátil tradicional?
+              ¿Por qué elegir un show de pop & rock en lugar de la banda típica?
             </h2>
             <p className="text-gray-400 text-base">
               Compara lo que ofrece el estándar convencional frente a la experiencia de concierto que entregamos en cada fecha:
@@ -106,10 +106,10 @@ export default function HappeningsCumpleanosPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* El Grupo Versátil Clásico */}
+            {/* El Formato Clásico */}
             <div className="p-8 rounded-3xl bg-black/40 border border-white/10 opacity-75">
               <span className="text-xs font-mono font-bold text-red-400 uppercase tracking-widest">El Cliché de Siempre</span>
-              <h3 className="text-xl font-bold text-white mt-2 mb-4">Grupo Versátil Convencional</h3>
+              <h3 className="text-xl font-bold text-white mt-2 mb-4">Banda Tradicional de Eventos</h3>
               <ul className="space-y-3 text-sm text-gray-400">
                 <li className="flex items-start gap-2">❌ Pistas pregrabadas de sintetizador que suenan a karaoke.</li>
                 <li className="flex items-start gap-2">❌ Las mismas dinámicas de globos, sombreros de foami y pausas constantes.</li>

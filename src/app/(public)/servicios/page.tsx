@@ -22,7 +22,7 @@ export default function ServiciosPage() {
     },
     {
       title: "Cumpleaños & Fiestas Privadas",
-      description: "Celebra tus 30, 40 o 50 años con un concierto real de pop & rock en tu jardín, rancho o salón. Cero grupo versátil aburrido: metales en vivo y pura adrenalina.",
+      description: "Celebra tus 30, 40 o 50 años con un concierto real de pop & rock en inglés y español en tu jardín, rancho o salón. Sonido de festival, metales en vivo y pura adrenalina.",
       image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000&auto=format&fit=crop",
       tag: "Privados & Cumpleaños",
       href: "/happenings-y-cumpleanos"

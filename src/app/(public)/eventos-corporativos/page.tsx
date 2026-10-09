@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Música en Vivo para Eventos Corporativos | Vendetta Live Music",
-    description: "Eleva la experiencia de tu fiesta de fin de año, congreso o aniversario de empresa con un show de pop & rock en vivo nivel concierto. Cero grupo versátil genérico.",
+    description: "Eleva la experiencia de tu fiesta de fin de año, congreso o aniversario de empresa con un show de pop & rock en vivo en inglés y español nivel concierto. Cero poses, pura energía.",
     url: "https://vendetta.mx/eventos-corporativos",
     images: [{ url: "https://vendetta.mx/images/galeria/vendetta-musica-corporativo.jpg" }],
   },
@@ -53,7 +53,7 @@ export default function EventosCorporativosPage() {
           </h1>
 
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 font-normal leading-relaxed">
-            Reemplaza el típico grupo versátil de siempre por una <strong>experiencia real de concierto</strong>. 
+            Lleva a tu celebración empresarial una <strong>experiencia real de concierto</strong> con lo mejor del pop & rock en inglés y español. 
             Sonido de gira, ejecución 100% en vivo, puntualidad militar y respaldo administrativo completo para empresas.
           </p>
 

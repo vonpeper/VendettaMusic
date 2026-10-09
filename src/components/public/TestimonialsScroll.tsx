@@ -27,7 +27,7 @@ const DEFAULT_REVIEWS = [
   {
     id: "def-3",
     name: "Mariana Treviño",
-    text: "No es el típico grupo versátil aburrido. Su show es un viaje en el tiempo con arreglos modernos y una vocalista increíble. La gente no los dejaba bajar del escenario pidiendo encore.",
+    text: "El mejor show de pop & rock en vivo en inglés y español. Es un viaje en el tiempo con arreglos modernos, sonido de festival y una vocalista increíble. La gente no los dejaba bajar del escenario pidiendo encore.",
     event: "Fiesta Privada Metepec",
     stars: 5,
   },

@@ -219,14 +219,14 @@ export function getShowPackageHourlyRate(packageName?: string | null): number {
   const name = (packageName || "").toLowerCase()
   if (name.includes("festival")) return 12750
   if (name.includes("experience")) return 7750
-  return 4250 // Essential / Show Versátil por defecto
+  return 4250 // Essential / Show Pop Rock por defecto
 }
 
 /**
  * Calcula el precio base del paquete musical según la duración en horas.
  * 
  * Reglas de Negocio Oficiales:
- * - Essential / Show Versátil:
+ * - Essential / Show Pop Rock:
  *   - Base 2 Horas: $8,500 MXN (Precio gancho competitivo en Toluca con 4 músicos, staff técnico y audio propio).
  *   - Horas adicionales: +$5,000 MXN / hora ($1,000 para CADA músico, $300 staff, $700 oficina/audio).
  *     2 hrs = $8,500 | 3 hrs = $13,500 | 4 hrs = $18,500 | 5 hrs = $23,500.
@@ -246,7 +246,7 @@ export function calculateShowPackageBasePrice(packageName?: string | null, hours
     return h <= 2 ? 15500 : 15500 + Math.round((h - 2) * 7750)
   }
 
-  // Essential / Show Versátil estándar
+  // Essential / Show Pop Rock estándar
   if (h <= 2) return 8500
   return 8500 + Math.round((h - 2) * 5000)
 }
