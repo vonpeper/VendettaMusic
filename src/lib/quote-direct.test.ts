@@ -30,41 +30,52 @@ describe("Reglas de Cotizador Directo (Horas, Aforo > 100 y Producción)", () =>
     assert.equal(localBase, 23500)
   })
 
-  it("debe identificar cuando un evento califica para auto-landing o para revisión manual", () => {
+  it("debe identificar cuando un evento califica para auto-landing o para prospecto/revisión", () => {
     // Caso 1: 50 invitados, 2 horas, sin extras -> auto_quote
     const c1Aforo = 50
     const c1Extras: string[] = []
     const c1Horas = 2
-    const c1Auto = c1Aforo <= 100 && c1Extras.length === 0 && c1Horas <= 5
+    const c1Auto = c1Aforo <= 120 && c1Extras.length === 0 && c1Horas <= 5
     assert.equal(c1Auto, true)
 
-    // Caso 2: 80 invitados, 5 horas, sin extras -> auto_quote (Irina Galo)
-    const c2Aforo = 80
+    // Caso 2: 120 invitados (límite máximo auto-quote), 5 horas, sin extras -> auto_quote
+    const c2Aforo = 120
     const c2Extras: string[] = []
     const c2Horas = 5
-    const c2Auto = c2Aforo <= 100 && c2Extras.length === 0 && c2Horas <= 5
+    const c2Auto = c2Aforo <= 120 && c2Extras.length === 0 && c2Horas <= 5
     assert.equal(c2Auto, true)
 
-    // Caso 3: 150 invitados (> 100) -> needs_review
-    const c3Aforo = 150
+    // Caso 3: 121 invitados (> 120) -> NO cotización (se captura como prospecto para agendar llamada)
+    const c3Aforo = 121
     const c3Extras: string[] = []
-    const c3Horas = 5
-    const c3Auto = c3Aforo <= 100 && c3Extras.length === 0 && c3Horas <= 5
+    const c3Horas = 3
+    const c3Auto = c3Aforo <= 120 && c3Extras.length === 0 && c3Horas <= 5
+    const c3RequiereLlamada = c3Aforo > 120
     assert.equal(c3Auto, false)
+    assert.equal(c3RequiereLlamada, true)
 
-    // Caso 4: 80 invitados pero con Pantalla LED -> needs_review
-    const c4Aforo = 80
-    const c4Extras = ["Pantalla LED"]
-    const c4Horas = 2
-    const c4Auto = c4Aforo <= 100 && c4Extras.length === 0 && c4Horas <= 5
+    // Caso 4: 150 invitados (> 120) -> NO cotización
+    const c4Aforo = 150
+    const c4Extras: string[] = []
+    const c4Horas = 5
+    const c4Auto = c4Aforo <= 120 && c4Extras.length === 0 && c4Horas <= 5
+    const c4RequiereLlamada = c4Aforo > 120
     assert.equal(c4Auto, false)
+    assert.equal(c4RequiereLlamada, true)
 
-    // Caso 5: 50 invitados pero con duración extendida de 7 horas -> needs_review
-    const c5Aforo = 50
-    const c5Extras: string[] = []
-    const c5Horas = 7
-    const c5Auto = c5Aforo <= 100 && c5Extras.length === 0 && c5Horas <= 5
+    // Caso 5: 80 invitados pero con Pantalla LED -> needs_review (≤120 pero con extras)
+    const c5Aforo = 80
+    const c5Extras = ["Pantalla LED"]
+    const c5Horas = 2
+    const c5Auto = c5Aforo <= 120 && c5Extras.length === 0 && c5Horas <= 5
     assert.equal(c5Auto, false)
+
+    // Caso 6: 50 invitados pero con duración extendida de 7 horas -> needs_review (≤120 pero >5h)
+    const c6Aforo = 50
+    const c6Extras: string[] = []
+    const c6Horas = 7
+    const c6Auto = c6Aforo <= 120 && c6Extras.length === 0 && c6Horas <= 5
+    assert.equal(c6Auto, false)
   })
 
   it("debe aplicar recargo foráneo (+20%) para eventos fuera de zona local", () => {

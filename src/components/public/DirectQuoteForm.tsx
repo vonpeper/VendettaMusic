@@ -29,7 +29,8 @@ import {
   Maximize2,
   Lightbulb,
   Grid,
-  Speaker
+  Speaker,
+  PhoneCall
 } from "lucide-react"
 
 interface DirectQuoteFormProps {
@@ -185,6 +186,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
   // Cálculos dinámicos en tiempo real
   const numInvitados = parseInt(invitados, 10) || 0
   const tieneMasDe100Invitados = numInvitados > 100
+  const tieneMasDe120Invitados = numInvitados > 120
   const horasShow = calculateEventHours(horaInicio, horaFin)
   const basePackagePrice = calculateShowPackageBasePrice(paqueteNombre, horasShow)
   const showBasePrice = calculateShowBasePrice(basePackagePrice, viaticos?.isOutsideZone ?? false)
@@ -194,12 +196,12 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
   }, 0)
   const viaticosAmount = viaticos?.amount || 0
   const totalEstimado = showBasePrice + viaticosAmount + extrasEstimatedTotal
-  const isNeedsReview = numInvitados > 100 || produccionAdicional.length > 0 || horasShow > 5
+  const isNeedsReview = numInvitados > 120 || produccionAdicional.length > 0 || horasShow > 5
 
   // Estados de envío
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedResult, setSubmittedResult] = useState<{
-    mode: "auto_quote" | "needs_review"
+    mode: "auto_quote" | "needs_review" | "lead_captured"
     proposalUrl?: string
     shortId?: string
     waUrl: string
@@ -401,8 +403,11 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
       `• *Horario:* ${horarioCompleto} (${horasShow} Horas de Música en Vivo)`,
       `• *Invitados estimados:* ${numInvitados} personas`,
       `• *Ubicación:* ${ubicacionCompleta}`,
-      `• *Estimado Base Show:* ${MXN(showBasePrice)} MXN`,
     ]
+
+    if (!tieneMasDe120Invitados) {
+      lineasMensaje.push(`• *Estimado Base Show:* ${MXN(showBasePrice)} MXN`)
+    }
 
     if (mapsLink.trim()) {
       lineasMensaje.push(`• *Google Maps:* ${mapsLink.trim()}`)
@@ -410,16 +415,27 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
 
     if (textoProduccion) {
       lineasMensaje.push(textoProduccion)
-      lineasMensaje.push(`• *Producción estimada:* +${MXN(extrasEstimatedTotal)} MXN`)
+      if (!tieneMasDe120Invitados) {
+        lineasMensaje.push(`• *Producción estimada:* +${MXN(extrasEstimatedTotal)} MXN`)
+      }
     }
 
-    lineasMensaje.push(
-      "",
-      "*LOGÍSTICA Y VIÁTICOS*",
-      `• *Viáticos estimados:* ${textoViaticos}`,
-      "• *Condiciones:* No incluye planta de luz. Viáticos para 2 camionetas (gasolina y casetas únicamente). No incluye alimentos.",
-      `• *Total Estimado${isNeedsReview ? " Referencial" : ""}:* ${MXN(totalEstimado)} MXN`
-    )
+    if (tieneMasDe120Invitados) {
+      lineasMensaje.push(
+        "",
+        "*ESTATUS DE REVISIÓN*",
+        "• *Aforo:* Superior a 120 personas (Se cotizará a la medida tras llamada técnica).",
+        "• *Acción:* Quedo en espera de agendar la llamada para ver detalles técnicos y de producción."
+      )
+    } else {
+      lineasMensaje.push(
+        "",
+        "*LOGÍSTICA Y VIÁTICOS*",
+        `• *Viáticos estimados:* ${textoViaticos}`,
+        "• *Condiciones:* No incluye planta de luz. Viáticos para 2 camionetas (gasolina y casetas únicamente). No incluye alimentos.",
+        `• *Total Estimado${isNeedsReview ? " Referencial" : ""}:* ${MXN(totalEstimado)} MXN`
+      )
+    }
 
     if (notas.trim()) {
       lineasMensaje.push(
@@ -430,6 +446,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
     }
 
     const isAutoQuote = quoteResult?.mode === "auto_quote" && quoteResult?.shortId
+    const isLeadCaptured = quoteResult?.mode === "lead_captured" || tieneMasDe120Invitados
     const proposalFullUrl = isAutoQuote ? `https://vendetta.mx/propuesta/${quoteResult.shortId}` : null
 
     if (isAutoQuote && proposalFullUrl) {
@@ -438,6 +455,11 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
         "🔗 *Revisa tu propuesta interactiva y disponibilidad:*",
         proposalFullUrl
       )
+    } else if (tieneMasDe120Invitados) {
+      lineasMensaje.push(
+        "",
+        "📞 *¿Podríamos agendar una breve llamada para afinar detalles técnicos? ¡Muchas gracias!*"
+      )
     } else if (produccionAdicional.length > 0 || tieneMasDe100Invitados) {
       lineasMensaje.push(
         "",
@@ -445,16 +467,18 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
       )
     }
 
-    lineasMensaje.push(
-      "",
-      "¿Tienen disponibilidad para esta fecha? ¡Quedo atento a la propuesta!"
-    )
+    if (!tieneMasDe120Invitados) {
+      lineasMensaje.push(
+        "",
+        "¿Tienen disponibilidad para esta fecha? ¡Quedo atento a la propuesta!"
+      )
+    }
 
     const waMessage = lineasMensaje.join("\n")
 
     const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(waMessage)}`
     setSubmittedResult({
-      mode: quoteResult?.mode || (numInvitados <= 100 && produccionAdicional.length === 0 ? "auto_quote" : "needs_review"),
+      mode: quoteResult?.mode || (numInvitados <= 120 && produccionAdicional.length === 0 && horasShow <= 5 ? "auto_quote" : (tieneMasDe120Invitados ? "lead_captured" : "needs_review")),
       proposalUrl: proposalFullUrl || undefined,
       shortId: quoteResult?.shortId,
       waUrl
@@ -464,6 +488,8 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
     toast.success(
       isAutoQuote
         ? "¡Propuesta lista! Enviamos el resumen a tu WhatsApp."
+        : tieneMasDe120Invitados
+        ? "¡Solicitud registrada! Te contactaremos para agendar una llamada."
         : "¡Solicitud recibida! Enviamos el resumen a tu WhatsApp."
     )
   }
@@ -471,15 +497,18 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
   // Pantalla de confirmación y reintento
   if (submittedResult) {
     const isAutoQuote = submittedResult.mode === "auto_quote"
+    const isLeadCaptured = submittedResult.mode === "lead_captured" || tieneMasDe120Invitados
 
     return (
       <div className="bg-card/90 border border-white/10 rounded-3xl p-8 sm:p-12 text-center max-w-xl mx-auto shadow-2xl backdrop-blur-xl space-y-6 animate-in fade-in-0 duration-300">
         <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-lg ${
           isAutoQuote
             ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 shadow-emerald-500/20"
-            : "bg-primary/20 border border-primary/40 text-primary shadow-primary/20"
+            : isLeadCaptured
+              ? "bg-blue-500/20 border border-blue-500/40 text-blue-400 shadow-blue-500/20"
+              : "bg-primary/20 border border-primary/40 text-primary shadow-primary/20"
         }`}>
-          {isAutoQuote ? <CheckCircle2 className="w-9 h-9" /> : <Sparkles className="w-9 h-9" />}
+          {isAutoQuote ? <CheckCircle2 className="w-9 h-9" /> : isLeadCaptured ? <PhoneCall className="w-9 h-9" /> : <Sparkles className="w-9 h-9" />}
         </div>
 
         <div className="space-y-3">
@@ -496,6 +525,10 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             {isAutoQuote ? (
               <>
                 Generamos tu propuesta interactiva exclusiva{submittedResult.shortId ? ` (Folio: ${submittedResult.shortId})` : ""}. En breve estaré asistiéndole personalmente por WhatsApp para verificar disponibilidad y afinar cualquier detalle.
+              </>
+            ) : isLeadCaptured ? (
+              <>
+                Por el aforo de <strong>{numInvitados} personas</strong>, no emitimos una cotización genérica automática. Un productor de Vendetta te contactará por WhatsApp para <strong>agendar una breve llamada</strong>, revisar los detalles del recinto y presentarte una propuesta integral a la medida.
               </>
             ) : (
               <>
@@ -535,7 +568,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
               className="w-full sm:w-auto h-14 px-8 bg-[#25D366] hover:bg-[#20ba59] text-white font-black text-base rounded-2xl shadow-xl shadow-[#25D366]/30 gap-2 cursor-pointer transition-all hover:scale-[1.02]"
             >
               <WhatsAppIcon className="w-5 h-5 fill-white" />
-              <span>Abrir WhatsApp</span>
+              <span>{isLeadCaptured ? "Contactar a Producción" : "Abrir WhatsApp"}</span>
               <ExternalLink className="w-4 h-4 ml-1 opacity-70" />
             </Button>
           </a>
@@ -992,20 +1025,25 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
           )}
 
           <div className="pt-2 border-t border-white/10 flex justify-between items-center text-sm sm:text-base font-black text-white">
-            <span>Total Estimado{isNeedsReview ? " Referencial" : ""}:</span>
+            <span>{tieneMasDe120Invitados ? "Cotización de Producción:" : `Total Estimado${isNeedsReview ? " Referencial" : ""}:`}</span>
             <span className="text-primary text-lg sm:text-xl font-heading">
-              {MXN(totalEstimado)} MXN
+              {tieneMasDe120Invitados ? "A la medida (+120 pax)" : `${MXN(totalEstimado)} MXN`}
             </span>
           </div>
         </div>
 
-        {isNeedsReview ? (
+        {tieneMasDe120Invitados ? (
+          <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-[11px] text-blue-200 flex items-start gap-2.5">
+            <PhoneCall className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+            <span>
+              <strong>Llamada técnica requerida:</strong> Al ser un aforo de <strong>{numInvitados} invitados</strong>, personalizamos el sistema de audio, microfonía e iluminación según el recinto. Guardaremos tu solicitud para agendar una llamada con nuestro director de producción y armar tu propuesta a la medida.
+            </span>
+          </div>
+        ) : isNeedsReview ? (
           <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 flex items-start gap-2">
             <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
             <span>
-              {numInvitados > 100
-                ? `Por tu aforo de ${numInvitados} invitados y requerimientos técnicos, tu solicitud será validada con nuestro director de producción por WhatsApp para afinar especificaciones.`
-                : produccionAdicional.length > 0
+              {produccionAdicional.length > 0
                 ? "Al seleccionar producción adicional (pantallas, templete o robóticas), un director técnico revisará dimensiones y requerimientos eléctricos."
                 : "Para duraciones extendidas de más de 5 horas, afinaremos la logística y descansos de forma personalizada."}
             </span>
