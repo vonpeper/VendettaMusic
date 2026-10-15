@@ -296,7 +296,7 @@ export function PremiumClientQuoteView({
               <div className="flex items-center gap-2">
                 {isAgendado ? (
                   <Badge className="bg-emerald-600 text-white border-0 px-3 py-1 text-xs font-black uppercase tracking-wider shadow-md shadow-emerald-600/20">
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Fecha Confirmada
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> {depositAmount > 0 ? "Fecha Confirmada con Anticipo" : "Fecha Confirmada"}
                   </Badge>
                 ) : isCancelado ? (
                   <Badge className="bg-red-600 text-white border-0 px-3 py-1 text-xs font-black uppercase tracking-wider">
@@ -335,11 +335,26 @@ export function PremiumClientQuoteView({
                 <div className="p-2.5 rounded-xl bg-emerald-600 text-white shrink-0 shadow-sm">
                   <BadgeCheck className="w-6 h-6" />
                 </div>
-                <div className="text-xs sm:text-sm">
-                  <strong className="block text-emerald-950 font-black text-sm sm:text-base">
-                    ¡Tu fecha está oficialmente confirmada en la gira de Vendetta!
-                  </strong>
-                  A continuación puedes consultar todos los detalles acordados y firmar digitalmente tu contrato con plena validez legal.
+                <div className="text-xs sm:text-sm space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <strong className="text-emerald-950 font-black text-sm sm:text-base">
+                      {depositAmount > 0 
+                        ? "¡Evento Confirmado con Anticipo Acreditado!" 
+                        : "¡Tu fecha está oficialmente confirmada en la gira de Vendetta!"}
+                    </strong>
+                    {depositAmount > 0 && (
+                      <span className="bg-emerald-600 text-white font-mono font-bold text-xs px-2.5 py-0.5 rounded-md shadow-sm">
+                        Anticipo: {formatMXN(depositAmount)} recibido
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-emerald-900 text-xs sm:text-sm leading-relaxed">
+                    Tu fecha está oficialmente confirmada y blindada en la agenda de Vendetta. 
+                    {remainingAmount > 0 
+                      ? ` Saldo restante a liquidar el día del show: ${formatMXN(remainingAmount)}.` 
+                      : ` Monto total liquidado al 100%.`}
+                    {" "}A continuación puedes consultar todos los detalles acordados y firmar digitalmente tu contrato con plena validez legal.
+                  </p>
                 </div>
               </div>
               {downloadContractUrl && (
@@ -824,6 +839,9 @@ export function PremiumClientQuoteView({
                     eventTime={booking.startTime}
                     eventEndTime={booking.endTime}
                     eventAmount={totalAmount}
+                    depositAmount={depositAmount}
+                    remainingAmount={remainingAmount}
+                    bandHours={booking.bandHours || booking.event?.bandHours}
                     packageName={booking.packageName}
                     eventAddress={fullAddress}
                     downloadContractUrl={downloadContractUrl}

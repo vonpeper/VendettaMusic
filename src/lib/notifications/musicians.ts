@@ -255,7 +255,16 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
       const resp = await fetch(`${evolutionUrl}/message/sendText/${evolutionInstance}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "apikey": evolutionKey },
-        body: JSON.stringify({ number: jid, text: message })
+        body: JSON.stringify({ 
+          number: jid, 
+          text: message,
+          linkPreview: false,
+          options: {
+            delay: 1200,
+            presence: "composing",
+            linkPreview: false
+          }
+        })
       })
 
       if (resp.ok) {

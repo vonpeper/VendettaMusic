@@ -23,6 +23,9 @@ interface ContractSignerProps {
   eventTime?: string
   eventEndTime?: string
   eventAmount?: number
+  depositAmount?: number
+  remainingAmount?: number
+  bandHours?: number
   packageName?: string
   eventAddress?: string
   downloadContractUrl?: string
@@ -41,6 +44,9 @@ export function ContractSigner({
   eventTime,
   eventEndTime,
   eventAmount,
+  depositAmount,
+  remainingAmount,
+  bandHours,
   packageName,
   eventAddress,
   downloadContractUrl
@@ -57,6 +63,25 @@ export function ContractSigner({
     }).format(amount)
   }
 
+  const contractedHours = (() => {
+    if (bandHours && Number(bandHours) > 0) return Number(bandHours)
+    if (eventTime && eventEndTime) {
+      const [startH, startM] = eventTime.split(":").map(Number)
+      const [endH, endM] = eventEndTime.split(":").map(Number)
+      if (!isNaN(startH) && !isNaN(endH)) {
+        let diffMinutes = (endH * 60 + (endM || 0)) - (startH * 60 + (startM || 0))
+        if (diffMinutes < 0) diffMinutes += 24 * 60
+        const h = diffMinutes / 60
+        if (h > 0) return h
+      }
+    }
+    return 2
+  })()
+
+  const dynamicExtraHour = (eventAmount && eventAmount > 0 && contractedHours > 0)
+    ? Math.round((eventAmount / contractedHours) / 100) * 100
+    : 3500
+
   const defaultClauses = `PRIMERA.- DECLARA Y ACEPTA "{{cliente}}" Conocer el trabajo que desempeña “VENDETTA” y estar de acuerdo en su modalidad de “BANDA DE ROCK DE COVERS EN INGLES Y ESPAÑOL”
 
 SEGUNDA.- DECLARA “VENDETTA” tener la capacidad y experiencia necesaria en términos musicales para cumplir con el compromiso motivo de este contrato de forma profesional.
@@ -65,7 +90,7 @@ TERCERA.- “VENDETTA” se compromete a tocar en el evento que se efectuará el
 
 CUARTA.- La actuación de “VENDETTA” será efectuada en el siguiente programa: {{horario}} HRS.
 
-QUINTA.- Por esta actuación "{{cliente}}" se compromete a pagar a “VENDETTA” la cantidad de: {{monto}} por concepto de la actuación. La liquidación se realizará en efectivo el día del evento en el momento en el que “VENDETTA” llegue a la dirección mencionada en la tercera cláusula.
+QUINTA.- Por esta actuación "{{cliente}}" se compromete a pagar a “VENDETTA” la cantidad de: {{monto}} por concepto de la actuación. {{detallesPago}}
 
 SEXTA.- En caso de alternar con otro grupo, si dicho grupo no respeta el horario establecido y ocupara más tiempo del establecido, “VENDETTA” no repondrá dicho tiempo y será sujeto a cumplir dentro del horario estipulado.
 
@@ -79,7 +104,7 @@ DÉCIMA.- "{{cliente}}" se obliga a proporcionar a “VENDETTA” las condicione
 
 DÉCIMA PRIMERA.- Si por algún motivo el evento no se realizara por causas imputables a "{{cliente}}", éste mismo se compromete a pagar a “VENDETTA” el 50% del costo total de la presentación por concepto de indemnización.
 
-DÉCIMA SEGUNDA.- Las partes están de acuerdo en que una vez terminada la actuación de “VENDETTA” y si fuese necesario seguir tocando por tiempo extra, el precio por este será de $3,500.00 MN por TURNO EXTRA.
+DÉCIMA SEGUNDA.- Las partes están de acuerdo en que una vez terminada la actuación de “VENDETTA” y si fuese necesario seguir tocando por tiempo extra, la tarifa por hora extra se estipula calculando el monto final acordado entre las horas contratadas ({{monto}} / {{horasContratadas}} hrs = {{montoHoraExtra}} por hora), fijándose en la cantidad de {{montoHoraExtra}} MN por cada hora extra de música en vivo, debiendo ser autorizada y liquidada en efectivo antes de iniciar dicho tiempo adicional.
 
 DÉCIMA TERCERA.- "{{cliente}}" hace constar bajo protesta de decir verdad que la información es verídica, comprometiéndose a resarcir los daños por una falsa declaración.
 
@@ -95,6 +120,13 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
     const rawText = contractLegalText || defaultClauses
     
     let text = rawText
+    const resolvedDeposit = Number(depositAmount || 0)
+    const resolvedRemaining = Number(remainingAmount ?? Math.max(0, (eventAmount || 0) - resolvedDeposit))
+
+    const paymentDetailsText = resolvedDeposit > 0
+      ? `Las partes hacen constar expresamente que “EL CLIENTE” ha cubierto un anticipo de ${formatCurrency(resolvedDeposit)} MN, quedando la fecha formalmente confirmada y apartada. El saldo restante por la cantidad de ${formatCurrency(resolvedRemaining)} MN se liquidará en efectivo el día del evento al arribo de “VENDETTA” antes de montar la producción.`
+      : `La liquidación se realizará en efectivo el día del evento en el momento en el que “VENDETTA” llegue a la dirección mencionada en la tercera cláusula.`
+
     const replacements: Record<string, string> = {
       "{{cliente}}": clientName,
       "{{horario}}": eventTime && eventEndTime ? `${eventTime} A ${eventEndTime}` : (eventTime || "Por confirmar"),
@@ -102,15 +134,23 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
       "{{paquete}}": packageName || "Por confirmar",
       "{{dirección}}": eventAddress || "Por confirmar",
       "{{ubicación}}": eventAddress || "Por confirmar",
-      "{{fecha}}": eventDate ? new Date(eventDate).toLocaleDateString("es-MX", { day: 'numeric', month: 'long', year: 'numeric' }) : "Por confirmar"
+      "{{fecha}}": eventDate ? new Date(eventDate).toLocaleDateString("es-MX", { day: 'numeric', month: 'long', year: 'numeric' }) : "Por confirmar",
+      "{{detallesPago}}": paymentDetailsText,
+      "{{anticipo}}": resolvedDeposit > 0 ? formatCurrency(resolvedDeposit) : "$0.00",
+      "{{saldoRestante}}": formatCurrency(resolvedRemaining),
+      "{{horasContratadas}}": String(contractedHours),
+      "{{montoHoraExtra}}": formatCurrency(dynamicExtraHour)
     }
 
     Object.entries(replacements).forEach(([key, value]) => {
       text = text.split(key).join(value)
     })
 
+    // Reemplazar ocurrencias legacy de tarifas fijas de $3,500 en textos guardados
+    text = text.replace(/\$3,500(?:\.00)?\s*MN\s*por\s*TURNO\s*EXTRA/gi, `${formatCurrency(dynamicExtraHour)} MN por HORA EXTRA (${formatCurrency(eventAmount || 0)} / ${contractedHours} hrs)`)
+
     return text
-  }, [contractLegalText, clientName, eventTime, eventEndTime, eventAmount, packageName, eventAddress, eventDate])
+  }, [contractLegalText, defaultClauses, clientName, eventTime, eventEndTime, eventAmount, depositAmount, remainingAmount, contractedHours, dynamicExtraHour, packageName, eventAddress, eventDate])
 
   const handleSign = async (base64: string) => {
     if (isSubmitting.current) return

@@ -61,7 +61,13 @@ export async function sendWhatsApp(
   try {
     const body: any = {
       number: `${cleanNumber}@s.whatsapp.net`,
-      delay: 1200
+      delay: 1200,
+      linkPreview: false,
+      options: {
+        delay: 1200,
+        presence: "composing",
+        linkPreview: false
+      }
     }
 
     if (isMedia) {
