@@ -294,6 +294,12 @@ export async function convertQuoteToEvent(
   }
 
   // Crear nuevo Evento
+  const subtotal = Math.max(0, (booking.baseAmount || 0) + (booking.viaticosAmount || 0) - (booking.discountAmount || 0))
+  const ivaAmount = booking.invoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
+  const totalWithTax = subtotal + ivaAmount
+  const deposit = Number(booking.depositAmount || 0)
+  const balance = Math.max(0, totalWithTax - deposit)
+
   const newEvent = await tx.event.create({
     data: {
       customName: booking.customName || `Evento ${booking.clientName}`,
@@ -309,10 +315,11 @@ export async function convertQuoteToEvent(
       musicianNotes: booking.musicianNotes || null,
       package: booking.packageId ? { connect: { id: booking.packageId } } : undefined,
       client: booking.clientId ? { connect: { id: booking.clientId } } : undefined,
-      amount: booking.baseAmount + (booking.viaticosAmount || 0) - (booking.discountAmount || 0),
-      deposit: booking.depositAmount,
-      balance: Math.max(0, (booking.baseAmount + (booking.viaticosAmount || 0) - (booking.discountAmount || 0)) - booking.depositAmount),
-      totalWithTax: booking.baseAmount + (booking.viaticosAmount || 0) - (booking.discountAmount || 0),
+      amount: subtotal,
+      deposit: deposit,
+      balance: balance,
+      ivaAmount: ivaAmount,
+      totalWithTax: totalWithTax,
       totalIncome: 0,
       invoice: booking.invoice,
       status: "agendado",

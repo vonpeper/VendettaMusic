@@ -286,7 +286,8 @@ export async function dispatchNotification({
       const { generateContractPdf } = await import("../pdf/contract-generator")
       // Re-fetcheamos para tener los datos completos para el generador
       const booking = await db.bookingRequest.findUnique({ 
-        where: { id: bookingId }
+        where: { id: bookingId },
+        include: { event: true, lineItems: true }
       })
 
       if (booking) {
@@ -294,7 +295,7 @@ export async function dispatchNotification({
         const funnelData: any = {
           bookingId: booking.id,
           shortId: booking.shortId || "",
-          packageId: booking.packageId || "manual-arma",
+          packageId: booking.packageId || (booking as any).event?.packageId || "manual-arma",
           packageName: booking.packageName || "Paquete Personalizado",
           packagePrice: booking.baseAmount || 0,
           guestCount: booking.guestCount || 0,
@@ -313,6 +314,11 @@ export async function dispatchNotification({
           city: booking.city || "",
           state: booking.state || "México",
           viaticosAmount: booking.viaticosAmount || 0,
+          depositAmount: booking.depositAmount ?? (booking as any).event?.deposit ?? undefined,
+          discountAmount: booking.discountAmount || 0,
+          originalPrice: booking.originalPrice || 0,
+          invoice: Boolean(booking.invoice || (booking as any).event?.invoice),
+          ivaAmount: (booking as any).event?.ivaAmount || 0,
           requestedDate: booking.requestedDate ? booking.requestedDate.toISOString() : new Date().toISOString(),
           startTime: booking.startTime || "21:00",
           endTime: booking.endTime || "23:00",

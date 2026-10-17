@@ -237,6 +237,15 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
           })
         }
 
+        const lineItems = await db.bookingLineItem.findMany({ where: { bookingRequestId: canonicalBookingId } })
+        const lineItemsTotal = lineItems.reduce((acc, it) => acc + (it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
+        const subtotal = Math.max(0, Number(brCheck.baseAmount || 0) + Number(brCheck.viaticosAmount || 0) + lineItemsTotal - Number(brCheck.discountAmount || 0))
+        const hasInvoice = Boolean(brCheck.invoice)
+        const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
+        const totalWithTax = subtotal + ivaAmount
+        const deposit = Number(brCheck.depositAmount || 0)
+        const balance = Math.max(0, totalWithTax - deposit)
+
         // Crear Evento
         const event = await db.event.create({
           data: {
@@ -247,10 +256,12 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
             performanceStart: brCheck.startTime,
             startTime:        brCheck.startTime,
             performanceEnd:   brCheck.endTime,
-            amount:           brCheck.baseAmount,
-            deposit:          brCheck.depositAmount,
-            balance:          brCheck.baseAmount - brCheck.depositAmount,
-            totalIncome:      brCheck.baseAmount,
+            amount:           subtotal,
+            deposit:          deposit,
+            balance:          balance,
+            ivaAmount:        ivaAmount,
+            totalWithTax:     totalWithTax,
+            totalIncome:      totalWithTax,
             depositMethod:    brCheck.paymentMethod,
             status:           "agendado",
             venueType:        brCheck.venueType,
@@ -287,12 +298,26 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
           console.error("⚠️ Error syncing confirmed funnel event to Google Calendar:", calErr)
         }
       } else {
+        const lineItems = await db.bookingLineItem.findMany({ where: { bookingRequestId: canonicalBookingId } })
+        const lineItemsTotal = lineItems.reduce((acc, it) => acc + (it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
+        const subtotal = Math.max(0, Number(brCheck.baseAmount || 0) + Number(brCheck.viaticosAmount || 0) + lineItemsTotal - Number(brCheck.discountAmount || 0))
+        const hasInvoice = Boolean(brCheck.invoice)
+        const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
+        const totalWithTax = subtotal + ivaAmount
+        const deposit = Number(brCheck.depositAmount || 0)
+        const balance = Math.max(0, totalWithTax - deposit)
+
         await db.event.update({
           where: { id: eventId },
           data: {
             clientId: clientId,
             locationId: locationId,
-            status: newStatus
+            status: newStatus,
+            amount: subtotal,
+            deposit: deposit,
+            balance: balance,
+            ivaAmount: ivaAmount,
+            totalWithTax: totalWithTax,
           }
         })
       }
@@ -682,17 +707,25 @@ export async function confirmDepositPaidAction(bookingId: string) {
       }
 
       // Al confirmar anticipo, actualizamos el balance del evento
+      const currentEvent = await db.event.findUnique({ where: { id: eventId } })
+      const totalAmount = currentEvent?.totalWithTax || currentEvent?.amount || booking.baseAmount
+      const deposit = booking.depositAmount || 0
       await db.event.update({
         where: { id: eventId },
         data: { 
-          deposit: booking.depositAmount,
-          balance: booking.baseAmount - booking.depositAmount
+          deposit: deposit,
+          balance: Math.max(0, totalAmount - deposit)
         }
       })
     }
 
     revalidatePath("/admin/ventas")
     revalidatePath(`/admin/ventas/${bookingId}`)
+    if (booking.shortId) {
+      revalidatePath(`/admin/ventas/${booking.shortId}`)
+      revalidatePath(`/status/${booking.shortId}`)
+      revalidatePath(`/propuesta/${booking.shortId}`)
+    }
     revalidatePath("/admin/eventos")
     return { success: true }
   } catch (error) {
@@ -803,6 +836,12 @@ export async function updateDepositAmountAction(bookingId: string, amount: numbe
 
     revalidatePath("/admin/ventas")
     revalidatePath(`/admin/ventas/${bookingId}`)
+    if (booking.shortId) {
+      revalidatePath(`/admin/ventas/${booking.shortId}`)
+      revalidatePath(`/status/${booking.shortId}`)
+      revalidatePath(`/propuesta/${booking.shortId}`)
+    }
+    revalidatePath("/admin/eventos")
     revalidatePath("/admin/eventualidades")
     revalidatePath("/admin")
 
@@ -863,6 +902,17 @@ export async function updateTotalAmountAction(
         }
       })
 
+      if (booking.event?.quoteId) {
+        await db.quote.update({
+          where: { id: booking.event.quoteId },
+          data: { totalEstimated: totalWithTax }
+        }).catch(() => {})
+        await db.quoteItem.updateMany({
+          where: { quoteId: booking.event.quoteId },
+          data: { unitCost: finalBase }
+        }).catch(() => {})
+      }
+
       const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
       syncEventToGoogleCalendar(booking.eventId).catch(e => console.error("Error syncing to Google Calendar:", e))
     }
@@ -870,9 +920,11 @@ export async function updateTotalAmountAction(
     revalidatePath("/admin/ventas")
     revalidatePath(`/admin/ventas/${bookingId}`)
     if (booking.shortId) {
+      revalidatePath(`/admin/ventas/${booking.shortId}`)
       revalidatePath(`/propuesta/${booking.shortId}`)
       revalidatePath(`/status/${booking.shortId}`)
     }
+    revalidatePath("/admin/eventos")
     revalidatePath("/admin/eventualidades")
     revalidatePath("/admin")
 

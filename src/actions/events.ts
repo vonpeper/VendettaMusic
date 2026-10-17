@@ -230,6 +230,15 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
 
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/eventualidades")
+    revalidatePath("/admin/ventas")
+    if (existingBooking) {
+      revalidatePath(`/admin/ventas/${existingBooking.id}`)
+      if (existingBooking.shortId) {
+        revalidatePath(`/admin/ventas/${existingBooking.shortId}`)
+        revalidatePath(`/status/${existingBooking.shortId}`)
+        revalidatePath(`/propuesta/${existingBooking.shortId}`)
+      }
+    }
     revalidatePath("/")
 
     // Notificación automática
@@ -1223,6 +1232,15 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
     revalidatePath("/admin/ventas")
     if (result && typeof result === "object" && "bookingId" in result && result.bookingId) {
       revalidatePath(`/admin/ventas/${result.bookingId}`)
+      const b = await db.bookingRequest.findUnique({
+        where: { id: result.bookingId },
+        select: { shortId: true }
+      })
+      if (b?.shortId) {
+        revalidatePath(`/admin/ventas/${b.shortId}`)
+        revalidatePath(`/status/${b.shortId}`)
+        revalidatePath(`/propuesta/${b.shortId}`)
+      }
     }
     revalidatePath("/admin/prospectos")
     revalidatePath("/admin/clientes")
@@ -1252,8 +1270,19 @@ export async function convertBookingToEventAction(bookingId: string) {
       return await convertQuoteToEvent(tx, bookingId)
     })
 
+    const b = await db.bookingRequest.findUnique({
+      where: { id: bookingId },
+      select: { shortId: true }
+    })
+
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${bookingId}`)
+    if (b?.shortId) {
+      revalidatePath(`/admin/ventas/${b.shortId}`)
+      revalidatePath(`/status/${b.shortId}`)
+      revalidatePath(`/propuesta/${b.shortId}`)
+    }
     revalidatePath("/agenda")
 
     return { success: true, eventId: result.eventId, alreadyConverted: !result.isNew }
