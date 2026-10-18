@@ -712,7 +712,21 @@ export function PremiumClientQuoteView({
             </div>
 
             {/* Caja de Inversión Total */}
-            <div className="w-full md:w-92 space-y-2.5 bg-emerald-50/70 p-5 sm:p-6 rounded-2xl border-2 border-emerald-500 shadow-lg shadow-emerald-500/10">
+            <div className="w-full md:w-96 space-y-2.5 bg-emerald-50/80 p-5 sm:p-6 rounded-2xl border-2 border-emerald-500 shadow-lg shadow-emerald-500/10">
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-xs text-slate-600 font-medium">
+                  <span>Precio de Lista:</span>
+                  <span className="font-mono text-slate-700 line-through">{formatMXN(baseAmount + viaticosAmount + lineItemsTotal)}</span>
+                </div>
+              )}
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-xs font-bold text-emerald-800 bg-emerald-100/90 px-2.5 py-1 rounded-lg">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Descuento Especial:
+                  </span>
+                  <span className="font-mono font-black">-{formatMXN(discountAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-xs text-slate-700 font-medium">
                 <span className="font-bold">Subtotal Neto:</span>
                 <span className="font-mono text-slate-950 font-black">{formatMXN(subtotal)}</span>

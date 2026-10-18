@@ -97,6 +97,8 @@ export async function POST(req: NextRequest) {
         endTime:       endTime || "23:00",
         baseAmount:    parseFloat(baseAmount) || 0,
         depositAmount: parseFloat(depositAmount) || 0,
+        discountAmount: parseFloat(body.discountAmount) || 0,
+        originalPrice: parseFloat(body.originalPrice) || 0,
         paymentMethod: paymentMethod || "transfer",
         paymentStatus: "pending",
         clientName:    clientName || "ClienteAnónimo",

@@ -44,17 +44,20 @@ export function EditTotalInline({
   const [isOpen, setIsOpen] = useState(false)
   const [baseValue, setBaseValue] = useState(initialBase.toString())
   const [viaticosValue, setViaticosValue] = useState(initialViaticos.toString())
+  const [discountValue, setDiscountValue] = useState(initialDiscount.toString())
   const [isPending, startTransition] = useTransition()
 
   const numBase = parseFloat(baseValue) || 0
   const numViaticos = parseFloat(viaticosValue) || 0
-  const previewSubtotal = Math.max(0, numBase + numViaticos + initialLineItemsTotal - initialDiscount)
+  const numDiscount = Math.max(0, parseFloat(discountValue) || 0)
+  const previewSubtotal = Math.max(0, numBase + numViaticos + initialLineItemsTotal - numDiscount)
   const previewIva = hasInvoice ? Math.round(previewSubtotal * 0.16 * 100) / 100 : 0
   const previewTotal = previewSubtotal + previewIva
 
   function resetForm() {
     setBaseValue(initialBase.toString())
     setViaticosValue(initialViaticos.toString())
+    setDiscountValue(initialDiscount.toString())
   }
 
   async function handleSave() {
@@ -65,7 +68,7 @@ export function EditTotalInline({
 
     startTransition(async () => {
       try {
-        const res = await updateTotalAmountAction(bookingId, numBase, numViaticos)
+        const res = await updateTotalAmountAction(bookingId, numBase, numViaticos, numDiscount)
         if (res.success) {
           toast.success("Total del evento actualizado con éxito")
           setIsOpen(false)
@@ -102,7 +105,7 @@ export function EditTotalInline({
                 Editar Inversión del Show
               </DialogTitle>
               <DialogDescription className="text-muted-foreground text-xs">
-                Modifica el precio base del show y viáticos. El total comercial, propuesta del cliente y contrato se actualizarán automáticamente.
+                Modifica el precio base del show, viáticos y descuentos. El total comercial, propuesta del cliente y contrato se actualizarán automáticamente.
               </DialogDescription>
             </DialogHeader>
 
@@ -141,6 +144,25 @@ export function EditTotalInline({
                 />
               </div>
 
+              <div>
+                <label htmlFor="modalDiscountAmount" className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1.5 flex items-center justify-between">
+                  <span>Descuento Especial ($ MXN)</span>
+                  {numDiscount > 0 && <span className="text-[9px] lowercase font-normal text-muted-foreground">se restará del subtotal</span>}
+                </label>
+                <Input
+                  id="modalDiscountAmount"
+                  type="number"
+                  step="100"
+                  min="0"
+                  value={discountValue}
+                  disabled={isPending}
+                  placeholder="0"
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  className="bg-background text-foreground border-emerald-500/40 focus-visible:ring-2 focus-visible:ring-emerald-500/50 w-full font-bold"
+                />
+              </div>
+
               {/* Vista Previa en Tiempo Real */}
               <div className="p-3.5 rounded-xl bg-blue-600/10 border border-blue-600/20 space-y-1.5 text-xs">
                 <div className="flex justify-between text-muted-foreground font-medium">
@@ -153,10 +175,10 @@ export function EditTotalInline({
                     <span className="font-bold text-foreground">+{MXN(initialLineItemsTotal)}</span>
                   </div>
                 )}
-                {initialDiscount > 0 && (
-                  <div className="flex justify-between text-blue-500 font-medium">
+                {numDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
                     <span>Descuento aplicado:</span>
-                    <span className="font-bold">-{MXN(initialDiscount)}</span>
+                    <span>-{MXN(numDiscount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-muted-foreground font-medium pt-1 border-t border-border/20">

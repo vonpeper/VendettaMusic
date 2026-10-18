@@ -860,7 +860,8 @@ export async function updateDepositAmountAction(bookingId: string, amount: numbe
 export async function updateTotalAmountAction(
   bookingId: string, 
   baseAmount: number, 
-  viaticosAmount?: number
+  viaticosAmount?: number,
+  discountAmount?: number
 ) {
   try {
     const booking = await db.bookingRequest.findUnique({
@@ -871,15 +872,18 @@ export async function updateTotalAmountAction(
 
     const finalBase = Math.max(0, baseAmount)
     const finalViaticos = viaticosAmount !== undefined ? Math.max(0, viaticosAmount) : Number(booking.viaticosAmount || 0)
-    const discount = Number(booking.discountAmount || 0)
+    const finalDiscount = discountAmount !== undefined ? Math.max(0, discountAmount) : Number(booking.discountAmount || 0)
     const lineItemsTotal = (booking.lineItems || []).reduce((acc: number, it: any) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
-    const subtotal = Math.max(0, finalBase + finalViaticos + lineItemsTotal - discount)
+    const subtotal = Math.max(0, finalBase + finalViaticos + lineItemsTotal - finalDiscount)
 
     const hasInvoice = Boolean(booking.invoice || booking.event?.invoice)
     const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
     const totalWithTax = subtotal + ivaAmount
-    const deposit = Number(booking.depositAmount || 0)
-    const balance = Math.max(0, totalWithTax - deposit)
+    const currentDeposit = Number(booking.depositAmount || 0)
+    const finalDeposit = (currentDeposit > totalWithTax && booking.paymentStatus !== "paid") 
+      ? Math.round(totalWithTax * 0.5) 
+      : currentDeposit
+    const balance = Math.max(0, totalWithTax - finalDeposit)
 
     // 1. Actualizar BookingRequest
     await db.bookingRequest.update({
@@ -887,6 +891,8 @@ export async function updateTotalAmountAction(
       data: {
         baseAmount: finalBase,
         viaticosAmount: finalViaticos,
+        discountAmount: finalDiscount,
+        depositAmount: finalDeposit,
       }
     })
 
@@ -896,6 +902,7 @@ export async function updateTotalAmountAction(
         where: { id: booking.eventId },
         data: {
           amount: subtotal,
+          deposit: finalDeposit,
           ivaAmount: ivaAmount,
           totalWithTax: totalWithTax,
           balance: balance

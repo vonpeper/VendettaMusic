@@ -439,34 +439,92 @@ function ContratosGrid({
                             </Link>
                           </Button>
 
-                          {c.event && (
-                            <EditEventoButton 
-                              eventId={c.event.id}
-                              initialData={{
-                                ...c.event,
-                                client: c.client,
-                                clientId: c.clientId || c.client?.id,
-                                clientName: c.clientName || c.client?.user?.name,
-                                clientPhone: c.clientPhone || c.client?.whatsapp,
-                                clientEmail: c.clientEmail || c.client?.user?.email,
-                                city: c.city || c.client?.city,
-                                startTime: c.event.performanceStart || (c.event as any).startTime || c.startTime,
-                                endTime: c.event.performanceEnd || (c.event as any).endTime || c.endTime,
-                                arrivalTime: c.event.arrivalTime || c.arrivalTime,
-                                setupTime: c.event.setupTime || c.setupTime,
-                                bookingRequest: c,
-                              }}
-                              clients={clients}
-                              locations={locations}
-                              packages={packages}
-                              staff={staff}
-                              allMusicians={allMusicians}
-                              showText={true}
-                              variant="outline"
-                              label="Ver/Editar Show"
-                              className="h-9 gap-2 border-blue-600/30 text-blue-400 hover:bg-blue-600 hover:text-foreground w-full flex items-center justify-center rounded-lg border text-xs font-bold transition-all cursor-pointer"
-                            />
-                          )}
+                          <EditEventoButton 
+                            eventId={c.event?.id || c.id}
+                            initialData={c.event ? {
+                              ...c.event,
+                              id: c.event.id,
+                              targetId: c.event.id,
+                              bookingId: c.id,
+                              client: c.client,
+                              clientId: c.clientId || c.client?.id,
+                              clientName: c.clientName || c.client?.user?.name || "",
+                              clientPhone: c.clientPhone || c.client?.whatsapp || "",
+                              clientEmail: c.clientEmail || c.client?.user?.email || "",
+                              city: c.city || c.client?.city || "",
+                              packageId: c.event.packageId || c.packageId,
+                              packageName: c.packageName,
+                              basePrice: c.baseAmount,
+                              baseAmount: c.baseAmount,
+                              viaticosAmount: c.viaticosAmount || 0,
+                              discountAmount: c.discountAmount || 0,
+                              deposit: c.event.deposit ?? c.depositAmount,
+                              depositAmount: c.event.deposit ?? c.depositAmount,
+                              invoice: Boolean(c.event.invoice ?? c.invoice),
+                              venueName: c.event.location?.name || c.venueType || c.address || "",
+                              venueAddress: c.event.location?.address || c.address || "",
+                              venueCity: c.event.location?.city || c.city || "Toluca",
+                              venueState: c.event.location?.state || c.state || "Estado de México",
+                              mapsLink: c.event.mapsLink || c.event.location?.mapsLink || c.mapsLink || "",
+                              startTime: c.event.performanceStart || (c.event as any).startTime || c.startTime,
+                              endTime: c.event.performanceEnd || (c.event as any).endTime || c.endTime,
+                              arrivalTime: c.event.arrivalTime || c.arrivalTime,
+                              setupTime: c.event.setupTime || c.setupTime,
+                              lineItems: c.lineItems || [],
+                              bookingRequest: c,
+                              status: c.status,
+                            } : {
+                              id: c.id,
+                              targetId: c.id,
+                              bookingId: c.id,
+                              bookingRequest: c,
+                              clientId: c.clientId || c.client?.id,
+                              client: c.client,
+                              clientName: c.clientName || c.client?.user?.name || "",
+                              clientPhone: c.clientPhone || c.client?.whatsapp || "",
+                              clientEmail: c.clientEmail || c.client?.user?.email || "",
+                              city: c.city || c.client?.city || "",
+                              packageId: c.packageId,
+                              date: c.requestedDate,
+                              eventDate: c.requestedDate,
+                              basePrice: c.baseAmount,
+                              baseAmount: c.baseAmount,
+                              amount: c.baseAmount,
+                              viaticosAmount: c.viaticosAmount || 0,
+                              discountAmount: c.discountAmount || 0,
+                              deposit: c.depositAmount || 0,
+                              depositAmount: c.depositAmount || 0,
+                              paymentMethod: c.paymentMethod,
+                              ceremonyType: c.ceremonyType || c.venueType || "otro",
+                              venueName: c.venueType || c.address || "",
+                              venueAddress: c.address || "",
+                              venueCity: c.city || "Toluca",
+                              venueState: c.state || "Estado de México",
+                              mapsLink: c.mapsLink || "",
+                              guestCount: c.guestCount || 0,
+                              performanceStart: c.startTime,
+                              performanceEnd: c.endTime,
+                              startTime: c.startTime,
+                              endTime: c.endTime,
+                              status: c.status,
+                              invoice: Boolean(c.invoice),
+                              customName: c.customName || (c.clientName ? `Evento de ${c.clientName}` : "Evento Vendetta"),
+                              arrivalTime: c.arrivalTime,
+                              setupTime: c.setupTime,
+                              dressCode: c.dressCode,
+                              musicianNotes: c.musicianNotes,
+                              lineItems: c.lineItems || [],
+                            }}
+                            clients={clients}
+                            locations={locations}
+                            packages={packages}
+                            staff={staff}
+                            allMusicians={allMusicians}
+                            showText={true}
+                            variant="outline"
+                            label={c.event ? "Ver/Editar Show" : "Editar Cotización"}
+                            className="h-9 gap-2 border-blue-600/30 text-blue-400 hover:bg-blue-600 hover:text-foreground w-full flex items-center justify-center rounded-lg border text-xs font-bold transition-all cursor-pointer"
+                          />
 
                           <CancelBookingButton 
                             bookingId={c.id} 
