@@ -33,6 +33,14 @@ export async function generateMetadata({
   return {
     title: `Convocatoria: ${musicianName} - ${eventName} | Vendetta Music`,
     description: `Hola ${musicianName}, confirma tu asistencia al show "${eventName}" del ${eventDate}.`,
+    icons: {
+      other: [
+        {
+          rel: "image_src",
+          url: "https://vendetta.mx/images/opengraph-confirmacion.png?v=3",
+        },
+      ],
+    },
     openGraph: {
       title: `🎸 Convocatoria: ${musicianName}`,
       description: `Show: ${eventName}\n📅 ${eventDate}\nPresiona aquí para confirmar tu asistencia.`,
@@ -40,14 +48,21 @@ export async function generateMetadata({
       siteName: "Vendetta Music Operations",
       images: [
         {
-          url: "https://vendetta.mx/images/opengraph-confirmacion.png",
+          url: "https://vendetta.mx/images/opengraph-confirmacion.png?v=3",
           width: 1200,
-          height: 1200,
+          height: 630,
           alt: "Convocatoria Vendetta Live Music",
+          type: "image/png",
         },
       ],
       locale: "es_MX",
       type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `🎸 Convocatoria: ${musicianName}`,
+      description: `Show: ${eventName} • ${eventDate}`,
+      images: ["https://vendetta.mx/images/opengraph-confirmacion.png?v=3"],
     },
   }
 }

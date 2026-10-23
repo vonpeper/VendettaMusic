@@ -105,9 +105,9 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
       </div>
 
       <div className="border border-border/40 rounded-xl bg-card overflow-hidden shadow-sm">
-        <div className="md:overflow-x-auto">
-          <Table className="w-full block md:table">
-            <TableHeader className="hidden md:table-header-group">
+        <div className="overflow-x-auto custom-scrollbar">
+          <Table className="w-full block lg:table">
+            <TableHeader className="hidden lg:table-header-group">
               <tr className="bg-blue-600/10 border-b border-border/40">
                 <TableHead className="text-blue-600 font-bold w-24 py-5 pl-8">Fecha</TableHead>
                 <TableHead className="font-bold py-5">Evento, Identidad y Estatus</TableHead>
@@ -117,10 +117,10 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                 <TableHead className="text-right pr-8 font-bold py-5">Acciones</TableHead>
               </tr>
             </TableHeader>
-            <TableBody className="block md:table-row-group p-4 md:p-0 space-y-4 md:space-y-0">
+            <TableBody className="block lg:table-row-group p-4 lg:p-0 space-y-4 lg:space-y-0">
               {filteredEvents.length === 0 ? (
-                <TableRow className="block md:table-row">
-                  <TableCell colSpan={8} className="block md:table-cell text-center py-20 text-muted-foreground">
+                <TableRow className="block lg:table-row">
+                  <TableCell colSpan={8} className="block lg:table-cell text-center py-20 text-muted-foreground">
                     <div className="flex flex-col items-center gap-2 opacity-50">
                       <Filter className="w-12 h-12 mb-2" />
                       <p className="text-lg font-medium">No se encontraron eventos con estos filtros.</p>
@@ -137,9 +137,9 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                 const dayNum = isValidDate ? eventDate.getUTCDate() : "--"
                 
                 return (
-                  <TableRow key={evt.id} className="flex flex-col md:table-row bg-card md:bg-transparent border border-border/40 md:border-b md:border-t-0 md:border-x-0 rounded-2xl md:rounded-none mb-6 md:mb-0 align-top hover:bg-blue-600/5 transition-colors relative shadow-sm md:shadow-none overflow-hidden">
-                    {/* VISTA MÓVIL (Tarjeta Premium Rediseñada) */}
-                    <TableCell className="md:hidden p-0 block border-none">
+                  <TableRow key={evt.id} className="flex flex-col lg:table-row bg-card lg:bg-transparent border border-border/40 lg:border-b lg:border-t-0 lg:border-x-0 rounded-2xl lg:rounded-none mb-6 lg:mb-0 align-top hover:bg-blue-600/5 transition-colors relative shadow-sm lg:shadow-none overflow-hidden">
+                    {/* VISTA MÓVIL Y TABLET (<1024px) (Tarjeta Premium Rediseñada) */}
+                    <TableCell className="lg:hidden p-0 block border-none">
                       <div className="flex flex-col h-full">
                         {/* Cabecera del Evento */}
                         <div className="p-5 flex items-start gap-4">
@@ -231,9 +231,9 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                       </div>
                     </TableCell>
 
-                    {/* VISTA DESKTOP */}
+                    {/* VISTA DESKTOP (>=1024px) */}
                     {/* Fecha */}
-                    <TableCell className="hidden md:table-cell md:py-6 md:pl-8 md:border-none items-start md:bg-transparent">
+                    <TableCell className="hidden lg:table-cell lg:py-6 lg:pl-8 lg:border-none items-start lg:bg-transparent">
                       <div className={`w-14 h-14 rounded-xl flex flex-col justify-center items-center shadow-sm shrink-0 ${
                         isCurrentMonth ? "bg-blue-600 text-white ring-2 ring-blue-600/20" : "bg-card border border-border text-foreground"
                       }`}>
@@ -245,7 +245,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                     </TableCell>
 
                     {/* Identidad y Detalles Consolidados */}
-                    <TableCell className="hidden md:table-cell md:py-6 md:min-w-[300px] md:border-none">
+                    <TableCell className="hidden lg:table-cell lg:py-6 lg:min-w-[300px] lg:border-none">
                       <div className="font-bold text-foreground text-lg md:text-base leading-tight">
                         {evt.bookingRequest ? (
                           <Link 
@@ -308,8 +308,8 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                     </TableCell>
 
                     {/* Horario y Logística */}
-                    <TableCell className="hidden md:table-cell md:py-6 md:border-none">
-                      <div className="flex flex-row md:flex-col items-center md:items-start flex-wrap gap-2 md:gap-2">
+                    <TableCell className="hidden lg:table-cell lg:py-6 lg:border-none">
+                      <div className="flex flex-row lg:flex-col items-center lg:items-start flex-wrap gap-2 lg:gap-2">
                         {evt.arrivalTime && (
                           <div className="text-[10px] font-bold text-muted-foreground flex items-center gap-1.5 bg-muted/20 px-2 py-1 rounded w-fit">
                             <Clock className="w-3 h-3 opacity-60" /> {evt.arrivalTime} (Llegada)
@@ -327,7 +327,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                     </TableCell>
 
                     {/* Staff y Confirmaciones */}
-                    <TableCell className="hidden md:table-cell md:py-6 md:border-none">
+                    <TableCell className="hidden lg:table-cell lg:py-6 lg:border-none">
                       {evt.musicians && evt.musicians.length > 0 ? (
                         <div className="space-y-1.5">
                           <div className="flex flex-col items-center gap-1.5">
@@ -358,7 +358,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                     </TableCell>
 
                     {/* Finanzas */}
-                    <TableCell className="hidden md:table-cell md:py-6 md:border-none">
+                    <TableCell className="hidden lg:table-cell lg:py-6 lg:border-none">
                       <div className="bg-white p-3 rounded-xl border border-border/40 w-48 shadow-sm space-y-2">
                         <div className="flex justify-between items-center text-[10px]">
                           <span className="text-muted-foreground font-bold uppercase tracking-tight">Subtotal:</span>
@@ -402,7 +402,7 @@ export function MasterEventsTable({ events, clients, locations, packages, staff,
                     </TableCell>
 
                     {/* Acciones */}
-                    <TableCell className="hidden md:table-cell md:py-6 text-right md:pr-8 md:bg-transparent">
+                    <TableCell className="hidden lg:table-cell lg:py-6 text-right lg:pr-8 lg:bg-transparent">
                       <div className="flex items-center justify-end gap-1.5">
                         <NotifyEventButton
                           eventId={evt.id}

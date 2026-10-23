@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button"
 
 import { redirect } from "next/navigation"
 import { parseInquiryDetails } from "@/lib/inquiry-parser"
-import { isLocalCity } from "@/lib/viaticos"
-import { calculateShowBasePrice } from "@/lib/pricing"
+import { isLocalCity, calcularViatcos } from "@/lib/viaticos"
+import { calculateShowBasePrice, calculateEventHours } from "@/lib/pricing"
 
 interface ManualBookingPageProps {
   searchParams?: Promise<{
@@ -30,7 +30,7 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
   const paramClientEmail = resolvedParams?.clientEmail
   const paramCity = resolvedParams?.city
 
-  const [packages, clients, locations] = await Promise.all([
+  const [packages, clients, locations, globalConfig] = await Promise.all([
     db.package.findMany({
       orderBy: { baseCostPerHour: "asc" }
     }),
@@ -40,7 +40,8 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
     }),
     db.location.findMany({
       orderBy: { name: "asc" }
-    })
+    }),
+    db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
   ])
 
   const formattedPackages = packages.map(p => ({
@@ -94,8 +95,10 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
     mapsLink?: string
     packageId?: string
     packageName?: string
+    bandHours?: number
     basePrice?: number
     viaticosAmount?: number
+    depositAmount?: number
     musicianNotes?: string
     originInquiryId?: string
     status?: string
@@ -135,25 +138,7 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
         }
       }
 
-      // Resolver Paquete seleccionado
-      let matchedPackageId: string | undefined = undefined
-      let matchedPackageName: string | undefined = undefined
-      let initialBasePrice: number | undefined = undefined
-
-      if (parsed.packageKeyword) {
-        const foundPkg = formattedPackages.find(p =>
-          p.name.toLowerCase().includes(parsed.packageKeyword!.toLowerCase())
-        )
-        if (foundPkg) {
-          matchedPackageId = foundPkg.id
-          matchedPackageName = foundPkg.name
-          const isOutside = parsed.city ? !isLocalCity(parsed.city) : false
-          const localBase = foundPkg.baseCostPerHour * (foundPkg.minDuration || 2)
-          initialBasePrice = calculateShowBasePrice(localBase, isOutside)
-        }
-      }
-
-      // Resolver Venue / Ubicación en catálogo
+      // Resolver Venue / Ubicación en catálogo primero para asegurar ciudad y estado
       let matchedLocationId: string | undefined = undefined
       let venueName = parsed.venueName || ""
       let venueCity = parsed.city || ""
@@ -177,6 +162,44 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
         }
       }
 
+      // Resolver Paquete seleccionado con fallback robusto a Essential
+      let matchedPackageId: string | undefined = undefined
+      let matchedPackageName: string | undefined = undefined
+      let initialBasePrice: number | undefined = undefined
+
+      let targetPkg = undefined
+      if (parsed.packageKeyword) {
+        targetPkg = formattedPackages.find(p =>
+          p.name.toLowerCase().includes(parsed.packageKeyword!.toLowerCase())
+        )
+      }
+      if (!targetPkg) {
+        targetPkg = formattedPackages.find(p => p.name.toLowerCase().includes("essential")) || formattedPackages[0]
+      }
+
+      const effectiveCity = venueCity || parsed.city || ""
+      const isOutside = effectiveCity ? !isLocalCity(effectiveCity, venueState) : false
+      const durationHours = (parsed.startTime && parsed.endTime ? calculateEventHours(parsed.startTime, parsed.endTime) : null) || targetPkg?.minDuration || 2
+
+      if (targetPkg) {
+        matchedPackageId = targetPkg.id
+        matchedPackageName = targetPkg.name
+        const localBase = targetPkg.baseCostPerHour * durationHours
+        initialBasePrice = calculateShowBasePrice(localBase, isOutside)
+      }
+
+      // Resolver Viáticos automáticos si no vienen especificados
+      let initialViaticos: number | undefined = parsed.viaticosAmount || undefined
+      if (initialViaticos === undefined && effectiveCity) {
+        const viatResult = calcularViatcos(effectiveCity, venueState, globalConfig || undefined)
+        initialViaticos = viatResult.amount
+      }
+
+      // Sugerir 50% de anticipo estimado sobre base + viáticos
+      const initialDeposit = (initialBasePrice !== undefined || initialViaticos !== undefined)
+        ? Math.round(((initialBasePrice || 0) + (initialViaticos || 0)) * 0.5)
+        : undefined
+
       // Fecha del evento formateada YYYY-MM-DD
       const eventDate = inquiry.requestedDate
         ? inquiry.requestedDate.toISOString().split("T")[0]
@@ -193,12 +216,13 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
         clientName: inquiry.name,
         clientPhone: inquiry.phone || "",
         clientEmail: parsed.cleanEmail,
-        city: parsed.city || venueCity,
+        city: effectiveCity,
         customName: parsed.customName,
         ceremonyType: parsed.ceremonyType,
         eventDate,
         startTime: parsed.startTime,
         endTime: parsed.endTime,
+        bandHours: durationHours,
         arrivalTime: parsed.arrivalTime,
         setupTime: parsed.setupTime,
         guestCount: parsed.guestCount,
@@ -211,7 +235,8 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
         packageId: matchedPackageId,
         packageName: matchedPackageName,
         basePrice: initialBasePrice,
-        viaticosAmount: parsed.viaticosAmount || undefined,
+        viaticosAmount: initialViaticos,
+        depositAmount: initialDeposit,
         musicianNotes,
         originInquiryId: inquiry.id,
         status: "pendiente"
@@ -224,12 +249,25 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
     })
 
     if (client) {
+      const defaultPkg = formattedPackages.find(p => p.name.toLowerCase().includes("essential")) || formattedPackages[0]
+      const city = client.city || paramCity || ""
+      const isOutside = city ? !isLocalCity(city) : false
+      const initialBase = defaultPkg ? calculateShowBasePrice(defaultPkg.baseCostPerHour * (defaultPkg.minDuration || 2), isOutside) : undefined
+      const initialViat = city ? calcularViatcos(city, undefined, globalConfig || undefined).amount : undefined
+      const initialDep = (initialBase !== undefined || initialViat !== undefined) ? Math.round(((initialBase || 0) + (initialViat || 0)) * 0.5) : undefined
+
       prefillInquiry = {
         clientId: client.id,
         clientName: client.user?.name || paramClientName || "",
         clientPhone: client.whatsapp || paramClientPhone || "",
         clientEmail: client.user?.email || paramClientEmail || "",
-        city: client.city || paramCity || "",
+        city,
+        packageId: defaultPkg?.id,
+        packageName: defaultPkg?.name,
+        basePrice: initialBase,
+        viaticosAmount: initialViat,
+        depositAmount: initialDep,
+        bandHours: defaultPkg?.minDuration || 2,
         status: "pendiente"
       }
     }
@@ -251,12 +289,25 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
       }
     }
 
+    const defaultPkg = formattedPackages.find(p => p.name.toLowerCase().includes("essential")) || formattedPackages[0]
+    const city = paramCity || ""
+    const isOutside = city ? !isLocalCity(city) : false
+    const initialBase = defaultPkg ? calculateShowBasePrice(defaultPkg.baseCostPerHour * (defaultPkg.minDuration || 2), isOutside) : undefined
+    const initialViat = city ? calcularViatcos(city, undefined, globalConfig || undefined).amount : undefined
+    const initialDep = (initialBase !== undefined || initialViat !== undefined) ? Math.round(((initialBase || 0) + (initialViat || 0)) * 0.5) : undefined
+
     prefillInquiry = {
       clientId: matchedClientId,
       clientName: paramClientName || "",
       clientPhone: paramClientPhone || "",
       clientEmail: paramClientEmail || "",
-      city: paramCity || "",
+      city,
+      packageId: defaultPkg?.id,
+      packageName: defaultPkg?.name,
+      basePrice: initialBase,
+      viaticosAmount: initialViat,
+      depositAmount: initialDep,
+      bandHours: defaultPkg?.minDuration || 2,
       status: "pendiente"
     }
   }

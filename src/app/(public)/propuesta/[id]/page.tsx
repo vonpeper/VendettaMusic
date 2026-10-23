@@ -43,8 +43,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     : `Hola ${booking.clientName}, te compartimos la cotización exclusiva para tu evento el ${dateStr}. Revisa tu propuesta y aprueba tu fecha en línea.`
 
   const ogImage = isConfirmed
-    ? 'https://vendetta.mx/images/opengraph-confirmacion.png'
-    : 'https://vendetta.mx/images/opengraph-cotizacion.jpg?v=2'
+    ? 'https://vendetta.mx/images/opengraph-confirmacion.png?v=3'
+    : 'https://vendetta.mx/images/opengraph-cotizacion.png?v=3'
 
   return {
     title,
@@ -69,7 +69,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
           width: 1200,
           height: 630,
           alt: `Cotización de Show: ${booking.clientName} (${booking.shortId})`,
-          type: 'image/jpeg',
+          type: 'image/png',
         },
       ],
       locale: 'es_MX',

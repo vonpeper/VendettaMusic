@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { RockBackground } from "./RockBackground"
 import Step1_Paquete  from "./Step1_Paquete"
@@ -9,6 +9,7 @@ import Step3_Fecha    from "./Step3_Fecha"
 import Step4_Pago     from "./Step4_Pago"
 import Step5_Registro from "./Step5_Registro"
 import FunnelSuccess  from "./FunnelSuccess"
+import { trackGoogleEvent } from "@/components/public/GoogleAnalytics"
 
 export interface FunnelData {
   // Step 1
@@ -133,8 +134,93 @@ export default function FunnelWizard({ packages, extras = [], initialStep = 0, i
     } : {}),
   })
 
+  useEffect(() => {
+    try {
+      trackGoogleEvent("funnel_started", {
+        step: initialStep + 1,
+        initial_package_id: initialPkgId || null,
+        initial_city: initialCity || null,
+      })
+    } catch {
+      // Ignorar silenciosamente si los rastreadores están bloqueados
+    }
+  }, [])
+
   function next(partial: Partial<FunnelData>) {
-    setData(prev => ({ ...prev, ...partial }))
+    const updated = { ...data, ...partial }
+    setData(updated)
+
+    // Telemetría GA4 del embudo de cotización
+    try {
+      if (step === 0) {
+        // Paso 1: Selección de paquete y configuración base
+        trackGoogleEvent("view_item", {
+          item_id: partial.packageId || updated.packageId,
+          item_name: partial.packageName || updated.packageName,
+          value: partial.packagePrice || updated.packagePrice,
+          currency: "MXN",
+        })
+        trackGoogleEvent("funnel_step_package", {
+          step: 1,
+          package_id: partial.packageId || updated.packageId,
+          package_name: partial.packageName || updated.packageName,
+          guest_count: partial.guestCount ?? updated.guestCount,
+          band_hours: partial.bandHours ?? updated.bandHours,
+        })
+      } else if (step === 1) {
+        // Paso 2: Selección de ubicación y cálculo de viáticos
+        trackGoogleEvent("funnel_step_event_details", {
+          step: 2,
+          municipio: partial.municipio || updated.municipio,
+          city: partial.city || updated.city,
+          state: partial.state || updated.state,
+          is_outside_zone: partial.isOutsideZone ?? updated.isOutsideZone,
+          viaticos_amount: partial.viaticosAmount ?? updated.viaticosAmount,
+        })
+      } else if (step === 2) {
+        // Paso 3: Selección de fecha, horarios y servicios adicionales (addons)
+        trackGoogleEvent("funnel_step_addons", {
+          step: 3,
+          requested_date: partial.requestedDate || updated.requestedDate,
+          start_time: partial.startTime || updated.startTime,
+          end_time: partial.endTime || updated.endTime,
+          has_pantalla: updated.hasPantalla,
+          has_robot: updated.hasRobot,
+          has_pista: updated.hasPista,
+          has_templete: updated.hasTemplete,
+        })
+      } else if (step === 3) {
+        // Paso 4: Revisión de cotización preliminar y anticipo
+        const totalEst = (updated.packagePrice ?? 0) + (updated.viaticosAmount ?? 0)
+        trackGoogleEvent("begin_checkout", {
+          step: 4,
+          value: totalEst,
+          currency: "MXN",
+          deposit_amount: partial.depositAmount ?? updated.depositAmount,
+          payment_method: partial.paymentMethod || updated.paymentMethod,
+        })
+      } else if (step === 4) {
+        // Paso 5: Envío final del formulario y generación de lead
+        const totalFinal = (updated.packagePrice ?? 0) + (updated.viaticosAmount ?? 0)
+        trackGoogleEvent("generate_lead", {
+          step: 5,
+          booking_id: partial.bookingId || updated.bookingId,
+          short_id: partial.shortId || updated.shortId,
+          value: totalFinal,
+          currency: "MXN",
+          package_name: updated.packageName,
+        })
+        trackGoogleEvent("booking_submitted", {
+          booking_id: partial.bookingId || updated.bookingId,
+          short_id: partial.shortId || updated.shortId,
+          package_name: updated.packageName,
+          payment_method: updated.paymentMethod,
+        })
+      }
+    } catch (err) {
+      console.warn("[FunnelWizard] Error al emitir telemetría GA4:", err)
+    }
+
     setStep(s => s + 1)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }

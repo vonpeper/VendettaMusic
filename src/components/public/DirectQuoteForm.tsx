@@ -631,7 +631,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             placeholder="Ej: Mariana Gómez"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
+            className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-400 text-sm rounded-xl focus:border-primary"
           />
         </div>
 
@@ -645,7 +645,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             placeholder="Ej: 722 123 4567"
             value={telefono}
             onChange={(e) => setTelefono(e.target.value)}
-            className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
+            className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-400 text-sm rounded-xl focus:border-primary"
           />
         </div>
       </div>
@@ -693,7 +693,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
               placeholder="Ej: Bautizo, Primera Comunión, Pedida de Mano, Despedida..."
               value={tipoEventoOtro}
               onChange={(e) => setTipoEventoOtro(e.target.value)}
-              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
+              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-400 text-sm rounded-xl focus:border-primary"
             />
           </div>
         )}
@@ -792,7 +792,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             placeholder={isLargePackage ? "Mínimo 100 invitados" : "Ej: 50"}
             value={invitados}
             onChange={(e) => setInvitados(e.target.value)}
-            className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
+            className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-400 text-sm rounded-xl focus:border-primary"
           />
           {isLargePackage && (
             <p className="text-[11px] text-amber-400 font-semibold mt-1">
@@ -897,7 +897,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
               placeholder="Ej: Avándaro, Valle de Bravo, Cuautitlán..."
               value={municipioManual}
               onChange={(e) => setMunicipioManual(e.target.value)}
-              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
+              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-400 text-sm rounded-xl focus:border-primary"
             />
           </div>
         )}
@@ -911,7 +911,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
               placeholder="Ej: Hacienda San Martín, Jardín La Concordia..."
               value={lugarEvento}
               onChange={(e) => setLugarEvento(e.target.value)}
-              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
+              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-400 text-sm rounded-xl focus:border-primary"
             />
           </div>
 
@@ -924,7 +924,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
               placeholder="Ej: https://maps.app.goo.gl/... o enlace de ubicación"
               value={mapsLink}
               onChange={(e) => setMapsLink(e.target.value)}
-              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-sm rounded-xl focus:border-primary"
+              className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-400 text-sm rounded-xl focus:border-primary"
             />
           </div>
         </div>
@@ -991,7 +991,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
           placeholder="¿Alguna canción especial para vals, detalles del salón, temas de audio o logística?"
           value={notas}
           onChange={(e) => setNotas(e.target.value)}
-          className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+          className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-400 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
         />
       </div>
 

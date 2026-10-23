@@ -55,10 +55,12 @@ next-env.d.ts
 *.db-journal
 *.db-shm
 *.db-wal
+*.bak*
 prisma/*.db
 prisma/*.db-journal
 prisma/*.db-shm
 prisma/*.db-wal
+prisma/*.bak*
 
 # scratch
 scratch/

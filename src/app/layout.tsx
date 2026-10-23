@@ -47,6 +47,8 @@ const advent = Advent_Pro({
   display: "swap",
 });
 
+import { GoogleAnalytics } from "@/components/public/GoogleAnalytics"
+
 export async function generateMetadata(): Promise<Metadata> {
   const config = await db.globalConfig.findUnique({
     where: { id: "vendetta_config" },
@@ -54,19 +56,29 @@ export async function generateMetadata(): Promise<Metadata> {
       ogTitle: true,
       ogDescription: true,
       ogImage: true,
+      googleSiteVerification: true,
     }
   });
 
   const title = config?.ogTitle || "Vendetta | Pop & Rock en Vivo para Eventos";
   const description = config?.ogDescription || "Banda profesional de pop y rock en vivo para bodas, eventos corporativos y celebraciones en México. Experiencia real de concierto con producción premium.";
-  const image = config?.ogImage || 'https://vendetta.mx/images/vendetta-hero-og-v2.jpg';
+  const image = config?.ogImage || 'https://vendetta.mx/images/vendetta-hero-og-v2.jpg?v=3';
+  const siteVerification = config?.googleSiteVerification || 'xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY';
 
   return {
     title,
     description,
     metadataBase: new URL('https://vendetta.mx'),
     verification: {
-      google: 'xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY',
+      google: siteVerification,
+    },
+    icons: {
+      other: [
+        {
+          rel: 'image_src',
+          url: image,
+        },
+      ],
     },
     openGraph: {
       title,
@@ -76,9 +88,11 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [
         {
           url: image,
+          secureUrl: image,
           width: 1200,
           height: 630,
           alt: 'Vendetta Live Music Show',
+          type: 'image/jpeg',
         },
       ],
       locale: 'es_MX',
@@ -93,18 +107,28 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const config = await db.globalConfig.findUnique({
+    where: { id: "vendetta_config" },
+    select: {
+      googleAnalyticsMeasurementId: true,
+      googleSiteVerification: true,
+    }
+  });
+
+  const siteVerification = config?.googleSiteVerification || 'xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY';
+
   return (
     <html
       lang="es"
       className={`${nohemi.variable} ${plusJakartaSans.variable} ${advent.variable} dark antialiased scroll-smooth`}
     >
       <head>
-        <meta name="google-site-verification" content="xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY" />
+        <meta name="google-site-verification" content={siteVerification} />
         {/* Redirección instantánea a la agenda si la app se abre en modo standalone (PWA en Android / iOS) */}
         <script
           dangerouslySetInnerHTML={{
@@ -125,6 +149,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden max-w-[100vw]">
+        <GoogleAnalytics measurementId={config?.googleAnalyticsMeasurementId} />
         <PwaStandaloneRedirect />
         <Toaster theme="dark" position="bottom-right" richColors />
         <SchemaMarkup />

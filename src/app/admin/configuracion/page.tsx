@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MessageCircle, Calendar, Settings, ShieldCheck, Mail, ArrowRight, ExternalLink, Share2, FileText, Plug, Map, Loader2, MessageSquare, Search, CreditCard, Lock } from "lucide-react"
+import { MessageCircle, Calendar, Settings, ShieldCheck, Mail, ArrowRight, ExternalLink, Share2, FileText, Plug, Map, Loader2, MessageSquare, Search, CreditCard, Lock, BarChart3, Globe } from "lucide-react"
 import { ConfigFormWrapper } from "@/components/admin/ConfigFormWrapper"
 import { SandboxToggle } from "@/components/admin/SandboxToggle"
 import { AdminSignatureManager } from "@/components/admin/AdminSignatureManager"
@@ -198,59 +198,130 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
               </div>
             </section>
 
-            {/* Google Calendar Section */}
+            {/* Google Workspace Suite Section */}
             <section className="space-y-6">
               <div className="bg-card border border-border/40 rounded-2xl p-6 backdrop-blur-sm">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
-                    <Calendar className="w-6 h-6 text-blue-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground">Google Calendar</h2>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <div className={`w-2 h-2 rounded-full ${config?.googleRefreshToken ? 'bg-green-400' : 'bg-red-500 animate-pulse'}`} />
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-                        {config?.googleRefreshToken ? 'Sincronización Activa' : 'Desconectado'}
-                      </span>
+                <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                      <BarChart3 className="w-6 h-6 text-blue-400" />
                     </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Google Workspace Suite</h2>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className={`w-2 h-2 rounded-full ${config?.googleRefreshToken ? 'bg-green-400' : 'bg-red-500 animate-pulse'}`} />
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                          {config?.googleRefreshToken ? 'OAuth Conectado (Calendar + Analytics + Search Console)' : 'Desconectado'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link href="/admin/analytics">
+                    <Button variant="outline" size="sm" className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 font-bold text-xs h-9">
+                      <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+                      Ver Métricas en Dashboard
+                      <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Sub-status badges */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-6">
+                  <div className="p-3 rounded-xl bg-card border border-border/40 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs">
+                      <Calendar className="w-4 h-4 text-blue-400" />
+                      <span className="font-semibold text-foreground">Calendar</span>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${config?.googleCalendarId ? 'bg-green-500/15 text-green-400' : 'bg-muted text-muted-foreground'}`}>
+                      {config?.googleCalendarId ? 'Configurado' : 'Pendiente'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-card border border-border/40 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs">
+                      <Search className="w-4 h-4 text-indigo-400" />
+                      <span className="font-semibold text-foreground">Search Console</span>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${config?.googleSearchConsoleSiteUrl ? 'bg-green-500/15 text-green-400' : 'bg-muted text-muted-foreground'}`}>
+                      {config?.googleSearchConsoleSiteUrl ? 'Configurado' : 'Pendiente'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-card border border-border/40 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs">
+                      <BarChart3 className="w-4 h-4 text-emerald-400" />
+                      <span className="font-semibold text-foreground">Analytics (GA4)</span>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${config?.googleAnalyticsPropertyId ? 'bg-green-500/15 text-green-400' : 'bg-muted text-muted-foreground'}`}>
+                      {config?.googleAnalyticsPropertyId ? 'Configurado' : 'Pendiente'}
+                    </span>
                   </div>
                 </div>
 
                 <ConfigFormWrapper action={saveGoogleCredentialsAction} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="clientId">Client ID</Label>
-                    <Input id="clientId" name="clientId" defaultValue={config?.googleClientId || ""} 
-                      className="bg-card border-border/40" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="clientId" className="text-xs font-semibold">OAuth Client ID</Label>
+                      <Input id="clientId" name="clientId" defaultValue={config?.googleClientId || ""} 
+                        placeholder="...apps.googleusercontent.com" className="bg-card border-border/40 font-mono text-xs" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="clientSecret" className="text-xs font-semibold">OAuth Client Secret</Label>
+                      <Input id="clientSecret" name="clientSecret" type="password"
+                        defaultValue={config?.googleClientSecret ? "********" : ""} 
+                        className="bg-card border-border/40 font-mono text-xs" />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="clientSecret">Client Secret</Label>
-                    <Input id="clientSecret" name="clientSecret" type="password"
-                      defaultValue={config?.googleClientSecret ? "********" : ""} 
-                      className="bg-card border-border/40" />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="calendarId" className="text-xs font-semibold">Google Calendar ID</Label>
+                      <Input id="calendarId" name="calendarId" defaultValue={config?.googleCalendarId || ""}
+                        placeholder="ejemplo@gmail.com" className="bg-card border-border/40 text-xs" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="siteUrl" className="text-xs font-semibold">Search Console Site URL</Label>
+                      <Input id="siteUrl" name="siteUrl" defaultValue={config?.googleSearchConsoleSiteUrl || "https://vendetta.mx"}
+                        placeholder="https://vendetta.mx" className="bg-card border-border/40 text-xs" />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="calendarId">Google Calendar ID (Email)</Label>
-                    <Input id="calendarId" name="calendarId" defaultValue={config?.googleCalendarId || ""}
-                      placeholder="ejemplo@gmail.com" className="bg-card border-border/40" />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="propertyId" className="text-xs font-semibold">GA4 Property ID (Data API)</Label>
+                      <Input id="propertyId" name="propertyId" defaultValue={config?.googleAnalyticsPropertyId || ""}
+                        placeholder="Ej: 439281729" className="bg-card border-border/40 font-mono text-xs" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="measurementId" className="text-xs font-semibold">GA4 Measurement ID (Frontend Tag)</Label>
+                      <Input id="measurementId" name="measurementId" defaultValue={config?.googleAnalyticsMeasurementId || ""}
+                        placeholder="Ej: G-XXXXXXXXXX" className="bg-card border-border/40 font-mono text-xs" />
+                    </div>
                   </div>
-                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold mt-2 text-white">
-                    Guardar Credenciales Google
+
+                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold mt-2 text-white text-xs h-10">
+                    Guardar Configuración Google Suite
                   </Button>
                 </ConfigFormWrapper>
 
                 <div className="mt-8 pt-6 border-t border-border/40 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-foreground">Estado del Vínculo</h4>
+                    <h4 className="text-sm font-bold text-foreground">Vínculo con Cuenta de Google</h4>
                     {config?.googleRefreshToken ? (
-                      <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20 font-bold uppercase">Vinculado</span>
+                      <span className="text-[10px] bg-green-500/20 text-green-400 px-2.5 py-1 rounded-full border border-green-500/20 font-bold uppercase">
+                        Autorizado con Acceso Completo
+                      </span>
                     ) : (
-                      <span className="text-[10px] bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full border border-red-500/20 font-bold uppercase">No Vinculado</span>
+                      <span className="text-[10px] bg-red-500/20 text-red-500 px-2.5 py-1 rounded-full border border-red-500/20 font-bold uppercase">
+                        No Vinculado
+                      </span>
                     )}
                   </div>
                   
                   <Button variant="outline" className="w-full border-blue-500/30 hover:bg-blue-500/10 text-blue-400 group h-12" disabled={!config?.googleClientId} asChild>
-                    <a href="/api/auth/google">
-                      Vincular Cuenta de Google
+                    <a href="/api/auth/google?returnTo=/admin/configuracion?tab=integraciones">
+                      {config?.googleRefreshToken ? "Re-vincular / Actualizar Permisos Google" : "Vincular Cuenta de Google"}
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </a>
                   </Button>
@@ -274,14 +345,16 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
                     <Search className="w-4 h-4" />
                    </div>
-                   <h3 className="font-black text-white text-sm uppercase tracking-widest">Guía de Configuración Google</h3>
+                   <h3 className="font-black text-white text-sm uppercase tracking-widest">Guía de Integración Google Suite</h3>
                  </div>
                  <p className="text-xs text-slate-300 mb-5 leading-relaxed">
-                   Para habilitar la sincronización con tu calendario, es necesario configurar un proyecto en la consola de Google Cloud. He preparado una documentación detallada para guiarte en este proceso.
+                   Para sincronizar tu calendario, las consultas orgánicas de Search Console y el tráfico de Google Analytics 4, es necesario habilitar <strong>Google Calendar API</strong>, <strong>Google Analytics Data API</strong> y <strong>Search Console API</strong> en tu proyecto de Google Cloud.
                  </p>
-                 <Button variant="link" className="p-0 h-auto text-blue-400 font-black text-[10px] uppercase tracking-widest hover:text-blue-300 hover:no-underline underline-offset-4 decoration-2 decoration-blue-500/30">
-                   CONSULTAR GUÍA DE INTEGRACIÓN →
-                 </Button>
+                 <Link href="/admin/analytics?tab=connection">
+                   <Button variant="link" className="p-0 h-auto text-blue-400 font-black text-[10px] uppercase tracking-widest hover:text-blue-300 hover:no-underline underline-offset-4 decoration-2 decoration-blue-500/30">
+                     ABRIR DIAGNÓSTICO Y GUÍA PASO A PASO →
+                   </Button>
+                 </Link>
               </div>
             </section>
 

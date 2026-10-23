@@ -332,7 +332,7 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
                placeholder="https://goo.gl/maps/..."
                className="bg-card/50 border-white/15 h-12 text-base focus:border-primary rounded-xl"
              />
-             <p className="text-[9px] text-gray-500 font-medium">Pegar el link compartido de Maps nos ayuda a llegar más rápido.</p>
+             <p className="text-[9px] text-zinc-400 font-medium">Pegar el link compartido de Maps nos ayuda a llegar más rápido.</p>
            </div>
         </div>
 
@@ -352,7 +352,7 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
              </div>
              <div className="flex-1">
                <div className="text-sm font-bold text-white group-hover:text-primary transition-colors">¿Es un evento abierto al público?</div>
-               <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">
+               <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">
                  Si lo marcas como público (ej. un show en un Bar o Festival), aparecerá en nuestra agenda con el nombre del lugar y dirección para que tus invitados nos encuentren. Si es privado, solo mostraremos el municipio.
                </p>
              </div>
@@ -437,7 +437,7 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
 
             <div className="flex justify-between items-end pt-4 border-t border-white/10">
               <div>
-                <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] block">
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] block">
                   {viaticos.requiresManualQuote ? "Total Estimado (Sin Viáticos)" : "Total Estimado"}
                 </span>
                 <span className="text-3xl font-black text-primary tracking-tighter">
@@ -455,10 +455,10 @@ export default function Step2_Ubicacion({ data, onNext, onBack, viaticosConfig }
       {/* Aviso zonas locales */}
       {!viaticos && !loading && (
         <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 mb-8">
-          <p className="text-xs text-gray-500 font-medium flex items-start gap-3 leading-relaxed">
+          <p className="text-xs text-zinc-400 font-medium flex items-start gap-3 leading-relaxed">
             <AlertTriangle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
             <span>
-              <strong className="text-gray-300">Zona Preferencial Vendetta:</strong> Toluca, Metepec, Zinacantepec, Ocoyoacac, Lerma y alrededores no generan cargos de viáticos adicionales.
+              <strong className="text-zinc-200">Zona Preferencial Vendetta:</strong> Toluca, Metepec, Zinacantepec, Ocoyoacac, Lerma y alrededores no generan cargos de viáticos adicionales.
             </span>
           </p>
         </div>

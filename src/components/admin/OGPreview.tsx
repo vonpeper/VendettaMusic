@@ -9,7 +9,7 @@ interface OGPreviewProps {
 }
 
 export function OGPreview({ ogImage, ogTitle, ogDescription }: OGPreviewProps) {
-  const fallbackImage = "/images/vendetta-hero-og.jpg"
+  const fallbackImage = "/images/vendetta-hero-og-v2.jpg"
   const displayImage = ogImage || fallbackImage
   const displayTitle = ogTitle || "Vendetta | Música en Vivo"
   const displayDescription = ogDescription || "La mejor música en vivo para tu boda..."

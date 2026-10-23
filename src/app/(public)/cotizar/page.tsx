@@ -3,7 +3,7 @@ import { DirectQuoteForm } from "@/components/public/DirectQuoteForm"
 import { Metadata } from "next"
 import { Sparkles, ShieldCheck, MapPin, Music } from "lucide-react"
 
-const ogImage = "https://vendetta.mx/images/opengraph-cotizar.jpg?v=1"
+const ogImage = "https://vendetta.mx/images/opengraph-cotizar.png?v=3"
 
 export const metadata: Metadata = {
   title: "Personaliza tu Propuesta | Vendetta Live Music",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         alt: "Cotizar Evento en Vivo - Vendetta Live Music",
-        type: "image/jpeg",
+        type: "image/png",
       },
     ],
   },

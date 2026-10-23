@@ -232,8 +232,8 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                         {features.map(f => (
                           <span key={f} className={`text-[10px] border px-2 py-0.5 rounded capitalize ${
                             isUnavailable 
-                              ? "bg-white/5 border-white/5 text-gray-500" 
-                              : "bg-white/5 border-white/10 text-gray-400"
+                              ? "bg-white/5 border-white/5 text-zinc-400" 
+                              : "bg-white/5 border-white/10 text-zinc-300"
                           }`}>{f}</span>
                         ))}
                       </div>
@@ -291,10 +291,10 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
               />
               <div className="w-20 text-center bg-black/40 rounded-xl p-2 border border-white/10">
                 <div className="text-xl font-black text-white">{guests}</div>
-                <div className="text-[9px] text-gray-500 uppercase">Per.</div>
+                <div className="text-[9px] text-zinc-400 uppercase">Per.</div>
               </div>
             </div>
-            <p className="text-[11px] text-gray-400 font-medium">
+            <p className="text-[11px] text-zinc-300 font-medium">
               {guests <= 100 ? "✓ Audio estándar incluido (Hasta 100 personas)." : 
                guests <= 300 ? `⚠️ Upgrade de audio Pro necesario (+${formatMXN(audioMediumFee)}).` : 
                `🔥 Sistema Line Array Festival necesario (+${formatMXN(audioLargeFee)}).`}
@@ -313,7 +313,7 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                   <span className="text-xl font-black text-white w-10 text-center">{bandHrs}h</span>
                   <Button variant="ghost" size="icon" onClick={() => setBandHrs(Math.min(pkg?.maxDuration || 5, bandHrs + 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
                 </div>
-                <p className="text-[10px] text-gray-500 font-bold tracking-tight">* Mínimo {pkg?.minDuration || 2} horas para contratación. Máximo {pkg?.maxDuration || 5} horas.</p>
+                <p className="text-[10px] text-zinc-400 font-bold tracking-tight">* Mínimo {pkg?.minDuration || 2} horas para contratación. Máximo {pkg?.maxDuration || 5} horas.</p>
               </div>
 
               <div className="space-y-3">
@@ -324,7 +324,7 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                   <div className="space-y-2">
                     <div className="flex items-center gap-3 bg-black/25 p-2 rounded-2xl border border-white/5 w-fit opacity-50 cursor-not-allowed">
                       <Button variant="ghost" size="icon" disabled className="h-8 w-8 rounded-full border border-white/10">-</Button>
-                      <span className="text-xl font-black text-gray-500 w-10 text-center">0h</span>
+                      <span className="text-xl font-black text-zinc-400 w-10 text-center">0h</span>
                       <Button variant="ghost" size="icon" disabled className="h-8 w-8 rounded-full border border-white/10">+</Button>
                     </div>
                     <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded font-black tracking-widest uppercase inline-block">
@@ -343,7 +343,7 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                         <label className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-not-allowed opacity-50 group mt-2">
                           <input type="checkbox" disabled checked={false} className="w-4 h-4 rounded" />
                           <div className="flex flex-col">
-                            <span className="text-[11px] font-bold text-gray-500">¿Incluir 2 Pantallas LED de 45"?</span>
+                            <span className="text-[11px] font-bold text-zinc-400">¿Incluir 2 Pantallas LED de 45"?</span>
                             <span className="text-[9px] text-red-400 font-black">No disponible</span>
                           </div>
                         </label>
@@ -437,7 +437,7 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                             </span>
                           )}
                         </div>
-                        <span className="text-[10px] text-gray-500">
+                        <span className="text-[10px] text-zinc-400">
                           {ex.description || (hourly > 0 ? "Precio variable por hora" : "Un pago único")}
                         </span>
                       </div>

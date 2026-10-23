@@ -16,6 +16,7 @@ const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto
 import { auth } from "@/lib/auth"
 import { RepairSyncButton } from "@/components/admin/RepairSyncButton"
 import { NuevoEventoButton } from "@/components/admin/EventActions"
+import { GoogleMetricsWidget } from "@/components/admin/GoogleMetricsWidget"
 import { Plus, UserPlus, FilePlus, CalendarDays } from "lucide-react"
 
 export default async function AdminDashboardPage() {
@@ -327,6 +328,9 @@ export default async function AdminDashboardPage() {
           </Card>
         ))}
       </div>
+
+      {/* -- Widget Métricas Google Suite (Search Console + GA4) -- */}
+      <GoogleMetricsWidget />
 
       {/* -- Gráfica + Pérdida Potencial -- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

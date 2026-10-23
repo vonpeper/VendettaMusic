@@ -115,4 +115,27 @@ describe("Parser de Prospectos (inquiry-parser.ts)", () => {
     assert.strictEqual(parsed.guestCount, 120)
     assert.strictEqual(parsed.notes, "Requiere iluminación especial")
   })
+
+  it("caso 5: Cotización con producción personalizada (>120 pax) sin paquete explícito (caso César Mendiola)", () => {
+    const parsed = parseInquiryDetails({
+      name: "César Mendiola",
+      phone: "+52 722 535 3531",
+      email: "cliente_527225353531@cotizacion.vendetta.mx",
+      eventType: "Boda (Producción personalizada - >120 pax)",
+      message: "Horario: 04:00 PM a 06:00 PM (2 Horas) | Invitados: 130 | Ubicación: Metepec, Estado de México (Hacienda La Puerta) | Maps: https://maps.app.goo.gl/test | Motivo revisión: Aforo > 120 (130 personas)",
+    })
+
+    assert.strictEqual(parsed.cleanEmail, "")
+    assert.strictEqual(parsed.ceremonyType, "boda")
+    assert.strictEqual(parsed.customName, "Boda - César Mendiola")
+    assert.strictEqual(parsed.packageKeyword, "Essential", "Debe resolver automáticamente a Essential como paquete base canónico")
+    assert.strictEqual(parsed.startTime, "16:00")
+    assert.strictEqual(parsed.endTime, "18:00")
+    assert.strictEqual(parsed.arrivalTime, "15:00")
+    assert.strictEqual(parsed.setupTime, "15:50")
+    assert.strictEqual(parsed.guestCount, 130)
+    assert.strictEqual(parsed.city, "Metepec")
+    assert.strictEqual(parsed.state, "Estado de México")
+    assert.strictEqual(parsed.venueName, "Hacienda La Puerta")
+  })
 })

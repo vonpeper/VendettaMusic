@@ -32,10 +32,26 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
+    const cspHeader = `
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      img-src 'self' data: blob: https://images.unsplash.com https://img.youtube.com https://i.ytimg.com https://*.google-analytics.com https://www.googletagmanager.com https://*.stripe.com;
+      font-src 'self' data: https://fonts.gstatic.com;
+      connect-src 'self' https://*.google-analytics.com https://analytics.google.com https://www.google-analytics.com https://stats.g.doubleclick.net https://api.stripe.com https://maps.googleapis.com https://*.vendetta.mx http://localhost:* https://localhost:* ws: wss:;
+      frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://js.stripe.com https://hooks.stripe.com;
+      media-src 'self' blob: data:;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+    `.replace(/\s{2,}/g, ' ').trim();
+
     return [
       {
         source: '/(.*)',
         headers: [
+          { key: 'Content-Security-Policy', value: cspHeader },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },

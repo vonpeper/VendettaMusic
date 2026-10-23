@@ -132,19 +132,23 @@ export function parseInquiryDetails(params: {
   const ceremonyLabel = CEREMONY_LABELS[ceremonyType] || "Evento"
   const customName = `${ceremonyLabel} - ${name.trim()}`
 
-  // 3. Detección de Paquete
+  // 3. Detección de Paquete (con fallback predeterminado a Essential)
   let packageKeyword: string | null = null
   const lowerFull = fullText.toLowerCase()
-  if (lowerFull.includes("essential")) {
+  if (lowerFull.includes("essential") || lowerFull.includes("esencial")) {
     packageKeyword = "Essential"
-  } else if (lowerFull.includes("experience")) {
+  } else if (lowerFull.includes("experience") || lowerFull.includes("experiencia")) {
     packageKeyword = "Experience"
   } else if (lowerFull.includes("festival")) {
     packageKeyword = "Festival"
-  } else if (lowerFull.includes("cocktail") || lowerFull.includes("acustico")) {
+  } else if (lowerFull.includes("cocktail") || lowerFull.includes("coctel") || lowerFull.includes("cóctel") || lowerFull.includes("acustico") || lowerFull.includes("acústico")) {
     packageKeyword = "Cocktail"
-  } else if (lowerFull.includes("arma tu show")) {
+  } else if (lowerFull.includes("arma tu show") || lowerFull.includes("personalizado")) {
     packageKeyword = "Arma tu show"
+  } else {
+    // Si no se especifica paquete explícito (ej. consultas libres o eventos con producción especial),
+    // el paquete base canónico de arranque de Vendetta es Essential
+    packageKeyword = "Essential"
   }
 
   // 4. Horarios

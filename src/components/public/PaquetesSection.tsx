@@ -1,21 +1,11 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import * as Icons from "lucide-react"
-import Image from "next/image"
-import { toast } from "sonner"
-
-import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
-
-import { submitContactInquiry } from "@/actions/contact"
-import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 
 const {
-  Check, X, Sparkles, Music2,
-  Mic2, Lightbulb, Users, Volume2, Monitor, Star,
-  ArrowUpRight, Calendar, Clock, MapPin, User, PartyPopper, Phone, Mail, MessageSquare
+  Check, X, Sparkles, ArrowUpRight
 } = Icons
 
 // Helper to get Lucide icon from string
@@ -122,184 +112,13 @@ const HARDCODED_FEATURES: Record<string, { includes: {icon: string, text: string
     notIncludes: ["Templete", "Pantalla LED", "Iluminación robótica", "Viáticos"]
   }
 }
-
-const EVENT_MOTIVOS = [
-  { value: "Boda", label: "💍 Boda" },
-  { value: "XV Años", label: "✨ XV Años" },
-  { value: "Cumpleaños", label: "🎂 Cumpleaños" },
-  { value: "Corporativo", label: "🏢 Corporativo / Empresarial" },
-  { value: "Bar", label: "🍸 Bar / Restaurante" },
-  { value: "Happening", label: "⚡ Happening / Fiesta Privada" },
-  { value: "Otro", label: "🎶 Otro" },
-]
-
 interface PaquetesSectionProps {
   dbPackages: PackageData[]
   adminWhatsapp?: string | null
   viaticosConfig?: any
 }
 
-export function PaquetesSection({ dbPackages, adminWhatsapp }: PaquetesSectionProps) {
-
-  // Estado del modal de cotización
-  const [selectedPkg, setSelectedPkg] = useState<PackageData | null>(null)
-  const [formData, setFormData] = useState({
-    nombre: "",
-    telefono: "",
-    email: "",
-    motivo: "Boda",
-    fecha: "",
-    hora: "",
-    invitados: "",
-    estado: "Estado de México",
-    municipio: "Metepec",
-    municipioOtro: "",
-    lugar: "",
-    mapsLink: "",
-    notas: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const isLargePackage = (name?: string) => {
-    if (!name) return false
-    const lower = name.toLowerCase()
-    return lower.includes("experience") || lower.includes("festival")
-  }
-
-  const handleOpenQuote = (pkg: PackageData) => {
-    setSelectedPkg(pkg)
-    const isLarge = isLargePackage(pkg.name)
-    setFormData((prev) => ({
-      ...prev,
-      invitados: isLarge ? "100" : (prev.invitados || "50"),
-    }))
-  }
-
-  const handleCloseModal = () => {
-    setSelectedPkg(null)
-    setIsSubmitting(false)
-  }
-
-  const handleSubmitQuote = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!formData.nombre.trim()) {
-      toast.error("Por favor ingresa tu nombre")
-      return
-    }
-    if (!formData.telefono.trim()) {
-      toast.error("Por favor ingresa tu número de teléfono / WhatsApp")
-      return
-    }
-    if (!formData.fecha) {
-      toast.error("Por favor selecciona la fecha de tu evento")
-      return
-    }
-    if (!formData.hora.trim()) {
-      toast.error("Por favor indica la hora estimada")
-      return
-    }
-    if (!formData.invitados.trim()) {
-      toast.error("Por favor indica el número aproximado de invitados")
-      return
-    }
-
-    const numInv = parseInt(formData.invitados, 10) || 0
-    const isLarge = selectedPkg ? isLargePackage(selectedPkg.name) : false
-    if (isLarge && numInv < 100) {
-      toast.error(`El paquete ${selectedPkg?.name} incluye producción diseñada para un aforo mínimo de 100 invitados.`)
-      return
-    }
-
-    const finalMuni = formData.municipio === "Otro municipio / cotización manual"
-      ? (formData.municipioOtro.trim() || "Otro municipio")
-      : formData.municipio
-
-    if (!finalMuni.trim()) {
-      toast.error("Por favor selecciona o especifica tu municipio")
-      return
-    }
-
-    const venuePlace = formData.lugar.trim()
-    const finalUbicacion = `${finalMuni}, ${formData.estado}${venuePlace ? ` (${venuePlace})` : ""}`
-
-    setIsSubmitting(true)
-
-    const pkgName = selectedPkg ? selectedPkg.name : "Personalizado"
-
-    // 1. Guardar prospecto en segundo plano en la base de datos
-    try {
-      const inquiryForm = new FormData()
-      inquiryForm.set("nombre", formData.nombre.trim())
-      inquiryForm.set("telefono", formData.telefono.trim())
-      inquiryForm.set("email", formData.email?.trim() || "contacto@vendetta.mx")
-      inquiryForm.set("fecha", formData.fecha)
-      inquiryForm.set("tipo", `${formData.motivo} - Paquete: ${pkgName}`)
-
-      const msgParts = [
-        `Hora: ${formData.hora.trim()}`,
-        `Invitados: ${formData.invitados.trim()}`,
-        `Ubicación: ${finalUbicacion}`,
-      ]
-      if (formData.mapsLink.trim()) {
-        msgParts.push(`Maps: ${formData.mapsLink.trim()}`)
-      } else {
-        msgParts.push(`Maps: Pendiente por confirmar`)
-      }
-      if (formData.notas.trim()) {
-        msgParts.push(`Notas: ${formData.notas.trim()}`)
-      }
-
-      inquiryForm.set("mensaje", msgParts.join(" | "))
-      await submitContactInquiry(inquiryForm).catch((e) => console.warn("Could not save contact inquiry:", e))
-    } catch (inqErr) {
-      console.warn("Inquiry error:", inqErr)
-    }
-
-    // 2. Formatear mensaje para WhatsApp prellenado
-    const mapsSection = formData.mapsLink.trim()
-      ? `🗺️ *Google Maps:* ${formData.mapsLink.trim()}\n`
-      : `🗺️ *Dirección exacta y Maps:* Pendientes por confirmar más adelante\n`
-
-    const waMessage = 
-`¡Hola Vendetta Live Music! 🎸⚡
-Me gustaría solicitar una cotización formal para mi evento:
-
-📦 *Paquete de interés:* ${pkgName}
-👤 *Nombre:* ${formData.nombre.trim()}
-📱 *Teléfono:* ${formData.telefono.trim()}
-${formData.email.trim() ? `📧 *Correo:* ${formData.email.trim()}\n` : ""}🎉 *Tipo de Evento:* ${formData.motivo}
-📅 *Fecha:* ${formData.fecha}
-⏰ *Hora estimada:* ${formData.hora.trim()}
-👥 *Invitados:* ${formData.invitados.trim()} personas
-📍 *Ubicación / Ciudad:* ${finalUbicacion}
-${mapsSection}${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formData.notas.trim()}\n` : ""}
-¿Tienen disponibilidad para esta fecha? ¡Muchas gracias!`
-
-    const rawNumber =
-      adminWhatsapp?.trim() ||
-      process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() ||
-      process.env.NEXT_PUBLIC_ADMIN_WA?.trim() ||
-      ""
-    const cleanPhone = rawNumber.replace(/\D/g, "")
-    
-    if (!cleanPhone) {
-      toast.error("Número de WhatsApp de atención no disponible en este momento. Hemos registrado tus datos y te contactaremos a la brevedad.")
-      handleCloseModal()
-      return
-    }
-
-    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`
-    
-    toast.success("¡Abriendo WhatsApp con la información prellenada de tu evento!")
-    
-    if (typeof window !== "undefined") {
-      window.open(waUrl, "_blank")
-    }
-    
-    handleCloseModal()
-  }
-
+export function PaquetesSection({ dbPackages }: PaquetesSectionProps) {
   return (
     <section id="paquetes" className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#15152B]/90 to-[#42112D]">
       {/* Concert ambient lights and grid */}
@@ -327,6 +146,11 @@ ${mapsSection}${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formDa
             const style = PACKAGE_STLYES[i % 3] || PACKAGE_STLYES[0]
             const isUnavailable = pkg.active === false
             const isEssential = pkg.name.toLowerCase().includes("essent")
+            const pkgSlug = pkg.name.toLowerCase().includes("experience")
+              ? "experience"
+              : pkg.name.toLowerCase().includes("festival")
+                ? "festival"
+                : "essential"
             
             return (
               <div
@@ -447,337 +271,34 @@ ${mapsSection}${formData.notas.trim() ? `📝 *Notas / Requerimientos:* ${formDa
                   )}
                 </div>
 
-                <Button
-                  disabled={isUnavailable}
-                  onClick={() => handleOpenQuote(pkg)}
-                  className={`w-full h-12 font-semibold text-xs uppercase tracking-wider rounded-xl gap-2 cursor-pointer transition-all duration-300 mt-auto group ${
-                    isUnavailable
-                      ? "bg-neutral-800 border border-neutral-700/50 text-neutral-500 cursor-not-allowed"
-                      : style.highlight
+                {isUnavailable ? (
+                  <Button
+                    disabled
+                    className="w-full h-12 font-semibold text-xs uppercase tracking-wider rounded-xl gap-2 mt-auto bg-neutral-800 border border-neutral-700/50 text-neutral-500 cursor-not-allowed"
+                  >
+                    No Disponible
+                  </Button>
+                ) : (
+                  <Button
+                    asChild
+                    className={`w-full h-12 font-semibold text-xs uppercase tracking-wider rounded-xl gap-2 cursor-pointer transition-all duration-300 mt-auto group ${
+                      style.highlight
                         ? "bg-gradient-to-r from-[#6F0D2B] via-[#A91D4D] to-[#FF5A5F] hover:from-[#7e1032] hover:to-[#ff6d72] text-[#F2F0EB] shadow-xl shadow-[#FF5A5F]/25 hover:scale-[1.02] border border-white/20"
                         : "bg-white/10 hover:bg-white/20 text-[#F2F0EB] border border-white/20 hover:border-white/40 hover:scale-[1.01]"
-                  }`}
-                >
-                  {isUnavailable ? "No Disponible" : (
-                    <>
-                      <WhatsAppIcon className="w-4 h-4 fill-current transition-transform duration-300 group-hover:scale-110" />
+                    }`}
+                  >
+                    <Link href={`/cotizar?paquete=${pkgSlug}`}>
+                      <Sparkles className="w-4 h-4 text-white/90 transition-transform duration-300 group-hover:scale-110" />
                       <span>Cotizar Paquete</span>
                       <ArrowUpRight className="w-4 h-4 opacity-70 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </>
-                  )}
-                </Button>
+                    </Link>
+                  </Button>
+                )}
               </div>
             )
           })}
         </div>
       </div>
-
-      {/* -- MODAL DE COTIZACIÓN A WHATSAPP ----------------------------- */}
-      {selectedPkg && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in-0 duration-200"
-          onClick={handleCloseModal}
-        >
-          <div 
-            className="relative w-full max-w-lg bg-zinc-950 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar cursor-default"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Ambient background glow */}
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[#25D366]/10 rounded-full blur-3xl pointer-events-none" />
-
-            {/* Close button */}
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            {/* Header */}
-            <div className="mb-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary font-bold text-[10px] uppercase tracking-widest mb-3">
-                <Sparkles className="w-3 h-3" /> Cotizando: {selectedPkg.name}
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-heading font-black text-white uppercase tracking-tight">
-                Datos de tu Evento
-              </h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Completa estos datos para generar tu cotización formal con disponibilidad inmediata vía WhatsApp.
-              </p>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleSubmitQuote} className="space-y-4">
-              {/* Nombre y Teléfono */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-primary" /> Nombre Completo *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej: Mariana Gómez"
-                    value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-primary" /> Teléfono / WhatsApp *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="Ej: 55 1234 5678"
-                    value={formData.telefono}
-                    onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Correo y Motivo */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-primary" /> Correo Electrónico (Opcional)
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="Ej: mariana@correo.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <PartyPopper className="w-3.5 h-3.5 text-primary" /> Motivo del Evento *
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={formData.motivo}
-                      onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
-                      className="w-full h-11 px-4 rounded-xl bg-zinc-900 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
-                    >
-                      {EVENT_MOTIVOS.map((m) => (
-                        <option key={m.value} value={m.value} className="bg-zinc-900 text-white">
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-white/40">
-                      <ArrowUpRight className="w-4 h-4 rotate-90" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fecha y Hora */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-primary" /> Fecha del Evento *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    min={new Date().toISOString().split("T")[0]}
-                    value={formData.fecha}
-                    onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all [color-scheme:dark]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-primary" /> Hora Estimada *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej: 21:00 hrs"
-                    value={formData.hora}
-                    onChange={(e) => setFormData({ ...formData, hora: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Invitados */}
-              <div>
-                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-primary" /> No. de Invitados *
-                </label>
-                <input
-                  type="number"
-                  required
-                  min={selectedPkg && isLargePackage(selectedPkg.name) ? 100 : 10}
-                  placeholder={selectedPkg && isLargePackage(selectedPkg.name) ? "Mínimo 100 invitados" : "Ej: 50"}
-                  value={formData.invitados}
-                  onChange={(e) => setFormData({ ...formData, invitados: e.target.value })}
-                  className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                />
-                {selectedPkg && isLargePackage(selectedPkg.name) && (
-                  <p className="text-[11px] text-amber-400 font-semibold mt-1.5">
-                    ⚠️ Mínimo 100 invitados por la dimensión de este paquete.
-                  </p>
-                )}
-              </div>
-
-              {/* Estado y Municipio (Dropdowns para viáticos automáticos) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-primary" /> Estado *
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={formData.estado}
-                      onChange={(e) => {
-                        const newEstado = e.target.value
-                        const list = ESTADOS_MUNICIPIOS[newEstado] || ["Otro municipio / cotización manual"]
-                        setFormData({
-                          ...formData,
-                          estado: newEstado,
-                          municipio: list[0] || "",
-                          municipioOtro: "",
-                        })
-                      }}
-                      className="w-full h-11 px-4 rounded-xl bg-zinc-900 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
-                    >
-                      {Object.keys(ESTADOS_MUNICIPIOS).map((st) => (
-                        <option key={st} value={st} className="bg-zinc-900 text-white">
-                          {st}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-white/40">
-                      <ArrowUpRight className="w-4 h-4 rotate-90" />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-primary" /> Municipio / Alcaldía *
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={formData.municipio}
-                      onChange={(e) => setFormData({ ...formData, municipio: e.target.value })}
-                      className="w-full h-11 px-4 rounded-xl bg-zinc-900 border border-white/10 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer"
-                    >
-                      {(ESTADOS_MUNICIPIOS[formData.estado] || ["Otro municipio / cotización manual"]).map((m) => (
-                        <option key={m} value={m} className="bg-zinc-900 text-white">
-                          {m}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-white/40">
-                      <ArrowUpRight className="w-4 h-4 rotate-90" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {formData.municipio === "Otro municipio / cotización manual" && (
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                    Nombre de tu Municipio o Ciudad *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej: San Juan del Río, Taxco..."
-                    value={formData.municipioOtro}
-                    onChange={(e) => setFormData({ ...formData, municipioOtro: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  />
-                </div>
-              )}
-
-              {/* Lugar / Salón y Enlace Google Maps (Opcionales con aviso de privacidad) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                    Lugar o Salón (Opcional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ej. Hacienda o Salón tentativo"
-                    value={formData.lugar}
-                    onChange={(e) => setFormData({ ...formData, lugar: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                    Link de Google Maps (Opcional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://maps.app.goo.gl/..."
-                    value={formData.mapsLink}
-                    onChange={(e) => setFormData({ ...formData, mapsLink: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  />
-                </div>
-              </div>
-              <p className="text-[11px] text-gray-400">
-                🔒 <em>Si aún no tienes salón definido o prefieres compartir tu dirección exacta más adelante, puedes dejarlo en blanco.</em>
-              </p>
-
-              {/* Notas opcionales */}
-              <div>
-                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <MessageSquare className="w-3.5 h-3.5 text-primary" /> Requerimientos o Notas Adicionales (Opcional)
-                </label>
-                <textarea
-                  placeholder="Ej: Horas extras, música especial, temática de rock..."
-                  rows={2}
-                  value={formData.notas}
-                  onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
-                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
-                />
-              </div>
-
-              {/* Botón de Enviar a WhatsApp */}
-              <div className="pt-2">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-13 font-black text-sm uppercase tracking-wider gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-xl shadow-[#25D366]/25 transition-all duration-300 rounded-xl cursor-pointer group hover:scale-[1.01] active:scale-[0.99]"
-                >
-                  <WhatsAppIcon className="w-5 h-5 fill-white transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110" />
-                  <span>Enviar y Cotizar por WhatsApp</span>
-                  <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </Button>
-                <p className="text-[10px] text-gray-500 text-center mt-2">
-                  ⚡ Tu información se abrirá automáticamente en WhatsApp para atención personalizada y formalización directa con el equipo.
-                </p>
-
-                <div className="mt-4 pt-3 border-t border-white/10 text-center">
-                  <Link
-                    href={`/cotizar?paquete=${selectedPkg ? (selectedPkg.name.toLowerCase().includes("experience") ? "experience" : selectedPkg.name.toLowerCase().includes("festival") ? "festival" : "essential") : "essential"}`}
-                    className="text-xs text-gray-400 hover:text-primary transition-colors inline-flex items-center gap-1 font-semibold group"
-                  >
-                    <span>¿Prefieres calcular viáticos y personalizar tu propuesta en línea?</span>
-                    <ArrowUpRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                  </Link>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </section>
   )
 }
-

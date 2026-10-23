@@ -326,9 +326,9 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
         </div>
       )}
 
-      <div className="bg-card border border-border/40 rounded-2xl overflow-x-auto shadow-sm">
-        <table className="w-full text-left border-collapse block md:table">
-          <thead className="hidden md:table-header-group">
+      <div className="bg-card border border-border/40 rounded-2xl overflow-x-auto shadow-sm custom-scrollbar">
+        <table className="w-full text-left border-collapse block lg:table">
+          <thead className="hidden lg:table-header-group">
             <tr className="bg-blue-600/10 border-b border-border/40">
               <th className="px-6 py-4 w-12 text-center">
                 <button onClick={toggleSelectAll} className="w-5 h-5 mx-auto rounded border border-border/40 flex items-center justify-center hover:border-blue-600/50 transition-colors">
@@ -377,16 +377,16 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
               <th className="px-6 py-4 text-[10px] font-bold text-blue-600 uppercase tracking-widest text-right">Opciones</th>
             </tr>
           </thead>
-          <tbody className="block md:table-row-group divide-y-0 md:divide-y md:divide-white/5 p-4 md:p-0 space-y-4 md:space-y-0">
+          <tbody className="block lg:table-row-group divide-y-0 lg:divide-y lg:divide-white/5 p-4 lg:p-0 space-y-4 lg:space-y-0">
             {filtered.length === 0 && (
-              <tr className="block md:table-row"><td colSpan={6} className="block md:table-cell px-6 py-12 text-center text-muted-foreground text-sm">Sin resultados para la búsqueda actual.</td></tr>
+              <tr className="block lg:table-row"><td colSpan={6} className="block lg:table-cell px-6 py-12 text-center text-muted-foreground text-sm">Sin resultados para la búsqueda actual.</td></tr>
             )}
             {filtered.map(reserva => (
               <tr 
                 key={reserva.id} 
-                className={`flex flex-col md:table-row bg-card md:bg-transparent border border-border/40 md:border-b md:border-x-0 md:border-t-0 rounded-2xl md:rounded-none mb-6 md:mb-0 align-top hover:bg-blue-600/5 transition-colors group relative overflow-hidden shadow-sm md:shadow-none ${selectedIds.has(reserva.id) ? 'bg-blue-600/5 ring-1 ring-blue-600/20' : ''}`}
+                className={`flex flex-col lg:table-row bg-card lg:bg-transparent border border-border/40 lg:border-b lg:border-x-0 lg:border-t-0 rounded-2xl lg:rounded-none mb-6 lg:mb-0 align-top hover:bg-blue-600/5 transition-colors group relative overflow-hidden shadow-sm lg:shadow-none ${selectedIds.has(reserva.id) ? 'bg-blue-600/5 ring-1 ring-blue-600/20' : ''}`}
               >
-                <td className="flex justify-between md:table-cell p-4 md:py-4 md:px-6 border-b border-border/10 md:border-none items-center bg-muted/5 md:bg-transparent">
+                <td className="flex justify-between lg:table-cell p-4 lg:py-4 lg:px-6 border-b border-border/10 lg:border-none items-center bg-muted/5 lg:bg-transparent">
                   <button 
                     onClick={() => toggleSelect(reserva.id)}
                     className="w-5 h-5 rounded border border-border/40 flex items-center justify-center hover:border-blue-600/50 transition-colors"
@@ -398,16 +398,16 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                     )}
                   </button>
                 </td>
-                <td className="flex flex-col md:table-cell p-4 md:py-4 md:px-6 border-b border-border/10 md:border-none items-start">
+                <td className="flex flex-col lg:table-cell p-4 lg:py-4 lg:px-6 border-b border-border/10 lg:border-none items-start">
                   <Link 
                     href={`/admin/ventas/${reserva.id}`}
-                    className="font-bold text-foreground hover:text-primary hover:underline transition-colors block truncate max-w-[200px] md:max-w-none"
+                    className="font-bold text-foreground hover:text-primary hover:underline transition-colors block truncate max-w-[200px] lg:max-w-none"
                     title={reserva.event?.customName || reserva.customName || reserva.clientName}
                   >
                     {reserva.event?.customName || reserva.customName || reserva.clientName}
                   </Link>
                   {Boolean(reserva.event?.customName || reserva.customName) && (reserva.event?.customName || reserva.customName) !== reserva.clientName && (
-                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px] md:max-w-none" title={reserva.clientName}>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px] lg:max-w-none" title={reserva.clientName}>
                       👤 {reserva.clientName}
                     </div>
                   )}
@@ -429,14 +429,14 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                     </div>
                   )}
                 </td>
-                <td className="flex flex-col md:table-cell p-4 md:py-4 md:px-6 border-b border-border/10 md:border-none items-start gap-1">
+                <td className="flex flex-col lg:table-cell p-4 lg:py-4 lg:px-6 border-b border-border/10 lg:border-none items-start gap-1">
                   <div className="text-sm text-foreground flex items-center gap-2">
                     <Calendar className="w-3 h-3 text-blue-600" />
                     {formatDateMX(reserva.requestedDate, "dd/MM/yyyy")}
                   </div>
                   <div className="text-[10px] text-muted-foreground mt-0.5">{reserva.packageName}</div>
                 </td>
-                <td className="flex flex-row md:table-cell p-4 md:py-4 md:px-6 border-b border-border/10 md:border-none items-center md:items-start font-mono gap-4">
+                <td className="flex flex-row lg:table-cell p-4 lg:py-4 lg:px-6 border-b border-border/10 lg:border-none items-center lg:items-start font-mono gap-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="text-sm font-black text-foreground">{formatCurrency(calculateBookingFinancials(reserva).total)}</div>
                     {(() => {
@@ -450,7 +450,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                   </div>
                   <div className="text-[9px] text-muted-foreground">Anticipo: {formatCurrency(Number(reserva.depositAmount))}</div>
                 </td>
-                <td className="flex justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 border-b border-border/10 md:border-none items-center md:text-center">
+                <td className="flex justify-between lg:table-cell px-2 py-3 lg:px-6 lg:py-4 border-b border-border/10 lg:border-none items-center lg:text-center">
                   <StatusSwitcher 
                     status={reserva.status} 
                     id={reserva.id} 
@@ -459,13 +459,13 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                     isUpdating={updatingId === reserva.id}
                   />
                 </td>
-                <td className="flex flex-col items-center justify-center md:table-cell p-4 md:py-4 md:px-6 border-b border-border/10 md:border-none text-center">
+                <td className="flex flex-col items-center justify-center lg:table-cell p-4 lg:py-4 lg:px-6 border-b border-border/10 lg:border-none text-center">
                   <ContractStatusSwitcher 
                     bookingId={reserva.id} 
                     status={reserva.contractStatus || "pending"} 
                   />
                 </td>
-                <td className="flex justify-end md:table-cell p-4 md:py-4 md:px-6 text-right md:pr-8 bg-muted/5 md:bg-transparent">
+                <td className="flex justify-end lg:table-cell p-4 lg:py-4 lg:px-6 text-right lg:pr-8 bg-muted/5 lg:bg-transparent">
                   <div className="flex justify-end items-center gap-1.5 flex-wrap">
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>

@@ -33,6 +33,7 @@ export const saveUnifiedEventQuoteSchema = z.object({
 
   packageId: z.string().nullable().optional(),
   packageName: z.string().nullable().optional(),
+  bandHours: z.number().int().min(0).nullable().optional(),
   basePrice: z.number().min(0, "El precio base no puede ser negativo"),
   viaticosAmount: z.number().min(0).nullable().optional(),
   discountAmount: z.number().min(0).nullable().optional(),

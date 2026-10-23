@@ -621,6 +621,10 @@ model GlobalConfig {
   viaticosVehicleCount     Int?      @default(2)
   msgTodayReminderActive   Boolean   @default(true)
   msgTemplateTodayReminder String?
+  googleAnalyticsPropertyId    String?
+  googleAnalyticsMeasurementId String?
+  googleSearchConsoleSiteUrl   String?
+  googleSiteVerification       String?
 }
 
 model InboxItem {

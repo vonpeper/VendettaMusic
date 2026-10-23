@@ -143,7 +143,7 @@ export async function UpcomingGigs() {
         )}
         
         <div className="mt-12 text-center max-w-2xl mx-auto">
-           <p className="text-gray-500 text-[11px] md:text-sm italic px-6">
+           <p className="text-zinc-400 text-[11px] md:text-sm italic px-6">
               * Debido a la naturaleza de los eventos privados (bodas, corporativos), algunas ubicaciones exactas están reservadas por privacidad de nuestros clientes.
            </p>
         </div>

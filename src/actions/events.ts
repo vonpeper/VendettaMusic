@@ -866,7 +866,7 @@ export async function notifySingleMusicianAction(eventId: string, musicianId: st
   }
 }
 
-import { calculateQuoteTotals, AdditionalLineItem } from "@/lib/pricing"
+import { calculateQuoteTotals, calculateEventHours, AdditionalLineItem } from "@/lib/pricing"
 import { normalizeClientEmail, normalizeClientPhone } from "@/lib/clients"
 import { getValidMapsLink } from "@/lib/locations"
 import { auth } from "@/lib/auth"
@@ -1016,6 +1016,9 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               requestedDate: dateObj,
               startTime: normStart,
               endTime: normEnd,
+              bandHours: val.bandHours !== undefined && val.bandHours !== null 
+                ? val.bandHours 
+                : (normStart && normEnd ? calculateEventHours(normStart, normEnd) : (val.packageId ? 2 : 0)),
               arrivalTime: finalArrival,
               setupTime: finalSetup,
               guestCount: val.guestCount || 0,
@@ -1153,6 +1156,9 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
             eventDate: val.eventDate,
             startTime: createNormStart,
             endTime: createNormEnd,
+            bandHours: val.bandHours !== undefined && val.bandHours !== null 
+              ? val.bandHours 
+              : (createNormStart && createNormEnd ? calculateEventHours(createNormStart, createNormEnd) : (val.packageId ? 2 : 0)),
             arrivalTime: createArrival,
             setupTime: createSetup,
             guestCount: val.guestCount,
@@ -1194,6 +1200,9 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
             eventDate: d,
             startTime: createNormStart,
             endTime: createNormEnd,
+            bandHours: val.bandHours !== undefined && val.bandHours !== null 
+              ? val.bandHours 
+              : (createNormStart && createNormEnd ? calculateEventHours(createNormStart, createNormEnd) : (val.packageId ? 2 : 0)),
             arrivalTime: createArrival,
             setupTime: createSetup,
             guestCount: val.guestCount,

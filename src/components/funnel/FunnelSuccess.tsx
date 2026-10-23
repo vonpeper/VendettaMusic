@@ -94,7 +94,7 @@ export default function FunnelSuccess({ data }: { data: FunnelData }) {
           <div className="flex items-start gap-3">
             <Package className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div>
-              <div className="text-[10px] font-bold text-gray-500 uppercase">Paquete / Show</div>
+              <div className="text-[10px] font-bold text-zinc-400 uppercase">Paquete / Show</div>
               <div className="text-white font-bold">{data.packageName}</div>
             </div>
           </div>
@@ -102,7 +102,7 @@ export default function FunnelSuccess({ data }: { data: FunnelData }) {
           <div className="flex items-start gap-3">
             <Calendar className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div>
-              <div className="text-[10px] font-bold text-gray-500 uppercase">Fecha y Horario</div>
+              <div className="text-[10px] font-bold text-zinc-400 uppercase">Fecha y Horario</div>
               <div className="text-white font-bold capitalize">{eventDate} @ {data.startTime}</div>
             </div>
           </div>
@@ -110,7 +110,7 @@ export default function FunnelSuccess({ data }: { data: FunnelData }) {
           <div className="flex items-start gap-3">
             <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div>
-              <div className="text-[10px] font-bold text-gray-500 uppercase">Ubicación</div>
+              <div className="text-[10px] font-bold text-zinc-400 uppercase">Ubicación</div>
               <div className="text-white font-bold">{data.street} {data.houseNumber}, {data.colonia}</div>
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function FunnelSuccess({ data }: { data: FunnelData }) {
 
         <div className="pt-6 border-t border-white/10 flex justify-between items-end">
           <div>
-            <div className="text-[10px] font-bold text-gray-500 uppercase mb-1">Costo Total</div>
+            <div className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Costo Total</div>
             <div className="text-3xl font-black text-white">{MXN(total)}</div>
           </div>
           <div className="text-right">

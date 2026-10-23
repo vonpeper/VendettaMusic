@@ -56,33 +56,46 @@ export async function saveGoogleCredentialsAction(arg1: any, arg2?: any) {
     const formData = arg1 instanceof FormData ? arg1 : (arg2 instanceof FormData ? arg2 : null);
     if (!formData) return { success: false, message: "Error: No se recibieron datos" };
 
-    const clientId = formData.get("clientId") as string
-    const clientSecret = formData.get("clientSecret") as string
-    const calendarId = formData.get("calendarId") as string
+    const clientId = (formData.get("clientId") as string)?.trim() || ""
+    const clientSecret = (formData.get("clientSecret") as string)?.trim() || ""
+    const calendarId = (formData.get("calendarId") as string)?.trim() || ""
+    const propertyId = formData.has("propertyId") ? ((formData.get("propertyId") as string)?.trim() || null) : undefined
+    const measurementId = formData.has("measurementId") ? ((formData.get("measurementId") as string)?.trim() || null) : undefined
+    const siteUrl = formData.has("siteUrl") ? ((formData.get("siteUrl") as string)?.trim() || null) : undefined
 
     const existing = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
-    let finalClientSecret = clientSecret?.trim() || ""
+    let finalClientSecret = clientSecret || ""
     if (finalClientSecret === "********") {
       finalClientSecret = existing?.googleClientSecret || ""
     }
 
+    const updateData: any = {
+      googleClientId: clientId || null,
+      googleClientSecret: finalClientSecret || null,
+      googleCalendarId: calendarId || null,
+    }
+    if (propertyId !== undefined) updateData.googleAnalyticsPropertyId = propertyId
+    if (measurementId !== undefined) updateData.googleAnalyticsMeasurementId = measurementId
+    if (siteUrl !== undefined) updateData.googleSearchConsoleSiteUrl = siteUrl
+
     await db.globalConfig.upsert({
       where: { id: "vendetta_config" },
-      update: {
-        googleClientId: clientId,
-        googleClientSecret: finalClientSecret,
-        googleCalendarId: calendarId,
-      },
+      update: updateData,
       create: {
         id: "vendetta_config",
-        googleClientId: clientId,
-        googleClientSecret: finalClientSecret,
-        googleCalendarId: calendarId,
+        googleClientId: clientId || null,
+        googleClientSecret: finalClientSecret || null,
+        googleCalendarId: calendarId || null,
+        googleAnalyticsPropertyId: propertyId || null,
+        googleAnalyticsMeasurementId: measurementId || null,
+        googleSearchConsoleSiteUrl: siteUrl || null,
       }
     })
 
     revalidatePath("/admin/configuracion")
-    return { success: true, message: "Credenciales de Google guardadas" }
+    revalidatePath("/admin/analytics")
+    revalidatePath("/")
+    return { success: true, message: "Credenciales de Google Suite guardadas" }
   } catch (error) {
     console.error("Error saving Google credentials:", error)
     return { success: false, message: "Error al guardar las credenciales" }

@@ -44,12 +44,12 @@ export default function StatusLookupPage() {
             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
             <div className="relative flex flex-col md:flex-row gap-2 bg-black/40 backdrop-blur-xl p-2 rounded-2xl border border-white/10">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                 <Input
                   value={shortId}
                   onChange={(e) => setShortId(e.target.value)}
                   placeholder="VND-XXXX"
-                  className="bg-transparent border-none h-14 pl-12 text-lg font-black tracking-widest uppercase text-white focus-visible:ring-0"
+                  className="bg-transparent border-none h-14 pl-12 text-lg font-black tracking-widest uppercase text-white placeholder:text-zinc-400 focus-visible:ring-0"
                 />
               </div>
               <Button type="submit" size="lg" className="h-14 px-8 font-black uppercase text-xs tracking-widest gap-2">
@@ -66,7 +66,7 @@ export default function StatusLookupPage() {
             ].map((s) => (
               <div key={s.label} className="flex items-center justify-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${s.color} animate-pulse`} />
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{s.label}</span>
+                <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">{s.label}</span>
               </div>
             ))}
           </div>

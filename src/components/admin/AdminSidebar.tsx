@@ -165,8 +165,9 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
       title: "MÉTRICAS",
       id: "analytics",
       icon: BarChart3,
-      placeholder: true,
-      items: []
+      items: [
+        { name: "Google Analytics & SEO", href: "/admin/analytics", icon: BarChart3, adminOnly: true }
+      ]
     }
   ]
 

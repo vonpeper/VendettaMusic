@@ -39,6 +39,14 @@ export const metadata: Metadata = {
   verification: {
     google: 'xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY',
   },
+  icons: {
+    other: [
+      {
+        rel: 'image_src',
+        url: 'https://vendetta.mx/images/vendetta-hero-og-v2.jpg?v=3',
+      },
+    ],
+  },
   openGraph: {
     title: "Vendetta | Show de Pop & Rock en Vivo para Eventos y Corporativos",
     description: "Banda profesional de pop & rock en vivo para eventos corporativos, cumpleaños, festivales y celebraciones en Metepec, Toluca, CDMX, Valle de Bravo, Cuernavaca y Querétaro.",
@@ -46,10 +54,12 @@ export const metadata: Metadata = {
     siteName: 'Vendetta Live Music',
     images: [
       {
-        url: 'https://vendetta.mx/images/vendetta-hero-og-v2.jpg',
+        url: 'https://vendetta.mx/images/vendetta-hero-og-v2.jpg?v=3',
+        secureUrl: 'https://vendetta.mx/images/vendetta-hero-og-v2.jpg?v=3',
         width: 1200,
         height: 630,
         alt: 'Banda de pop y rock en vivo Vendetta',
+        type: 'image/jpeg',
       },
     ],
     locale: 'es_MX',
@@ -59,7 +69,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vendetta | Show de Pop & Rock en Vivo',
     description: 'La mejor experiencia musical en vivo para eventos corporativos, cumpleaños y fiestas privadas.',
-    images: ['https://vendetta.mx/images/vendetta-hero-og-v2.jpg'],
+    images: ['https://vendetta.mx/images/vendetta-hero-og-v2.jpg?v=3'],
   },
 }
 
@@ -112,6 +122,20 @@ export default async function HomePage() {
           <div className="absolute inset-0 stage-grid-overlay opacity-30" />
         </div>
 
+        {/* Unsplash Background Atmosphere with Priority & WebP/AVIF Responsive Sizes */}
+        {mediaMap.hero && (
+          <div className="absolute inset-0 z-0 pointer-events-none opacity-20 mix-blend-overlay">
+            <Image
+              src={mediaMap.hero}
+              alt="Ambiente de concierto en vivo Vendetta"
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 1200px"
+              className="object-cover"
+            />
+          </div>
+        )}
+
         {/* Background Image Container - Desktop (>=lg) */}
         <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[62%] xl:w-[66%] 2xl:w-[70%] z-0 select-none pointer-events-none animate-hero-bg hidden lg:block">
           <Image
@@ -119,7 +143,7 @@ export default async function HomePage() {
             alt="Banda de pop y rock en vivo Vendetta para eventos sociales y bodas"
             fill
             priority
-            unoptimized
+            sizes="(max-width: 768px) 100vw, 1200px"
             className="opacity-95 object-contain object-right"
           />
           {/* Smooth gradient blend into Midnight Stage background */}
@@ -158,7 +182,7 @@ export default async function HomePage() {
                 alt="Show de pop y rock en vivo Vendetta para eventos corporativos, cumpleaños y fiestas privadas"
                 fill
                 priority
-                unoptimized
+                sizes="(max-width: 768px) 100vw, 1200px"
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#07080D]/70 via-transparent to-transparent pointer-events-none" />

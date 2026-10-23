@@ -12,7 +12,7 @@ import { VenueCombobox, VenueData } from "@/components/admin/crm/VenueCombobox"
 import { QuoteLineItems } from "@/components/admin/crm/QuoteLineItems"
 import { FinancialSummary } from "@/components/admin/crm/FinancialSummary"
 import { calculateQuoteTotals, calculateShowBasePrice, formatCurrencyMXN, calculateEventHours, AdditionalLineItem } from "@/lib/pricing"
-import { isLocalCity } from "@/lib/viaticos"
+import { isLocalCity, calcularViatcos } from "@/lib/viaticos"
 import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import { saveUnifiedEventQuoteAction } from "@/actions/events"
 import { Toggle } from "@/components/ui/Toggle"
@@ -294,9 +294,11 @@ export function UnifiedEventQuoteForm({
   }
 
   // 4. Estado Cotización y Paquete
-  const [packageId, setPackageId] = useState<string>(
-    initialData?.packageId || ""
-  )
+  const [packageId, setPackageId] = useState<string>(() => {
+    if (initialData?.packageId) return initialData.packageId
+    const foundEssential = packages.find(p => p.name.toLowerCase().includes("essential"))
+    return foundEssential ? foundEssential.id : (packages[0]?.id || "")
+  })
   const selectedPackage = useMemo(() => {
     return packages.find(p => p.id === packageId) || null
   }, [packages, packageId])
@@ -308,22 +310,30 @@ export function UnifiedEventQuoteForm({
     return !isLocalCity(city, venueState)
   }, [venueCity, clientCity, venueState])
 
-  // Precio base ajustable (aplica +20% automáticamente para foráneo)
+  // Precio base ajustable (aplica +20% automáticamente para foráneo y toma en cuenta duración)
   const defaultPackagePrice = useMemo(() => {
     if (!selectedPackage) return 0
-    const local = selectedPackage.baseCostPerHour * (selectedPackage.minDuration || 1)
+    const hours = (showDuration && showDuration > 0) ? showDuration : (selectedPackage.minDuration || 2)
+    const local = selectedPackage.baseCostPerHour * hours
     return calculateShowBasePrice(local, isOutsideZone)
-  }, [selectedPackage, isOutsideZone])
+  }, [selectedPackage, isOutsideZone, showDuration])
 
   const [basePrice, setBasePrice] = useState<number | null>(() => {
     if (initialData?.basePrice !== undefined && initialData?.basePrice !== null) return Number(initialData.basePrice)
     if (initialData?.amount !== undefined && initialData?.amount !== null) return Number(initialData.amount)
     if (initialData?.baseAmount !== undefined && initialData?.baseAmount !== null) return Number(initialData.baseAmount)
-    if (initialData?.packageId) {
-      const pkg = packages.find(p => p.id === initialData.packageId)
-      if (pkg) {
-        return pkg.baseCostPerHour * (pkg.minDuration || 1)
-      }
+    
+    // Auto-cálculo predeterminado si no viene precio explícito
+    const targetPkg = (initialData?.packageId ? packages.find(p => p.id === initialData.packageId) : null)
+      || packages.find(p => p.name.toLowerCase().includes("essential"))
+      || packages[0]
+    if (targetPkg) {
+      const city = initialData?.venueCity || initialData?.city || initialData?.clientCity || ""
+      const state = initialData?.venueState || initialData?.state || "Estado de México"
+      const outside = city ? !isLocalCity(city, state) : false
+      const hours = (initialNormStart && initialNormEnd ? calculateEventHours(initialNormStart, initialNormEnd) : null) || targetPkg.minDuration || 2
+      const local = targetPkg.baseCostPerHour * hours
+      return calculateShowBasePrice(local, outside)
     }
     return null
   })
@@ -333,9 +343,15 @@ export function UnifiedEventQuoteForm({
     return basePrice !== defaultPackagePrice
   }, [basePrice, defaultPackagePrice, selectedPackage])
 
-  const [viaticosAmount, setViaticosAmount] = useState<number | null>(
-    initialData?.viaticosAmount !== undefined && initialData?.viaticosAmount !== null ? Number(initialData.viaticosAmount) : null
-  )
+  const [viaticosAmount, setViaticosAmount] = useState<number | null>(() => {
+    if (initialData?.viaticosAmount !== undefined && initialData?.viaticosAmount !== null) return Number(initialData.viaticosAmount)
+    const city = initialData?.venueCity || initialData?.city || initialData?.clientCity || ""
+    const state = initialData?.venueState || initialData?.state || "Estado de México"
+    if (city) {
+      return calcularViatcos(city, state).amount
+    }
+    return null
+  })
   const [discountAmount, setDiscountAmount] = useState<number | null>(
     initialData?.discountAmount !== undefined && initialData?.discountAmount !== null ? Number(initialData.discountAmount) : null
   )
@@ -345,6 +361,19 @@ export function UnifiedEventQuoteForm({
   const [depositAmount, setDepositAmount] = useState<number | null>(() => {
     if (initialData?.deposit !== undefined && initialData?.deposit !== null) return Number(initialData.deposit)
     if (initialData?.depositAmount !== undefined && initialData?.depositAmount !== null) return Number(initialData.depositAmount)
+    if (mode === "create") {
+      const targetPkg = (initialData?.packageId ? packages.find(p => p.id === initialData.packageId) : null)
+        || packages.find(p => p.name.toLowerCase().includes("essential"))
+        || packages[0]
+      const city = initialData?.venueCity || initialData?.city || initialData?.clientCity || ""
+      const state = initialData?.venueState || initialData?.state || "Estado de México"
+      const outside = city ? !isLocalCity(city, state) : false
+      const hours = (initialNormStart && initialNormEnd ? calculateEventHours(initialNormStart, initialNormEnd) : null) || targetPkg?.minDuration || 2
+      const base = targetPkg ? calculateShowBasePrice(targetPkg.baseCostPerHour * hours, outside) : 0
+      const viat = city ? calcularViatcos(city, state).amount : 0
+      const sub = base + viat
+      if (sub > 0) return Math.round(sub * 0.5)
+    }
     return null
   })
   const [additionalItems, setAdditionalItems] = useState<AdditionalLineItem[]>(() => {
@@ -513,9 +542,18 @@ export function UnifiedEventQuoteForm({
     setPackageId(newPkgId)
     const pkg = packages.find(p => p.id === newPkgId)
     if (pkg) {
-      const localBase = pkg.baseCostPerHour * (pkg.minDuration || 1)
+      const hours = (showDuration && showDuration > 0) ? showDuration : (pkg.minDuration || 2)
+      const localBase = pkg.baseCostPerHour * hours
       const price = calculateShowBasePrice(localBase, isOutsideZone)
       setBasePrice(price)
+
+      // Actualizar anticipo al 50% si el anticipo actual era 0 o coincidía con el 50% anterior
+      const currentSubtotal = (basePrice || 0) + (viaticosAmount || 0)
+      const isAutoDeposit = depositAmount === null || depositAmount === 0 || depositAmount === Math.round(currentSubtotal * 0.5)
+      if (isAutoDeposit) {
+        const newSubtotal = price + (viaticosAmount || 0)
+        setDepositAmount(Math.round(newSubtotal * 0.5))
+      }
     }
   }
 
@@ -534,6 +572,16 @@ export function UnifiedEventQuoteForm({
       const data = await resp.json()
       if (data && typeof data.viaticosAmount === "number") {
         setViaticosAmount(data.viaticosAmount)
+        // Actualizar anticipo al 50% si no ha sido personalizado
+        const effBase = basePrice || defaultPackagePrice || 0
+        if (effBase > 0) {
+          const currentTotal = effBase + (viaticosAmount || 0)
+          const isAutoDeposit = depositAmount === null || depositAmount === 0 || depositAmount === Math.round(currentTotal * 0.5)
+          if (isAutoDeposit) {
+            setDepositAmount(Math.round((effBase + data.viaticosAmount) * 0.5))
+          }
+        }
+
         if (data.viaticosAmount === 0 && !data.isOutsideZone) {
           toast.success(`Ubicación en Zona Local: $0 MXN de viáticos (${data.distanceKm || 0} km)`)
         } else {
@@ -557,6 +605,23 @@ export function UnifiedEventQuoteForm({
   function handleGoToPricingStep() {
     if (viaticosAmount === null && (venueCity || venueAddress || venueName || clientCity)) {
       handleAutoCalculateViaticos()
+    }
+    // Asegurar que haya un paquete seleccionado
+    if (!packageId && packages.length > 0) {
+      const defPkg = packages.find(p => p.name.toLowerCase().includes("essential")) || packages[0]
+      setPackageId(defPkg.id)
+    }
+    // Si basePrice sigue siendo null o 0, inicializarlo con defaultPackagePrice
+    if ((basePrice === null || basePrice === 0) && defaultPackagePrice > 0) {
+      setBasePrice(defaultPackagePrice)
+    }
+    // Si depositAmount es null o 0, sugerir 50%
+    if (depositAmount === null || depositAmount === 0) {
+      const effectiveBase = (basePrice && basePrice > 0) ? basePrice : defaultPackagePrice
+      const viat = viaticosAmount || 0
+      if (effectiveBase > 0) {
+        setDepositAmount(Math.round((effectiveBase + viat) * 0.5))
+      }
     }
     setActiveStep(4)
   }
@@ -774,6 +839,7 @@ export function UnifiedEventQuoteForm({
 
           packageId: packageId || null,
           packageName: selectedPackage?.name || null,
+          bandHours: (showDuration && showDuration > 0) ? showDuration : (selectedPackage?.minDuration || 2),
           basePrice: totals.basePrice,
           viaticosAmount: totals.viaticosAmount,
           discountAmount: totals.discountAmount,

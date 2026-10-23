@@ -14,15 +14,23 @@ export async function GET(req: NextRequest) {
     const protocol = req.headers.get("x-forwarded-proto") || "https"
     
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`
+    const returnTo = req.nextUrl.searchParams.get("returnTo") || "/admin/configuracion?tab=integraciones"
+
+    const scopes = [
+      "https://www.googleapis.com/auth/calendar",
+      "https://www.googleapis.com/auth/analytics.readonly",
+      "https://www.googleapis.com/auth/webmasters.readonly",
+    ].join(" ")
     const redirectUri = `${baseUrl}/api/auth/google/callback`
 
     const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + new URLSearchParams({
       client_id: config.googleClientId,
       redirect_uri: redirectUri,
       response_type: "code",
-      scope: "https://www.googleapis.com/auth/calendar",
+      scope: scopes,
       access_type: "offline",
-      prompt: "consent select_account"
+      prompt: "consent select_account",
+      state: encodeURIComponent(returnTo)
     }).toString()
 
     return NextResponse.redirect(googleAuthUrl)

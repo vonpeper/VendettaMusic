@@ -25,10 +25,10 @@ async function handleCron(request: Request) {
     const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null
     const providedToken = queryToken || bearerToken
 
-    const CRON_SECRET = process.env.CRON_SECRET?.trim() || "vendetta_cron_2024"
+    const CRON_SECRET = process.env.CRON_SECRET?.trim()
 
-    if (!providedToken || (providedToken !== CRON_SECRET && providedToken !== "vendetta_cron_2024")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (!CRON_SECRET || !providedToken || providedToken !== CRON_SECRET) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
     const now = new Date()

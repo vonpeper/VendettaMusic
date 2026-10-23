@@ -7,6 +7,7 @@ import { Input }      from "@/components/ui/input"
 import { Label }      from "@/components/ui/label"
 import { User, Phone, Mail, MapPin, Lock, Loader2, CheckCircle2, Calendar, Package } from "lucide-react"
 import { formatDateMX } from "@/lib/utils"
+import { trackGoogleEvent } from "@/components/public/GoogleAnalytics"
 
 interface Props {
   data: Partial<FunnelData>
@@ -93,6 +94,24 @@ export default function Step5_Registro({ data, onNext, onBack }: Props) {
 
       // Si eligió Stripe, redirige a Checkout antes de mostrar success.
       if (data.paymentMethod === "stripe") {
+        try {
+          trackGoogleEvent("generate_lead", {
+            booking_id: json.bookingId,
+            short_id: json.shortId,
+            value: base,
+            currency: "MXN",
+            payment_method: "stripe",
+          })
+          trackGoogleEvent("booking_submitted", {
+            booking_id: json.bookingId,
+            short_id: json.shortId,
+            package_name: data.packageName,
+            payment_method: "stripe",
+          })
+        } catch {
+          // Ignorar si el rastreador está bloqueado
+        }
+
         const checkout = await fetch("/api/payments/create-checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -159,7 +178,7 @@ export default function Step5_Registro({ data, onNext, onBack }: Props) {
               <span className="font-bold">{data.street} {data.houseNumber}</span>, 
               <span> Col. {data.colonia}</span>, 
               <span> CP {data.zipCode}</span>, 
-              <span className="block text-[10px] text-gray-500 uppercase tracking-wider">{data.city}, {data.state}</span>
+              <span className="block text-[10px] text-zinc-400 uppercase tracking-wider">{data.city}, {data.state}</span>
             </div>
           </div>
         </div>
