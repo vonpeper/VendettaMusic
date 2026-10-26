@@ -5,6 +5,10 @@ const nextConfig = {
     PORT: process.env.PORT || '3005',
   },
   images: {
+    // SVG optimization stays off (GHSA-2464-fhr4-w9xw / CVE-2026-96889).
+    dangerouslyAllowSVG: false,
+    // Block optimizer fetches that resolve to private IPs (GHSA-cjq9-62q9-8jv4).
+    dangerouslyAllowLocalIP: false,
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
