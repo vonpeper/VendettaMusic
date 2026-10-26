@@ -27,6 +27,91 @@ export interface SubmitPublicQuoteInput {
   } | null
   paquete?: string
   notas?: string
+  inquiryId?: string
+}
+
+export interface SaveQuoteDraftInput {
+  nombre: string
+  telefono: string
+  fecha?: string
+  municipio?: string
+  estado?: string
+  invitados?: number
+  tipoEvento?: string
+  inquiryId?: string
+}
+
+export type SaveQuoteDraftResult = {
+  success: boolean
+  inquiryId?: string
+  error?: string
+}
+
+export async function saveQuoteDraftAction(
+  input: SaveQuoteDraftInput
+): Promise<SaveQuoteDraftResult> {
+  try {
+    const nombre = (input.nombre || "").trim()
+    const telefono = (input.telefono || "").trim()
+    const cleanPhone = telefono.replace(/\D/g, "")
+
+    if (!nombre) {
+      return { success: false, error: "El nombre completo es obligatorio." }
+    }
+    if (cleanPhone.length < 10) {
+      return { success: false, error: "El número de WhatsApp debe contener al menos 10 dígitos." }
+    }
+
+    let parsedDate: Date | null = null
+    if (input.fecha) {
+      const d = new Date(`${input.fecha}T12:00:00`)
+      if (!isNaN(d.getTime())) {
+        parsedDate = d
+      }
+    }
+
+    const aforo = Number(input.invitados) || 100
+    const municipio = (input.municipio || "").trim()
+    const estado = (input.estado || "Estado de México").trim()
+    const tipoEvento = input.tipoEvento || "Evento Privado"
+    const message = `[Borrador Cotizador] Aforo: ${aforo} pax | Ubicación: ${municipio || "Pendiente"}, ${estado}`
+
+    if (input.inquiryId) {
+      const existing = await db.contactInquiry.findUnique({ where: { id: input.inquiryId } })
+      if (existing) {
+        const updated = await db.contactInquiry.update({
+          where: { id: input.inquiryId },
+          data: {
+            name: nombre,
+            phone: telefono,
+            requestedDate: parsedDate ?? existing.requestedDate,
+            eventType: `${tipoEvento} (Borrador)`,
+            message: message,
+            status: existing.status === "converted" ? "converted" : "prospecto_cotizando"
+          }
+        })
+        return { success: true, inquiryId: updated.id }
+      }
+    }
+
+    const fallbackEmail = `cliente_${cleanPhone.slice(-10)}@prospectos.vendetta.mx`
+    const inquiry = await db.contactInquiry.create({
+      data: {
+        name: nombre,
+        phone: telefono,
+        email: fallbackEmail,
+        requestedDate: parsedDate,
+        eventType: `${tipoEvento} (Borrador)`,
+        message: message,
+        status: "prospecto_cotizando"
+      }
+    })
+
+    return { success: true, inquiryId: inquiry.id }
+  } catch (err: any) {
+    console.error("Error al registrar borrador de prospecto:", err)
+    return { success: false, error: "Error interno al registrar borrador." }
+  }
 }
 
 export type SubmitPublicQuoteResult = {
@@ -222,18 +307,52 @@ export async function submitPublicQuoteAction(
       const reasonText = `Aforo superior a 120 invitados (${aforo} personas)${extrasDetalle ? ` | Producción: ${extrasDetalle}` : ""}`
       const pkgLabel = input.paquete ? `Paquete: ${input.paquete}` : "Producción personalizada"
 
-      // 1. Guardar estrictamente en ContactInquiry (Prospectos Web) SIN crear BookingRequest
-      const inquiry = await db.contactInquiry.create({
-        data: {
-          name: input.nombre.trim(),
-          phone: input.telefono.trim(),
-          email: `cliente_${input.telefono.replace(/\D/g, "") || Date.now()}@prospectos.vendetta.mx`,
-          requestedDate: new Date(`${input.fecha}T12:00:00`),
-          eventType: `${input.tipoEvento} (${pkgLabel} - >120 pax)`,
-          message: `Aforo: ${aforo} invitados | Horario: ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas) | Ubicación: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}${input.mapsLink?.trim() ? ` | Maps: ${input.mapsLink.trim()}` : ""}${input.produccionAdicional.length > 0 ? ` | Producción: ${extrasDetalle}` : ""}${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""} | Motivo: Aforo > 120 pax requiere agendar llamada para ver detalles técnicos y cotizar a la medida.`,
-          status: "new"
+      // 1. Guardar o actualizar en ContactInquiry (Prospectos Web) SIN crear BookingRequest
+      let inquiryId = input.inquiryId
+      const inqMsg = `Aforo: ${aforo} invitados | Horario: ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas) | Ubicación: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}${input.mapsLink?.trim() ? ` | Maps: ${input.mapsLink.trim()}` : ""}${input.produccionAdicional.length > 0 ? ` | Producción: ${extrasDetalle}` : ""}${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""} | Motivo: Aforo > 120 pax requiere agendar llamada para ver detalles técnicos y cotizar a la medida.`
+      
+      if (inquiryId) {
+        try {
+          const updated = await db.contactInquiry.update({
+            where: { id: inquiryId },
+            data: {
+              name: input.nombre.trim(),
+              phone: input.telefono.trim(),
+              requestedDate: new Date(`${input.fecha}T12:00:00`),
+              eventType: `${input.tipoEvento} (${pkgLabel} - >120 pax)`,
+              message: inqMsg,
+              status: "new"
+            }
+          })
+          inquiryId = updated.id
+        } catch {
+          const created = await db.contactInquiry.create({
+            data: {
+              name: input.nombre.trim(),
+              phone: input.telefono.trim(),
+              email: `cliente_${input.telefono.replace(/\D/g, "") || Date.now()}@prospectos.vendetta.mx`,
+              requestedDate: new Date(`${input.fecha}T12:00:00`),
+              eventType: `${input.tipoEvento} (${pkgLabel} - >120 pax)`,
+              message: inqMsg,
+              status: "new"
+            }
+          })
+          inquiryId = created.id
         }
-      })
+      } else {
+        const created = await db.contactInquiry.create({
+          data: {
+            name: input.nombre.trim(),
+            phone: input.telefono.trim(),
+            email: `cliente_${input.telefono.replace(/\D/g, "") || Date.now()}@prospectos.vendetta.mx`,
+            requestedDate: new Date(`${input.fecha}T12:00:00`),
+            eventType: `${input.tipoEvento} (${pkgLabel} - >120 pax)`,
+            message: inqMsg,
+            status: "new"
+          }
+        })
+        inquiryId = created.id
+      }
 
       // 2. WhatsApp informativo de estatus al CLIENTE (sin precios ni propuesta prematura)
       try {
@@ -301,7 +420,7 @@ https://vendetta.mx/admin/prospectos`
       return {
         success: true,
         mode: "lead_captured",
-        inquiryId: inquiry.id
+        inquiryId: inquiryId
       }
     }
 
@@ -324,6 +443,7 @@ https://vendetta.mx/admin/prospectos`
       const result = await db.$transaction(async (tx) => {
         return await createUnifiedQuote(tx, {
           source: "web",
+          originInquiryId: input.inquiryId || null,
           clientName: input.nombre.trim(),
           clientPhone: input.telefono.trim(),
           clientCity: input.municipio.trim(),
@@ -350,6 +470,13 @@ https://vendetta.mx/admin/prospectos`
           musicianNotes: `Cotización web para ${aforo} invitados en ${input.municipio}, ${input.estado}. Horario: ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas de Show).${input.notas?.trim() ? ` Notas: ${input.notas.trim()}` : ""}`
         })
       })
+
+      if (input.inquiryId) {
+        await db.contactInquiry.update({
+          where: { id: input.inquiryId },
+          data: { status: "converted" }
+        }).catch(() => {})
+      }
 
       const proposalFullUrl = `https://vendetta.mx/propuesta/${result.shortId}`
 
@@ -434,19 +561,53 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
     if (horasShow > 5) reasonParts.push(`Duración extendida: ${horasShow} Horas`)
     const reasonText = reasonParts.join(" | ") || "Revisión de producción especial"
 
-    // 1. Guardar primero el lead como ContactInquiry
+    // 1. Guardar o actualizar el lead como ContactInquiry
     const pkgLabel = input.paquete ? `Paquete: ${input.paquete}` : "Producción especial"
-    const inquiry = await db.contactInquiry.create({
-      data: {
-        name: input.nombre.trim(),
-        phone: input.telefono.trim(),
-        email: `cliente_${input.telefono.replace(/\D/g, "") || Date.now()}@cotizacion.vendetta.mx`,
-        requestedDate: new Date(`${input.fecha}T12:00:00`),
-        eventType: `${input.tipoEvento} (${pkgLabel})`,
-        message: `${input.paquete ? `[${input.paquete}] ` : ""}Horario: ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas) | Invitados: ${aforo} | Ubicación: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}${input.mapsLink?.trim() ? ` | Maps: ${input.mapsLink.trim()}` : ""} | Motivo revisión: ${reasonText} | Viáticos: $${viaticosAmount} MXN${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""}`,
-        status: "new"
+    const inqReviewMsg = `${input.paquete ? `[${input.paquete}] ` : ""}Horario: ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas) | Invitados: ${aforo} | Ubicación: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}${input.mapsLink?.trim() ? ` | Maps: ${input.mapsLink.trim()}` : ""} | Motivo revisión: ${reasonText} | Viáticos: $${viaticosAmount} MXN${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""}`
+    let finalInquiryId = input.inquiryId
+
+    if (finalInquiryId) {
+      try {
+        const updated = await db.contactInquiry.update({
+          where: { id: finalInquiryId },
+          data: {
+            name: input.nombre.trim(),
+            phone: input.telefono.trim(),
+            requestedDate: new Date(`${input.fecha}T12:00:00`),
+            eventType: `${input.tipoEvento} (${pkgLabel})`,
+            message: inqReviewMsg,
+            status: "new"
+          }
+        })
+        finalInquiryId = updated.id
+      } catch {
+        const inq = await db.contactInquiry.create({
+          data: {
+            name: input.nombre.trim(),
+            phone: input.telefono.trim(),
+            email: `cliente_${input.telefono.replace(/\D/g, "") || Date.now()}@cotizacion.vendetta.mx`,
+            requestedDate: new Date(`${input.fecha}T12:00:00`),
+            eventType: `${input.tipoEvento} (${pkgLabel})`,
+            message: inqReviewMsg,
+            status: "new"
+          }
+        })
+        finalInquiryId = inq.id
       }
-    })
+    } else {
+      const inq = await db.contactInquiry.create({
+        data: {
+          name: input.nombre.trim(),
+          phone: input.telefono.trim(),
+          email: `cliente_${input.telefono.replace(/\D/g, "") || Date.now()}@cotizacion.vendetta.mx`,
+          requestedDate: new Date(`${input.fecha}T12:00:00`),
+          eventType: `${input.tipoEvento} (${pkgLabel})`,
+          message: inqReviewMsg,
+          status: "new"
+        }
+      })
+      finalInquiryId = inq.id
+    }
 
     // 2. Crear la cotización en BookingRequest etiquetada como POR REVISAR
     const adminNoteText = `⚠️ POR REVISAR POR ADMINISTRADOR: ${input.paquete ? `[Paquete ${input.paquete}] ` : ""}${reasonText}. Aforo: ${aforo} invitados.`
@@ -454,7 +615,7 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
     const result = await db.$transaction(async (tx) => {
       return await createUnifiedQuote(tx, {
         source: "web",
-        originInquiryId: inquiry.id,
+        originInquiryId: finalInquiryId,
         clientName: input.nombre.trim(),
         clientPhone: input.telefono.trim(),
         clientCity: input.municipio.trim(),
@@ -564,7 +725,7 @@ https://vendetta.mx/admin/ventas/${result.bookingId}`
       success: true,
       mode: "needs_review",
       bookingId: result.bookingId,
-      inquiryId: inquiry.id,
+      inquiryId: finalInquiryId,
       shortId: result.shortId
     }
   } catch (err: unknown) {

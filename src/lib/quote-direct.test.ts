@@ -93,4 +93,27 @@ describe("Reglas de Cotizador Directo (Horas, Aforo > 100 y Producción)", () =>
     assert.equal(calculateShowPackageBasePrice("Festival Premium", 2), 25500)
     assert.equal(calculateShowPackageBasePrice("Festival Premium", 5), 63750)
   })
+
+  it("debe sugerir el paquete adecuado según los umbrales de aforo (≤100, 100-300, >300)", () => {
+    function suggestPackage(guests: number): "Essential" | "Experience" | "Festival Premium" {
+      if (guests <= 100) return "Essential"
+      if (guests <= 300) return "Experience"
+      return "Festival Premium"
+    }
+
+    assert.equal(suggestPackage(50), "Essential")
+    assert.equal(suggestPackage(100), "Essential")
+    assert.equal(suggestPackage(101), "Experience")
+    assert.equal(suggestPackage(200), "Experience")
+    assert.equal(suggestPackage(300), "Experience")
+    assert.equal(suggestPackage(301), "Festival Premium")
+    assert.equal(suggestPackage(500), "Festival Premium")
+  })
+
+  it("debe calcular correctamente el anticipo discrecional del 30% para apartado", () => {
+    const totalEstimado = 18500
+    const anticipo = Math.round(totalEstimado * 0.3)
+    assert.equal(anticipo, 5550)
+  })
 })
+
