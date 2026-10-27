@@ -32,6 +32,24 @@ function normalizeStateName(rawState?: string): string {
   const matched = Object.keys(ESTADOS_MUNICIPIOS).find(k => k.toLowerCase() === s)
   return matched || rawState
 }
+
+function extractDateString(val: any): string {
+  if (!val) return ""
+  if (typeof val === "string") {
+    const part = val.split("T")[0]
+    if (/^\d{4}-\d{2}-\d{2}$/.test(part)) return part
+  }
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    return val.toISOString().split("T")[0]
+  }
+  try {
+    const d = new Date(val)
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split("T")[0]
+    }
+  } catch {}
+  return ""
+}
 import { 
   Calendar, 
   Users, 
@@ -130,16 +148,44 @@ export function UnifiedEventQuoteForm({
   }, [initialData, clients])
 
   const [clientName, setClientName] = useState<string>(
-    initialData?.clientName || initialData?.client?.user?.name || initialData?.bookingRequest?.clientName || initialData?.bookingRequest?.client?.user?.name || initialPreselectedClient?.name || ""
+    initialData?.clientName ||
+    initialData?.client?.name ||
+    initialData?.client?.user?.name ||
+    initialData?.bookingRequest?.clientName ||
+    initialData?.bookingRequest?.client?.name ||
+    initialData?.bookingRequest?.client?.user?.name ||
+    initialPreselectedClient?.name ||
+    ""
   )
   const [clientPhone, setClientPhone] = useState<string>(
-    initialData?.clientPhone || initialData?.client?.whatsapp || initialData?.bookingRequest?.clientPhone || initialData?.bookingRequest?.client?.whatsapp || initialPreselectedClient?.phone || ""
+    initialData?.clientPhone ||
+    initialData?.client?.phone ||
+    initialData?.client?.whatsapp ||
+    initialData?.bookingRequest?.clientPhone ||
+    initialData?.bookingRequest?.client?.phone ||
+    initialData?.bookingRequest?.client?.whatsapp ||
+    initialPreselectedClient?.phone ||
+    ""
   )
   const [clientEmail, setClientEmail] = useState<string>(
-    initialData?.clientEmail || initialData?.client?.user?.email || initialData?.bookingRequest?.clientEmail || initialData?.bookingRequest?.client?.user?.email || initialPreselectedClient?.email || ""
+    initialData?.clientEmail ||
+    initialData?.client?.email ||
+    initialData?.client?.user?.email ||
+    initialData?.bookingRequest?.clientEmail ||
+    initialData?.bookingRequest?.client?.email ||
+    initialData?.bookingRequest?.client?.user?.email ||
+    initialPreselectedClient?.email ||
+    ""
   )
   const [clientCity, setClientCity] = useState<string>(
-    initialData?.city || initialData?.clientCity || initialData?.client?.city || initialData?.bookingRequest?.city || initialData?.bookingRequest?.clientCity || initialData?.bookingRequest?.client?.city || initialPreselectedClient?.city || ""
+    initialData?.city ||
+    initialData?.clientCity ||
+    initialData?.client?.city ||
+    initialData?.bookingRequest?.city ||
+    initialData?.bookingRequest?.clientCity ||
+    initialData?.bookingRequest?.client?.city ||
+    initialPreselectedClient?.city ||
+    ""
   )
 
   // Sincronizar automáticamente datos del cliente si selectedClientId existe pero los campos de texto están vacíos
@@ -157,7 +203,11 @@ export function UnifiedEventQuoteForm({
 
   // 2. Estado Operativo del Evento
   const [customName, setCustomName] = useState<string>(
-    initialData?.customName || initialData?.bookingRequest?.customName || ""
+    initialData?.customName ||
+    initialData?.bookingRequest?.customName ||
+    (initialData?.clientName ? `Evento de ${initialData.clientName}` : "") ||
+    (initialData?.bookingRequest?.clientName ? `Evento de ${initialData.bookingRequest.clientName}` : "") ||
+    ""
   )
   const [isPublic, setIsPublic] = useState<boolean>(() => {
     if (initialData?.isPublic !== undefined && initialData?.isPublic !== null) {
@@ -173,19 +223,15 @@ export function UnifiedEventQuoteForm({
     initialData?.ceremonyType || initialData?.bookingRequest?.ceremonyType || ""
   )
   const [eventDate, setEventDate] = useState<string>(() => {
-    if (initialData?.eventDate) {
-      return typeof initialData.eventDate === "string" ? initialData.eventDate.split("T")[0] : new Date(initialData.eventDate).toISOString().split("T")[0]
-    }
-    if (initialData?.date) {
-      return typeof initialData.date === "string" ? initialData.date.split("T")[0] : new Date(initialData.date).toISOString().split("T")[0]
-    }
-    if (initialData?.requestedDate) {
-      return typeof initialData.requestedDate === "string" ? initialData.requestedDate.split("T")[0] : new Date(initialData.requestedDate).toISOString().split("T")[0]
-    }
-    if (initialData?.bookingRequest?.requestedDate) {
-      return typeof initialData.bookingRequest.requestedDate === "string" ? initialData.bookingRequest.requestedDate.split("T")[0] : new Date(initialData.bookingRequest.requestedDate).toISOString().split("T")[0]
-    }
-    return ""
+    return (
+      extractDateString(initialData?.eventDate) ||
+      extractDateString(initialData?.date) ||
+      extractDateString(initialData?.requestedDate) ||
+      extractDateString(initialData?.bookingRequest?.eventDate) ||
+      extractDateString(initialData?.bookingRequest?.requestedDate) ||
+      extractDateString(initialData?.bookingRequest?.date) ||
+      ""
+    )
   })
   const [additionalDates, setAdditionalDates] = useState<string[]>([])
   const [newAdditionalDate, setNewAdditionalDate] = useState<string>("")
@@ -240,23 +286,66 @@ export function UnifiedEventQuoteForm({
   )
 
   // 3. Estado Venue
+  const initialPreselectedVenue = useMemo(() => {
+    const rawId = initialData?.locationId ||
+      initialData?.location?.id ||
+      initialData?.bookingRequest?.locationId ||
+      initialData?.bookingRequest?.location?.id
+    if (!rawId || !venues) return null
+    return venues.find(v => v.id === rawId) || null
+  }, [initialData, venues])
+
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(
-    initialData?.locationId || initialData?.location?.id || null
+    initialData?.locationId ||
+    initialData?.location?.id ||
+    initialData?.bookingRequest?.locationId ||
+    initialData?.bookingRequest?.location?.id ||
+    initialPreselectedVenue?.id ||
+    null
   )
   const [venueName, setVenueName] = useState<string>(
-    initialData?.venueName || initialData?.location?.name || ""
+    initialData?.venueName ||
+    initialData?.location?.name ||
+    initialPreselectedVenue?.name ||
+    initialData?.venueType ||
+    initialData?.bookingRequest?.venueName ||
+    initialData?.bookingRequest?.venueType ||
+    ""
   )
   const [venueAddress, setVenueAddress] = useState<string>(
-    initialData?.venueAddress || initialData?.address || initialData?.location?.address || ""
+    initialData?.venueAddress ||
+    initialData?.address ||
+    initialData?.location?.address ||
+    initialPreselectedVenue?.address ||
+    initialData?.bookingRequest?.venueAddress ||
+    initialData?.bookingRequest?.address ||
+    ""
   )
   const [venueCity, setVenueCity] = useState<string>(
-    initialData?.venueCity || initialData?.city || initialData?.location?.city || "Toluca"
+    initialData?.venueCity ||
+    initialData?.city ||
+    initialData?.location?.city ||
+    initialPreselectedVenue?.city ||
+    initialData?.bookingRequest?.venueCity ||
+    initialData?.bookingRequest?.city ||
+    initialData?.clientCity ||
+    "Toluca"
   )
   const [venueState, setVenueState] = useState<string>(
-    initialData?.venueState || initialData?.state || initialData?.location?.state || "Estado de México"
+    initialData?.venueState ||
+    initialData?.state ||
+    initialData?.location?.state ||
+    initialPreselectedVenue?.state ||
+    initialData?.bookingRequest?.venueState ||
+    initialData?.bookingRequest?.state ||
+    "Estado de México"
   )
   const [mapsLink, setMapsLink] = useState<string>(
-    initialData?.mapsLink || initialData?.location?.mapsLink || ""
+    initialData?.mapsLink ||
+    initialData?.location?.mapsLink ||
+    initialPreselectedVenue?.mapsLink ||
+    initialData?.bookingRequest?.mapsLink ||
+    ""
   )
 
   const [isCustomCity, setIsCustomCity] = useState(false)
@@ -345,40 +434,30 @@ export function UnifiedEventQuoteForm({
 
   const [viaticosAmount, setViaticosAmount] = useState<number | null>(() => {
     if (initialData?.viaticosAmount !== undefined && initialData?.viaticosAmount !== null) return Number(initialData.viaticosAmount)
-    const city = initialData?.venueCity || initialData?.city || initialData?.clientCity || ""
-    const state = initialData?.venueState || initialData?.state || "Estado de México"
+    if (initialData?.bookingRequest?.viaticosAmount !== undefined && initialData?.bookingRequest?.viaticosAmount !== null) return Number(initialData.bookingRequest.viaticosAmount)
+    const city = initialData?.venueCity || initialData?.city || initialData?.clientCity || initialData?.bookingRequest?.city || ""
+    const state = initialData?.venueState || initialData?.state || initialData?.bookingRequest?.state || "Estado de México"
     if (city) {
       return calcularViatcos(city, state).amount
     }
     return null
   })
-  const [discountAmount, setDiscountAmount] = useState<number | null>(
-    initialData?.discountAmount !== undefined && initialData?.discountAmount !== null ? Number(initialData.discountAmount) : null
-  )
-  const [invoice, setInvoice] = useState<boolean>(
-    Boolean(initialData?.invoice)
-  )
-  const [depositAmount, setDepositAmount] = useState<number | null>(() => {
-    if (initialData?.deposit !== undefined && initialData?.deposit !== null) return Number(initialData.deposit)
-    if (initialData?.depositAmount !== undefined && initialData?.depositAmount !== null) return Number(initialData.depositAmount)
-    if (mode === "create") {
-      const targetPkg = (initialData?.packageId ? packages.find(p => p.id === initialData.packageId) : null)
-        || packages.find(p => p.name.toLowerCase().includes("essential"))
-        || packages[0]
-      const city = initialData?.venueCity || initialData?.city || initialData?.clientCity || ""
-      const state = initialData?.venueState || initialData?.state || "Estado de México"
-      const outside = city ? !isLocalCity(city, state) : false
-      const hours = (initialNormStart && initialNormEnd ? calculateEventHours(initialNormStart, initialNormEnd) : null) || targetPkg?.minDuration || 2
-      const base = targetPkg ? calculateShowBasePrice(targetPkg.baseCostPerHour * hours, outside) : 0
-      const viat = city ? calcularViatcos(city, state).amount : 0
-      const sub = base + viat
-      if (sub > 0) return Math.round(sub * 0.3)
-    }
+  const [discountAmount, setDiscountAmount] = useState<number | null>(() => {
+    if (initialData?.discountAmount !== undefined && initialData?.discountAmount !== null) return Number(initialData.discountAmount)
+    if (initialData?.bookingRequest?.discountAmount !== undefined && initialData?.bookingRequest?.discountAmount !== null) return Number(initialData.bookingRequest.discountAmount)
     return null
   })
+  const [invoice, setInvoice] = useState<boolean>(
+    Boolean(initialData?.invoice ?? initialData?.bookingRequest?.invoice)
+  )
+
+  // Flag explícito para indicar si el usuario activó anticipo manual
+  const [isManualDeposit, setIsManualDeposit] = useState<boolean>(false)
+  const [depositAmount, setDepositAmount] = useState<number | null>(null)
+
   const [additionalItems, setAdditionalItems] = useState<AdditionalLineItem[]>(() => {
-    const raw = initialData?.lineItems || initialData?.items
-    if (Array.isArray(raw)) {
+    const raw = initialData?.lineItems || initialData?.items || initialData?.bookingRequest?.lineItems
+    if (Array.isArray(raw) && raw.length > 0) {
       return raw.map((item: { id?: string; description?: string; quantity?: number; unitCost?: number }) => ({
         id: item.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "item-" + Math.random().toString(36).substring(2, 9)),
         description: item.description || "",
@@ -386,7 +465,59 @@ export function UnifiedEventQuoteForm({
         unitCost: typeof item.unitCost === "number" ? item.unitCost : 0,
       }))
     }
-    return []
+    const inferred: AdditionalLineItem[] = []
+    const src = initialData?.bookingRequest || initialData
+    if (src) {
+      if (src.hasPantalla) {
+        inferred.push({
+          id: "pantalla-led",
+          description: "Pantalla LED para Escenario",
+          quantity: 1,
+          unitCost: 0
+        })
+      }
+      if (src.hasTemplete) {
+        inferred.push({
+          id: "templete-escenario",
+          description: "Templete / Tarima de Escenario",
+          quantity: 1,
+          unitCost: 0
+        })
+      }
+      if (src.hasPista) {
+        inferred.push({
+          id: "pista-iluminada",
+          description: "Pista Iluminada LED",
+          quantity: 1,
+          unitCost: 0
+        })
+      }
+      if (src.hasRobot) {
+        inferred.push({
+          id: "iluminacion-adicional",
+          description: "Iluminación Adicional / Robótica",
+          quantity: 1,
+          unitCost: 0
+        })
+      }
+      if (src.isDjWithTvs) {
+        inferred.push({
+          id: "dj-pantallas",
+          description: "Servicio de DJ con Pantallas",
+          quantity: 1,
+          unitCost: 0
+        })
+      }
+      if (typeof src.djHours === "number" && src.djHours > 0) {
+        inferred.push({
+          id: "dj-horas",
+          description: `Servicio de DJ (${src.djHours} Horas)`,
+          quantity: src.djHours,
+          unitCost: 0
+        })
+      }
+    }
+    return inferred
   })
 
   // Cálculos consolidados en tiempo real mediante la fuente única de verdad
@@ -397,9 +528,16 @@ export function UnifiedEventQuoteForm({
       discountAmount,
       additionalItems,
       invoice,
-      depositAmount
+      depositAmount: isManualDeposit ? depositAmount : undefined
     })
-  }, [basePrice, viaticosAmount, discountAmount, additionalItems, invoice, depositAmount])
+  }, [basePrice, viaticosAmount, discountAmount, additionalItems, invoice, isManualDeposit, depositAmount])
+
+  // Reactividad estricta del 30%: a menos que se active isManualDeposit, mantener siempre el 30%
+  useEffect(() => {
+    if (!isManualDeposit) {
+      setDepositAmount(totals.requiredDeposit)
+    }
+  }, [isManualDeposit, totals.requiredDeposit])
 
   const draftKey = useMemo(() => `vendetta_event_draft_${mode}_${targetId || "new"}`, [mode, targetId])
 
@@ -435,6 +573,7 @@ export function UnifiedEventQuoteForm({
           if (saved.viaticosAmount !== undefined && saved.viaticosAmount !== null) setViaticosAmount(saved.viaticosAmount)
           if (saved.discountAmount !== undefined && saved.discountAmount !== null) setDiscountAmount(saved.discountAmount)
           if (saved.depositAmount !== undefined && saved.depositAmount !== null) setDepositAmount(saved.depositAmount)
+          if (saved.isManualDeposit !== undefined) setIsManualDeposit(Boolean(saved.isManualDeposit))
           if (saved.invoice !== undefined) setInvoice(saved.invoice)
           if (saved.additionalItems?.length) setAdditionalItems(saved.additionalItems)
         }
@@ -451,6 +590,7 @@ export function UnifiedEventQuoteForm({
       guestCount, dressCode, status, musicianNotes, audioEngineer,
       selectedVenueId, venueName, venueAddress, venueCity, venueState, mapsLink,
       packageId, basePrice, viaticosAmount, discountAmount, invoice, depositAmount,
+      isManualDeposit,
       additionalItems
     }
     try {
@@ -462,6 +602,7 @@ export function UnifiedEventQuoteForm({
     guestCount, dressCode, status, musicianNotes, audioEngineer,
     selectedVenueId, venueName, venueAddress, venueCity, venueState, mapsLink,
     packageId, basePrice, viaticosAmount, discountAmount, invoice, depositAmount,
+    isManualDeposit,
     additionalItems
   ])
 
@@ -546,14 +687,6 @@ export function UnifiedEventQuoteForm({
       const localBase = pkg.baseCostPerHour * hours
       const price = calculateShowBasePrice(localBase, isOutsideZone)
       setBasePrice(price)
-
-      // Actualizar anticipo al 30% si el anticipo actual era 0 o coincidía con el 30% anterior
-      const currentSubtotal = (basePrice || 0) + (viaticosAmount || 0)
-      const isAutoDeposit = depositAmount === null || depositAmount === 0 || depositAmount === Math.round(currentSubtotal * 0.3)
-      if (isAutoDeposit) {
-        const newSubtotal = price + (viaticosAmount || 0)
-        setDepositAmount(Math.round(newSubtotal * 0.3))
-      }
     }
   }
 
@@ -572,15 +705,6 @@ export function UnifiedEventQuoteForm({
       const data = await resp.json()
       if (data && typeof data.viaticosAmount === "number") {
         setViaticosAmount(data.viaticosAmount)
-        // Actualizar anticipo al 30% si no ha sido personalizado
-        const effBase = basePrice || defaultPackagePrice || 0
-        if (effBase > 0) {
-          const currentTotal = effBase + (viaticosAmount || 0)
-          const isAutoDeposit = depositAmount === null || depositAmount === 0 || depositAmount === Math.round(currentTotal * 0.3)
-          if (isAutoDeposit) {
-            setDepositAmount(Math.round((effBase + data.viaticosAmount) * 0.3))
-          }
-        }
 
         if (data.viaticosAmount === 0 && !data.isOutsideZone) {
           toast.success(`Ubicación en Zona Local: $0 MXN de viáticos (${data.distanceKm || 0} km)`)
@@ -614,14 +738,6 @@ export function UnifiedEventQuoteForm({
     // Si basePrice sigue siendo null o 0, inicializarlo con defaultPackagePrice
     if ((basePrice === null || basePrice === 0) && defaultPackagePrice > 0) {
       setBasePrice(defaultPackagePrice)
-    }
-    // Si depositAmount es null o 0, sugerir 50%
-    if (depositAmount === null || depositAmount === 0) {
-      const effectiveBase = (basePrice && basePrice > 0) ? basePrice : defaultPackagePrice
-      const viat = viaticosAmount || 0
-      if (effectiveBase > 0) {
-        setDepositAmount(Math.round((effectiveBase + viat) * 0.5))
-      }
     }
     setActiveStep(4)
   }
@@ -1682,14 +1798,53 @@ export function UnifiedEventQuoteForm({
                       className="mt-1"
                     />
                   </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground">Anticipo Apartado</Label>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                        Anticipo Apartado
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                          isManualDeposit
+                            ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
+                            : "bg-primary/20 text-primary"
+                        }`}>
+                          {isManualDeposit ? "Monto Manual" : "30% Automático"}
+                        </span>
+                      </Label>
+                      <label className="text-[11px] text-muted-foreground flex items-center gap-1.5 cursor-pointer hover:text-foreground transition-colors select-none">
+                        <input
+                          type="checkbox"
+                          checked={isManualDeposit}
+                          onChange={(e) => {
+                            const checked = e.target.checked
+                            setIsManualDeposit(checked)
+                            if (!checked) {
+                              setDepositAmount(totals.requiredDeposit)
+                            }
+                          }}
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer accent-primary"
+                        />
+                        <span>Anticipo personalizado / monto manual</span>
+                      </label>
+                    </div>
                     <CurrencyInput
                       value={depositAmount}
-                      onChange={setDepositAmount}
+                      onChange={(val) => {
+                        setIsManualDeposit(true)
+                        setDepositAmount(val)
+                      }}
+                      disabled={!isManualDeposit}
                       placeholder="$0.00"
-                      className="mt-1"
+                      className={`mt-1 font-mono font-bold ${
+                        !isManualDeposit 
+                          ? "bg-muted/40 cursor-not-allowed opacity-90 text-primary" 
+                          : "border-amber-500/50 focus:border-amber-500"
+                      }`}
                     />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {!isManualDeposit
+                        ? "Recalculado de forma automática como el 30% exacto del Total Final del Evento."
+                        : "Modo personalizado activo. Desmarca la casilla para restablecer el cálculo automático del 30%."}
+                    </p>
                   </div>
                 </div>
 

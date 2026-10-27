@@ -89,7 +89,9 @@ export function FinancialSummary({ totals, isPriceModified = false, invoice = fa
 
         <div className="pt-3 border-t border-border/40 space-y-2">
           <div className="flex justify-between items-center text-xs text-muted-foreground">
-            <span>Anticipo Apartado (30%)</span>
+            <span>
+              Anticipo Apartado {totals.depositAmount === totals.requiredDeposit ? "(30%)" : "(Personalizado)"}
+            </span>
             <span className="font-mono text-foreground font-semibold">
               {formatCurrencyMXN(totals.depositAmount)}
             </span>

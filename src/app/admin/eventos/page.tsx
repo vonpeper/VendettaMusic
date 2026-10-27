@@ -34,7 +34,11 @@ export default async function AdminEventosPage() {
         client:   { include: { user: true } },
         location: true,
         package:  true,
-        bookingRequest: true,
+        bookingRequest: {
+          include: {
+            lineItems: true
+          }
+        },
         musicians: true,
       }
     }),

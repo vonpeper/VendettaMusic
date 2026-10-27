@@ -52,6 +52,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
     originalPrice:  booking.originalPrice ?? 0,
     discountAmount: booking.discountAmount ?? 0,
   })
+  const [isManualDeposit, setIsManualDeposit] = useState(false)
 
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault()
@@ -300,7 +301,15 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
                 id="viaticosAmount" 
                 type="number"
                 value={formData.viaticosAmount} 
-                onChange={e => setFormData({...formData, viaticosAmount: parseFloat(e.target.value)})}
+                onChange={e => {
+                  const viat = parseFloat(e.target.value) || 0
+                  const newDeposit = !isManualDeposit ? Math.round(((formData.baseAmount || 0) + viat) * 0.3) : formData.depositAmount
+                  setFormData({
+                    ...formData,
+                    viaticosAmount: viat,
+                    depositAmount: newDeposit
+                  })
+                }}
                 className="bg-background border-primary/30 font-bold"
               />
             </div>
@@ -332,10 +341,12 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
                 value={formData.baseAmount} 
                 onChange={e => {
                   const val = parseFloat(e.target.value) || 0
+                  const newDeposit = !isManualDeposit ? Math.round((val + (formData.viaticosAmount || 0)) * 0.3) : formData.depositAmount
                   setFormData({
                     ...formData, 
                     baseAmount: val,
-                    discountAmount: formData.originalPrice - val
+                    discountAmount: formData.originalPrice - val,
+                    depositAmount: newDeposit
                   })
                 }}
                 className="bg-background border-primary"
@@ -344,13 +355,42 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="depositAmount">Anticipo Pactado ($)</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="depositAmount" className="flex items-center gap-1.5">
+                Anticipo Pactado ($)
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                  isManualDeposit ? "bg-amber-500/20 text-amber-500" : "bg-primary/20 text-primary"
+                }`}>
+                  {isManualDeposit ? "Manual" : "30% Automático"}
+                </span>
+              </Label>
+              <label className="text-[11px] text-muted-foreground flex items-center gap-1.5 cursor-pointer hover:text-foreground">
+                <input
+                  type="checkbox"
+                  checked={isManualDeposit}
+                  onChange={(e) => {
+                    const checked = e.target.checked
+                    setIsManualDeposit(checked)
+                    if (!checked) {
+                      const total = (formData.baseAmount || 0) + (formData.viaticosAmount || 0)
+                      setFormData({ ...formData, depositAmount: Math.round(total * 0.3) })
+                    }
+                  }}
+                  className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer accent-primary"
+                />
+                <span>Anticipo personalizado / monto manual</span>
+              </label>
+            </div>
             <Input 
               id="depositAmount" 
               type="number"
               value={formData.depositAmount} 
-              onChange={e => setFormData({...formData, depositAmount: parseFloat(e.target.value)})}
-              className="bg-background"
+              disabled={!isManualDeposit}
+              onChange={e => {
+                setIsManualDeposit(true)
+                setFormData({...formData, depositAmount: parseFloat(e.target.value) || 0})
+              }}
+              className={`bg-background ${!isManualDeposit ? "bg-muted/40 cursor-not-allowed opacity-90 text-primary font-bold" : ""}`}
             />
           </div>
 

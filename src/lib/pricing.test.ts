@@ -268,5 +268,32 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
     assert.equal(withIva.requiredDeposit, 3480)
     assert.equal(withIva.balanceAmount, 8120)
   })
+
+  it("caso reportado en pantalla: Total Evento = $8,600 -> Anticipo 30% = $2,580 y Saldo = $6,020", () => {
+    // Caso 1: Sin anticipo manual (automático 30%)
+    const resAuto = calculateQuoteTotals({
+      basePrice: 8600,
+      viaticosAmount: 0,
+      discountAmount: 0,
+      depositAmount: undefined, // automático
+      invoice: false
+    })
+
+    assert.equal(resAuto.totalAmount, 8600)
+    assert.equal(resAuto.requiredDeposit, 2580)
+    assert.equal(resAuto.depositAmount, 2580)
+    assert.equal(resAuto.balanceAmount, 6020)
+
+    // Caso 2: Si un valor desfasado como $4,500 se reemplaza por el 30% automático, balance es $6,020
+    assert.notEqual(resAuto.balanceAmount, 4100) // Asegurar que NO reste $4,500 dando $4,100
+
+    // Caso 3: Anticipo manual explícito permitido si el usuario lo define
+    const resManual = calculateQuoteTotals({
+      basePrice: 8600,
+      depositAmount: 4000
+    })
+    assert.equal(resManual.depositAmount, 4000)
+    assert.equal(resManual.balanceAmount, 4600)
+  })
 })
 
