@@ -58,7 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
       ogImage: true,
       googleSiteVerification: true,
     }
-  });
+  }).catch(() => null);
 
   const title = config?.ogTitle || "Vendetta | Pop & Rock en Vivo para Eventos";
   const description = config?.ogDescription || "Banda profesional de pop y rock en vivo para bodas, eventos corporativos y celebraciones en México. Experiencia real de concierto con producción premium.";
@@ -118,7 +118,7 @@ export default async function RootLayout({
       googleAnalyticsMeasurementId: true,
       googleSiteVerification: true,
     }
-  });
+  }).catch(() => null);
 
   const siteVerification = config?.googleSiteVerification || 'xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY';
 

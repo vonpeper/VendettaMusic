@@ -29,14 +29,23 @@ export interface QuoteTotalsResult {
   viaticosAmount: number
   additionalItemsTotal: number
   discountAmount: number
+  subtotalBeforeDiscount: number
   subtotal: number
   ivaAmount: number
   totalAmount: number
+  requiredDeposit: number
   depositAmount: number
   balanceAmount: number
   isFullyPaid: boolean
   depositExceedsTotal: boolean
   depositError: string | null
+}
+
+/**
+ * Calcula el anticipo oficial requerido por Vendetta Music (exactamente el 30% del Total Final).
+ */
+export function calculateRequiredDeposit(totalAmount: number): number {
+  return Math.round(Math.max(0, roundCurrency(totalAmount)) * 0.3)
 }
 
 /**
@@ -84,8 +93,11 @@ export function calculateQuoteTotals(input: CalculateQuoteInput): QuoteTotalsRes
   }
   additionalItemsTotal = roundCurrency(additionalItemsTotal)
 
-  // Subtotal antes de impuestos
-  const rawSubtotal = basePrice + viaticosAmount + additionalItemsTotal - discountAmount
+  // Subtotal base antes de descuentos
+  const subtotalBeforeDiscount = roundCurrency(basePrice + viaticosAmount + additionalItemsTotal)
+
+  // Subtotal neto (Base + Viáticos + Adicionales - Descuento)
+  const rawSubtotal = subtotalBeforeDiscount - discountAmount
   const subtotal = Math.max(0, roundCurrency(rawSubtotal))
 
   // IVA (16%) si requiere factura
@@ -93,9 +105,11 @@ export function calculateQuoteTotals(input: CalculateQuoteInput): QuoteTotalsRes
 
   // Total final
   const totalAmount = roundCurrency(subtotal + ivaAmount)
+  const requiredDeposit = calculateRequiredDeposit(totalAmount)
 
-  // Anticipo y Saldo
-  const rawDeposit = roundCurrency(input.depositAmount)
+  // Anticipo y Saldo: Si se pasa explícito se respeta; sino por defecto el 30% oficial
+  const hasExplicitDeposit = input.depositAmount !== null && input.depositAmount !== undefined && !isNaN(input.depositAmount)
+  const rawDeposit = hasExplicitDeposit ? roundCurrency(input.depositAmount) : requiredDeposit
   const isNegativeDeposit = rawDeposit < 0
   const depositExceedsTotal = isNegativeDeposit || (totalAmount > 0 && rawDeposit > totalAmount)
   const depositError = isNegativeDeposit
@@ -113,9 +127,11 @@ export function calculateQuoteTotals(input: CalculateQuoteInput): QuoteTotalsRes
     viaticosAmount,
     additionalItemsTotal,
     discountAmount,
+    subtotalBeforeDiscount,
     subtotal,
     ivaAmount,
     totalAmount,
+    requiredDeposit,
     depositAmount,
     balanceAmount,
     isFullyPaid,

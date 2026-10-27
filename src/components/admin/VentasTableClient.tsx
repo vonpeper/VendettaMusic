@@ -23,11 +23,19 @@ import {
   Eye,
   Search,
   X,
-  RefreshCw
+  RefreshCw,
+  Phone,
+  PhoneCall,
+  CheckCircle2,
+  MapPin,
+  Clock,
+  Sparkles,
+  Check
 } from "lucide-react"
 import { resendNotificationAction } from "@/actions/notifications"
 import { getValidWhatsappPhone } from "@/lib/phone"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 import { 
   Dialog, 
@@ -49,7 +57,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { formatDateMX, formatCurrency } from "@/lib/utils"
-import { updateBookingStatusAction, reactivateBookingAction } from "@/actions/ventas"
+import { 
+  updateBookingStatusAction, 
+  reactivateBookingAction,
+  markLeadContactedAction,
+  scheduleLeadCallAction,
+  confirmDepositPaidAction
+} from "@/actions/ventas"
 import { FollowUpButton } from "./FollowUpButton"
 import { ContractStatusSwitcher } from "./ContractStatusSwitcher"
 import { PreConfirmChecklist, PreConfirmData } from "./PreConfirmChecklist"
@@ -65,6 +79,8 @@ interface Booking {
   viaticosAmount: number
   discountAmount?: number | null
   depositAmount: number
+  guestCount?: number
+  createdAt?: Date | string
   lineItems?: any[]
   invoice?: boolean
   originalPrice?: number | null
@@ -100,7 +116,8 @@ export const calculateBookingFinancials = (r: Booking) => {
   const hasInvoice = Boolean(r.event?.invoice || r.invoice)
   const iva = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
   const total = subtotal + iva
-  return { subtotal, iva, total, lineItemsTotal }
+  const requiredDeposit = Math.round(total * 0.3)
+  return { subtotal, iva, total, lineItemsTotal, requiredDeposit }
 }
 
 const formatTotal = (r: any) => {
@@ -109,17 +126,39 @@ const formatTotal = (r: any) => {
   return formatCurrency(base + iva)
 }
 
-const getDynamicPaymentStatus = (r: Booking) => {
-  const { total } = calculateBookingFinancials(r);
-  const deposit = Number(r.depositAmount || 0);
-  const paid = (r.payments || []).filter((p: any) => p.status === 'completed' || p.status === 'paid').reduce((sum: number, p: any) => sum + Number(p.amount), 0);
-  const balance = total - paid;
+export const getDynamicPaymentStatus = (r: Booking) => {
+  const { total, requiredDeposit } = calculateBookingFinancials(r)
+  const deposit = Number(r.depositAmount || 0) > 0 ? Number(r.depositAmount) : requiredDeposit
+  const paid = (r.payments || []).filter((p: any) => p.status === 'completed' || p.status === 'paid').reduce((sum: number, p: any) => sum + Number(p.amount), 0)
+  const balance = total - paid
   
-  if (paid === 0 && deposit === 0) return { label: "SIN ANTICIPO", color: "bg-gray-500/10 text-gray-400 border-gray-500/20" };
-  if (paid === 0) return { label: "PAGO PENDIENTE", color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" };
-  if (balance <= 0) return { label: "LIQUIDADO", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" };
-  if (paid >= deposit) return { label: "ANTICIPO PAGADO", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" };
-  return { label: "PAGO PARCIAL", color: "bg-orange-500/10 text-orange-500 border-orange-500/20" };
+  if (total === 0) return { label: "POR COTIZAR", color: "bg-purple-500/10 text-purple-400 border-purple-500/20" }
+  if (paid === 0 && deposit === 0) return { label: "SIN ANTICIPO", color: "bg-gray-500/10 text-gray-400 border-gray-500/20" }
+  if (paid === 0) return { label: "ANTICIPO PENDIENTE (30%)", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" }
+  if (balance <= 0) return { label: "LIQUIDADO", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" }
+  if (paid >= deposit) return { label: "ANTICIPO PAGADO (30%)", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" }
+  return { label: "PAGO PARCIAL", color: "bg-orange-500/10 text-orange-400 border-orange-500/20" }
+}
+
+export function formatDaysRemaining(targetDate: Date | string) {
+  const d = new Date(targetDate)
+  if (isNaN(d.getTime())) return null
+  const now = new Date()
+  const dMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const diffDays = Math.round((dMidnight - nowMidnight) / (1000 * 60 * 60 * 24))
+  if (diffDays === 0) return { text: "Hoy", color: "text-amber-400 bg-amber-500/10 border-amber-500/20" }
+  if (diffDays === 1) return { text: "Mañana", color: "text-amber-300 bg-amber-500/10 border-amber-500/20" }
+  if (diffDays > 1) return { text: `En ${diffDays} días`, color: diffDays <= 7 ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : "text-blue-400 bg-blue-500/10 border-blue-500/20" }
+  return { text: `Pasado hace ${Math.abs(diffDays)}d`, color: "text-muted-foreground bg-muted/20 border-border/40" }
+}
+
+export function getWhatsAppDirectUrl(phone: string, clientName: string, shortId?: string | null) {
+  const digits = phone.replace(/\D/g, "")
+  if (!digits) return null
+  const cleanPhone = digits.length === 10 ? `52${digits}` : digits
+  const greeting = `Hola ${clientName.trim()} 👋 Te saludamos del equipo de Vendetta Live Music respecto a tu solicitud${shortId ? ` (${shortId})` : ""}. ¿Tienes un momento para conversar sobre tu evento?`
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(greeting)}`
 }
 
 type SortKey = "fecha" | "cliente" | "monto" | "estado"
@@ -129,6 +168,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
   const [reactivatingBooking, setReactivatingBooking] = useState<any | null>(null)
   const [preConfirmData, setPreConfirmData] = useState<PreConfirmData | null>(null)
   const [isReactivating, setIsReactivating] = useState(false)
@@ -148,8 +188,15 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
   }
 
   const STATUS_LABELS: Record<string, string> = {
-    all: "Todos", pendiente: "Pendiente", agendado: "Confirmado",
-    completado: "Completado", cancelado: "Cancelado", EXPIRED: "Expirado"
+    all: "Todos",
+    requiere_llamada: "Requiere Llamada",
+    contactado: "Contactado",
+    llamada_agendada: "Llamada Agendada",
+    pendiente: "Pendiente",
+    agendado: "Confirmado",
+    completado: "Completado",
+    cancelado: "Cancelado",
+    EXPIRED: "Expirado"
   }
 
   const filtered = items
@@ -254,6 +301,84 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
     finally { setUpdatingId(null) }
   }
 
+  const handleMarkContacted = async (leadId: string) => {
+    setActionLoadingId(leadId)
+    try {
+      const res = await markLeadContactedAction(leadId)
+      if (res.success) {
+        toast.success("Lead marcado como contactado")
+        router.refresh()
+      } else {
+        toast.error(res.error || "No se pudo actualizar")
+      }
+    } catch {
+      toast.error("Error de red")
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleScheduleCall = async (leadId: string) => {
+    const note = window.prompt("Notas de la llamada técnica (opcional):", "Llamada acordada por WhatsApp")
+    if (note === null) return
+    setActionLoadingId(leadId)
+    try {
+      const res = await scheduleLeadCallAction(leadId, note)
+      if (res.success) {
+        toast.success("Llamada técnica agendada")
+        router.refresh()
+      } else {
+        toast.error(res.error || "No se pudo agendar la llamada")
+      }
+    } catch {
+      toast.error("Error de red")
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleConfirmDeposit = async (lead: Booking) => {
+    const financials = calculateBookingFinancials(lead)
+    const requiredDeposit = Math.round(financials.total * 0.3)
+    const depositToConfirm = Number(lead.depositAmount || 0) > 0 ? Number(lead.depositAmount) : requiredDeposit
+    const confirmMsg = `¿Confirmar anticipo de ${formatCurrency(depositToConfirm)} para ${lead.clientName}? Esto confirmará el evento y habilitará el contrato legal.`
+    if (!window.confirm(confirmMsg)) return
+    
+    setActionLoadingId(lead.id)
+    try {
+      const res = await confirmDepositPaidAction(lead.id)
+      if (res.success) {
+        toast.success("¡Anticipo del 30% confirmado! Evento agendado con éxito.")
+        router.refresh()
+      } else {
+        toast.error(res.error || "Error al confirmar anticipo")
+      }
+    } catch {
+      toast.error("Error de red")
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const activeLeads = items.filter(b => {
+    const s = b.status?.toLowerCase() || ""
+    return (
+      s === "requiere_llamada" ||
+      s === "contactado" ||
+      s === "llamada_agendada" ||
+      s === "pendiente" ||
+      s === "pending" ||
+      s === "new"
+    )
+  }).sort((a, b) => {
+    const isReqA = a.status === "requiere_llamada" ? 1 : 0
+    const isReqB = b.status === "requiere_llamada" ? 1 : 0
+    if (isReqA !== isReqB) return isReqB - isReqA
+    const dateA = a.createdAt ? new Date((a as any).createdAt).getTime() : 0
+    const dateB = b.createdAt ? new Date((b as any).createdAt).getTime() : 0
+    return dateB - dateA
+  })
+
   if (items.length === 0) return (
     <div className="py-20 text-center border-2 border-dashed border-border/40 rounded-3xl">
       <p className="text-muted-foreground">No hay solicitudes en esta categoría.</p>
@@ -261,7 +386,206 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
   )
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+
+      {/* SECCIÓN PRIORITARIA: LEADS NUEVOS / POR CONTACTAR */}
+      {activeLeads.length > 0 && (
+        <div className="space-y-4 bg-card/40 border border-border/40 p-5 md:p-6 rounded-3xl backdrop-blur-sm shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-border/20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400">
+                <PhoneCall className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-heading font-black text-foreground tracking-tight">
+                    Leads Nuevos / Por Contactar
+                  </h2>
+                  <Badge variant="outline" className="bg-purple-500/15 text-purple-400 border-purple-500/30 text-xs font-black">
+                    {activeLeads.length} {activeLeads.length === 1 ? "lead activo" : "leads activos"}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Prospectos y cotizaciones recientes ordenados por llegada. Contacta vía WhatsApp, agenda llamada técnica o confirma su anticipo.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pt-2">
+            {activeLeads.map(lead => {
+              const isSpecial = (lead.guestCount && lead.guestCount > 100) ||
+                lead.status === "requiere_llamada" ||
+                lead.packageName?.includes("Especial") ||
+                lead.packageName?.includes(">100")
+              
+              const financials = calculateBookingFinancials(lead)
+              const requiredDeposit = Math.round(financials.total * 0.3)
+              const paymentStatus = getDynamicPaymentStatus(lead)
+              const daysRemaining = formatDaysRemaining(lead.requestedDate)
+              const cleanPhone = lead.client?.whatsapp || lead.clientPhone || ""
+              const waUrl = getWhatsAppDirectUrl(cleanPhone, lead.clientName, lead.shortId)
+              const isActionLoading = actionLoadingId === lead.id
+
+              return (
+                <div 
+                  key={`lead-card-${lead.id}`}
+                  className="bg-card border border-border/40 hover:border-purple-500/40 rounded-2xl p-5 flex flex-col justify-between transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/5 group relative overflow-hidden"
+                >
+                  <div>
+                    {/* Top Row: Type Badge + ShortId */}
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      {isSpecial ? (
+                        <Badge className="bg-purple-500/15 text-purple-400 border-purple-500/30 text-[10px] font-black uppercase tracking-wider gap-1.5 hover:bg-purple-500/20">
+                          <PhoneCall className="w-3 h-3 text-purple-400" />
+                          Producción Especial &gt;100 pax
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/30 text-[10px] font-black uppercase tracking-wider gap-1.5 hover:bg-blue-500/20">
+                          <Sparkles className="w-3 h-3 text-blue-400" />
+                          Essential ≤100 pax
+                        </Badge>
+                      )}
+                      <span className="font-mono text-[11px] font-black text-muted-foreground">{lead.shortId || "S/F"}</span>
+                    </div>
+
+                    {/* Client Name & WhatsApp direct */}
+                    <div className="space-y-1 mb-3">
+                      <Link 
+                        href={`/admin/ventas/${lead.id}`}
+                        className="font-black text-base text-foreground hover:text-primary transition-colors leading-tight line-clamp-1 block"
+                        title={lead.clientName}
+                      >
+                        {lead.clientName}
+                      </Link>
+                      
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <span className="font-mono text-xs text-muted-foreground">
+                          {cleanPhone || "Sin teléfono"}
+                        </span>
+                        {waUrl && (
+                          <a
+                            href={waUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 transition-all hover:scale-[1.02] shadow-sm"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5 text-emerald-400" /> Abrir WhatsApp
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Event Logistics: Date, Days remaining, Location, Pax */}
+                    <div className="p-3 bg-muted/20 rounded-xl space-y-2 border border-border/20 text-xs mb-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1.5 font-medium">
+                          <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                          {formatDateMX(lead.requestedDate, "d 'de' MMMM, yyyy")}
+                        </span>
+                        {daysRemaining && (
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${daysRemaining.color}`}>
+                            {daysRemaining.text}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5 text-muted-foreground font-medium">
+                        <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="truncate">
+                          {lead.city || lead.address || "Ubicación por definir"}
+                        </span>
+                        <span>•</span>
+                        <span className="font-bold text-foreground whitespace-nowrap">
+                          {lead.guestCount && lead.guestCount > 0 ? `${lead.guestCount} pax` : "Aforo por definir"}
+                        </span>
+                      </div>
+
+                      {lead.adminNote && (
+                        <div className="pt-1 border-t border-border/10 text-[10px] text-muted-foreground line-clamp-2 italic">
+                          {lead.adminNote}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Financial Estimates */}
+                    <div className="p-3 bg-card border border-border/30 rounded-xl mb-4 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Inversión Estimada:</span>
+                        <span className="text-sm font-black text-foreground font-mono">
+                          {financials.total > 0 ? formatCurrency(financials.total) : "Por cotizar en llamada"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Anticipo Requerido (30%):</span>
+                        <span className="text-xs font-bold text-foreground font-mono">
+                          {financials.total > 0 ? formatCurrency(requiredDeposit) : "30% al agendar"}
+                        </span>
+                      </div>
+                      <div className="pt-1 flex items-center justify-between">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Estado Anticipo:</span>
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${paymentStatus.color}`}>
+                          {paymentStatus.label}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick 1-Click Action Buttons */}
+                  <div className="pt-3 border-t border-border/30 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        size="sm"
+                        variant={lead.status === "contactado" ? "secondary" : "outline"}
+                        disabled={isActionLoading || lead.status === "contactado"}
+                        onClick={() => handleMarkContacted(lead.id)}
+                        className={`h-9 text-xs font-bold rounded-xl transition-all ${lead.status === "contactado" ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30" : "border-border/40 hover:bg-cyan-500/10 hover:text-cyan-400"}`}
+                      >
+                        {isActionLoading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Check className="w-3 h-3 mr-1" />}
+                        {lead.status === "contactado" ? "Contactado ✓" : "Contactado"}
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant={lead.status === "llamada_agendada" ? "secondary" : "outline"}
+                        disabled={isActionLoading}
+                        onClick={() => handleScheduleCall(lead.id)}
+                        className={`h-9 text-xs font-bold rounded-xl transition-all ${lead.status === "llamada_agendada" ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/30" : "border-border/40 hover:bg-indigo-500/10 hover:text-indigo-400"}`}
+                      >
+                        {isActionLoading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <PhoneCall className="w-3 h-3 mr-1" />}
+                        {lead.status === "llamada_agendada" ? "Llamada ✓" : "Agendar Llamada"}
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        size="sm"
+                        disabled={isActionLoading}
+                        onClick={() => handleConfirmDeposit(lead)}
+                        className="h-9 text-xs font-black rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-sm"
+                      >
+                        {isActionLoading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <CheckCircle2 className="w-3 h-3 mr-1" />}
+                        Confirmar Anticipo
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        asChild
+                        className="h-9 text-xs font-bold rounded-xl border-border/40 hover:bg-blue-600/10 hover:text-blue-400"
+                      >
+                        <Link href={`/admin/ventas/${lead.id}`}>
+                          <Eye className="w-3 h-3 mr-1" /> Ver Ficha / Editar
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Barra de búsqueda y filtros */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -726,11 +1050,14 @@ function StatusSwitcher({ status, id, onStatusChange, isUpdating, reserva }: {
   reserva?: any
 }) {
   const configs: any = {
-    pendiente:  { color: "text-yellow-600 border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20", label: "Pendiente" },
-    agendado:   { color: "text-green-600 border-green-500/40 bg-green-500/10 hover:bg-green-500/20", label: "Confirmado" },
-    completado: { color: "text-blue-600 border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20", label: "Completado" },
-    cancelado:  { color: "text-red-600 border-red-500/40 bg-red-500/10 hover:bg-red-500/20", label: "Cancelado" },
-    EXPIRED:    { color: "text-muted-foreground border-gray-700 bg-gray-800/50 hover:bg-gray-800/70", label: "Expirado" },
+    requiere_llamada: { color: "text-purple-400 border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20", label: "Requiere Llamada" },
+    contactado:       { color: "text-cyan-400 border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20", label: "Contactado" },
+    llamada_agendada: { color: "text-indigo-400 border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20", label: "Llamada Agendada" },
+    pendiente:        { color: "text-yellow-600 border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20", label: "Pendiente" },
+    agendado:         { color: "text-green-600 border-green-500/40 bg-green-500/10 hover:bg-green-500/20", label: "Confirmado" },
+    completado:       { color: "text-blue-600 border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20", label: "Completado" },
+    cancelado:        { color: "text-red-600 border-red-500/40 bg-red-500/10 hover:bg-red-500/20", label: "Cancelado" },
+    EXPIRED:          { color: "text-muted-foreground border-gray-700 bg-gray-800/50 hover:bg-gray-800/70", label: "Expirado" },
   }
   
   const cfg = configs[status] || configs.pendiente

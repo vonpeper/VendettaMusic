@@ -140,6 +140,7 @@ export default async function StatusDetailPage({ params }: { params: Promise<{ i
   const includeConfig = { 
     client: true,
     lineItems: { orderBy: { order: "asc" as const } },
+    payments: true,
     event: {
       include: {
         contracts: true,

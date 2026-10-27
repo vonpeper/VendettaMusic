@@ -35,8 +35,10 @@ interface ProspectosClientProps {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   new: { label: "Nuevo", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+  lead_produccion_especial: { label: "Producción Especial (>100 pax)", color: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+  prospecto_cotizando: { label: "Borrador Cotizando", color: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20" },
   reviewing: { label: "En Revisión", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
-  contacted: { label: "Contactado", color: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+  contacted: { label: "Contactado", color: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" },
   converted: { label: "Convertido", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
   discarded: { label: "Descartado", color: "bg-muted text-muted-foreground border-border" },
 }

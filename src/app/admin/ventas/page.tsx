@@ -37,6 +37,51 @@ export default async function AdminVentasPage() {
   // Reconciliar eventos pasados de forma transparente
   await autoCompleteConcludedEvents()
 
+  // Reconciliar ContactInquiry huérfanos hacia BookingRequest para unificar toda la venta
+  try {
+    const orphanInquiries = await db.contactInquiry.findMany({
+      where: {
+        convertedBooking: null,
+        status: { notIn: ["discarded", "closed"] }
+      }
+    })
+
+    if (orphanInquiries.length > 0) {
+      const { generateUniqueShortId } = await import("@/lib/folios")
+      for (const inq of orphanInquiries) {
+        const shortId = await generateUniqueShortId(db)
+        const reqDate = inq.requestedDate || new Date()
+        await db.bookingRequest.create({
+          data: {
+            shortId,
+            sourceInquiryId: inq.id,
+            clientName: inq.name,
+            clientPhone: inq.phone || "Sin teléfono",
+            clientEmail: inq.email || `lead_${inq.id.slice(0, 8)}@vendetta.mx`,
+            packageName: inq.message?.includes(">100") ? "Producción Especial (>100 pax)" : "Cotización Web",
+            guestCount: 0,
+            venueType: inq.eventType || "evento",
+            requestedDate: reqDate,
+            startTime: "21:00",
+            endTime: "23:00",
+            city: "Por definir",
+            state: "Estado de México",
+            address: "Por definir",
+            baseAmount: 0,
+            depositAmount: 0,
+            paymentMethod: "transfer",
+            paymentStatus: "pending",
+            adminNote: inq.message || `Lead recibido desde formulario web (Inquiry ID: ${inq.id})`,
+            status: "requiere_llamada",
+            source: "web"
+          }
+        })
+      }
+    }
+  } catch (err) {
+    console.error("⚠️ Error reconciling orphan inquiries in admin/ventas:", err)
+  }
+
   // Fetch de datos unificados
   const [bookings, quotes, expiredStats, config, clients, locations, packages, musicianProfiles] = await Promise.all([
     db.bookingRequest.findMany({ 
@@ -553,10 +598,14 @@ function ContratosGrid({
 
 function StatusBadge({ status }: { status: string }) {
   const configs: any = {
-    pendiente: { color: "text-yellow-400 border-yellow-700/40 bg-yellow-900/20", label: "Pendiente" },
-    agendado:  { color: "text-green-400 border-green-700/40 bg-green-900/20", label: "Agendado" },
-    cancelado: { color: "text-red-400 border-red-700/40 bg-red-900/20", label: "Cancelado" },
-    EXPIRED:   { color: "text-muted-foreground border-gray-700 bg-gray-800/50", label: "Expirado" },
+    requiere_llamada: { color: "text-purple-400 border-purple-700/40 bg-purple-900/20", label: "Requiere Llamada" },
+    contactado:       { color: "text-cyan-400 border-cyan-700/40 bg-cyan-900/20", label: "Contactado" },
+    llamada_agendada: { color: "text-indigo-400 border-indigo-700/40 bg-indigo-900/20", label: "Llamada Agendada" },
+    pendiente:        { color: "text-yellow-400 border-yellow-700/40 bg-yellow-900/20", label: "Pendiente" },
+    agendado:         { color: "text-green-400 border-green-700/40 bg-green-900/20", label: "Agendado" },
+    completado:       { color: "text-blue-400 border-blue-700/40 bg-blue-900/20", label: "Completado" },
+    cancelado:        { color: "text-red-400 border-red-700/40 bg-red-900/20", label: "Cancelado" },
+    EXPIRED:          { color: "text-muted-foreground border-gray-700 bg-gray-800/50", label: "Expirado" },
   }
   const cfg = configs[status] || configs.pendiente
   return (

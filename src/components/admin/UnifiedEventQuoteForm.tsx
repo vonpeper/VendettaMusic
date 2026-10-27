@@ -372,7 +372,7 @@ export function UnifiedEventQuoteForm({
       const base = targetPkg ? calculateShowBasePrice(targetPkg.baseCostPerHour * hours, outside) : 0
       const viat = city ? calcularViatcos(city, state).amount : 0
       const sub = base + viat
-      if (sub > 0) return Math.round(sub * 0.5)
+      if (sub > 0) return Math.round(sub * 0.3)
     }
     return null
   })
@@ -547,12 +547,12 @@ export function UnifiedEventQuoteForm({
       const price = calculateShowBasePrice(localBase, isOutsideZone)
       setBasePrice(price)
 
-      // Actualizar anticipo al 50% si el anticipo actual era 0 o coincidía con el 50% anterior
+      // Actualizar anticipo al 30% si el anticipo actual era 0 o coincidía con el 30% anterior
       const currentSubtotal = (basePrice || 0) + (viaticosAmount || 0)
-      const isAutoDeposit = depositAmount === null || depositAmount === 0 || depositAmount === Math.round(currentSubtotal * 0.5)
+      const isAutoDeposit = depositAmount === null || depositAmount === 0 || depositAmount === Math.round(currentSubtotal * 0.3)
       if (isAutoDeposit) {
         const newSubtotal = price + (viaticosAmount || 0)
-        setDepositAmount(Math.round(newSubtotal * 0.5))
+        setDepositAmount(Math.round(newSubtotal * 0.3))
       }
     }
   }
@@ -572,13 +572,13 @@ export function UnifiedEventQuoteForm({
       const data = await resp.json()
       if (data && typeof data.viaticosAmount === "number") {
         setViaticosAmount(data.viaticosAmount)
-        // Actualizar anticipo al 50% si no ha sido personalizado
+        // Actualizar anticipo al 30% si no ha sido personalizado
         const effBase = basePrice || defaultPackagePrice || 0
         if (effBase > 0) {
           const currentTotal = effBase + (viaticosAmount || 0)
-          const isAutoDeposit = depositAmount === null || depositAmount === 0 || depositAmount === Math.round(currentTotal * 0.5)
+          const isAutoDeposit = depositAmount === null || depositAmount === 0 || depositAmount === Math.round(currentTotal * 0.3)
           if (isAutoDeposit) {
-            setDepositAmount(Math.round((effBase + data.viaticosAmount) * 0.5))
+            setDepositAmount(Math.round((effBase + data.viaticosAmount) * 0.3))
           }
         }
 

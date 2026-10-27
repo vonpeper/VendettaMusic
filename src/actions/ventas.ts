@@ -668,7 +668,8 @@ export async function reactivateBookingAction(bookingId: string) {
 export async function confirmDepositPaidAction(bookingId: string) {
   try {
     const booking = await db.bookingRequest.findUnique({
-      where: { id: bookingId }
+      where: { id: bookingId },
+      include: { lineItems: true }
     })
     
     if (!booking) return { success: false, error: "Reserva no encontrada" }
@@ -679,16 +680,27 @@ export async function confirmDepositPaidAction(bookingId: string) {
       if (!updateRes.success) return updateRes
     }
 
+    // Calcular el anticipo requerido canónico (30%)
+    const lineItemsTotal = (booking.lineItems || []).reduce((acc: number, it: any) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
+    const subtotal = Math.max(0, Number(booking.baseAmount || 0) + Number(booking.viaticosAmount || 0) + lineItemsTotal - Number(booking.discountAmount || 0))
+    const hasInvoice = Boolean(booking.invoice)
+    const iva = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
+    const totalCalc = subtotal + iva
+    const deposit = (booking.depositAmount && booking.depositAmount > 0) ? booking.depositAmount : Math.round(totalCalc * 0.3)
+
     await db.bookingRequest.update({
       where: { id: bookingId },
-      data: { paymentStatus: "paid" } // Lo marcamos como pagado (el anticipo)
+      data: {
+        paymentStatus: "paid",
+        depositAmount: deposit
+      }
     })
 
     const updatedBooking = await db.bookingRequest.findUnique({ where: { id: bookingId } })
     const eventId = updatedBooking?.eventId || booking.eventId
 
     if (eventId) {
-      // Crear registro de pago
+      // Crear registro de pago si no existe
       const existingPayments = await db.payment.findMany({
         where: { bookingRequestId: booking.id, status: { in: ["completed", "paid"] } }
       });
@@ -698,18 +710,17 @@ export async function confirmDepositPaidAction(bookingId: string) {
           data: {
             eventId: eventId,
             bookingRequestId: booking.id,
-            amount: booking.depositAmount || 0,
+            amount: deposit,
             method: "TRANSFER",
             status: "completed",
-            reference: "Anticipo Manual"
+            reference: "Anticipo 30% Confirmado"
           }
         })
       }
 
       // Al confirmar anticipo, actualizamos el balance del evento
       const currentEvent = await db.event.findUnique({ where: { id: eventId } })
-      const totalAmount = currentEvent?.totalWithTax || currentEvent?.amount || booking.baseAmount
-      const deposit = booking.depositAmount || 0
+      const totalAmount = currentEvent?.totalWithTax || currentEvent?.amount || totalCalc
       await db.event.update({
         where: { id: eventId },
         data: { 
@@ -857,6 +868,68 @@ export async function updateDepositAmountAction(bookingId: string, amount: numbe
   }
 }
 
+export async function markLeadContactedAction(bookingId: string) {
+  try {
+    const booking = await db.bookingRequest.findUnique({ where: { id: bookingId } })
+    if (!booking) return { success: false, error: "Registro no encontrado" }
+
+    await db.bookingRequest.update({
+      where: { id: bookingId },
+      data: {
+        status: "contactado",
+        adminNote: booking.adminNote 
+          ? `${booking.adminNote} | Contactado por WhatsApp` 
+          : "Contactado por WhatsApp"
+      }
+    })
+
+    if (booking.sourceInquiryId) {
+      await db.contactInquiry.update({
+        where: { id: booking.sourceInquiryId },
+        data: { status: "contactado" }
+      }).catch(() => {})
+    }
+
+    revalidatePath("/admin/ventas")
+    return { success: true }
+  } catch (error) {
+    console.error("Error marking lead as contacted:", error)
+    return { success: false, error: "Error al actualizar prospecto" }
+  }
+}
+
+export async function scheduleLeadCallAction(bookingId: string, notes?: string) {
+  try {
+    const booking = await db.bookingRequest.findUnique({ where: { id: bookingId } })
+    if (!booking) return { success: false, error: "Registro no encontrado" }
+
+    const updatedNote = notes?.trim()
+      ? (booking.adminNote ? `${booking.adminNote} | Llamada: ${notes.trim()}` : `Llamada: ${notes.trim()}`)
+      : (booking.adminNote ? `${booking.adminNote} | Llamada técnica agendada` : "Llamada técnica agendada")
+
+    await db.bookingRequest.update({
+      where: { id: bookingId },
+      data: {
+        status: "llamada_agendada",
+        adminNote: updatedNote
+      }
+    })
+
+    if (booking.sourceInquiryId) {
+      await db.contactInquiry.update({
+        where: { id: booking.sourceInquiryId },
+        data: { status: "llamada_agendada" }
+      }).catch(() => {})
+    }
+
+    revalidatePath("/admin/ventas")
+    return { success: true }
+  } catch (error) {
+    console.error("Error scheduling lead call:", error)
+    return { success: false, error: "Error al agendar llamada" }
+  }
+}
+
 export async function updateTotalAmountAction(
   bookingId: string, 
   baseAmount: number, 
@@ -866,7 +939,7 @@ export async function updateTotalAmountAction(
   try {
     const booking = await db.bookingRequest.findUnique({
       where: { id: bookingId },
-      include: { event: true, lineItems: true }
+      include: { event: true, lineItems: true, payments: true }
     })
     if (!booking) return { success: false, error: "Reserva no encontrada" }
 
@@ -874,16 +947,27 @@ export async function updateTotalAmountAction(
     const finalViaticos = viaticosAmount !== undefined ? Math.max(0, viaticosAmount) : Number(booking.viaticosAmount || 0)
     const finalDiscount = discountAmount !== undefined ? Math.max(0, discountAmount) : Number(booking.discountAmount || 0)
     const lineItemsTotal = (booking.lineItems || []).reduce((acc: number, it: any) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
+    
+    // Subtotal antes de impuestos
     const subtotal = Math.max(0, finalBase + finalViaticos + lineItemsTotal - finalDiscount)
 
     const hasInvoice = Boolean(booking.invoice || booking.event?.invoice)
     const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
     const totalWithTax = subtotal + ivaAmount
+
+    // Anticipo oficial de Vendetta: exactamente el 30% del Total Final
+    const requiredDeposit = Math.round(totalWithTax * 0.3)
     const currentDeposit = Number(booking.depositAmount || 0)
-    const finalDeposit = (currentDeposit > totalWithTax && booking.paymentStatus !== "paid") 
-      ? Math.round(totalWithTax * 0.5) 
-      : currentDeposit
-    const balance = Math.max(0, totalWithTax - finalDeposit)
+
+    // Recalcular anticipo dinámicamente si no ha sido liquidado
+    const isPaid = booking.paymentStatus === "paid"
+    const finalDeposit = (isPaid && currentDeposit >= totalWithTax) 
+      ? currentDeposit 
+      : requiredDeposit
+
+    // Saldo pendiente: Total Final - Anticipo Pagado (o pagos registrados)
+    const paidAmount = (booking.payments || []).filter(p => p.status === 'completed' || p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0)
+    const balance = isPaid ? 0 : Math.max(0, totalWithTax - paidAmount)
 
     // 1. Actualizar BookingRequest
     await db.bookingRequest.update({

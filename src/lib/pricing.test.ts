@@ -235,6 +235,38 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
     assert.equal(result.subtotal, 10600)
     assert.equal(result.totalAmount, 10600)
     assert.equal(result.balanceAmount, 10600)
+    assert.equal(result.requiredDeposit, 3180) // 30% de 10,600 = 3,180
+  })
+
+  it("debe calcular exactamente el 30% para anticipo con calculateRequiredDeposit", async () => {
+    const { calculateRequiredDeposit } = await import("./pricing")
+    assert.equal(calculateRequiredDeposit(10000), 3000)
+    assert.equal(calculateRequiredDeposit(10600), 3180)
+    assert.equal(calculateRequiredDeposit(8500), 2550)
+    assert.equal(calculateRequiredDeposit(23500), 7050)
+    assert.equal(calculateRequiredDeposit(0), 0)
+    assert.equal(calculateRequiredDeposit(-500), 0)
+  })
+
+  it("debe calcular saldo pendiente restando anticipo pagado del total con IVA", () => {
+    const withIva = calculateQuoteTotals({
+      basePrice: 10000,
+      viaticosAmount: 0,
+      discountAmount: 0,
+      depositAmount: 3480, // Pagó el 30% del total con IVA
+      invoice: true
+    })
+
+    // Subtotal: 10,000
+    // IVA (16%): 1,600
+    // Total con IVA: 11,600
+    // Anticipo Requerido (30%): 3,480
+    // Saldo Pendiente: 11,600 - 3,480 = 8,120
+    assert.equal(withIva.subtotal, 10000)
+    assert.equal(withIva.ivaAmount, 1600)
+    assert.equal(withIva.totalAmount, 11600)
+    assert.equal(withIva.requiredDeposit, 3480)
+    assert.equal(withIva.balanceAmount, 8120)
   })
 })
 

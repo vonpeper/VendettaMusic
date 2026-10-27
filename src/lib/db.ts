@@ -20,7 +20,7 @@ const dbUrl = resolveDbUrl()
 // Habilitar Write-Ahead Logging y timeout de concurrencia en SQLite
 async function configureDatabasePragmas() {
   if (!dbUrl.startsWith("file:")) return
-  if (process.env.NEXT_PHASE === "phase-production-build") return
+  if (process.env.NEXT_PHASE === "phase-production-build" || process.env.npm_lifecycle_event === "build") return
   try {
     const client = createClient({ url: dbUrl })
     await client.execute("PRAGMA journal_mode = WAL;")

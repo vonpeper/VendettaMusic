@@ -167,26 +167,25 @@ function buildClientLargeAudienceMessage(params: {
     `¡Hola ${params.nombre.trim()}! 👋🎸`,
     "Recibimos con éxito tu solicitud para tu evento con Vendetta Live Music:",
     "",
-    "📋 *RESUMEN DE TU SOLICITUD*",
-    ...(params.paquete ? [`• *Paquete de Referencia:* ${params.paquete}`] : []),
+    "📋 *DETALLES DEL EVENTO*",
     `• *Tipo de Evento:* ${params.tipoEvento}`,
     `• *Fecha:* ${fechaFormateada}`,
     `• *Horario:* ${horario}${duracionText}`,
-    `• *Invitados estimados:* ${params.invitados} personas`,
+    `• *Aforo estimado:* ${params.invitados} personas`,
     `• *Ubicación:* ${ubicacion}`,
     ...(params.mapsLink?.trim() ? [`• *Google Maps:* ${params.mapsLink.trim()}`] : []),
     ...(params.produccionAdicional.length > 0 ? [
       "",
-      "• *Producción adicional de interés:*",
+      "• *Requerimientos de producción:*",
       ...params.produccionAdicional.map((p) => `  - ${p}`)
     ] : []),
     ...(params.notas?.trim() ? [`\n📝 *Notas adicionales:* ${params.notas.trim()}`] : []),
     "",
-    "📌 *ESTATUS DE TU SOLICITUD: EN REVISIÓN PERSONALIZADA*",
-    "Al tratarse de un evento para más de 120 personas, no emitimos una cotización automática predeterminada. Personalizamos el dimensionamiento de audio, ingeniería y rider técnico de acuerdo al aforo y la acústica de tu espacio.",
+    "📌 *PRODUCCIÓN TÉCNICA PERSONALIZADA*",
+    "Tu evento supera los 100 invitados y requiere diseño técnico y de producción personalizado (templete, pantalla LED, iluminación y cobertura de audio según el recinto).",
     "",
-    "📞 *PRÓXIMO PASO: AGENDAR LLAMADA*",
-    "En breve, un productor de Vendetta te escribirá por este chat de WhatsApp para agendar una breve llamada, validar los detalles de tu evento y entregarte una propuesta integral a la medida.",
+    "📞 *PRÓXIMO PASO: LLAMADA TÉCNICA*",
+    "En breve, un productor de Vendetta te escribirá por este chat de WhatsApp para agendar una breve llamada, validar los requerimientos del recinto y presentarte una propuesta integral a la medida.",
     "",
     "¡Muchas gracias por tu interés en Vendetta!",
     "Vendetta Live Music ⚡"
@@ -300,16 +299,16 @@ export async function submitPublicQuoteAction(
     const aforo = Number(input.invitados) || 50
 
     // ──────────────────────────────────────────────────────────────────────────
-    // RAMA 1: Aforo > 120 personas (NO cotización directa -> Prospecto Web + Alerta Llamada)
+    // RAMA 1: Aforo > 100 personas (Producción Especial - Sin Precios en Pantalla)
     // ──────────────────────────────────────────────────────────────────────────
-    if (aforo > 120) {
+    if (aforo > 100) {
       const extrasDetalle = input.produccionAdicional.join(", ")
-      const reasonText = `Aforo superior a 120 invitados (${aforo} personas)${extrasDetalle ? ` | Producción: ${extrasDetalle}` : ""}`
-      const pkgLabel = input.paquete ? `Paquete: ${input.paquete}` : "Producción personalizada"
+      const reasonText = `Aforo superior a 100 invitados (${aforo} personas)${extrasDetalle ? ` | Producción: ${extrasDetalle}` : ""}`
+      const pkgLabel = "Producción Especial (>100 pax)"
 
-      // 1. Guardar o actualizar en ContactInquiry (Prospectos Web) SIN crear BookingRequest
+      // 1. Guardar o actualizar en ContactInquiry (Prospectos Web) con status "requiere_llamada"
       let inquiryId = input.inquiryId
-      const inqMsg = `Aforo: ${aforo} invitados | Horario: ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas) | Ubicación: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}${input.mapsLink?.trim() ? ` | Maps: ${input.mapsLink.trim()}` : ""}${input.produccionAdicional.length > 0 ? ` | Producción: ${extrasDetalle}` : ""}${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""} | Motivo: Aforo > 120 pax requiere agendar llamada para ver detalles técnicos y cotizar a la medida.`
+      const inqMsg = `Aforo: ${aforo} invitados | Horario: ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas) | Ubicación: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}${input.mapsLink?.trim() ? ` | Maps: ${input.mapsLink.trim()}` : ""}${input.produccionAdicional.length > 0 ? ` | Producción: ${extrasDetalle}` : ""}${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""} | Motivo: Aforo > 100 pax requiere diseño técnico y de producción personalizado (templete, pantalla LED, iluminación y cobertura de audio según el recinto).`
       
       if (inquiryId) {
         try {
@@ -319,9 +318,9 @@ export async function submitPublicQuoteAction(
               name: input.nombre.trim(),
               phone: input.telefono.trim(),
               requestedDate: new Date(`${input.fecha}T12:00:00`),
-              eventType: `${input.tipoEvento} (${pkgLabel} - >120 pax)`,
+              eventType: `${input.tipoEvento} (${pkgLabel})`,
               message: inqMsg,
-              status: "new"
+              status: "requiere_llamada"
             }
           })
           inquiryId = updated.id
@@ -332,9 +331,9 @@ export async function submitPublicQuoteAction(
               phone: input.telefono.trim(),
               email: `cliente_${input.telefono.replace(/\D/g, "") || Date.now()}@prospectos.vendetta.mx`,
               requestedDate: new Date(`${input.fecha}T12:00:00`),
-              eventType: `${input.tipoEvento} (${pkgLabel} - >120 pax)`,
+              eventType: `${input.tipoEvento} (${pkgLabel})`,
               message: inqMsg,
-              status: "new"
+              status: "requiere_llamada"
             }
           })
           inquiryId = created.id
@@ -346,12 +345,73 @@ export async function submitPublicQuoteAction(
             phone: input.telefono.trim(),
             email: `cliente_${input.telefono.replace(/\D/g, "") || Date.now()}@prospectos.vendetta.mx`,
             requestedDate: new Date(`${input.fecha}T12:00:00`),
-            eventType: `${input.tipoEvento} (${pkgLabel} - >120 pax)`,
+            eventType: `${input.tipoEvento} (${pkgLabel})`,
             message: inqMsg,
-            status: "new"
+            status: "requiere_llamada"
           }
         })
         inquiryId = created.id
+      }
+
+      // 1b. Crear o actualizar BookingRequest con status "requiere_llamada" para que aparezca en el Centro de Ventas
+      const { generateUniqueShortId } = await import("@/lib/folios")
+      let bookingRecord = await db.bookingRequest.findFirst({
+        where: { sourceInquiryId: inquiryId }
+      })
+
+      const cleanDate = new Date(`${input.fecha}T12:00:00`)
+      const shortId = bookingRecord?.shortId || (await generateUniqueShortId(db))
+
+      if (bookingRecord) {
+        bookingRecord = await db.bookingRequest.update({
+          where: { id: bookingRecord.id },
+          data: {
+            clientName: input.nombre.trim(),
+            clientPhone: input.telefono.trim(),
+            packageName: pkgLabel,
+            guestCount: aforo,
+            venueType: input.tipoEvento || "salon",
+            requestedDate: cleanDate,
+            startTime: input.horaInicio || "21:00",
+            endTime: input.horaFin || "23:00",
+            bandHours: horasShow,
+            city: input.municipio,
+            state: input.estado || "Estado de México",
+            address: input.lugarEvento?.trim() || input.municipio,
+            mapsLink: input.mapsLink?.trim() || null,
+            adminNote: `🚨 Requiere llamada técnica de producción (>100 pax: ${aforo} personas)${extrasDetalle ? ` | Producción: ${extrasDetalle}` : ""}${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""}`,
+            status: "requiere_llamada",
+            source: "cotizador_web"
+          }
+        })
+      } else {
+        bookingRecord = await db.bookingRequest.create({
+          data: {
+            shortId,
+            sourceInquiryId: inquiryId,
+            clientName: input.nombre.trim(),
+            clientPhone: input.telefono.trim(),
+            clientEmail: `cliente_${input.telefono.replace(/\D/g, "") || Date.now()}@prospectos.vendetta.mx`,
+            packageName: pkgLabel,
+            guestCount: aforo,
+            venueType: input.tipoEvento || "salon",
+            requestedDate: cleanDate,
+            startTime: input.horaInicio || "21:00",
+            endTime: input.horaFin || "23:00",
+            bandHours: horasShow,
+            city: input.municipio,
+            state: input.estado || "Estado de México",
+            address: input.lugarEvento?.trim() || input.municipio,
+            mapsLink: input.mapsLink?.trim() || null,
+            baseAmount: 0,
+            depositAmount: 0,
+            paymentMethod: "transfer",
+            paymentStatus: "pending",
+            adminNote: `🚨 Requiere llamada técnica de producción (>100 pax: ${aforo} personas)${extrasDetalle ? ` | Producción: ${extrasDetalle}` : ""}${input.notas?.trim() ? ` | Notas: ${input.notas.trim()}` : ""}`,
+            status: "requiere_llamada",
+            source: "cotizador_web"
+          }
+        })
       }
 
       // 2. WhatsApp informativo de estatus al CLIENTE (sin precios ni propuesta prematura)
@@ -369,17 +429,17 @@ export async function submitPublicQuoteAction(
           lugarEvento: input.lugarEvento,
           mapsLink: input.mapsLink,
           produccionAdicional: input.produccionAdicional,
-          paquete: input.paquete,
+          paquete: "Producción Especial",
           notas: input.notas
         })
-        await sendWhatsApp(input.telefono.trim(), clientMsg, `Prospecto +120 pax - ${input.nombre.trim()}`).catch(
-          (err) => console.warn("Aviso WhatsApp cliente (+120 pax) no enviado:", err)
+        await sendWhatsApp(input.telefono.trim(), clientMsg, `Lead Producción +100 pax - ${input.nombre.trim()}`).catch(
+          (err) => console.warn("Aviso WhatsApp cliente (+100 pax) no enviado:", err)
         )
       } catch (clientWaErr) {
-        console.warn("Error al enviar WhatsApp a cliente (+120 pax):", clientWaErr)
+        console.warn("Error al enviar WhatsApp a cliente (+100 pax):", clientWaErr)
       }
 
-      // 3. WhatsApp de alerta al ADMIN para AGENDAR LLAMADA
+      // 3. WhatsApp de alerta prioritaria al ADMIN
       try {
         const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
         const adminPhone =
@@ -389,55 +449,46 @@ export async function submitPublicQuoteAction(
           "5217222880045"
 
         const fechaFormateada = formatFechaEspanol(input.fecha) || input.fecha
-        const phoneDigits = input.telefono.replace(/\D/g, "")
 
         const avisoAdmin = 
-`📞 *NUEVO PROSPECTO WEB (+120 INVITADOS) — AGENDAR LLAMADA*
-Se registró una solicitud con aforo superior a 120 personas. Se requiere llamada para ver detalles y cotizar a la medida:
+`🚨 *NUEVO LEAD DE PRODUCCIÓN (>100 PAX)* 🚨
+👤 Cliente: ${input.nombre.trim()}
+📱 WhatsApp: ${input.telefono.trim()}
+📅 Fecha: ${fechaFormateada}
+📍 Lugar: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}
+👥 Aforo: ${aforo} personas
+⚠️ *Acción:* Requiere llamada técnica de producción.
+👉 Ver en Ventas: https://vendetta.mx/admin/ventas/${bookingRecord.id}`
 
-• *Cliente:* ${input.nombre.trim()}
-• *Teléfono:* ${input.telefono.trim()}
-• *WhatsApp directo:* https://wa.me/${phoneDigits}
-• *Aforo:* ${aforo} personas (>120 pax)
-• *Evento:* ${input.tipoEvento}
-• *Fecha:* ${fechaFormateada}
-• *Horario:* ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas de Show)
-• *Ubicación:* ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}
-${input.mapsLink?.trim() ? `• *Maps:* ${input.mapsLink.trim()}\n` : ""}${input.produccionAdicional.length > 0 ? `• *Producción solicitada:* ${input.produccionAdicional.join(", ")}\n` : ""}${input.notas?.trim() ? `• *Notas:* ${input.notas.trim()}\n` : ""}
-👉 *ACCIÓN REQUERIDA:*
-Contactar al cliente para agendar llamada técnica, afinar requerimientos del espacio y armar su propuesta personalizada.
-
-📂 *Ver en Prospectos Web:*
-https://vendetta.mx/admin/prospectos`
-
-        await sendWhatsApp(adminPhone, avisoAdmin, `Aviso Admin - Llamada +120 pax ${input.nombre.trim()}`).catch(
-          (err) => console.warn("Aviso WhatsApp admin (+120 pax) no enviado:", err)
+        await sendWhatsApp(adminPhone, avisoAdmin, `🚨 Lead Producción +100 pax ${input.nombre.trim()}`).catch(
+          (err) => console.warn("Aviso WhatsApp admin (+100 pax) no enviado:", err)
         )
       } catch (adminWaErr) {
-        console.warn("Error al enviar alerta a WhatsApp admin (+120 pax):", adminWaErr)
+        console.warn("Error al enviar alerta a WhatsApp admin (+100 pax):", adminWaErr)
       }
 
       return {
         success: true,
         mode: "lead_captured",
-        inquiryId: inquiryId
+        inquiryId: inquiryId,
+        bookingId: bookingRecord.id,
+        shortId: bookingRecord.shortId || undefined
       }
     }
 
-    // Auto-Landing sólo si: aforo <= 120, sin extras de producción Y duración <= 5 horas
-    const isAutoQuote = aforo <= 120 && !tieneExtras && horasShow <= 5
+    // Auto-Landing para aforo <= 100 personas (Paquete Essential - Cotización Directa)
+    const isAutoQuote = aforo <= 100 && !tieneExtras && horasShow <= 5
 
-    const baseLocalPrice = calculateShowPackageBasePrice(input.paquete, horasShow)
+    const packageName = "Essential"
+    const baseLocalPrice = calculateShowPackageBasePrice(packageName, horasShow)
     const isOutside = input.viaticos?.isOutsideZone ?? false
     const showBasePrice = calculateShowBasePrice(baseLocalPrice, isOutside)
     const viaticosAmount = input.viaticos?.amount || 0
 
-    const dynamicPackageName = input.paquete
-      ? `Show Vendetta - ${input.paquete} (${horasShow} Horas)`
-      : `Show Vendetta Pop Rock en Inglés y Español (${horasShow} Horas)`
+    const dynamicPackageName = `Show Vendetta - Paquete Essential (${horasShow} Horas)`
 
     // ──────────────────────────────────────────────────────────────────────────
-    // RAMA 2: Auto-Landing (≤ 120 personas, sin extras de producción y <= 5 horas)
+    // RAMA 2: Auto-Landing (≤ 100 personas, Paquete Essential directo)
     // ──────────────────────────────────────────────────────────────────────────
     if (isAutoQuote) {
       const result = await db.$transaction(async (tx) => {
@@ -447,7 +498,7 @@ https://vendetta.mx/admin/prospectos`
           clientName: input.nombre.trim(),
           clientPhone: input.telefono.trim(),
           clientCity: input.municipio.trim(),
-          customName: `${input.tipoEvento} - ${input.nombre.trim()}`,
+          customName: `${input.tipoEvento} - ${input.nombre.trim()} (Essential)`,
           ceremonyType: input.tipoEvento,
           eventDate: input.fecha,
           startTime: input.horaInicio,
@@ -464,9 +515,9 @@ https://vendetta.mx/admin/prospectos`
           packageName: dynamicPackageName,
           basePrice: showBasePrice,
           viaticosAmount: viaticosAmount,
-          depositAmount: Math.round((showBasePrice + viaticosAmount) * 0.5),
+          depositAmount: Math.round((showBasePrice + viaticosAmount) * 0.3), // 30% anticipo
           paymentMethod: "transferencia",
-          adminNote: `Cotización web automática para ${aforo} invitados (Show ${horasShow} Horas).`,
+          adminNote: `Cotización web automática Essential para ${aforo} invitados (Show ${horasShow} Horas).`,
           musicianNotes: `Cotización web para ${aforo} invitados en ${input.municipio}, ${input.estado}. Horario: ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas de Show).${input.notas?.trim() ? ` Notas: ${input.notas.trim()}` : ""}`
         })
       })
@@ -508,7 +559,7 @@ https://vendetta.mx/admin/prospectos`
         console.warn("Error al enviar WhatsApp a cliente (auto-quote):", clientWaErr)
       }
 
-      // 2. WhatsApp automático al ADMINISTRADOR
+      // 2. WhatsApp automático al ADMINISTRADOR (Status: NUEVA_COTIZACION_ESSENTIAL)
       try {
         const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
         const adminPhone =
@@ -517,26 +568,26 @@ https://vendetta.mx/admin/prospectos`
           process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
           "5217222880045"
 
+        const fechaFormateada = formatFechaEspanol(input.fecha) || input.fecha
+        const totalEstimado = showBasePrice + viaticosAmount
+
         const avisoAdmin = 
-`⚡ *NUEVA COTIZACIÓN WEB (PROPUESTA AUTOMÁTICA)*
-Se generó una propuesta interactiva para un cliente:
+`⚡ *NUEVA_COTIZACION_ESSENTIAL (≤100 PAX)*
+• Cliente: ${input.nombre.trim()}
+• WhatsApp: ${input.telefono.trim()}
+• Fecha: ${fechaFormateada}
+• Horario: ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas de Show)
+• Aforo: ${aforo} personas
+• Ubicación: ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}
+${input.mapsLink?.trim() ? `• Maps: ${input.mapsLink.trim()}\n` : ""}• Total Show: $${showBasePrice.toLocaleString("es-MX")} MXN
+• Viáticos: $${viaticosAmount.toLocaleString("es-MX")} MXN
+• Total Estimado: $${totalEstimado.toLocaleString("es-MX")} MXN
+• Propuesta interactiva: ${proposalFullUrl}
 
-• *Cliente:* ${input.nombre.trim()}
-• *Teléfono:* ${input.telefono.trim()}
-• *Paquete:* ${dynamicPackageName}
-• *Evento:* ${input.tipoEvento}
-• *Fecha:* ${input.fecha}
-• *Horario:* ${input.horaInicio} a ${input.horaFin} (${horasShow} Horas de Show)
-• *Invitados:* ${aforo} personas
-• *Ubicación:* ${input.municipio}, ${input.estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}
-${input.mapsLink?.trim() ? `• *Maps:* ${input.mapsLink.trim()}\n` : ""}• *Total Show:* $${showBasePrice.toLocaleString("es-MX")} MXN
-• *Viáticos:* $${viaticosAmount.toLocaleString("es-MX")} MXN
-• *Propuesta en línea:* ${proposalFullUrl}
-
-👉 *Ver en panel administrativo:*
+👉 Ver en panel administrativo:
 https://vendetta.mx/admin/ventas/${result.bookingId}`
 
-        await sendWhatsApp(adminPhone, avisoAdmin, `Aviso Admin - AutoCotización ${input.nombre.trim()}`).catch(
+        await sendWhatsApp(adminPhone, avisoAdmin, `Aviso Admin - NUEVA_COTIZACION_ESSENTIAL ${input.nombre.trim()}`).catch(
           (err) => console.warn("Aviso WhatsApp admin no enviado:", err)
         )
       } catch (adminWaErr) {
