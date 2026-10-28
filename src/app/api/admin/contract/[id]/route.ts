@@ -23,6 +23,9 @@ export async function GET(
           include: {
             location: true
           }
+        },
+        lineItems: {
+          orderBy: { order: "asc" }
         }
       }
     }) as any
@@ -133,6 +136,13 @@ export async function GET(
       clientEmail: booking.clientEmail || "",
       originalPrice: booking.originalPrice || 0,
       discountAmount: booking.discountAmount || 0,
+      lineItems: (booking.lineItems || []).map((li: any) => ({
+        id: li.id,
+        description: li.description,
+        quantity: li.quantity,
+        unitCost: li.unitCost,
+        lineTotal: li.lineTotal || (li.quantity * li.unitCost) || 0
+      })),
       // IVA / Factura
       invoice: booking.event?.invoice || booking.invoice || false,
       ivaAmount: booking.event?.ivaAmount || 0,

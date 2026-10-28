@@ -169,7 +169,9 @@ export async function generateContractPdf(
   const isEarlySoundcheck = (data as any).adminNote?.toLowerCase().includes("soundcheck") || false
   const extraSoundcheck = isEarlySoundcheck ? 2000 : 0
   const discount = Number((data as any).discountAmount || 0)
-  const baseTotal = data.packagePrice + (data.viaticosAmount || 0)
+  const lineItems: any[] = (data as any).lineItems || []
+  const lineItemsTotal = lineItems.reduce((acc: number, item: any) => acc + Number(item.lineTotal || (item.quantity * item.unitCost) || 0), 0)
+  const baseTotal = data.packagePrice + (data.viaticosAmount || 0) + lineItemsTotal
   const subtotal = Math.max(0, baseTotal + extraSoundcheck - discount)
   const ivaAmount = (isHappening || (data as any).invoice) ? Math.round(subtotal * 0.16 * 100) / 100 : ((data as any).ivaAmount || 0)
   const total = subtotal + ivaAmount
@@ -300,25 +302,35 @@ export async function generateContractPdf(
     if (data.discountAmount && data.discountAmount > 0) {
       tableRows.push({ 
         no: String(tableRows.length + 1), 
-        desc: "Descuento especial aplicado", 
+        desc: "Descuento especial aplicado / Beneficio comercial", 
         pu: `-${MXN(data.discountAmount as number)}` 
       });
     }
   } else {
     const packageNameDisplay = isBarPackage ? "Paquete Bar" : data.packageName
     const finalDesc = `Show Vendetta Rock — ${packageNameDisplay}\n${showDetails.join("\n")}\n${inclusions.map(i => "• " + i).join("\n")}`
-    const tableRowsDefault = [{ no: "1", desc: finalDesc, pu: MXN(data.packagePrice) }]
-    tableRows = tableRowsDefault
+    tableRows = [{ no: "1", desc: finalDesc, pu: MXN(data.packagePrice) }]
+
+    if (lineItems.length > 0) {
+      lineItems.forEach((li: any) => {
+        tableRows.push({
+          no: String(tableRows.length + 1),
+          desc: `${li.description}${li.quantity > 1 ? ` (x${li.quantity})` : ""}`,
+          pu: MXN(li.lineTotal || (li.quantity * li.unitCost) || 0)
+        })
+      })
+    }
     
+    if (data.viaticosAmount > 0) tableRows.push({ no: String(tableRows.length + 1), desc: data.viaticosLabel || "Viáticos y gastos logísticos", pu: MXN(data.viaticosAmount) })
+    if (extraSoundcheck > 0) tableRows.push({ no: String(tableRows.length + 1), desc: "Disponibilidad Extendida (Soundcheck)", pu: MXN(extraSoundcheck) })
+
     if (data.discountAmount && data.discountAmount > 0) {
       tableRows.push({ 
         no: String(tableRows.length + 1), 
-        desc: "Descuento especial aplicado", 
+        desc: "Descuento especial aplicado / Beneficio comercial", 
         pu: `-${MXN(data.discountAmount as number)}` 
       })
     }
-    if (data.viaticosAmount > 0) tableRows.push({ no: String(tableRows.length + 1), desc: data.viaticosLabel || "Viáticos y gastos logísticos", pu: MXN(data.viaticosAmount) })
-    if (extraSoundcheck > 0) tableRows.push({ no: String(tableRows.length + 1), desc: "Disponibilidad Extendida (Soundcheck)", pu: MXN(extraSoundcheck) })
   }
   if (ivaAmount > 0) tableRows.push({ no: String(tableRows.length + 1), desc: `IVA (16%) — Factura requerida`, pu: MXN(ivaAmount) })
 
@@ -357,9 +369,11 @@ export async function generateContractPdf(
   page.drawText(MXN(total), { x: pageWidth - margin - 100, y: ctx.y, size: 11, font: montserratBold, color: WHITE_COLOR })
 
   ctx.y -= 35
-  const anticipo = data.depositAmount ?? (total * 0.5)
-  const liquidacion = total - anticipo
-  const pct = Math.round((anticipo / total) * 100)
+  const anticipo = (data.depositAmount && data.depositAmount > 0) 
+    ? data.depositAmount 
+    : Math.round(total * 0.3)
+  const liquidacion = Math.max(0, total - anticipo)
+  const pct = total > 0 ? Math.round((anticipo / total) * 100) : 30
 
   page.drawText(`ANTICIPO SOLICITADO (${pct}%): ${MXN(anticipo)}`, { x: margin, y: ctx.y, size: 9, font: montserratBold })
   ctx.y -= 15

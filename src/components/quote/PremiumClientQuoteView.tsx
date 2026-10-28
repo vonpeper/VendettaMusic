@@ -36,10 +36,23 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RockBackground } from "@/components/funnel/RockBackground"
-import { ContractSigner } from "@/components/funnel/ContractSigner"
+import dynamic from "next/dynamic"
 import { reportDepositAction } from "@/actions/ventas"
 import { formatDateMX } from "@/lib/utils"
 import { toast } from "sonner"
+
+const ContractSigner = dynamic(
+  () => import("@/components/funnel/ContractSigner").then((mod) => mod.ContractSigner),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="p-8 text-center text-slate-500 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-6 h-6 animate-spin text-red-600" />
+        <span className="text-xs font-bold text-slate-600">Cargando módulo de firma digital...</span>
+      </div>
+    ),
+  }
+)
 
 const CEREMONY_TITLE_MAP: Record<string, string> = {
   boda: "Boda Exclusiva",
@@ -242,67 +255,60 @@ export function PremiumClientQuoteView({
 
   return (
     <div className="min-h-screen bg-transparent text-slate-950 relative overflow-hidden pb-28 sm:pb-20 font-sans selection:bg-red-600 selection:text-white">
-      {/* Fondo Vectorial de Concierto con Malla Acústica SVG y Luces de Escenario en Blanco */}
-      <RockBackground intensity="vibrant" />
+      {/* Fondo Vectorial de Concierto con Malla Acústica Estática Ultra-Ligera */}
+      <RockBackground intensity="medium" />
 
-      {/* Barra de Acento Superior con Gradiente de Escenario Rojo y Ámbar */}
-      <div className="h-2 w-full bg-gradient-to-r from-red-600 via-amber-500 to-red-600 shadow-md" />
+      {/* Línea Superior de Acento de Marca Vendetta */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-amber-500 to-red-600" />
 
-      <div className="container mx-auto px-4 sm:px-6 relative z-10 max-w-5xl pt-6 md:pt-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10 max-w-5xl pt-6 md:pt-8">
         
         {/* ============================================================ */}
-        {/* HEADER VIP: CREDENCIAL DE CONCIERTO, LOGO & FOLIO OFICIAL */}
+        {/* HEADER INSTITUCIONAL: BRANDING, FOLIO & ESTATUS FORMAL */}
         {/* ============================================================ */}
-        <header className="mb-8 md:mb-10">
-          {/* Lanyard / VIP Access Pass Tag */}
-          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-600 text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-md shadow-red-600/20">
-              <Ticket className="w-3.5 h-3.5" /> VIP ALL-ACCESS PASS • VENDETTA LIVE CONCERT TOUR
-            </div>
-            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Gira de Eventos & Producción {new Date().getFullYear()}</span>
-            </div>
-          </div>
+        <header className="mb-6 md:mb-8">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 border-2 border-slate-200/90 shadow-lg shadow-slate-200/50 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+            {/* Acento rojo superior sutil */}
+            <div className="h-1 w-full bg-gradient-to-r from-red-600 via-red-500 to-amber-500 absolute top-0 left-0 right-0" />
 
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-slate-200/90 shadow-xl shadow-slate-200/60 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-            {/* Acento rojo superior de la tarjeta */}
-            <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-red-500 to-amber-500 absolute top-0 left-0 right-0" />
-
-            {/* Branding Vendetta & Título */}
-            <div className="space-y-3">
+            {/* Branding Vendetta & Título Formal */}
+            <div className="space-y-2.5">
               <div className="flex items-center gap-3">
                 <img 
                   src="/logo.png" 
                   alt="Vendetta Live Music" 
-                  className="h-12 sm:h-14 w-auto object-contain drop-shadow-sm" 
+                  className="h-11 sm:h-12 w-auto object-contain drop-shadow-sm" 
                 />
-                <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+                <div className="h-7 w-px bg-slate-200 hidden sm:block" />
                 <div className="hidden sm:block">
-                  <span className="text-[11px] font-black uppercase tracking-[0.25em] text-red-600 block leading-tight">
-                    LIVE BAND & STAGE PRODUCTION
+                  <span className="text-[11px] font-black uppercase tracking-[0.2em] text-red-600 block leading-tight">
+                    VENDETTA LIVE MUSIC
                   </span>
-                  <span className="text-[10px] text-slate-500 font-bold tracking-wider uppercase">
-                    Conciertos en Vivo & Shows de Alto Nivel
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                    Producción Integral & Conciertos en Vivo
                   </span>
                 </div>
               </div>
 
               <div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2 flex-wrap">
-                  Cotización Oficial <span className="text-slate-900">&</span> Propuesta de Show
+                <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-900 flex items-center gap-2 flex-wrap">
+                  {isAgendado ? (
+                    <>Contrato Digital <span className="text-red-600">&</span> Estatus de Fecha</>
+                  ) : (
+                    <>Cotización Oficial <span className="text-red-600">&</span> Propuesta de Show</>
+                  )}
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-xl leading-relaxed mt-1">
-                  Producción técnica integral, ingeniería sonora y banda de rock/pop en vivo para tu evento.
+                <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-xl leading-relaxed">
+                  Propuesta formal con especificaciones técnicas, desglose de inversión y términos legales de presentación.
                 </p>
               </div>
             </div>
 
-            {/* Credencial de Folio estilo Boleto / Ticket de Concierto */}
-            <div className="flex flex-col md:items-end gap-2.5 shrink-0 bg-slate-50 p-4 sm:p-5 rounded-2xl border-2 border-slate-200">
+            {/* Credencial de Folio & Estatus Oficial */}
+            <div className="flex flex-col md:items-end gap-2 shrink-0 bg-slate-50 p-4 sm:p-4.5 rounded-2xl border border-slate-200">
               <div className="flex items-center gap-2">
                 {isAgendado ? (
-                  <Badge className="bg-emerald-600 text-white border-0 px-3 py-1 text-xs font-black uppercase tracking-wider shadow-md shadow-emerald-600/20">
+                  <Badge className="bg-emerald-600 text-white border-0 px-3 py-1 text-xs font-black uppercase tracking-wider shadow-sm">
                     <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> {depositAmount > 0 ? "Fecha Confirmada con Anticipo" : "Fecha Confirmada"}
                   </Badge>
                 ) : isCancelado ? (
@@ -310,34 +316,29 @@ export function PremiumClientQuoteView({
                     Cancelada
                   </Badge>
                 ) : (
-                  <Badge className="bg-red-600 text-white border-0 px-3 py-1 text-xs font-black uppercase tracking-wider shadow-md shadow-red-600/20">
-                    <Flame className="w-3.5 h-3.5 mr-1 text-amber-300" /> Propuesta Exclusiva
+                  <Badge className="bg-red-600 text-white border-0 px-3 py-1 text-xs font-black uppercase tracking-wider shadow-sm">
+                    <Sparkles className="w-3.5 h-3.5 mr-1 text-amber-300" /> Propuesta Exclusiva
                   </Badge>
                 )}
               </div>
 
-              {/* Folio con código de barras de concierto */}
-              <div className="space-y-1 text-right">
-                <div className="text-[9px] font-mono tracking-widest text-slate-400 select-none">
-                  ||||| | || |||| | ||| |||| |
-                </div>
-                <div className="text-xs font-mono text-slate-700 flex items-center justify-end gap-1.5">
-                  <span className="font-bold text-slate-500">FOLIO:</span>
-                  <span className="font-black text-slate-950 text-sm tracking-widest bg-white px-2.5 py-0.5 rounded-lg border-2 border-red-600 text-red-600 shadow-sm">
-                    {booking.shortId}
-                  </span>
-                </div>
+              {/* Folio Oficial */}
+              <div className="flex items-center gap-2 text-right">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">FOLIO:</span>
+                <span className="font-mono font-black text-red-600 text-sm tracking-widest bg-white px-2.5 py-0.5 rounded-lg border border-red-200 shadow-xs">
+                  {booking.shortId}
+                </span>
               </div>
 
               <div className="text-[11px] text-slate-500 font-medium">
-                Fecha de emisión: <strong className="text-slate-800">{formatDateMX(booking.createdAt, "d 'de' MMMM, yyyy")}</strong>
+                Emisión: <strong className="text-slate-800">{formatDateMX(booking.createdAt, "d 'de' MMMM, yyyy")}</strong>
               </div>
             </div>
           </div>
 
           {/* Banner de Estado para Fechas Confirmadas */}
           {isAgendado && (
-            <div className="mt-4 p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-emerald-950 shadow-md">
+            <div className="mt-4 p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-emerald-950 shadow-sm">
               <div className="flex items-center gap-3.5">
                 <div className="p-2.5 rounded-xl bg-emerald-600 text-white shrink-0 shadow-sm">
                   <BadgeCheck className="w-6 h-6" />
@@ -350,13 +351,13 @@ export function PremiumClientQuoteView({
                         : "¡Tu fecha está oficialmente confirmada en la gira de Vendetta!"}
                     </strong>
                     {depositAmount > 0 && (
-                      <span className="bg-emerald-600 text-white font-mono font-bold text-xs px-2.5 py-0.5 rounded-md shadow-sm">
-                        Anticipo: {formatMXN(depositAmount)} recibido
+                      <span className="bg-emerald-600 text-white font-mono font-bold text-xs px-2.5 py-0.5 rounded-md shadow-xs">
+                        Anticipo: {formatMXN(depositAmount)} acreditado
                       </span>
                     )}
                   </div>
                   <p className="text-emerald-900 text-xs sm:text-sm leading-relaxed">
-                    Tu fecha está oficialmente confirmada y blindada en la agenda de Vendetta. 
+                    Tu fecha está oficialmente reservada en la agenda de Vendetta. 
                     {remainingAmount > 0 
                       ? ` Saldo restante a liquidar el día del show: ${formatMXN(remainingAmount)}.` 
                       : ` Monto total liquidado al 100%.`}
@@ -365,7 +366,7 @@ export function PremiumClientQuoteView({
                 </div>
               </div>
               {downloadContractUrl && (
-                <Button size="sm" asChild className="bg-emerald-700 hover:bg-emerald-600 text-white shrink-0 text-xs font-black h-10 rounded-xl px-4 shadow-md">
+                <Button size="sm" asChild className="bg-emerald-700 hover:bg-emerald-600 text-white shrink-0 text-xs font-black h-10 rounded-xl px-4 shadow-sm">
                   <a href={downloadContractUrl} target="_blank" rel="noopener noreferrer">
                     <Download className="w-3.5 h-3.5 mr-1.5" /> Descargar Contrato
                   </a>
@@ -376,7 +377,7 @@ export function PremiumClientQuoteView({
 
           {/* Banner si el comprobante está en revisión */}
           {isReview && !isAgendado && (
-            <div className="mt-4 p-5 rounded-2xl bg-amber-50 border-2 border-amber-500/50 flex items-center gap-3.5 text-amber-950 shadow-md">
+            <div className="mt-4 p-5 rounded-2xl bg-amber-50 border-2 border-amber-500/50 flex items-center gap-3.5 text-amber-950 shadow-sm">
               <div className="p-2.5 rounded-xl bg-amber-500 text-white shrink-0 animate-pulse shadow-sm">
                 <Clock className="w-5 h-5" />
               </div>
@@ -1012,7 +1013,10 @@ export function PremiumClientQuoteView({
         {/* ============================================================ */}
         {/* SECCIÓN 3 (SOLICITADO 3°): ESPECIFICACIONES TÉCNICAS & RIDER */}
         {/* ============================================================ */}
-        <section className="mb-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-xl shadow-slate-200/60 p-6 sm:p-8 relative overflow-hidden">
+        <section 
+          className="mb-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-xl shadow-slate-200/60 p-6 sm:p-8 relative overflow-hidden"
+          style={{ contentVisibility: "auto", containIntrinsicSize: "600px" }}
+        >
           {/* Acento rojo superior */}
           <div className="h-1.5 w-full bg-red-600 absolute top-0 left-0 right-0" />
 
@@ -1190,7 +1194,10 @@ export function PremiumClientQuoteView({
         {/* ============================================================ */}
         {/* SECCIÓN 4: GARANTÍAS DE CONFIANZA & RESPALDO (SELLOS DE CIERRE) */}
         {/* ============================================================ */}
-        <section className="mb-10 rounded-3xl bg-white border-2 border-slate-200 p-6 text-center space-y-4 shadow-md">
+        <section 
+          className="mb-10 rounded-3xl bg-white border-2 border-slate-200 p-6 text-center space-y-4 shadow-md"
+          style={{ contentVisibility: "auto", containIntrinsicSize: "300px" }}
+        >
           <div className="text-xs font-black uppercase tracking-[0.25em] text-red-600">
             Compromiso de Calidad & Respaldo Vendetta
           </div>
@@ -1217,7 +1224,10 @@ export function PremiumClientQuoteView({
         {/* ============================================================ */}
         {/* FOOTER INSTITUCIONAL */}
         {/* ============================================================ */}
-        <footer className="pt-6 pb-12 border-t-2 border-slate-200 text-center space-y-3">
+        <footer 
+          className="pt-6 pb-12 border-t-2 border-slate-200 text-center space-y-3"
+          style={{ contentVisibility: "auto", containIntrinsicSize: "150px" }}
+        >
           <p className="text-xs text-slate-600 font-bold">
             Vendetta Live Music • Toluca, Metepec, Valle de Bravo, CDMX y alrededores.
           </p>
@@ -1232,7 +1242,7 @@ export function PremiumClientQuoteView({
       {/* BARRA FLOTANTE INFERIOR PARA DISPOSITIVOS MÓVILES (STICKY BAR) */}
       {/* ============================================================ */}
       {isPendiente && !isPaid && (
-        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 p-3 bg-white/95 backdrop-blur-2xl border-t-2 border-slate-200 shadow-[0_-8px_25px_rgba(0,0,0,0.1)]">
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 p-3 bg-white/98 border-t-2 border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-between gap-3">
             <div>
               <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">

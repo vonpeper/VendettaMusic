@@ -61,6 +61,7 @@ export interface FunnelData {
   // Promo
   promoCode?: string
   discountAmount?: number
+  lineItems?: Array<{ id?: string; description: string; quantity: number; unitCost: number; lineTotal?: number }>
   // Result
   bookingId:   string
   shortId:     string

@@ -243,7 +243,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
         const hasInvoice = Boolean(brCheck.invoice)
         const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
         const totalWithTax = subtotal + ivaAmount
-        const deposit = Number(brCheck.depositAmount || 0)
+        const deposit = (Number(brCheck.depositAmount || 0) > 0) ? Number(brCheck.depositAmount) : Math.round(totalWithTax * 0.3)
         const balance = Math.max(0, totalWithTax - deposit)
 
         // Crear Evento
@@ -304,7 +304,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
         const hasInvoice = Boolean(brCheck.invoice)
         const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
         const totalWithTax = subtotal + ivaAmount
-        const deposit = Number(brCheck.depositAmount || 0)
+        const deposit = (Number(brCheck.depositAmount || 0) > 0) ? Number(brCheck.depositAmount) : Math.round(totalWithTax * 0.3)
         const balance = Math.max(0, totalWithTax - deposit)
 
         await db.event.update({
