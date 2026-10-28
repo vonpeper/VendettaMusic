@@ -1160,3 +1160,90 @@ export async function updateEventOperationalCostsAction(
     return { success: false, error: error?.message || "Error al actualizar los costos operativos." }
   }
 }
+
+/**
+ * Descarte comercial rápido de un lead o cotización:
+ * Actualiza el status a 'cancelado', registra el motivo y la fecha de cierre.
+ */
+export async function discardLeadAction({ 
+  bookingId, 
+  reason 
+}: { 
+  bookingId: string
+  reason: string 
+}) {
+  try {
+    const trimmedId = bookingId?.trim()
+    const trimmedReason = reason?.trim() || "Descarte comercial manual"
+    if (!trimmedId) return { success: false, error: "ID de lead no proporcionado." }
+
+    const booking = await db.bookingRequest.findFirst({
+      where: {
+        OR: [
+          { id: trimmedId },
+          { shortId: trimmedId.toUpperCase() }
+        ]
+      }
+    })
+
+    if (!booking) {
+      // Soporte para cotizaciones legacy (Quote)
+      const quote = await db.quote.findFirst({
+        where: { id: trimmedId }
+      })
+
+      if (quote) {
+        await db.quote.update({
+          where: { id: quote.id },
+          data: { status: "cancelado" }
+        })
+        revalidatePath("/admin/ventas")
+        revalidatePath("/admin")
+        return { success: true }
+      }
+
+      return { success: false, error: "Lead o solicitud no encontrada." }
+    }
+
+    const now = new Date()
+
+    // 1. Actualizar BookingRequest
+    await db.bookingRequest.update({
+      where: { id: booking.id },
+      data: {
+        status: "cancelado",
+        cancellationReason: trimmedReason,
+        closedAt: now
+      }
+    })
+
+    // 2. Si tiene ContactInquiry asociado, sincronizar a cancelado
+    if (booking.sourceInquiryId) {
+      await db.contactInquiry.update({
+        where: { id: booking.sourceInquiryId },
+        data: {
+          status: "cancelado"
+        }
+      }).catch(e => console.warn("Could not cancel linked inquiry:", e))
+    }
+
+    // 3. Si tiene Event asociado, cancelar
+    if (booking.eventId) {
+      await db.event.updateMany({
+        where: { id: booking.eventId },
+        data: {
+          status: "cancelado"
+        }
+      }).catch(e => console.warn("Could not cancel linked event:", e))
+    }
+
+    revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${booking.id}`)
+    revalidatePath("/admin/eventos")
+    revalidatePath("/admin")
+    return { success: true }
+  } catch (error: any) {
+    console.error("Error in discardLeadAction:", error)
+    return { success: false, error: error?.message || "Error al descartar el prospecto." }
+  }
+}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -30,7 +30,9 @@ import {
   MapPin,
   Clock,
   Sparkles,
-  Check
+  Check,
+  Ban,
+  MessageCircle
 } from "lucide-react"
 import { resendNotificationAction } from "@/actions/notifications"
 import { getValidWhatsappPhone } from "@/lib/phone"
@@ -56,13 +58,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { formatDateMX, formatCurrency } from "@/lib/utils"
+import { formatDateMX, formatCurrency, cn } from "@/lib/utils"
 import { 
   updateBookingStatusAction, 
   reactivateBookingAction,
   markLeadContactedAction,
   scheduleLeadCallAction,
-  confirmDepositPaidAction
+  confirmDepositPaidAction,
+  discardLeadAction
 } from "@/actions/ventas"
 import { FollowUpButton } from "./FollowUpButton"
 import { ContractStatusSwitcher } from "./ContractStatusSwitcher"
@@ -93,6 +96,8 @@ interface Booking {
   city?: string | null
   state?: string | null
   address?: string | null
+  cancellationReason?: string | null
+  closedAt?: Date | string | null
   event?: {
     customName?: string | null
     location?: { mapsLink?: string | null } | null
@@ -161,10 +166,31 @@ export function getWhatsAppDirectUrl(phone: string, clientName: string, shortId?
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(greeting)}`
 }
 
+export function getWhatsAppClosureUrl(phone: string, clientName: string, eventDate?: Date | string | null) {
+  const digits = phone.replace(/\D/g, "")
+  if (!digits) return null
+  const cleanPhone = digits.length === 10 ? `52${digits}` : digits
+  const formattedDate = eventDate ? formatDateMX(new Date(eventDate), "dd 'de' MMMM") : "acordada"
+  const message = `Hola ${clientName.trim()}, para mantener actualizada nuestra agenda liberamos la fecha tentativa del ${formattedDate}. Si en el futuro retoman el evento, con gusto volvemos a cotizar. ¡Mucho éxito con su fiesta!`
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
+}
+
+export const DISCARD_REASONS = [
+  "Fuera de presupuesto",
+  "Contrató a otra banda",
+  "Evento cancelado",
+  "Sin respuesta"
+] as const
+
 type SortKey = "fecha" | "cliente" | "monto" | "estado"
 type SortDir = "asc" | "desc"
 
 export function VentasTableClient({ items, followUpTemplate }: { items: Booking[], followUpTemplate?: string | null }) {
+  const [localItems, setLocalItems] = useState<Booking[]>(items)
+  useEffect(() => {
+    setLocalItems(items)
+  }, [items])
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
@@ -178,6 +204,10 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
     id: ""
   })
   const [statusFilter, setStatusFilter] = useState("all")
+  const [tabFilter, setTabFilter] = useState<"all" | "activos" | "confirmados" | "expirados_cancelados">("all")
+  const [discardTargetLead, setDiscardTargetLead] = useState<Booking | null>(null)
+  const [selectedDiscardReason, setSelectedDiscardReason] = useState<string>("Fuera de presupuesto")
+  const [isDiscarding, setIsDiscarding] = useState(false)
   const [sortKey, setSortKey] = useState<SortKey>("fecha")
   const [sortDir, setSortDir] = useState<SortDir>("desc")
   const router = useRouter()
@@ -196,11 +226,23 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
     agendado: "Confirmado",
     completado: "Completado",
     cancelado: "Cancelado",
+    expirado: "Expirado",
+    no_interesado: "No Interesado",
     EXPIRED: "Expirado"
   }
 
-  const filtered = items
+  const filtered = localItems
     .filter(b => {
+      const s = b.status?.toLowerCase() || ""
+      let matchTab = true
+      if (tabFilter === "activos") {
+        matchTab = ["requiere_llamada", "contactado", "llamada_agendada", "pendiente", "pending", "cotizado", "new"].includes(s)
+      } else if (tabFilter === "confirmados") {
+        matchTab = ["agendado", "completado"].includes(s)
+      } else if (tabFilter === "expirados_cancelados") {
+        matchTab = ["expirado", "expired", "cancelado", "no_interesado"].includes(s)
+      }
+
       const eventTitle = (b.event?.customName || b.customName || "").toLowerCase()
       const clientName = (b.clientName || "").toLowerCase()
       const sid = (b.shortId || "").toLowerCase()
@@ -232,7 +274,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
       
       const matchStatus = statusFilter === "all" || b.status === statusFilter
       
-      return matchGlobal && matchCliente && matchId && matchStatus
+      return matchTab && matchGlobal && matchCliente && matchId && matchStatus
     })
     .sort((a, b) => {
       let cmp = 0
@@ -292,13 +334,52 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
       return
     }
 
+    if (newStatus === "cancelado") {
+      const leadToCancel = bookingObj || localItems.find(b => b.id === id)
+      if (leadToCancel) {
+        setDiscardTargetLead(leadToCancel)
+        setSelectedDiscardReason("Fuera de presupuesto")
+        return
+      }
+    }
+
     setUpdatingId(id)
     try {
       const result = await updateBookingStatusAction(id, newStatus)
-      if (result.success) { toast.success("Estado actualizado"); router.refresh() }
+      if (result.success) { 
+        toast.success("Estado actualizado")
+        setLocalItems(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b))
+        router.refresh() 
+      }
       else toast.error("Error: " + result.error)
     } catch { toast.error("Error de red") }
     finally { setUpdatingId(null) }
+  }
+
+  const handleDiscardLead = async (lead: Booking, reason: string) => {
+    setIsDiscarding(true)
+    try {
+      const res = await discardLeadAction({ bookingId: lead.id, reason })
+      if (res.success) {
+        toast.success(`Lead descartado: "${reason}"`, {
+          description: `Se liberó la fecha tentativa de ${lead.clientName}.`
+        })
+        setLocalItems(prev => prev.map(b => b.id === lead.id ? {
+          ...b,
+          status: "cancelado",
+          cancellationReason: reason,
+          closedAt: new Date()
+        } : b))
+        setDiscardTargetLead(null)
+        router.refresh()
+      } else {
+        toast.error("Error al descartar lead", { description: res.error })
+      }
+    } catch (err: any) {
+      toast.error("Error al descartar", { description: err.message })
+    } finally {
+      setIsDiscarding(false)
+    }
   }
 
   const handleMarkContacted = async (leadId: string) => {
@@ -360,7 +441,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
     }
   }
 
-  const activeLeads = items.filter(b => {
+  const activeLeads = localItems.filter(b => {
     const s = b.status?.toLowerCase() || ""
     return (
       s === "requiere_llamada" ||
@@ -379,7 +460,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
     return dateB - dateA
   })
 
-  if (items.length === 0) return (
+  if (localItems.length === 0) return (
     <div className="py-20 text-center border-2 border-dashed border-border/40 rounded-3xl">
       <p className="text-muted-foreground">No hay solicitudes en esta categoría.</p>
     </div>
@@ -579,6 +660,26 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                         </Link>
                       </Button>
                     </div>
+
+                    <div className="flex items-center justify-between pt-1 border-t border-border/20">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setDiscardTargetLead(lead)
+                          setSelectedDiscardReason("Fuera de presupuesto")
+                        }}
+                        disabled={isActionLoading}
+                        className="h-7 px-2 text-[11px] font-bold text-red-400/80 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors gap-1"
+                      >
+                        <Ban className="w-3 h-3" />
+                        Descartar / Cancelar
+                      </Button>
+
+                      <span className="text-[10px] text-muted-foreground/60 font-mono">
+                        {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString("es-MX", { month: "short", day: "numeric" }) : ""}
+                      </span>
+                    </div>
                   </div>
                 </div>
               )
@@ -586,6 +687,67 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
           </div>
         </div>
       )}
+
+      {/* Pestañas Rápidas de Navegación de Tabla */}
+      <div className="flex flex-wrap items-center gap-1.5 bg-card/60 p-1.5 rounded-2xl border border-border/30 w-fit">
+        <button
+          onClick={() => { setTabFilter("all"); setStatusFilter("all") }}
+          className={cn(
+            "px-3.5 py-1.5 rounded-xl text-xs font-black tracking-tight transition-all flex items-center gap-1.5",
+            tabFilter === "all"
+              ? "bg-blue-600 text-white shadow-sm shadow-blue-600/30"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          )}
+        >
+          <span>Todos</span>
+          <span className="text-[10px] opacity-80 font-mono">({localItems.length})</span>
+        </button>
+
+        <button
+          onClick={() => { setTabFilter("activos"); setStatusFilter("all") }}
+          className={cn(
+            "px-3.5 py-1.5 rounded-xl text-xs font-black tracking-tight transition-all flex items-center gap-1.5",
+            tabFilter === "activos"
+              ? "bg-purple-600 text-white shadow-sm shadow-purple-600/30"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          )}
+        >
+          <span>Activos</span>
+          <span className="text-[10px] opacity-80 font-mono">
+            ({localItems.filter(b => ["requiere_llamada", "contactado", "llamada_agendada", "pendiente", "pending", "cotizado", "new"].includes(b.status?.toLowerCase())).length})
+          </span>
+        </button>
+
+        <button
+          onClick={() => { setTabFilter("confirmados"); setStatusFilter("all") }}
+          className={cn(
+            "px-3.5 py-1.5 rounded-xl text-xs font-black tracking-tight transition-all flex items-center gap-1.5",
+            tabFilter === "confirmados"
+              ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/30"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          )}
+        >
+          <span>Confirmados</span>
+          <span className="text-[10px] opacity-80 font-mono">
+            ({localItems.filter(b => ["agendado", "completado"].includes(b.status?.toLowerCase())).length})
+          </span>
+        </button>
+
+        <button
+          onClick={() => { setTabFilter("expirados_cancelados"); setStatusFilter("all") }}
+          className={cn(
+            "px-3.5 py-1.5 rounded-xl text-xs font-black tracking-tight transition-all flex items-center gap-1.5",
+            tabFilter === "expirados_cancelados"
+              ? "bg-red-600 text-white shadow-sm shadow-red-600/30"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          )}
+        >
+          <span>Expirados / Cancelados</span>
+          <span className="text-[10px] opacity-80 font-mono">
+            ({localItems.filter(b => ["expirado", "expired", "cancelado", "no_interesado"].includes(b.status?.toLowerCase())).length})
+          </span>
+        </button>
+      </div>
 
       {/* Barra de búsqueda y filtros */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -752,6 +914,13 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                       </span>
                     </div>
                   )}
+                  {Boolean(reserva.cancellationReason) && (
+                    <div className="mt-1">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold bg-red-500/10 border border-red-500/30 text-red-400" title={reserva.cancellationReason || ""}>
+                        Motivo: {reserva.cancellationReason}
+                      </span>
+                    </div>
+                  )}
                 </td>
                 <td className="flex flex-col lg:table-cell p-4 lg:py-4 lg:px-6 border-b border-border/10 lg:border-none items-start gap-1">
                   <div className="text-sm text-foreground flex items-center gap-2">
@@ -832,15 +1001,31 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                             </DropdownMenuItem>
                           )}
 
-                          {reserva.status === "EXPIRED" && (
+                          {(reserva.status === "EXPIRED" || reserva.status === "expirado") && (
                             <DropdownMenuItem 
                               className="gap-3 cursor-pointer rounded-lg focus:bg-orange-500/10 py-2.5"
                               onClick={() => setReactivatingBooking(reserva)}
                             >
                               <RefreshCw className="w-4 h-4 text-orange-600" />
                               <div className="flex flex-col">
-                                <span className="text-xs font-semibold text-orange-600">Reactivar Contrato</span>
+                                <span className="text-xs font-semibold text-orange-600">Reactivar Cotización</span>
                                 <span className="text-[9px] text-muted-foreground">Recuperar venta expirada</span>
+                              </div>
+                            </DropdownMenuItem>
+                          )}
+
+                          {reserva.status !== "cancelado" && (
+                            <DropdownMenuItem
+                              className="gap-3 cursor-pointer rounded-lg focus:bg-red-500/10 py-2.5 text-red-400"
+                              onClick={() => {
+                                setDiscardTargetLead(reserva)
+                                setSelectedDiscardReason("Fuera de presupuesto")
+                              }}
+                            >
+                              <Ban className="w-4 h-4 text-red-500" />
+                              <div className="flex flex-col">
+                                <span className="text-xs font-semibold text-red-500">Descartar / Cancelar</span>
+                                <span className="text-[9px] text-muted-foreground">Cierre negativo con motivo</span>
                               </div>
                             </DropdownMenuItem>
                           )}
@@ -934,6 +1119,79 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => setReactivatingBooking(null)}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialogo para Descartar / Cancelar Lead */}
+      <Dialog open={!!discardTargetLead} onOpenChange={(open) => !open && setDiscardTargetLead(null)}>
+        <DialogContent className="max-w-md bg-background border-border shadow-2xl rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-heading font-black text-foreground flex items-center gap-2">
+              <Ban className="w-5 h-5 text-red-500" />
+              Descartar Prospecto / Cotización
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs pt-1">
+              Estás por descartar la solicitud de <strong className="text-foreground">{discardTargetLead?.clientName}</strong> ({discardTargetLead?.shortId || "Sin folio"}). El estado cambiará a cancelado y la fecha tentativa quedará liberada en la agenda.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Motivo del descarte:
+              </label>
+              <select
+                value={selectedDiscardReason}
+                onChange={e => setSelectedDiscardReason(e.target.value)}
+                className="w-full px-3 py-2 bg-muted/40 border border-border/40 rounded-xl text-sm text-foreground focus:outline-none focus:border-red-500/50"
+              >
+                {DISCARD_REASONS.map(reason => (
+                  <option key={reason} value={reason}>{reason}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Mensaje de cortesía de cierre en WhatsApp (Opcional) */}
+            {discardTargetLead && (discardTargetLead.client?.whatsapp || discardTargetLead.clientPhone) && (
+              <div className="p-3 bg-muted/20 border border-border/30 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                    <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    Mensaje de cortesía (WhatsApp):
+                  </span>
+                  <a
+                    href={getWhatsAppClosureUrl(
+                      discardTargetLead.client?.whatsapp || discardTargetLead.clientPhone,
+                      discardTargetLead.clientName,
+                      discardTargetLead.requestedDate
+                    ) || "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] font-black text-emerald-400 hover:text-emerald-300 underline"
+                  >
+                    Abrir WhatsApp ↗
+                  </a>
+                </div>
+                <p className="text-[11px] text-muted-foreground italic bg-background/50 p-2.5 rounded-lg border border-border/20 leading-relaxed">
+                  &ldquo;Hola {discardTargetLead.clientName}, para mantener actualizada nuestra agenda liberamos la fecha tentativa del {formatDateMX(new Date(discardTargetLead.requestedDate), "dd 'de' MMMM")}. Si en el futuro retoman el evento, con gusto volvemos a cotizar. ¡Mucho éxito con su fiesta!&rdquo;
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setDiscardTargetLead(null)} className="rounded-xl border-border/40 text-xs">
+              Volver
+            </Button>
+            <Button
+              onClick={() => discardTargetLead && handleDiscardLead(discardTargetLead, selectedDiscardReason)}
+              disabled={isDiscarding}
+              className="bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold text-xs shadow-md shadow-red-600/20"
+            >
+              {isDiscarding ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Ban className="w-3.5 h-3.5 mr-1.5" />}
+              Confirmar Descarte
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1056,8 +1314,10 @@ function StatusSwitcher({ status, id, onStatusChange, isUpdating, reserva }: {
     pendiente:        { color: "text-yellow-600 border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20", label: "Pendiente" },
     agendado:         { color: "text-green-600 border-green-500/40 bg-green-500/10 hover:bg-green-500/20", label: "Confirmado" },
     completado:       { color: "text-blue-600 border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20", label: "Completado" },
-    cancelado:        { color: "text-red-600 border-red-500/40 bg-red-500/10 hover:bg-red-500/20", label: "Cancelado" },
-    EXPIRED:          { color: "text-muted-foreground border-gray-700 bg-gray-800/50 hover:bg-gray-800/70", label: "Expirado" },
+    cancelado:        { color: "text-red-400 border-red-500/40 bg-red-500/10 hover:bg-red-500/20", label: "Cancelado" },
+    expirado:         { color: "text-zinc-400 border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800/70", label: "Expirado" },
+    no_interesado:    { color: "text-orange-400 border-orange-500/40 bg-orange-500/10 hover:bg-orange-500/20", label: "No Interesado" },
+    EXPIRED:          { color: "text-zinc-400 border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800/70", label: "Expirado" },
   }
   
   const cfg = configs[status] || configs.pendiente

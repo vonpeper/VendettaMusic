@@ -490,6 +490,8 @@ model BookingRequest {
   musicianNotes         String?
   customMusicianPay     Float?
   customStaffPay        Float?
+  cancellationReason    String?
+  closedAt              DateTime?
   sourceInquiryId       String?           @unique
   lineItems             BookingLineItem[]
   event                 Event?            @relation(fields: [eventId], references: [id])
@@ -701,7 +703,7 @@ model ContactInquiry {
   requestedDate    DateTime?
   eventType        String?
   message          String?
-  status           String          @default("new") // "new", "reviewing", "converted", "closed"
+  status           String          @default("new") // "new", "reviewing", "converted", "closed", "expirado", "cancelado", "no_interesado"
   matchedClientId  String?
   convertedBooking BookingRequest?
   createdAt        DateTime        @default(now())

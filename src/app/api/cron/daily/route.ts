@@ -6,6 +6,7 @@ import { formatDateMX } from "@/lib/utils"
 import { getAppUrl } from "@/lib/url"
 
 import { autoCompleteConcludedEvents } from "@/lib/events-automation"
+import { autoExpireInactiveLeads } from "@/lib/lead-lifecycle"
 
 export const dynamic = "force-dynamic"
 
@@ -41,6 +42,8 @@ async function handleCron(request: Request) {
       weekendReminders: 0,
       postEventThanks: 0,
       autoCompletedEvents: 0,
+      expiredPastDateLeads: 0,
+      expiredInactivityLeads: 0,
       errors: [] as string[]
     }
 
@@ -586,6 +589,19 @@ async function handleCron(request: Request) {
       results.errors.push(`Error in autoCompleteConcludedEvents: ${err.message}`)
     }
 
+    // 3.7. Depuración Automatizada de Leads Inactivos y No Confirmados (Vigencia 7 días o fecha pasada)
+    try {
+      const { expiredPastDate, expiredInactivity, totalExpired } = await autoExpireInactiveLeads(db)
+      results.expiredPastDateLeads = expiredPastDate
+      results.expiredInactivityLeads = expiredInactivity
+      if (totalExpired > 0) {
+        console.log(`🧹 [CRON LIFECYCLE] ${totalExpired} leads depurados: ${expiredPastDate} por fecha pasada, ${expiredInactivity} por inactividad >7d.`)
+      }
+    } catch (err: any) {
+      results.errors.push(`Error in autoExpireInactiveLeads: ${err.message}`)
+      console.error("⚠️ Error in autoExpireInactiveLeads:", err)
+    }
+
     // 4. Retry Failed Notifications
     const failedNotifications = await db.notification.findMany({
       where: {
@@ -721,7 +737,7 @@ async function handleCron(request: Request) {
     return NextResponse.json({
       success: true,
       results,
-      message: `Procesados: ${results.followups5Days} seguimientos (5d), ${results.followups10Days} seguimientos (10d), ${results.vipReminders} recordatorios VIP, ${results.musicianReminders} recordatorios de músicos hoy, ${results.postEventThanks} agradecimientos post-evento, ${results.autoCompletedEvents} eventos concluidos auto-completados, ${retriesCount} reintentos exitosos.`
+      message: `Procesados: ${results.followups5Days} seguimientos (5d), ${results.followups10Days} seguimientos (10d), ${results.vipReminders} recordatorios VIP, ${results.musicianReminders} recordatorios de músicos hoy, ${results.postEventThanks} agradecimientos post-evento, ${results.autoCompletedEvents} eventos concluidos auto-completados, ${results.expiredPastDateLeads + results.expiredInactivityLeads} leads inactivos depurados, ${retriesCount} reintentos exitosos.`
     })
     
   } catch (error: any) {

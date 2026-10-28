@@ -106,7 +106,7 @@ export default async function AdminVentasPage() {
     db.bookingRequest.aggregate({
       _count: true,
       _sum: { baseAmount: true },
-      where: { status: "EXPIRED" }
+      where: { status: { in: ["EXPIRED", "expirado"] } }
     }),
     db.globalConfig.findUnique({ where: { id: "vendetta_config" } }),
     db.clientProfile.findMany({
