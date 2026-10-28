@@ -258,10 +258,8 @@ export function PremiumClientQuoteView({
       {/* Fondo Vectorial de Concierto con Malla Acústica Estática Ultra-Ligera */}
       <RockBackground intensity="medium" />
 
-      {/* Línea Superior de Acento de Marca Vendetta */}
-      <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-amber-500 to-red-600" />
-
-      <div className="container mx-auto px-4 sm:px-6 relative z-10 max-w-5xl pt-6 md:pt-8">
+      {/* Contenedor principal con compensación para el navbar fijo (h-20 = 80px) */}
+      <div className="container mx-auto px-4 sm:px-6 relative z-10 max-w-5xl pt-24 sm:pt-28 md:pt-32">
         
         {/* ============================================================ */}
         {/* HEADER INSTITUCIONAL: BRANDING, FOLIO & ESTATUS FORMAL */}
