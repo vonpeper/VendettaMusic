@@ -18,7 +18,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/")
   }
 
-  const pendingInbox = await (db as any).inboxItem?.count?.({ where: { status: "pending" } }).catch(() => 0) || 0
+  const [pendingInbox, pendingBookingsCount, orphanInquiriesCount] = await Promise.all([
+    (db as any).inboxItem?.count?.({ where: { status: "pending" } }).catch(() => 0) || 0,
+    db.bookingRequest.count({
+      where: {
+        status: { in: ["requiere_llamada", "pendiente", "pending"] }
+      }
+    }).catch(() => 0),
+    db.contactInquiry.count({
+      where: {
+        convertedBooking: null,
+        status: { notIn: ["discarded", "closed"] }
+      }
+    }).catch(() => 0)
+  ])
+
+  const pendingLeads = (pendingBookingsCount || 0) + (orphanInquiriesCount || 0)
 
   return (
     <div className="admin-theme flex flex-col md:flex-row min-h-screen bg-background text-foreground p-4 pt-20 md:pt-4 gap-4">
@@ -28,6 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <AdminSidebar 
         user={{ name: session.user?.name, role: session.user?.role }} 
         pendingInbox={pendingInbox} 
+        pendingLeads={pendingLeads}
       />
 
       {/* Main Content */}
