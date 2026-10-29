@@ -6,14 +6,20 @@ export function NeonBorder() {
   const [opacity, setOpacity] = useState(0)
 
   useEffect(() => {
+    if (typeof window === "undefined" || window.innerWidth < 768) return
+
+    let ticking = false
     const handleScroll = () => {
-      const scrolled = window.scrollY
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-      const scrollPercent = scrolled / maxScroll
-      // Aparece sutilmente después de los primeros 100px
-      setOpacity(Math.min(scrolled / 500, 0.4))
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrolled = window.scrollY
+          setOpacity(Math.min(scrolled / 500, 0.4))
+          ticking = false
+        })
+        ticking = true
+      }
     }
-    window.addEventListener("scroll", handleScroll)
+    window.addEventListener("scroll", handleScroll, { passive: true })
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 

@@ -80,10 +80,16 @@ export function PhotoGallery({ images = [] }: { images?: (string | null | undefi
   }, [photoList.length])
 
   useEffect(() => {
-    if (containerRef.current) {
-      const width = containerRef.current.scrollWidth - containerRef.current.offsetWidth
-      setConstraints({ left: -Math.max(0, width), right: 0 })
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      return
     }
+    const frameId = requestAnimationFrame(() => {
+      if (containerRef.current) {
+        const width = containerRef.current.scrollWidth - containerRef.current.offsetWidth
+        setConstraints({ left: -Math.max(0, width), right: 0 })
+      }
+    })
+    return () => cancelAnimationFrame(frameId)
   }, [photoList.length])
 
   useEffect(() => {

@@ -9,11 +9,21 @@ export function ConcertAtmosphere() {
 
   useEffect(() => {
     setIsClient(true)
+    if (typeof window === "undefined" || window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches) {
+      return
+    }
+    let frameId: number | null = null
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY })
+      if (frameId) cancelAnimationFrame(frameId)
+      frameId = requestAnimationFrame(() => {
+        setMousePos({ x: e.clientX, y: e.clientY })
+      })
     }
     window.addEventListener("mousemove", handleMouseMove, { passive: true })
-    return () => window.removeEventListener("mousemove", handleMouseMove)
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId)
+      window.removeEventListener("mousemove", handleMouseMove)
+    }
   }, [])
 
   useEffect(() => {

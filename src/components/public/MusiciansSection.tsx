@@ -138,7 +138,11 @@ export function MusiciansSection({ musicians = [] }: { musicians?: Musician[] })
         </div>
       )}
 
-      <section id="nosotros" className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#15152B] via-[#07080D] to-[#42112D]/80">
+      <section 
+        id="nosotros" 
+        className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#15152B] via-[#07080D] to-[#42112D]/80"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
+      >
         {/* Máscara de mezcla de gradiente para transición suave */}
         <div className="section-blend-top bg-gradient-to-b from-[#07080D] to-transparent" />
 

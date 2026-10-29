@@ -49,17 +49,24 @@ const DEFAULT_REVIEWS = [
 
 export function TestimonialsScroll({ reviews = [] }: TestimonialsScrollProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const frameRef = useRef<number | null>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
 
   const activeReviews = reviews && reviews.length > 0 ? reviews : DEFAULT_REVIEWS
 
   const checkScroll = () => {
-    if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
-      setCanScrollLeft(scrollLeft > 10)
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10)
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      return
     }
+    if (frameRef.current) cancelAnimationFrame(frameRef.current)
+    frameRef.current = requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
+        setCanScrollLeft(scrollLeft > 10)
+        setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10)
+      }
+    })
   }
 
   const scroll = (direction: "left" | "right") => {
@@ -73,7 +80,11 @@ export function TestimonialsScroll({ reviews = [] }: TestimonialsScrollProps) {
   }
 
   return (
-    <section id="testimonios" className="py-28 md:py-36 bg-[#0B0B14] relative overflow-hidden">
+    <section 
+      id="testimonios" 
+      className="py-28 md:py-36 bg-[#0B0B14] relative overflow-hidden"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
+    >
       {/* Top and Bottom Gradient Blends */}
       <div className="section-blend-top bg-gradient-to-b from-[#0E0E1A] to-transparent" />
       <div className="section-blend-bottom bg-gradient-to-t from-[#0B0B14] to-transparent" />

@@ -111,6 +111,17 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Native Browser Preload Hint in Head for Immediate Mobile LCP Discovery */}
+      <link
+        rel="preload"
+        as="image"
+        href="/_next/image?url=%2Fimages%2Fvendetta-web-assets%2Fvendetta-hero-mobile-ultra-4k.webp&w=1200&q=70"
+        imageSrcSet="/_next/image?url=%2Fimages%2Fvendetta-web-assets%2Fvendetta-hero-mobile-ultra-4k.webp&w=750&q=70 750w, /_next/image?url=%2Fimages%2Fvendetta-web-assets%2Fvendetta-hero-mobile-ultra-4k.webp&w=1200&q=70 1200w"
+        imageSizes="(max-width: 768px) 100vw, 1200px"
+        // @ts-ignore
+        fetchPriority="high"
+      />
+
       <NeonBorder />
       <ConcertAtmosphere />
       <WhatsAppButton />
@@ -148,6 +159,7 @@ export default async function HomePage() {
             priority={true}
             fetchPriority="high"
             loading="eager"
+            quality={70}
             sizes="(max-width: 768px) 100vw, 1200px"
             className="opacity-95 object-contain object-right"
           />
@@ -189,6 +201,7 @@ export default async function HomePage() {
                 priority={true}
                 fetchPriority="high"
                 loading="eager"
+                quality={70}
                 sizes="(max-width: 768px) 100vw, 1200px"
                 className="object-cover"
               />
@@ -256,7 +269,10 @@ export default async function HomePage() {
       <InstagramReelsSection reels={mediaMap.reels} />
 
       {/* -- TRIBUTO MENTIRAS HERO ------------------------------------------ */}
-      <section className="relative py-32 overflow-hidden bg-gradient-to-b from-[#0E0E1A] via-[#2D0F22]/90 to-[#0B0B14]">
+      <section 
+        className="relative py-32 overflow-hidden bg-gradient-to-b from-[#0E0E1A] via-[#2D0F22]/90 to-[#0B0B14]"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
+      >
         {/* Máscara de mezcla de gradiente para transición suave */}
         <div className="section-blend-top bg-gradient-to-b from-[#0E0E1A] to-transparent" />
 
@@ -306,7 +322,11 @@ export default async function HomePage() {
       </section>
 
       {/* -- CERTIFICADOS DE CALIDAD (SERVICIOS - BENTO CARDS) ------------- */}
-      <section id="servicios" className="py-28 bg-[#0B0B14] relative overflow-hidden">
+      <section 
+        id="servicios" 
+        className="py-28 bg-[#0B0B14] relative overflow-hidden"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "1px 600px" }}
+      >
         {/* Aurora stage effects */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="aurora-layer-1 -top-32 left-1/4 animate-aurora-drift opacity-45" />
@@ -651,7 +671,11 @@ export default async function HomePage() {
       <AutographWall />
 
       {/* -- GALERÍA DE FOTOS ----------------------------------------------- */}
-      <section id="galeria" className="py-24 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#120F24] to-[#0B0B14]">
+      <section 
+        id="galeria" 
+        className="py-24 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#120F24] to-[#0B0B14]"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
+      >
         <div className="section-blend-top bg-gradient-to-b from-[#07080D] to-transparent" />
         <PhotoGallery images={mediaMap.galeria} />
         <div className="section-blend-bottom bg-gradient-to-t from-[#0B0B14] to-transparent" />
@@ -661,7 +685,10 @@ export default async function HomePage() {
       <TestimonialsScroll reviews={liveDbReviews} />
 
       {/* -- CTA FINAL ------------------------------------------------------ */}
-      <section className="py-36 relative overflow-hidden bg-gradient-to-b from-[#0B0B14] via-[#42112D]/80 to-[#07080D]">
+      <section 
+        className="py-36 relative overflow-hidden bg-gradient-to-b from-[#0B0B14] via-[#42112D]/80 to-[#07080D]"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
+      >
         {/* Máscara de mezcla de gradiente para transición suave */}
         <div className="section-blend-top bg-gradient-to-b from-[#0B0B14] to-transparent" />
 
