@@ -45,6 +45,9 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      - name: Deploy Prisma Migrations (CI DB)
+        run: npx prisma migrate deploy
+
       - name: TypeScript Check
         run: npm run ts-check
 
