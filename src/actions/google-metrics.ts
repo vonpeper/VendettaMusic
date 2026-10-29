@@ -92,12 +92,101 @@ export async function getGoogleMetricsAction(
       }
     }
 
-    // Ejecutar ambas consultas concurrentemente con captura de errores aislada
+    // 1. Verificación previa de token y scopes válidos (Fail-fast con timeout)
+    let token: string
+    try {
+      token = await getGoogleAccessToken()
+    } catch (err: any) {
+      console.warn("[google-metrics] Token refresh failed:", err?.message || err)
+      const unlinkedData: GoogleMetricsCombined = {
+        status: {
+          isLinked: false,
+          hasSearchConsole: suiteStatus.hasSearchConsoleSiteUrl,
+          hasAnalytics: suiteStatus.hasAnalyticsPropertyId,
+          siteUrl: suiteStatus.siteUrl,
+          propertyId: suiteStatus.propertyId,
+          measurementId: suiteStatus.measurementId,
+        },
+        searchConsole: null,
+        analytics: null,
+        errors: {
+          searchConsole: "auth_failed",
+          analytics: "auth_failed",
+        },
+        lastUpdated: new Date().toISOString(),
+      }
+      setCached(cacheKey, unlinkedData, 10 * 60 * 1000)
+      return { success: true, data: unlinkedData }
+    }
+
+    // Validar scopes con tokeninfo antes de intentar peticiones costosas
+    let hasScScope = false
+    let hasGaScope = false
+    try {
+      const tokenInfoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${token}`, {
+        signal: AbortSignal.timeout(2000),
+      })
+      if (tokenInfoRes.ok) {
+        const info = await tokenInfoRes.json()
+        const scopeStr = typeof info.scope === "string" ? info.scope : ""
+        hasScScope = scopeStr.includes("webmasters")
+        hasGaScope = scopeStr.includes("analytics")
+      } else if (tokenInfoRes.status === 401 || tokenInfoRes.status === 403) {
+        // Credenciales inválidas o revocadas
+        const unlinkedData: GoogleMetricsCombined = {
+          status: {
+            isLinked: false,
+            hasSearchConsole: suiteStatus.hasSearchConsoleSiteUrl,
+            hasAnalytics: suiteStatus.hasAnalyticsPropertyId,
+            siteUrl: suiteStatus.siteUrl,
+            propertyId: suiteStatus.propertyId,
+            measurementId: suiteStatus.measurementId,
+          },
+          searchConsole: null,
+          analytics: null,
+          errors: {
+            searchConsole: "auth_failed",
+            analytics: "auth_failed",
+          },
+          lastUpdated: new Date().toISOString(),
+        }
+        setCached(cacheKey, unlinkedData, 10 * 60 * 1000)
+        return { success: true, data: unlinkedData }
+      }
+    } catch {
+      // Timeout o fallo de red en tokeninfo; continuar si no se pudo validar
+    }
+
+    if (!hasScScope && !hasGaScope) {
+      const unlinkedData: GoogleMetricsCombined = {
+        status: {
+          isLinked: false,
+          hasSearchConsole: suiteStatus.hasSearchConsoleSiteUrl,
+          hasAnalytics: suiteStatus.hasAnalyticsPropertyId,
+          siteUrl: suiteStatus.siteUrl,
+          propertyId: suiteStatus.propertyId,
+          measurementId: suiteStatus.measurementId,
+        },
+        searchConsole: null,
+        analytics: null,
+        errors: {
+          searchConsole: "auth_failed",
+          analytics: "auth_failed",
+        },
+        lastUpdated: new Date().toISOString(),
+      }
+      setCached(cacheKey, unlinkedData, 10 * 60 * 1000)
+      return { success: true, data: unlinkedData }
+    }
+
+    // Ejecutar consultas solo para los servicios con permisos y configuración activa
     const [scResult, gaResult] = await Promise.allSettled([
-      getSearchConsoleReport(period),
-      suiteStatus.hasAnalyticsPropertyId 
+      hasScScope && suiteStatus.hasSearchConsoleSiteUrl
+        ? getSearchConsoleReport(period)
+        : Promise.reject(new Error(hasScScope ? "URL de Search Console no configurada." : "auth_failed")),
+      hasGaScope && suiteStatus.hasAnalyticsPropertyId 
         ? getGoogleAnalyticsReport(period) 
-        : Promise.reject(new Error("ID de propiedad GA4 no configurado en Ajustes.")),
+        : Promise.reject(new Error(hasGaScope ? "ID de GA4 no configurado." : "auth_failed")),
     ])
 
     const errors: { searchConsole?: string; analytics?: string } = {}

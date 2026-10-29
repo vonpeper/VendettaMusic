@@ -13,10 +13,11 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", { style: "currency", c
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
 
+import { Suspense } from "react"
 import { auth } from "@/lib/auth"
 import { RepairSyncButton } from "@/components/admin/RepairSyncButton"
 import { NuevoEventoButton } from "@/components/admin/EventActions"
-import { GoogleMetricsWidget } from "@/components/admin/GoogleMetricsWidget"
+import { GoogleMetricsWidget, GoogleMetricsSkeleton } from "@/components/admin/GoogleMetricsWidget"
 import { Plus, UserPlus, FilePlus, CalendarDays } from "lucide-react"
 
 export default async function AdminDashboardPage() {
@@ -27,104 +28,100 @@ export default async function AdminDashboardPage() {
   const thisMonthName = MONTHS[now.getMonth()]
   const thisYear = now.getFullYear()
   
-  // -- Fetch en paralelo ------------------------------------------
+  // -- Fetch en paralelo con proyecciones select exactas (Zero Overfetching) --
   const [
     upcomingEvents,
     bandEvents,
     newEvents,
     pendingBookingRequests,
-    pendingQuotes,
-    expiredBookingRequests,
     allBookingRequests,
+    confirmedBookingsCount,
     confirmedBookings,
     pendingInbox,
-    allClients,
-    allLocations,
-    allPackages,
-    musicianProfiles
   ] = await Promise.all([
     db.event.findMany({
       where: { date: { gte: new Date(now.getTime() - 12 * 60 * 60 * 1000) }, status: { not: "cancelado" } },
       orderBy: { date: "asc" },
-      take: 5,
-      include: { 
-        client: { include: { user: true } }, 
-        location: true, 
-        package: true,
-        contracts: true,
-        bookingRequest: true,
-        musicians: true
+      take: 6,
+      select: { 
+        id: true,
+        date: true,
+        balance: true,
+        deposit: true,
+        customName: true,
+        client: {
+          select: {
+            user: { select: { name: true } }
+          }
+        },
+        contracts: {
+          select: { signedAt: true, status: true },
+          take: 1
+        },
+        bookingRequest: {
+          select: { id: true, shortId: true }
+        },
+        musicians: {
+          select: { status: true }
+        }
       }
     }),
     db.bandEvent.findMany({
       where: { status: { notIn: ["cancelado", "cancelled", "pendiente", "pending"] } },
+      select: {
+        eventMonth: true,
+        eventYear: true,
+        totalIncome: true,
+      },
       orderBy: [{ eventYear: "asc" }, { eventDate: "asc" }]
     }),
     db.event.findMany({
       where: { status: { notIn: ["cancelado", "cancelled", "pendiente", "pending"] } },
+      select: {
+        date: true,
+        totalIncome: true,
+        amount: true,
+      },
       orderBy: { date: "asc" }
     }),
     // Pipeline: Booking Requests (Web Funnel)
     db.bookingRequest.findMany({
       where: { status: { in: ["pending", "pendiente"] } },
       orderBy: { createdAt: "desc" },
-      include: { client: { include: { user: true } } }
+      select: {
+        id: true,
+        source: true,
+        clientName: true,
+        clientPhone: true,
+        requestedDate: true,
+        baseAmount: true,
+        createdAt: true,
+        followUpCount: true,
+        client: {
+          select: {
+            user: { select: { name: true } }
+          }
+        }
+      }
     }),
-    // Pipeline: Quotes Manuales
-    db.quote.findMany({
-      where: { status: "pendiente" },
-      orderBy: { createdAt: "desc" },
-      include: { client: { include: { user: true } } }
-    }),
-    // Para la vista de pérdida potencial
-    db.bookingRequest.findMany({
-      where: { status: "EXPIRED" },
-      orderBy: { updatedAt: "desc" },
-      take: 5
-    }),
-    // Para Tasa de Cierre
+    // Para Tasa de Cierre y Leads Totales
     db.bookingRequest.count(),
-    // Para el Semáforo de Producción (Robust Lookup)
+    // Confirmados para cálculo paralelo de conversión (sin serial waterfall)
+    db.bookingRequest.count({
+      where: { status: "CONFIRMED" }
+    }),
+    // Para el Semáforo de Producción (Robust Lookup acotado a eventos y confirmados)
     db.bookingRequest.findMany({
+      where: {
+        OR: [
+          { status: "CONFIRMED" },
+          { eventId: { not: null } }
+        ]
+      },
       select: { id: true, eventId: true, clientName: true, status: true, shortId: true }
     }),
     db.inboxItem.count({ where: { status: "pending" } }).catch(() => 0),
-    // Data for Quick Actions
-    db.clientProfile.findMany({ include: { user: true }, orderBy: { user: { name: 'asc' } } }),
-    db.location.findMany({ orderBy: { name: 'asc' } }),
-    db.package.findMany({ orderBy: { name: 'asc' } }),
-    db.musicianProfile.findMany({ 
-      where: { 
-        status: "active"
-      },
-      include: { user: true },
-      orderBy: { user: { name: "asc" } }
-    }),
   ])
-
-  const staffMapped = musicianProfiles
-    .filter(p => 
-      p.instrument?.toLowerCase().includes("ingeniero") || 
-      p.instrument?.toLowerCase().includes("staff")
-    )
-    .map(p => ({ id: p.id, name: p.user?.name || "Sin nombre" }))
-
-  const allMusiciansMapped = musicianProfiles.map(p => ({ 
-    id: p.id, 
-    name: p.user?.name ?? "Sin nombre",
-    instrument: p.instrument || "Músico",
-    isTitular: p.isTitular
-  }))
-
-  const clientsMapped = allClients.map(c => ({
-    id: c.id,
-    name: c.user?.name || "Sin nombre",
-    phone: c.whatsapp || null,
-    email: c.user?.email || null,
-    city: c.city || null
-  }))
-
-
 
   // -- Métricas de ingresos unificadas ------------------------------
   const allEventsIncome = [
@@ -156,15 +153,9 @@ export default async function AdminDashboardPage() {
 
   const activeLeadsCount = pendingBookingRequests.length;
 
-  const confirmedBookingsCount = await db.bookingRequest.count({
-    where: { status: "CONFIRMED" }
-  })
-  
   const conversionRate = allBookingRequests > 0 
     ? Math.round((confirmedBookingsCount / allBookingRequests) * 100) 
     : 0;
-
-  const expiredValue = expiredBookingRequests.reduce((acc, req) => acc + (req.baseAmount || 0), 0);
 
   // -- Datos para la gráfica (agrupado por mes/año, últimos 6 meses) --
   const monthMap: Record<string, { total: number; count: number }> = {}
@@ -222,13 +213,7 @@ export default async function AdminDashboardPage() {
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <NuevoEventoButton 
-          clients={clientsMapped}
-          locations={allLocations}
-          packages={allPackages as any}
-          staff={staffMapped}
-          allMusicians={allMusiciansMapped}
-        />
+        <NuevoEventoButton />
         
         <Link href="/admin/ventas?new=quote" className="no-underline">
           <Button variant="outline" className="w-full h-14 justify-start gap-4 border-dashed border-primary/40 hover:border-primary hover:bg-primary/10 rounded-xl group transition-all">
@@ -329,8 +314,10 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* -- Widget Métricas Google Suite (Search Console + GA4) -- */}
-      <GoogleMetricsWidget />
+      {/* -- Widget Métricas Google Suite (Search Console + GA4) con Streaming SSR -- */}
+      <Suspense fallback={<GoogleMetricsSkeleton />}>
+        <GoogleMetricsWidget />
+      </Suspense>
 
       {/* -- Gráfica + Pérdida Potencial -- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

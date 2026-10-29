@@ -2,50 +2,106 @@
 
 import { useState } from "react"
 import { EventForm } from "@/components/admin/EventForm"
-import { notifyEventAction, deleteEventAction } from "@/actions/events"
+import { notifyEventAction, deleteEventAction, getEventFormCatalogsAction } from "@/actions/events"
 import { Button } from "@/components/ui/button"
-import { Bell, BellOff, Edit2, Trash2, AlertCircle, Plus } from "lucide-react"
+import { Bell, BellOff, Edit2, Trash2, AlertCircle, Plus, Loader2 } from "lucide-react"
 
-export function NuevoEventoButton({ clients, locations, packages, staff, allMusicians = [], variant = "big" }: {
-  clients: { id: string; name: string }[]
-  locations: { id: string; name: string }[]
-  packages: { id: string; name: string; baseCostPerHour: number; minDuration: number }[]
-  staff: { id: string; name: string }[]
+export function NuevoEventoButton({
+  clients,
+  locations,
+  packages,
+  staff,
+  allMusicians,
+  variant = "big"
+}: {
+  clients?: { id: string; name: string }[]
+  locations?: { id: string; name: string }[]
+  packages?: { id: string; name: string; baseCostPerHour: number; minDuration: number }[]
+  staff?: { id: string; name: string }[]
   allMusicians?: any[]
   variant?: "big" | "compact"
-}) {
+} = {}) {
   const [showForm, setShowForm] = useState(false)
+  const [loadingCatalogs, setLoadingCatalogs] = useState(false)
+  const [catalogs, setCatalogs] = useState<{
+    clients: any[]
+    locations: any[]
+    packages: any[]
+    staff: any[]
+    allMusicians: any[]
+  } | null>(
+    clients && locations && packages
+      ? {
+          clients,
+          locations,
+          packages,
+          staff: staff || [],
+          allMusicians: allMusicians || []
+        }
+      : null
+  )
+
+  async function handleOpen() {
+    if (catalogs) {
+      setShowForm(true)
+      return
+    }
+
+    setLoadingCatalogs(true)
+    try {
+      const data = await getEventFormCatalogsAction()
+      setCatalogs(data)
+      setShowForm(true)
+    } catch (err) {
+      console.error("Error loading event catalogs:", err)
+      alert("Error al cargar los catálogos del evento. Por favor intente de nuevo.")
+    } finally {
+      setLoadingCatalogs(false)
+    }
+  }
 
   return (
     <>
-      {showForm && (
+      {showForm && catalogs && (
         <EventForm
           onClose={() => setShowForm(false)}
-          clients={clients}
-          locations={locations}
-          packages={packages}
-          staff={staff}
-          allMusicians={allMusicians}
+          clients={catalogs.clients}
+          locations={catalogs.locations}
+          packages={catalogs.packages}
+          staff={catalogs.staff}
+          allMusicians={catalogs.allMusicians}
         />
       )}
       {variant === "big" ? (
         <Button 
-          onClick={() => setShowForm(true)} 
-          className="w-full h-14 justify-center gap-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all active:scale-[0.98]"
+          onClick={handleOpen} 
+          disabled={loadingCatalogs}
+          className="w-full h-14 justify-center gap-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all active:scale-[0.98] disabled:opacity-75"
         >
-          <Plus className="w-5 h-5" />
+          {loadingCatalogs ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Plus className="w-5 h-5" />
+          )}
           <div className="text-left">
-            <div className="text-sm font-bold">Nuevo Evento</div>
+            <div className="text-sm font-bold">
+              {loadingCatalogs ? "Cargando..." : "Nuevo Evento"}
+            </div>
             <div className="text-[10px] text-white/70 uppercase tracking-tight">Manual / Admin</div>
           </div>
         </Button>
       ) : (
         <Button 
-          onClick={() => setShowForm(true)} 
-          className="bg-primary hover:bg-primary/90 text-white font-bold gap-2 px-6 rounded-full shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-[0.98]"
+          onClick={handleOpen} 
+          disabled={loadingCatalogs}
+          className="bg-primary hover:bg-primary/90 text-white font-bold gap-2 px-6 rounded-full shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-[0.98] disabled:opacity-75"
         >
-          <Plus className="w-4 h-4" />
-          Nuevo Evento
+          {loadingCatalogs ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Plus className="w-4 h-4" />
+          )}
+          {loadingCatalogs ? "Cargando..." : "Nuevo Evento"}
         </Button>
       )}
     </>

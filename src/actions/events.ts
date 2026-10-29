@@ -1300,3 +1300,88 @@ export async function convertBookingToEventAction(bookingId: string) {
     return { success: false, error: message }
   }
 }
+
+/**
+ * Obtiene bajo demanda los catálogos necesarios para el formulario de Nuevo Evento / Edición.
+ * Evita la sobrecarga de consultas en el SSR de páginas como /admin.
+ */
+export async function getEventFormCatalogsAction() {
+  const session = await auth()
+  if (!session) {
+    throw new Error("No autenticado")
+  }
+
+  const [allClients, allLocations, allPackages, musicianProfiles] = await Promise.all([
+    db.clientProfile.findMany({
+      select: {
+        id: true,
+        whatsapp: true,
+        city: true,
+        user: { select: { name: true, email: true } },
+      },
+      orderBy: { user: { name: "asc" } },
+    }),
+    db.location.findMany({
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        city: true,
+        state: true,
+        mapsLink: true,
+        phone: true,
+      },
+      orderBy: { name: "asc" },
+    }),
+    db.package.findMany({
+      select: {
+        id: true,
+        name: true,
+        baseCostPerHour: true,
+        minDuration: true,
+      },
+      orderBy: { name: "asc" },
+    }),
+    db.musicianProfile.findMany({
+      where: { status: "active" },
+      select: {
+        id: true,
+        instrument: true,
+        isTitular: true,
+        user: { select: { name: true } },
+      },
+      orderBy: { user: { name: "asc" } },
+    }),
+  ])
+
+  const staffMapped = musicianProfiles
+    .filter(p =>
+      p.instrument?.toLowerCase().includes("ingeniero") ||
+      p.instrument?.toLowerCase().includes("staff")
+    )
+    .map(p => ({ id: p.id, name: p.user?.name || "Sin nombre" }))
+
+  const allMusiciansMapped = musicianProfiles.map(p => ({
+    id: p.id,
+    name: p.user?.name ?? "Sin nombre",
+    instrument: p.instrument || "Músico",
+    isTitular: p.isTitular,
+  }))
+
+  const clientsMapped = allClients.map(c => ({
+    id: c.id,
+    name: c.user?.name || "Sin nombre",
+    phone: c.whatsapp || null,
+    email: c.user?.email || null,
+    city: c.city || null,
+  }))
+
+  return {
+    clients: clientsMapped,
+    locations: allLocations,
+    packages: allPackages,
+    staff: staffMapped,
+    allMusicians: allMusiciansMapped,
+  }
+}
+

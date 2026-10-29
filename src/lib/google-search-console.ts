@@ -85,6 +85,7 @@ async function querySearchConsole(siteUrl: string, body: any) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(2500),
   })
 
   if (!res.ok) {
@@ -104,7 +105,8 @@ export async function listSearchConsoleSites(): Promise<string[]> {
   try {
     const token = await getGoogleAccessToken()
     const res = await fetch("https://www.googleapis.com/webmasters/v3/sites", {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: { "Authorization": `Bearer ${token}` },
+      signal: AbortSignal.timeout(2500),
     })
     if (!res.ok) return []
     const json = await res.json()

@@ -70,6 +70,7 @@ async function runGA4Report(propertyId: string, body: any) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(2500),
   })
 
   if (!res.ok) {
@@ -96,6 +97,7 @@ async function runGA4Realtime(propertyId: string): Promise<number> {
       body: JSON.stringify({
         metrics: [{ name: "activeUsers" }],
       }),
+      signal: AbortSignal.timeout(2500),
     })
 
     if (!res.ok) return 0

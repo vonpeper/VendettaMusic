@@ -4,11 +4,37 @@ import { Badge } from "@/components/ui/badge"
 import { BarChart3, Search, MousePointerClick, Eye, Users, ArrowRight, Sparkles } from "lucide-react"
 import Link from "next/link"
 
+export function GoogleMetricsSkeleton() {
+  return (
+    <Card className="bg-card/70 border-border/40 shadow-sm overflow-hidden mb-8 animate-pulse">
+      <CardContent className="p-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-muted/60" />
+            <div className="space-y-2">
+              <div className="h-4 w-48 bg-muted/60 rounded" />
+              <div className="h-3 w-72 bg-muted/40 rounded" />
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="h-8 w-20 bg-muted/50 rounded" />
+            <div className="h-8 w-20 bg-muted/50 rounded" />
+            <div className="h-8 w-24 bg-muted/50 rounded" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 export async function GoogleMetricsWidget() {
-  const res = await getGoogleMetricsAction("28d")
+  const res = await getGoogleMetricsAction("28d").catch(() => ({
+    success: false,
+    data: undefined
+  }))
   const data = res.data
 
-  const isLinked = data?.status.isLinked
+  const isLinked = Boolean(res.success && data?.status?.isLinked)
   const sc = data?.searchConsole
   const ga = data?.analytics
 
