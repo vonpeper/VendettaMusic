@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { db } from "@/lib/db"
 import { notFound, redirect } from "next/navigation"
 import { isValidShortIdFormat } from "@/lib/folios"
@@ -24,15 +25,37 @@ function buildLookupCandidates(rawIdInput: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params
-  const { rawId, lookupUpper, normalizedWithPrefix, bareId } = buildLookupCandidates(id)
+/**
+ * Consulta de BookingRequest deduplicada por petición mediante React.cache().
+ * Garantiza que generateMetadata y StatusDetailPage compartan exactamente
+ * el mismo resultado en memoria sin duplicar consultas a la base de datos.
+ */
+export const getBookingData = cache(async (rawIdInput: string) => {
+  const { rawId, lookupUpper, normalizedWithPrefix, bareId } = buildLookupCandidates(rawIdInput)
 
   if (!isValidShortIdFormat(lookupUpper)) {
-    return { title: "No encontrado | Vendetta Live Music" }
+    return null
   }
 
-  let booking = await db.bookingRequest.findFirst({
+  const includeConfig = { 
+    client: true,
+    lineItems: { orderBy: { order: "asc" as const } },
+    payments: true,
+    event: {
+      include: {
+        contracts: true,
+        musicians: {
+          include: {
+            musician: {
+              include: { user: true }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  let mainBooking = await db.bookingRequest.findFirst({
     where: {
       OR: [
         { shortId: lookupUpper },
@@ -48,10 +71,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         { adminNote: { contains: lookupUpper } },
         { adminNote: { contains: bareId } }
       ]
-    }
+    },
+    include: includeConfig
   })
 
-  if (!booking) {
+  // Si no se encontró por booking directo, intentar por Event o Quote vinculado
+  if (!mainBooking) {
     const eventMatch = await db.event.findFirst({
       where: {
         OR: [
@@ -59,12 +84,26 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
           { quoteId: rawId }
         ]
       },
-      include: { bookingRequest: true }
+      select: {
+        bookingRequest: {
+          select: { id: true }
+        }
+      }
     })
-    if (eventMatch?.bookingRequest) {
-      booking = eventMatch.bookingRequest
+    if (eventMatch?.bookingRequest?.id) {
+      mainBooking = await db.bookingRequest.findUnique({
+        where: { id: eventMatch.bookingRequest.id },
+        include: includeConfig
+      })
     }
   }
+
+  return mainBooking
+})
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const booking = await getBookingData(id)
 
   if (!booking) {
     return {
@@ -131,72 +170,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function StatusDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { rawId, lookupUpper, normalizedWithPrefix, bareId } = buildLookupCandidates(id)
+  const { lookupUpper } = buildLookupCandidates(id)
 
-  if (!isValidShortIdFormat(lookupUpper)) {
-    return notFound()
-  }
-
-  const includeConfig = { 
-    client: true,
-    lineItems: { orderBy: { order: "asc" as const } },
-    payments: true,
-    event: {
-      include: {
-        contracts: true,
-        musicians: {
-          include: {
-            musician: {
-              include: { user: true }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  let mainBooking = await db.bookingRequest.findFirst({
-    where: {
-      OR: [
-        { shortId: lookupUpper },
-        { shortId: normalizedWithPrefix },
-        { shortId: bareId },
-        { shortId: lookupUpper.toLowerCase() },
-        { shortId: normalizedWithPrefix.toLowerCase() },
-        { shortId: bareId.toLowerCase() },
-        { id: rawId },
-        { id: rawId.toLowerCase() },
-        { eventId: rawId },
-        { eventId: rawId.toLowerCase() },
-        { adminNote: { contains: lookupUpper } },
-        { adminNote: { contains: bareId } }
-      ]
-    },
-    include: includeConfig
-  })
-
-  // Si no se encontró por booking directo, intentar por Event o Quote vinculado
-  if (!mainBooking) {
-    const eventMatch = await db.event.findFirst({
-      where: {
-        OR: [
-          { id: rawId },
-          { quoteId: rawId }
-        ]
-      },
-      select: {
-        bookingRequest: {
-          select: { id: true }
-        }
-      }
-    })
-    if (eventMatch?.bookingRequest?.id) {
-      mainBooking = await db.bookingRequest.findUnique({
-        where: { id: eventMatch.bookingRequest.id },
-        include: includeConfig
-      })
-    }
-  }
+  const mainBooking = await getBookingData(id)
 
   if (!mainBooking) {
     return notFound()

@@ -7,15 +7,17 @@ import {
 import { MusiciansSection } from "@/components/public/MusiciansSection"
 import { UpcomingGigs } from "@/components/public/UpcomingGigs"
 import { VideoSection } from "@/components/public/VideoSection"
-import { InstagramReelsSection } from "@/components/public/InstagramReelsSection"
-import { PhotoGallery } from "@/components/public/PhotoGallery"
-import { NeonBorder } from "@/components/public/NeonBorder"
-import { ConcertAtmosphere } from "@/components/public/ConcertAtmosphere"
-import { AutographWall } from "@/components/public/AutographWall"
 import { TestimonialsScroll } from "@/components/public/TestimonialsScroll"
-import { VinylShowcase } from "@/components/public/VinylShowcase"
-import { WhatsAppButton } from "@/components/public/WhatsAppButton"
-import { VendettaExperience } from "@/components/public/VendettaExperience"
+import { 
+  ConcertAtmosphere, 
+  NeonBorder, 
+  WhatsAppButton, 
+  VinylShowcase, 
+  AutographWall, 
+  InstagramReelsSection, 
+  PhotoGallery, 
+  VendettaExperience 
+} from "@/components/public/ClientVisuals"
 import { Suspense } from "react"
 import Image from "next/image"
 import { db } from "@/lib/db"
@@ -78,8 +80,24 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function HomePage() {
-  const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
-  const allMedia = await db.siteMedia.findMany()
+  // Carga concurrente paralela (Zero Waterfall) de toda la información requerida
+  const [config, allMedia, liveDbReviews, liveMusicians, dbPackages] = await Promise.all([
+    db.globalConfig.findUnique({ where: { id: "vendetta_config" } }),
+    db.siteMedia.findMany(),
+    db.review.findMany({ 
+      where: { status: "approved" }, 
+      orderBy: { createdAt: "desc" } 
+    }),
+    db.publicBandMember.findMany({
+      orderBy: { order: "asc" }
+    }),
+    db.package.findMany({
+      where: { NOT: { isCustom: true } },
+      include: { serviceItems: { orderBy: { order: "asc" } } },
+      orderBy: { baseCostPerHour: "asc" }
+    })
+  ])
+
   const mediaMap = {
     hero: allMedia.find((m: any) => m.section === "hero")?.url || "https://images.unsplash.com/photo-1468359601543-843bfaef291a?q=80&w=2074&auto=format&fit=crop",
     mentiras: allMedia.find((m: any) => m.section === "mentiras")?.url || "/images/shows/mentiras.jpg",
@@ -90,21 +108,6 @@ export default async function HomePage() {
       .filter((m: any) => m.section === "galeria" && m.url && !m.url.includes("_n.jpg"))
       .map((m: any) => m.url as string),
   }
-  
-  const liveDbReviews = await db.review.findMany({ 
-    where: { status: "approved" }, 
-    orderBy: { createdAt: "desc" } 
-  })
-  
-  const liveMusicians = await db.publicBandMember.findMany({
-    orderBy: { order: "asc" }
-  })
-
-  const dbPackages = await db.package.findMany({
-    where: { NOT: { isCustom: true } },
-    include: { serviceItems: { orderBy: { order: "asc" } } },
-    orderBy: { baseCostPerHour: "asc" }
-  })
 
   return (
     <div className="flex flex-col min-h-screen">
