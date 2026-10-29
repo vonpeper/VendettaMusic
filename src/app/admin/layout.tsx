@@ -19,7 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const [pendingInbox, pendingBookingsCount, orphanInquiriesCount] = await Promise.all([
-    (db as any).inboxItem?.count?.({ where: { status: "pending" } }).catch(() => 0) || 0,
+    db.inboxItem.count({ where: { status: "pending" } }).catch(() => 0),
     db.bookingRequest.count({
       where: {
         status: { in: ["requiere_llamada", "pendiente", "pending"] }

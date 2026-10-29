@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import crypto from "crypto"
 import { revalidatePath } from "next/cache"
+import { findCommercialContact } from "@/lib/commercial-contacts"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -11,7 +12,8 @@ export const dynamic = "force-dynamic"
  *
  * Receiver de webhooks de Evolution API v2.
  * - Procesa actualizaciones de entrega y lectura de mensajes salientes (delivery/read receipts).
- * - Procesa y persiste mensajes entrantes (Inbound) en InboxItem y Notification cuando WHATSAPP_INBOUND_ENABLED está activo.
+ * - Procesa y persiste mensajes entrantes (Inbound) exclusivamente de contactos comerciales reconocidos.
+ * - Descarta inmediatamente mensajes grupales (@g.us) y números no registrados en el CRM.
  */
 export async function POST(req: NextRequest) {
   const body = await req.text()
@@ -48,7 +50,10 @@ export async function POST(req: NextRequest) {
 
   try {
     if (event === "send.message" || event === "messages.update" || event === "messages.upsert") {
-      await handleMessageEvent(event, payload, config)
+      const result = await handleMessageEvent(event, payload, config)
+      if (result) {
+        return NextResponse.json(result)
+      }
     } else if (event === "connection.update") {
       console.log("Evolution connection.update received.")
     }
@@ -62,6 +67,7 @@ export async function POST(req: NextRequest) {
 async function handleMessageEvent(event: string, payload: any, config: any) {
   const rawData = payload?.data || payload
   const items = Array.isArray(rawData) ? rawData : [rawData]
+  let lastInboundResult: any = null
 
   for (const data of items) {
     const key = data?.key || {}
@@ -90,6 +96,13 @@ async function handleMessageEvent(event: string, payload: any, config: any) {
     // 2. Mensajes entrantes (Inbound)
     const isInbound = (event === "messages.upsert" && from && key?.fromMe === false)
     if (isInbound) {
+      // 2a. Descarte inmediato de grupos o difusiones (@g.us, @broadcast, key.participant)
+      if (from.endsWith("@g.us") || from.includes("@g.us") || key?.participant || from.includes("@broadcast")) {
+        console.log(`[INBOUND] Mensaje de grupo descartado: ${from}`)
+        lastInboundResult = { ignored: true, reason: "group_message" }
+        continue
+      }
+
       const envInbound = process.env.WHATSAPP_INBOUND_ENABLED?.trim()
       const inboundEnabled =
         envInbound === "true" ||
@@ -98,12 +111,16 @@ async function handleMessageEvent(event: string, payload: any, config: any) {
 
       if (!inboundEnabled) {
         // INBOUND APAGADO: No procesar, no almacenar en InboxItem ni generar notificaciones inbound.
+        lastInboundResult = { ignored: true, reason: "inbound_disabled" }
         continue
       }
 
-      await handleInboundMessage(data, payload, from, messageId, config)
+      const inboundRes = await handleInboundMessage(data, payload, from, messageId, config)
+      lastInboundResult = inboundRes
     }
   }
+
+  return lastInboundResult || { received: true }
 }
 
 function extractMessageText(data: any): string {
@@ -176,9 +193,19 @@ async function handleInboundMessage(
   messageId: string | undefined,
   config: any
 ) {
+  // Filtro Estricto de Admisión:
+  // Antes de crear cualquier registro en InboxItem o disparar notificaciones,
+  // valida si los últimos 10 dígitos del remitente existen en BookingRequest, ContactInquiry o ClientProfile.
+  const contact = await findCommercialContact(from)
+
+  if (!contact.isCommercial) {
+    console.log(`[INBOUND] Mensaje ignorado - contacto no comercial: ${from}`)
+    return { ignored: true, reason: "non_commercial_contact" }
+  }
+
   const messageText = extractMessageText(data) || extractMessageText(payload)
   const cleanDigits = (from || "").split("@")[0].replace(/\D/g, "")
-  const last10 = cleanDigits.slice(-10)
+  const last10 = contact.last10 || cleanDigits.slice(-10)
 
   const pushName =
     data?.pushName ||
@@ -190,45 +217,49 @@ async function handleInboundMessage(
   let clientId: string | null = null
   let bookingRequestId: string | null = null
 
-  // Vincular con ClientProfile y BookingRequest existentes por número de WhatsApp
-  if (last10 && last10.length === 10) {
-    const client = await db.clientProfile.findFirst({
-      where: {
-        whatsapp: { contains: last10 },
-      },
-      include: {
-        user: { select: { name: true } },
-      },
-    })
-
-    if (client) {
-      clientId = client.id
-      if (!senderName && client.user?.name) {
-        senderName = client.user.name
-      }
+  // 1. Resolver clientId
+  if (contact.client) {
+    clientId = contact.client.id
+    if (!senderName && contact.client.user?.name) {
+      senderName = contact.client.user.name
     }
+  } else if (contact.booking?.clientId) {
+    clientId = contact.booking.clientId
+  } else if (contact.inquiry?.matchedClientId) {
+    clientId = contact.inquiry.matchedClientId
+  } else if (contact.inquiry?.convertedBooking?.clientId) {
+    clientId = contact.inquiry.convertedBooking.clientId
+  }
 
-    const booking = await db.bookingRequest.findFirst({
-      where: {
-        clientPhone: { contains: last10 },
-      },
+  // 2. Resolver bookingRequestId
+  if (contact.booking) {
+    bookingRequestId = contact.booking.id
+    if (!senderName && contact.booking.clientName) {
+      senderName = contact.booking.clientName
+    }
+  } else if (contact.inquiry?.convertedBooking?.id) {
+    bookingRequestId = contact.inquiry.convertedBooking.id
+    if (!senderName && contact.inquiry.convertedBooking.clientName) {
+      senderName = contact.inquiry.convertedBooking.clientName
+    }
+  } else if (clientId) {
+    // Si tenemos cliente pero no booking directo por teléfono, asociar su booking más reciente
+    const latestBooking = await db.bookingRequest.findFirst({
+      where: { clientId },
       orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        clientName: true,
-        clientId: true,
-      },
+      select: { id: true, clientName: true },
     })
-
-    if (booking) {
-      bookingRequestId = booking.id
-      if (!senderName && booking.clientName) {
-        senderName = booking.clientName
-      }
-      if (!clientId && booking.clientId) {
-        clientId = booking.clientId
+    if (latestBooking) {
+      bookingRequestId = latestBooking.id
+      if (!senderName && latestBooking.clientName) {
+        senderName = latestBooking.clientName
       }
     }
+  }
+
+  // 3. Fallback de nombre si provino de ContactInquiry
+  if (!senderName && contact.inquiry?.name) {
+    senderName = contact.inquiry.name
   }
 
   const isKnownContact = Boolean(clientId || bookingRequestId)
@@ -248,7 +279,7 @@ async function handleInboundMessage(
 
   if (recentDuplicate) {
     console.log(`[INBOUND] Mensaje duplicado omitido para ${cleanDigits}`)
-    return
+    return { ignored: true, reason: "duplicate" }
   }
 
   // Registrar en InboxItem para que aparezca en /admin/inbox
@@ -287,4 +318,6 @@ async function handleInboundMessage(
   } catch {
     // Entorno sin soporte de revalidatePath
   }
+
+  return { received: true, processed: true }
 }

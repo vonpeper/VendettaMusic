@@ -57,3 +57,29 @@ export async function deleteInboxItem(id: string) {
     return { success: false, error: "Error al eliminar el mensaje" }
   }
 }
+
+import { auth } from "@/lib/auth"
+import { purgeOrphanInboxItems } from "@/lib/commercial-contacts"
+
+export async function purgeOrphanInboxItemsAction() {
+  try {
+    const session = await auth()
+    if (!session?.user || session.user.role !== "ADMIN") {
+      return { success: false, error: "No autorizado. Se requiere rol de administrador." }
+    }
+
+    const result = await purgeOrphanInboxItems()
+    revalidatePath("/admin/inbox")
+    revalidatePath("/admin")
+    return {
+      success: true,
+      deletedCount: result.deletedCount,
+      remainingCount: result.remainingCount,
+      totalScanned: result.totalScanned
+    }
+  } catch (error) {
+    console.error("Error purging orphan inbox items:", error)
+    return { success: false, error: "Error al purgar mensajes huérfanos" }
+  }
+}
+

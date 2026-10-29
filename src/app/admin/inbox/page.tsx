@@ -10,6 +10,7 @@ import { formatDateMX, formatDateTimeMX } from "@/lib/utils"
 import { InboxItemActions } from "@/components/admin/InboxItemActions"
 import Link from "next/link"
 import { LogInboundToggle } from "@/components/admin/LogInboundToggle"
+import { PurgeInboxButton } from "@/components/admin/PurgeInboxButton"
 
 const PRIORITY_COLORS: Record<string, string> = {
   high:   "bg-red-500/10 text-red-500 border-red-500/30",
@@ -76,6 +77,7 @@ export default async function InboxPage({
           </p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4">
+            <PurgeInboxButton />
             <LogInboundToggle initialValue={config?.logInboundActive ?? true} />
             <Badge variant="outline" className="px-4 py-2 border-primary/20 bg-primary/10 text-primary text-sm font-bold">
                 {pendingCount} Pendientes
