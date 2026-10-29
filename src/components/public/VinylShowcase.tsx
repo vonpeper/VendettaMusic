@@ -234,7 +234,7 @@ export function VinylShowcase() {
       {/* Hidden HTML5 Audio Element */}
       <audio
         ref={audioRef}
-        preload="metadata"
+        preload="none"
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onLoadedMetadata={() => {

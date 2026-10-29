@@ -84,8 +84,9 @@ export function PublicNavbar() {
         <div className="lg:hidden">
           <Sheet>
             <SheetTrigger 
+              aria-label="Abrir menú de navegación"
               render={
-                <Button variant="ghost" size="icon" className="text-[#F2F0EB] hover:bg-white/10 rounded-xl" />
+                <Button variant="ghost" size="icon" className="text-[#F2F0EB] hover:bg-white/10 rounded-xl" aria-label="Abrir menú de navegación" />
               }
             >
               <Menu className="h-6 w-6" />

@@ -145,7 +145,9 @@ export default async function HomePage() {
             src="/images/vendetta-web-assets/vendetta-hero-ultra-4k.png"
             alt="Banda de pop y rock en vivo Vendetta para eventos sociales y bodas"
             fill
-            priority
+            priority={true}
+            fetchPriority="high"
+            loading="eager"
             sizes="(max-width: 768px) 100vw, 1200px"
             className="opacity-95 object-contain object-right"
           />
@@ -184,7 +186,9 @@ export default async function HomePage() {
                 src="/images/vendetta-web-assets/vendetta-hero-mobile-ultra-4k.webp"
                 alt="Show de pop y rock en vivo Vendetta para eventos corporativos, cumpleaños y fiestas privadas"
                 fill
-                priority
+                priority={true}
+                fetchPriority="high"
+                loading="eager"
                 sizes="(max-width: 768px) 100vw, 1200px"
                 className="object-cover"
               />
