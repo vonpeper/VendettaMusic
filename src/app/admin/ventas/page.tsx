@@ -25,7 +25,6 @@ import { CancelBookingButton } from "@/components/admin/CancelBookingButton"
 import { EditEventoButton } from "@/components/admin/EventActions"
 import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
-import { autoCompleteConcludedEvents } from "@/lib/events-automation"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 
@@ -34,55 +33,7 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", {
 }).format(v)
 
 export default async function AdminVentasPage() {
-  // Reconciliar eventos pasados de forma transparente
-  await autoCompleteConcludedEvents()
-
-  // Reconciliar ContactInquiry huérfanos hacia BookingRequest para unificar toda la venta
-  try {
-    const orphanInquiries = await db.contactInquiry.findMany({
-      where: {
-        convertedBooking: null,
-        status: { notIn: ["discarded", "closed"] }
-      }
-    })
-
-    if (orphanInquiries.length > 0) {
-      const { generateUniqueShortId } = await import("@/lib/folios")
-      for (const inq of orphanInquiries) {
-        const shortId = await generateUniqueShortId(db)
-        const reqDate = inq.requestedDate || new Date()
-        await db.bookingRequest.create({
-          data: {
-            shortId,
-            sourceInquiryId: inq.id,
-            clientName: inq.name,
-            clientPhone: inq.phone || "Sin teléfono",
-            clientEmail: inq.email || `lead_${inq.id.slice(0, 8)}@vendetta.mx`,
-            packageName: inq.message?.includes(">100") ? "Producción Especial (>100 pax)" : "Cotización Web",
-            guestCount: 0,
-            venueType: inq.eventType || "evento",
-            requestedDate: reqDate,
-            startTime: "21:00",
-            endTime: "23:00",
-            city: "Por definir",
-            state: "Estado de México",
-            address: "Por definir",
-            baseAmount: 0,
-            depositAmount: 0,
-            paymentMethod: "transfer",
-            paymentStatus: "pending",
-            adminNote: inq.message || `Lead recibido desde formulario web (Inquiry ID: ${inq.id})`,
-            status: "requiere_llamada",
-            source: "web"
-          }
-        })
-      }
-    }
-  } catch (err) {
-    console.error("⚠️ Error reconciling orphan inquiries in admin/ventas:", err)
-  }
-
-  // Fetch de datos unificados
+  // Fetch de datos unificados (mutaciones pesadas y reconciliación delegadas al cron desatendido)
   const [bookings, quotes, expiredStats, config, clients, locations, packages, musicianProfiles] = await Promise.all([
     db.bookingRequest.findMany({ 
       orderBy: { createdAt: "desc" },
@@ -92,7 +43,6 @@ export default async function AdminVentasPage() {
         payments: true,
         event: {
           include: {
-            bookingRequest: true,
             location: true,
             musicians: true,
             contracts: true

@@ -602,6 +602,52 @@ async function handleCron(request: Request) {
       console.error("⚠️ Error in autoExpireInactiveLeads:", err)
     }
 
+    // 3.8. Reconciliar ContactInquiry huérfanos hacia BookingRequest de forma desatendida
+    try {
+      const orphanInquiries = await db.contactInquiry.findMany({
+        where: {
+          convertedBooking: null,
+          status: { notIn: ["discarded", "closed"] }
+        }
+      })
+
+      if (orphanInquiries.length > 0) {
+        const { generateUniqueShortId } = await import("@/lib/folios")
+        for (const inq of orphanInquiries) {
+          const shortId = await generateUniqueShortId(db)
+          const reqDate = inq.requestedDate || new Date()
+          await db.bookingRequest.create({
+            data: {
+              shortId,
+              sourceInquiryId: inq.id,
+              clientName: inq.name,
+              clientPhone: inq.phone || "Sin teléfono",
+              clientEmail: inq.email || `lead_${inq.id.slice(0, 8)}@vendetta.mx`,
+              packageName: inq.message?.includes(">100") ? "Producción Especial (>100 pax)" : "Cotización Web",
+              guestCount: 0,
+              venueType: inq.eventType || "evento",
+              requestedDate: reqDate,
+              startTime: "21:00",
+              endTime: "23:00",
+              city: "Por definir",
+              state: "Estado de México",
+              address: "Por definir",
+              baseAmount: 0,
+              depositAmount: 0,
+              paymentMethod: "transfer",
+              paymentStatus: "pending",
+              adminNote: inq.message || `Lead recibido desde formulario web (Inquiry ID: ${inq.id})`,
+              status: "requiere_llamada",
+              source: "web"
+            }
+          })
+        }
+      }
+    } catch (err: any) {
+      results.errors.push(`Error in reconcileOrphanInquiries: ${err.message}`)
+      console.error("⚠️ Error reconciling orphan inquiries in cron:", err)
+    }
+
     // 4. Retry Failed Notifications
     const failedNotifications = await db.notification.findMany({
       where: {

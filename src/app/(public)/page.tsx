@@ -75,9 +75,10 @@ export const metadata: Metadata = {
   },
 }
 
-// La home lee paquetes/medios/reseñas de la DB en cada request — no debe pre-renderizarse
-// estáticamente o queda con el snapshot del build (vacío si la DB se llenó después del deploy).
-export const dynamic = "force-dynamic"
+// ISR: Revalidar cada 120 segundos. El primer render se guarda en memoria y se sirve
+// en <25ms a todos los visitantes subsecuentes sin golpear SQLite. Los cambios desde
+// el panel admin invalidan la caché al instante mediante revalidatePath('/').
+export const revalidate = 120
 
 export default async function HomePage() {
   // Carga concurrente paralela (Zero Waterfall) de toda la información requerida
