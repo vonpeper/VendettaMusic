@@ -38,6 +38,8 @@ export function BookingStatusSwitcher({
   const router = useRouter()
 
   const configs: any = {
+    pendiente_aprobacion: { color: "text-amber-400 border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20", label: "Pendiente Aprobación" },
+    propuesta_enviada:    { color: "text-cyan-400 border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20", label: "Propuesta Enviada" },
     pendiente:  { color: "text-yellow-600 border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20", label: "Pendiente" },
     agendado:   { color: "text-green-600 border-green-500/40 bg-green-500/10 hover:bg-green-500/20", label: "Confirmado" },
     completado: { color: "text-blue-600 border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20", label: "Completado" },
@@ -123,7 +125,13 @@ export function BookingStatusSwitcher({
           <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-40 border-border/40 shadow-xl bg-background/95 backdrop-blur-xl">
+      <DropdownMenuContent align="start" className="w-48 border-border/40 shadow-xl bg-background/95 backdrop-blur-xl">
+        <DropdownMenuItem onClick={() => attemptStatusChange("pendiente_aprobacion")} className="text-xs font-bold cursor-pointer hover:bg-amber-500/10 hover:text-amber-500">
+          Pendiente Aprobación
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => attemptStatusChange("propuesta_enviada")} className="text-xs font-bold cursor-pointer hover:bg-cyan-500/10 hover:text-cyan-500">
+          Propuesta Enviada
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => attemptStatusChange("pendiente")} className="text-xs font-bold cursor-pointer hover:bg-yellow-500/10 hover:text-yellow-500">
           Marcar Pendiente
         </DropdownMenuItem>

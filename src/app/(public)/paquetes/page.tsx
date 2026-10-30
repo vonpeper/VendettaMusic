@@ -3,8 +3,8 @@ import { PaquetesSection } from "@/components/public/PaquetesSection"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Paquetes y Precios | Vendetta Live Music",
-  description: "Conoce nuestros paquetes musicales para tu boda o evento. Cotiza directamente por WhatsApp con disponibilidad inmediata.",
+  title: "Paquetes y Experiencias en Vivo | Vendetta Live Music",
+  description: "Conoce nuestros formatos y experiencias musicales para tu boda o evento exclusivo. Solicita tu propuesta técnica personalizada.",
   alternates: {
     canonical: "/paquetes",
   }

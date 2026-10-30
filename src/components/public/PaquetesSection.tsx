@@ -177,49 +177,52 @@ export function PaquetesSection({ dbPackages }: PaquetesSectionProps) {
                 <div className="mb-6">
                   <div className="text-3xl mb-2">{style.emoji}</div>
                   <h3 className={`font-sans font-black text-2xl mb-2 ${style.accentColor}`}>{pkg.name}</h3>
-                  <p className="text-sm text-[#F2F0EB]/80 leading-relaxed font-normal">{pkg.description}</p>
+                  <p className="text-sm text-[#F2F0EB]/80 leading-relaxed font-normal">
+                    {pkg.name.toLowerCase().includes("essent")
+                      ? "Formato acústico y compacto para eventos íntimos y bodas boutique."
+                      : pkg.name.toLowerCase().includes("experience")
+                        ? "Show completo con refuerzo de audio y diseño de iluminación para salones."
+                        : pkg.name.toLowerCase().includes("festival")
+                          ? "Producción de gran escala con escenario, templete y show concert-grade."
+                          : (pkg.description || "Experiencia musical en vivo para celebraciones inolvidables.")}
+                  </p>
                 </div>
 
-                {/* Precios y Aforo */}
-                {isEssential ? (
-                  <div className="mb-6 pb-6 border-b border-white/10">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Inversión</div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-3xl font-black text-white">Desde $8,500</span>
-                          <span className="text-xs text-primary font-bold">MXN</span>
-                        </div>
-                        <div className="text-xs text-primary font-semibold mt-1">2 horas de show</div>
+                {/* Formato y Alcance Técnico (Sin Precios Abiertos) */}
+                <div className="mb-6 pb-6 border-b border-white/10">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Formato</div>
+                      <div className="text-sm font-bold text-white">
+                        {pkg.name.toLowerCase().includes("essent")
+                          ? "Boutique & Íntimo"
+                          : pkg.name.toLowerCase().includes("experience")
+                            ? "Full Band & Salón"
+                            : "Concert-Grade"}
                       </div>
-                      <div className="text-right">
-                        <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Aforo</div>
-                        <span className="text-xs font-bold text-gray-300 bg-white/5 px-2.5 py-1 rounded-md border border-white/10 inline-block">
-                          Hasta 100 inv.
-                        </span>
-                      </div>
+                      <div className="text-xs text-primary font-semibold mt-0.5">Show en vivo de 2 horas</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Aforo Sugerido</div>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md border inline-block ${
+                        pkg.name.toLowerCase().includes("experience")
+                          ? "text-amber-300 bg-amber-500/10 border-amber-500/30"
+                          : pkg.name.toLowerCase().includes("festival")
+                            ? "text-cyan-300 bg-cyan-500/10 border-cyan-500/30"
+                            : "text-gray-300 bg-white/5 border-white/10"
+                      }`}>
+                        {pkg.name.toLowerCase().includes("essent")
+                          ? "Hasta 100 inv."
+                          : pkg.name.toLowerCase().includes("experience")
+                            ? "100 a 300 inv."
+                            : "+300 inv."}
+                      </span>
                     </div>
                   </div>
-                ) : (
-                  <div className="mb-6 pb-6 border-b border-white/10">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Inversión</div>
-                        <div className="text-lg font-black text-white/90">Cotización personalizada</div>
-                        <div className="text-xs text-muted-foreground mt-1">Atención directa a la medida</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Aforo</div>
-                        <span className="text-xs font-bold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/30 inline-block">
-                          {pkg.name.toLowerCase().includes("experience") ? "100 a 300 inv." : "Mínimo 100 inv."}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </div>
 
                 <div className="flex-1 mb-6">
-                  <div className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${style.accentColor}`}>¿Qué incluye?</div>
+                  <div className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${style.accentColor}`}>Alcance y Equipamiento</div>
                   <ul className="space-y-2.5">
                     {HARDCODED_FEATURES[pkg.name] ? (
                       HARDCODED_FEATURES[pkg.name].includes.map((item, j) => {

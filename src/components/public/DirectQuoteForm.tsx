@@ -1,15 +1,12 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
 import { submitPublicQuoteAction, saveQuoteDraftAction } from "@/actions/quote-direct"
-import {
-  calculateShowPackageBasePrice,
-  calculateShowBasePrice,
-} from "@/lib/pricing"
 import { toast } from "sonner"
 import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import {
@@ -22,17 +19,19 @@ import {
   Sparkles,
   CheckCircle2,
   Loader2,
-  ExternalLink,
-  Car,
-  Music,
-  RotateCcw,
+  Copy,
   Check,
   Building2,
-  PhoneCall,
-  Sliders,
-  ChevronDown,
-  ChevronUp
+  Music2,
+  ArrowRight
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 
 interface DirectQuoteFormProps {
   adminWhatsapp?: string | null
@@ -40,373 +39,158 @@ interface DirectQuoteFormProps {
   initialDate?: string | null
 }
 
-const LOCAL_STORAGE_KEY = "vendetta_quote_single_v1"
-
 const EVENT_TYPES = [
   { value: "Boda", label: "💒 Boda" },
   { value: "XV Años", label: "👸 XV Años" },
-  { value: "Cumpleaños / Aniversario", label: "🎂 Cumpleaños / Aniversario" },
-  { value: "Corporativo / Fin de Año", label: "🏢 Corporativo / Fin de Año" },
-  { value: "Bar / Restaurante / Festival", label: "🍸 Bar / Restaurante / Festival" },
+  { value: "Corporativo", label: "🏢 Corporativo" },
+  { value: "Cumpleaños / Aniversario", label: "🎂 Cumpleaños" },
   { value: "Graduación", label: "🎓 Graduación" },
   { value: "Fiesta Privada", label: "🎸 Fiesta Privada" },
-  { value: "Otro", label: "✨ Otro motivo..." },
+  { value: "Otro", label: "✨ Otro Motivo" },
+]
+
+const GUEST_RANGES = [
+  { label: "< 100 pax", desc: "Íntimo / Boutique", value: 80 },
+  { label: "100 - 300 pax", desc: "Salón / Gran Celebración", value: 200 },
+  { label: "+300 pax", desc: "Festival / Gran Escala", value: 400 },
+]
+
+const PACKAGE_FORMATS = [
+  {
+    id: "essential",
+    name: "Essential",
+    headline: "Boutique & Íntimo",
+    description: "Formato acústico y compacto para eventos íntimos y bodas boutique (hasta 100 pax).",
+    badge: "Hasta 100 pax"
+  },
+  {
+    id: "experience",
+    name: "Experience",
+    headline: "Full Band & Salón",
+    description: "Show completo con refuerzo de audio y diseño de iluminación para salones (100 a 300 pax).",
+    badge: "100 - 300 pax"
+  },
+  {
+    id: "festival",
+    name: "Festival",
+    headline: "Concert-Grade",
+    description: "Producción de gran escala con templete, pantalla e ingeniería de audio (+300 pax).",
+    badge: "+300 pax"
+  },
+  {
+    id: "definir",
+    name: "Por Definir",
+    headline: "Asesoría Técnica",
+    description: "No estoy seguro, deseo que el equipo me oriente según las características del recinto.",
+    badge: "Personalizado"
+  }
 ]
 
 const TIME_OPTIONS = [
-  "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM",
-  "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM",
-  "05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM",
-  "07:00 PM", "07:30 PM", "08:00 PM", "08:30 PM",
-  "09:00 PM", "09:30 PM", "10:00 PM", "10:30 PM",
-  "11:00 PM", "11:30 PM", "12:00 AM", "12:30 AM",
-  "01:00 AM", "01:30 AM", "02:00 AM"
+  "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM",
+  "06:00 PM", "07:00 PM", "08:00 PM", "09:00 PM", "10:00 PM", "11:00 PM",
+  "12:00 AM", "01:00 AM", "02:00 AM"
 ]
 
-const QUICK_GUEST_OPTIONS = [50, 80, 100, 150, 250, 350]
-
-const MXN = (v: number) =>
-  new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    maximumFractionDigits: 0,
-  }).format(v)
-
-function formatFechaEspanol(fechaStr: string): string {
-  if (!fechaStr) return ""
-  try {
-    const [year, month, day] = fechaStr.split("-").map(Number)
-    if (!year || !month || !day) return fechaStr
-    const fechaObj = new Date(year, month - 1, day, 12, 0, 0)
-    const fechaFormateada = new Intl.DateTimeFormat("es-MX", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(fechaObj)
-    return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1)
-  } catch {
-    return fechaStr
-  }
-}
-
-export function DirectQuoteForm({ adminWhatsapp, initialDate }: DirectQuoteFormProps) {
-  // --- Datos del Evento y Contacto ---
+export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: DirectQuoteFormProps) {
+  // Datos de Contacto
   const [nombre, setNombre] = useState("")
   const [telefono, setTelefono] = useState("")
+
+  // Datos del Evento
+  const [tipoEvento, setTipoEvento] = useState("Boda")
   const [fecha, setFecha] = useState(initialDate || "")
+  const [horaInicio, setHoraInicio] = useState("09:00 PM")
+  const [horaFin, setHoraFin] = useState("11:00 PM")
+  const [horasShow, setHorasShow] = useState<number>(2)
+
+  // Ubicación y Aforo
   const [estado, setEstado] = useState("Estado de México")
   const [municipio, setMunicipio] = useState("Metepec")
   const [municipioManual, setMunicipioManual] = useState("")
-  const [tipoEvento, setTipoEvento] = useState("Boda")
-  const [tipoEventoOtro, setTipoEventoOtro] = useState("")
-  const [invitados, setInvitados] = useState("80")
-
-  // --- Parámetros de Show (para aforo <= 100) ---
-  const [horasShow, setHorasShow] = useState<2 | 3 | 4>(2)
-  const [horaInicio, setHoraInicio] = useState("08:00 PM")
-  const [horaFin, setHoraFin] = useState("10:00 PM")
-
-  // --- Campos Adicionales (Venue y Notas opcionales) ---
-  const [showOptionalFields, setShowOptionalFields] = useState(false)
   const [lugarEvento, setLugarEvento] = useState("")
-  const [mapsLink, setMapsLink] = useState("")
+  const [invitados, setInvitados] = useState<number>(200)
+
+  // Formato de interés
+  const resolveInitialPkg = () => {
+    if (!initialPackage) return "experience"
+    const p = initialPackage.toLowerCase()
+    if (p.includes("essential")) return "essential"
+    if (p.includes("festival")) return "festival"
+    if (p.includes("experience")) return "experience"
+    return "experience"
+  }
+  const [paquete, setPaquete] = useState<string>(resolveInitialPkg())
   const [notas, setNotas] = useState("")
 
-  // --- Identificador de Lead en BD ---
-  const [inquiryId, setInquiryId] = useState<string | null>(null)
-  const [hasRestoredDraft, setHasRestoredDraft] = useState(false)
-
-  // --- Viáticos ---
-  const [viaticos, setViaticos] = useState<{
-    amount: number
-    tollCost: number
-    fuelCost: number
-    isOutsideZone: boolean
-    distanceKm: number
-    requiresManualQuote: boolean
-    description?: string
-  } | null>(null)
-  const [loadingViaticos, setLoadingViaticos] = useState(false)
-
-  // --- Estado de Envío ---
+  // Estados de proceso
+  const [inquiryId, setInquiryId] = useState<string | undefined>(undefined)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submittedResult, setSubmittedResult] = useState<{
-    mode: "auto_quote" | "lead_captured"
-    shortId?: string
-    proposalUrl?: string
-    waUrl: string
+  const [submittedData, setSubmittedData] = useState<{
+    shortId: string
+    nombre: string
+    motivo: string
+    fecha: string
+    municipio: string
   } | null>(null)
+  const [copiedFolio, setCopiedFolio] = useState(false)
 
-  // Aforo numérico en tiempo real
-  const numInvitados = parseInt(invitados, 10) || 80
-  const isLargeProduction = numInvitados > 100 // UMBRAL ESTRICTO: 100 PERSONAS
+  // Lista de municipios según el estado seleccionado
+  const municipiosDisponibles = useMemo(() => {
+    return ESTADOS_MUNICIPIOS[estado] || ["Toluca", "Metepec", "Otro municipio / cotización manual"]
+  }, [estado])
 
-  // 1. Restauración desde LocalStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY)
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        if (parsed.nombre) setNombre(parsed.nombre)
-        if (parsed.telefono) setTelefono(parsed.telefono)
-        if (parsed.tipoEvento) setTipoEvento(parsed.tipoEvento)
-        if (parsed.tipoEventoOtro) setTipoEventoOtro(parsed.tipoEventoOtro)
-        if (!initialDate && parsed.fecha) setFecha(parsed.fecha)
-        if (parsed.estado) setEstado(parsed.estado)
-        if (parsed.municipio) setMunicipio(parsed.municipio)
-        if (parsed.municipioManual) setMunicipioManual(parsed.municipioManual)
-        if (parsed.invitados) setInvitados(parsed.invitados)
-        if (parsed.horasShow && [2, 3, 4].includes(parsed.horasShow)) setHorasShow(parsed.horasShow)
-        if (parsed.horaInicio) setHoraInicio(parsed.horaInicio)
-        if (parsed.horaFin) setHoraFin(parsed.horaFin)
-        if (parsed.lugarEvento) setLugarEvento(parsed.lugarEvento)
-        if (parsed.mapsLink) setMapsLink(parsed.mapsLink)
-        if (parsed.notas) setNotas(parsed.notas)
-        if (parsed.inquiryId) setInquiryId(parsed.inquiryId)
-        setHasRestoredDraft(true)
-      }
-    } catch (e) {
-      console.warn("No se pudo restaurar el borrador local:", e)
-    }
-  }, [initialDate])
+  // Fecha mínima: mañana
+  const minDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    return d.toISOString().split("T")[0]
+  }, [])
 
-  // Sincronizar initialDate si se pasa por prop
-  useEffect(() => {
-    if (initialDate) setFecha(initialDate)
-  }, [initialDate])
-
-  // 2. Persistir en LocalStorage
-  const persistState = useCallback(
-    (newInquiryId?: string) => {
-      try {
-        const payload = {
-          nombre,
-          telefono,
-          tipoEvento,
-          tipoEventoOtro,
-          fecha,
-          estado,
-          municipio,
-          municipioManual,
-          invitados,
-          horasShow,
-          horaInicio,
-          horaFin,
-          lugarEvento,
-          mapsLink,
-          notas,
-          inquiryId: newInquiryId ?? inquiryId,
-        }
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload))
-      } catch (e) {
-        console.warn("Error guardando en localStorage:", e)
-      }
-    },
-    [
-      nombre,
-      telefono,
-      tipoEvento,
-      tipoEventoOtro,
-      fecha,
-      estado,
-      municipio,
-      municipioManual,
-      invitados,
-      horasShow,
-      horaInicio,
-      horaFin,
-      lugarEvento,
-      mapsLink,
-      notas,
-      inquiryId,
-    ]
-  )
+  // Auto-guardado de borrador cuando ingresa nombre y 10 dígitos de WhatsApp
+  const cleanPhone = telefono.replace(/\D/g, "")
+  const isPhoneValid = cleanPhone.length === 10
+  const draftTimer = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    persistState()
-  }, [persistState, nombre, telefono, fecha, invitados, horasShow, horaInicio, horaFin])
-
-  // 3. Guardado en segundo plano (Debounce en BD) para no perder ningún prospecto
-  const draftTimerRef = useRef<NodeJS.Timeout | null>(null)
-  useEffect(() => {
-    const cleanPhoneStr = telefono.replace(/\D/g, "")
-    const cleanName = nombre.trim()
-    const muniFinal = municipio === "Otro municipio / cotización manual" || municipio === "Otro municipio"
-      ? municipioManual.trim()
-      : municipio.trim()
-
-    // Solo guardar automáticamente si hay datos mínimos de contacto y fecha
-    if (cleanName.length >= 3 && cleanPhoneStr.length >= 10 && fecha && muniFinal) {
-      if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
-
-      draftTimerRef.current = setTimeout(async () => {
+    if (nombre.trim().length >= 3 && isPhoneValid) {
+      if (draftTimer.current) clearTimeout(draftTimer.current)
+      draftTimer.current = setTimeout(async () => {
         try {
           const res = await saveQuoteDraftAction({
-            nombre: cleanName,
-            telefono: cleanPhoneStr,
-            fecha,
-            municipio: muniFinal,
+            nombre: nombre.trim(),
+            telefono: cleanPhone,
+            fecha: fecha || undefined,
+            municipio: municipio === "Otro municipio / cotización manual" ? municipioManual : municipio,
             estado,
-            invitados: numInvitados,
-            tipoEvento: tipoEvento === "Otro" ? tipoEventoOtro.trim() || "Otro" : tipoEvento,
-            inquiryId: inquiryId || undefined,
+            invitados,
+            tipoEvento,
+            inquiryId
           })
-          if (res.success && res.inquiryId && res.inquiryId !== inquiryId) {
+          if (res.success && res.inquiryId) {
             setInquiryId(res.inquiryId)
-            persistState(res.inquiryId)
           }
-        } catch (err) {
-          console.warn("Error al registrar borrador silencioso:", err)
+        } catch {
+          // Fallo silencioso en borrador
         }
       }, 1200)
     }
-
     return () => {
-      if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
+      if (draftTimer.current) clearTimeout(draftTimer.current)
     }
-  }, [nombre, telefono, fecha, municipio, municipioManual, estado, numInvitados, tipoEvento, tipoEventoOtro, inquiryId, persistState])
+  }, [nombre, cleanPhone, isPhoneValid, fecha, municipio, municipioManual, estado, invitados, tipoEvento, inquiryId])
 
-  // Reiniciar formulario
-  const handleReset = () => {
-    try {
-      localStorage.removeItem(LOCAL_STORAGE_KEY)
-    } catch {
-      // ignore
-    }
-    setNombre("")
-    setTelefono("")
-    setFecha(initialDate || "")
-    setEstado("Estado de México")
-    setMunicipio("Metepec")
-    setMunicipioManual("")
-    setTipoEvento("Boda")
-    setTipoEventoOtro("")
-    setInvitados("80")
-    setHorasShow(2)
-    setHoraInicio("08:00 PM")
-    setHoraFin("10:00 PM")
-    setLugarEvento("")
-    setMapsLink("")
-    setNotas("")
-    setInquiryId(null)
-    setSubmittedResult(null)
-    setHasRestoredDraft(false)
-    toast.info("Cotizador reiniciado. Puedes comenzar de nuevo.")
-  }
-
-  // Municipios según estado
-  const municipiosDisponibles = ESTADOS_MUNICIPIOS[estado] || ["Otro municipio / cotización manual"]
-  const isMunicipioManual =
-    municipio === "Otro municipio / cotización manual" || municipio === "Otro municipio"
-
-  const handleEstadoChange = (nuevoEstado: string) => {
-    setEstado(nuevoEstado)
-    const primerMuni = ESTADOS_MUNICIPIOS[nuevoEstado]?.[0] || "Otro municipio / cotización manual"
-    setMunicipio(primerMuni)
-    setMunicipioManual("")
-  }
-
-  // Sincronizar hora fin cuando cambia horasShow o horaInicio
-  const handleHorasShowChange = (newHours: 2 | 3 | 4) => {
-    setHorasShow(newHours)
-    const startIdx = TIME_OPTIONS.indexOf(horaInicio)
-    if (startIdx !== -1) {
-      const stepIntervals = Math.round(newHours * 2)
-      const endIdx = (startIdx + stepIntervals) % TIME_OPTIONS.length
-      setHoraFin(TIME_OPTIONS[endIdx])
-    }
-  }
-
-  const handleHoraInicioChange = (nuevoInicio: string) => {
-    setHoraInicio(nuevoInicio)
-    const startIdx = TIME_OPTIONS.indexOf(nuevoInicio)
-    if (startIdx !== -1) {
-      const stepIntervals = Math.round(horasShow * 2)
-      const endIdx = (startIdx + stepIntervals) % TIME_OPTIONS.length
-      setHoraFin(TIME_OPTIONS[endIdx])
-    }
-  }
-
-  // Cálculo de viáticos automático según municipio
-  useEffect(() => {
-    const muniEfectivo = isMunicipioManual ? municipioManual.trim() : municipio.trim()
-    if (!muniEfectivo || muniEfectivo.length < 2) {
-      setViaticos(null)
-      return
-    }
-
-    let isMounted = true
-    const fetchViaticos = async () => {
-      setLoadingViaticos(true)
-      try {
-        const destination = `${muniEfectivo}, ${estado}`
-        const resp = await fetch(`/api/viaticos?destination=${encodeURIComponent(destination)}`)
-        const data = await resp.json()
-
-        if (!isMounted) return
-
-        if (resp.ok && !data.error) {
-          setViaticos({
-            amount: data.viaticosAmount || 0,
-            tollCost: data.tollCost || 0,
-            fuelCost: data.fuelCost || 0,
-            isOutsideZone: data.isOutsideZone ?? data.viaticosAmount > 0,
-            distanceKm: data.distanceKm || 0,
-            requiresManualQuote: !!data.requiresManualQuote,
-            description: data.description,
-          })
-        } else {
-          setViaticos(null)
-        }
-      } catch (err) {
-        if (isMounted) {
-          console.warn("Error calculando viáticos:", err)
-          setViaticos(null)
-        }
-      } finally {
-        if (isMounted) setLoadingViaticos(false)
-      }
-    }
-
-    const timer = setTimeout(() => {
-      fetchViaticos()
-    }, 400)
-
-    return () => {
-      isMounted = false
-      clearTimeout(timer)
-    }
-  }, [municipio, municipioManual, estado, isMunicipioManual])
-
-  // Cálculos financieros (Solo aplicables cuando aforo <= 100)
-  const baseEssentialPrice = useMemo(() => {
-    return calculateShowPackageBasePrice("Essential", horasShow)
-  }, [horasShow])
-
-  const isOutsideZone = viaticos?.isOutsideZone ?? false
-  const showBasePrice = useMemo(() => {
-    return calculateShowBasePrice(baseEssentialPrice, isOutsideZone)
-  }, [baseEssentialPrice, isOutsideZone])
-
-  const viaticosAmount = viaticos?.amount || 0
-  const totalEstimado = showBasePrice + viaticosAmount
-
-  // --- ENVÍO DEL FORMULARIO ---
+  // Manejo del Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const cleanName = nombre.trim()
-    const cleanPhoneStr = telefono.replace(/\D/g, "")
-    const muniFinal = isMunicipioManual ? municipioManual.trim() : municipio.trim()
-
-    if (!cleanName) {
+    if (!nombre.trim()) {
       toast.error("Por favor ingresa tu nombre completo.")
       return
     }
 
-    if (cleanPhoneStr.length < 10) {
-      toast.error("El número de WhatsApp debe tener al menos 10 dígitos (ej. 722 123 4567).")
+    if (!isPhoneValid) {
+      toast.error("Por favor ingresa un número de WhatsApp válido de 10 dígitos.")
       return
     }
 
@@ -415,826 +199,496 @@ export function DirectQuoteForm({ adminWhatsapp, initialDate }: DirectQuoteFormP
       return
     }
 
-    if (!muniFinal) {
-      toast.error("Por favor especifica el municipio de tu evento.")
+    const finalMunicipio = municipio === "Otro municipio / cotización manual" 
+      ? municipioManual.trim() 
+      : municipio
+
+    if (!finalMunicipio) {
+      toast.error("Por favor especifica el municipio o ciudad de tu evento.")
       return
     }
 
     setIsSubmitting(true)
 
-    const cleanAdminPhone = (
-      adminWhatsapp ||
-      process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
-      "5217222880045"
-    ).replace(/\D/g, "")
-
-    const tipoEventoFinal =
-      tipoEvento === "Otro"
-        ? tipoEventoOtro.trim()
-          ? `Otro (${tipoEventoOtro.trim()})`
-          : "Otro"
-        : tipoEvento
-
-    let quoteResult: any = null
     try {
-      quoteResult = await submitPublicQuoteAction({
-        nombre: cleanName,
-        telefono: cleanPhoneStr,
-        tipoEvento: tipoEventoFinal,
+      const selectedPkgObj = PACKAGE_FORMATS.find(p => p.id === paquete)
+      const selectedPkgLabel = selectedPkgObj?.name || "Experience"
+
+      const res = await submitPublicQuoteAction({
+        nombre: nombre.trim(),
+        telefono: cleanPhone,
+        tipoEvento,
         fecha,
         horaInicio,
         horaFin,
-        horasShow: isLargeProduction ? 2 : horasShow,
-        invitados: numInvitados,
-        produccionAdicional: [],
+        horasShow,
+        invitados,
         estado,
-        municipio: muniFinal,
+        municipio: finalMunicipio,
         lugarEvento: lugarEvento.trim() || undefined,
-        mapsLink: mapsLink.trim() || undefined,
-        viaticos: isLargeProduction ? null : viaticos,
-        paquete: isLargeProduction ? "Producción Especial" : "Essential",
+        paquete: selectedPkgLabel,
         notas: notas.trim() || undefined,
-        inquiryId: inquiryId || undefined,
+        inquiryId
       })
-    } catch (saveErr) {
-      console.warn("Quote submit error:", saveErr)
-    }
 
-    // Armar mensaje WhatsApp para el cliente al hacer clic
-    const fechaFormateada = formatFechaEspanol(fecha) || fecha
-    const horarioCompleto = `${horaInicio} a ${horaFin} (${horasShow} Horas de Show en Vivo)`
-    const ubicacionCompleta = `${muniFinal}, ${estado}${lugarEvento.trim() ? ` (${lugarEvento.trim()})` : ""}`
-
-    let waMessage = ""
-    let proposalFullUrl: string | undefined = undefined
-
-    if (isLargeProduction) {
-      // CASO 2: > 100 PAX (Agendar llamada técnica de producción)
-      const lineas = [
-        "¡Hola Vendetta Live Music! 👋🎸",
-        "Completé la solicitud para mi evento en la web y me gustaría agendar una llamada técnica de producción:",
-        "",
-        "📋 *DETALLES DEL EVENTO*",
-        `• *Cliente:* ${cleanName}`,
-        `• *WhatsApp:* ${cleanPhoneStr}`,
-        `• *Tipo de Evento:* ${tipoEventoFinal}`,
-        `• *Fecha:* ${fechaFormateada}`,
-        `• *Aforo estimado:* ${numInvitados} personas (>100 pax)`,
-        `• *Ubicación:* ${ubicacionCompleta}`,
-      ]
-      if (mapsLink.trim()) lineas.push(`• *Google Maps:* ${mapsLink.trim()}`)
-      if (notas.trim()) lineas.push(`• *Notas:* ${notas.trim()}`)
-      lineas.push(
-        "",
-        "📌 *PRODUCCIÓN ESPECIAL*",
-        "• Al ser más de 100 invitados, deseo agendar la llamada técnica para revisar requerimientos de escenario, cobertura de audio e iluminación.",
-        "",
-        "¿Podemos agendar una llamada breve para revisar disponibilidad? ¡Gracias!"
-      )
-      waMessage = lineas.join("\n")
-    } else {
-      // CASO 1: <= 100 PAX (Cotización Directa Essential)
-      const isAutoQuote = quoteResult?.mode === "auto_quote" && quoteResult?.shortId
-      if (isAutoQuote) {
-        proposalFullUrl = `https://vendetta.mx/propuesta/${quoteResult.shortId}`
+      if (res.success && res.shortId) {
+        setSubmittedData({
+          shortId: res.shortId,
+          nombre: res.clientName || nombre.trim(),
+          motivo: res.motivo || tipoEvento,
+          fecha: res.fecha || fecha,
+          municipio: res.municipio || finalMunicipio
+        })
+        toast.success(`¡Solicitud enviada con éxito! Folio: ${res.shortId}`)
+      } else {
+        toast.error(res.error || "No se pudo registrar la solicitud. Intenta nuevamente.")
       }
-
-      let textoViaticos = "Zona local (sin costo adicional de viáticos)"
-      if (viaticos && viaticos.amount > 0) {
-        textoViaticos = `$${viaticos.amount.toLocaleString("es-MX")} MXN (casetas y combustible)`
-      }
-
-      const lineas = [
-        "¡Hola Vendetta Live Music! 👋🎸",
-        "Acabo de generar la cotización de mi evento con el Paquete Essential:",
-        "",
-        "📋 *RESUMEN DE COTIZACIÓN (PAQUETE ESSENTIAL)*",
-        ...(quoteResult?.shortId ? [`• *Folio:* ${quoteResult.shortId}`] : []),
-        `• *Cliente:* ${cleanName}`,
-        `• *WhatsApp:* ${cleanPhoneStr}`,
-        `• *Tipo de Evento:* ${tipoEventoFinal}`,
-        `• *Fecha:* ${fechaFormateada}`,
-        `• *Horario:* ${horarioCompleto}`,
-        `• *Aforo:* ${numInvitados} personas`,
-        `• *Ubicación:* ${ubicacionCompleta}`,
-        `• *Show Banda en Vivo:* ${MXN(showBasePrice)} MXN`,
-        `• *Logística y Viáticos:* ${textoViaticos}`,
-        `• *Total Estimado:* ${MXN(totalEstimado)} MXN`,
-      ]
-      if (mapsLink.trim()) lineas.push(`• *Google Maps:* ${mapsLink.trim()}`)
-      if (notas.trim()) lineas.push(`• *Notas:* ${notas.trim()}`)
-      if (proposalFullUrl) {
-        lineas.push(
-          "",
-          "🔗 *Propuesta interactiva en línea:*",
-          proposalFullUrl
-        )
-      }
-      lineas.push(
-        "",
-        "¿Tienen disponible esta fecha para apartarla? ¡Quedo atento!"
-      )
-      waMessage = lineas.join("\n")
+    } catch (err: any) {
+      console.error("Error submitting direct quote:", err)
+      toast.error("Ocurrió un error inesperado al enviar la solicitud.")
+    } finally {
+      setIsSubmitting(false)
     }
-
-    const waUrl = `https://api.whatsapp.com/send?phone=${cleanAdminPhone}&text=${encodeURIComponent(waMessage)}`
-
-    setSubmittedResult({
-      mode: isLargeProduction ? "lead_captured" : "auto_quote",
-      shortId: quoteResult?.shortId,
-      proposalUrl: proposalFullUrl,
-      waUrl,
-    })
-
-    setIsSubmitting(false)
-
-    // Limpiar localStorage tras envío para evitar colisiones
-    try {
-      localStorage.removeItem(LOCAL_STORAGE_KEY)
-    } catch {
-      // ignore
-    }
-
-    toast.success(
-      isLargeProduction
-        ? "¡Solicitud registrada! Abriendo WhatsApp para agendar tu llamada."
-        : "¡Cotización lista! Enviando el desglose a tu WhatsApp."
-    )
   }
 
-  // --- VISTA DE CONFIRMACIÓN POST-ENVÍO ---
-  if (submittedResult) {
-    const isLeadCaptured = submittedResult.mode === "lead_captured"
-
-    return (
-      <div className="bg-zinc-950/90 border border-white/10 rounded-3xl p-8 sm:p-12 text-center max-w-xl mx-auto shadow-2xl backdrop-blur-xl space-y-6 animate-in fade-in-0 duration-300">
-        <div
-          className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-lg ${
-            isLeadCaptured
-              ? "bg-purple-500/20 border border-purple-500/40 text-purple-400 shadow-purple-500/20"
-              : "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 shadow-emerald-500/20"
-          }`}
-        >
-          {isLeadCaptured ? <PhoneCall className="w-8 h-8" /> : <CheckCircle2 className="w-8 h-8" />}
-        </div>
-
-        <div className="space-y-3">
-          <h2 className="text-2xl sm:text-3xl font-heading font-black text-white uppercase tracking-tight">
-            {isLeadCaptured ? "¡Solicitud de Producción Recibida!" : "¡Tu Cotización Está Lista!"}
-          </h2>
-
-          <div className="p-3.5 rounded-2xl bg-[#25D366]/10 border border-[#25D366]/30 text-emerald-300 text-xs sm:text-sm font-medium flex items-center justify-center gap-2 max-w-md mx-auto">
-            <WhatsAppIcon className="w-4 h-4 fill-[#25D366] shrink-0" />
-            <span>
-              {isLeadCaptured
-                ? "Un productor de Vendetta revisará la disponibilidad técnica contigo."
-                : `Enviamos el desglose formal a tu WhatsApp (${telefono}).`}
-            </span>
-          </div>
-
-          <p className="text-sm text-zinc-300 max-w-md mx-auto leading-relaxed">
-            {isLeadCaptured ? (
-              <>
-                Por el aforo de <strong>{numInvitados} invitados</strong>, preparamos un diseño
-                técnico a la medida del recinto. Haz clic en el botón inferior para abrir WhatsApp y
-                agendar tu llamada de producción técnica.
-              </>
-            ) : (
-              <>
-                Generamos tu propuesta con el <strong>Paquete Essential</strong>
-                {submittedResult.shortId ? ` (Folio: ${submittedResult.shortId})` : ""}. Estaremos
-                asistiéndote directamente por WhatsApp para validar la fecha y resolver cualquier duda.
-              </>
-            )}
-          </p>
-        </div>
-
-        <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center items-center">
-          {!isLeadCaptured && submittedResult.proposalUrl && (
-            <a
-              href={submittedResult.proposalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto"
-            >
-              <Button
-                size="lg"
-                className="w-full sm:w-auto h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base rounded-2xl shadow-xl shadow-primary/25 gap-2 cursor-pointer transition-all hover:scale-[1.02]"
-              >
-                <Sparkles className="w-5 h-5" />
-                <span>Ver Mi Propuesta en Línea</span>
-                <ExternalLink className="w-4 h-4 ml-1 opacity-70" />
-              </Button>
-            </a>
-          )}
-
-          <a
-            href={submittedResult.waUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full sm:w-auto"
-          >
-            <Button
-              size="lg"
-              className="w-full sm:w-auto h-14 px-8 bg-[#25D366] hover:bg-[#20ba59] text-white font-black text-base rounded-2xl shadow-xl shadow-[#25D366]/30 gap-2 cursor-pointer transition-all hover:scale-[1.02]"
-            >
-              <WhatsAppIcon className="w-5 h-5 fill-white" />
-              <span>{isLeadCaptured ? "Agendar Llamada en WhatsApp" : "Abrir WhatsApp"}</span>
-              <ExternalLink className="w-4 h-4 ml-1 opacity-70" />
-            </Button>
-          </a>
-
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleReset}
-            className="w-full sm:w-auto h-14 px-6 rounded-2xl border-white/15 hover:bg-white/5 text-zinc-300 font-bold text-sm cursor-pointer"
-          >
-            Nueva cotización
-          </Button>
-        </div>
-      </div>
-    )
+  const handleCopyFolio = () => {
+    if (submittedData?.shortId) {
+      navigator.clipboard.writeText(submittedData.shortId)
+      setCopiedFolio(true)
+      toast.success("Folio copiado al portapapeles")
+      setTimeout(() => setCopiedFolio(false), 2500)
+    }
   }
 
-  // --- FORMULARIO ÚNICO Y DIRECTO ---
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-zinc-950/85 border border-white/10 rounded-3xl p-5 sm:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden space-y-7"
-    >
-      {/* Glows de ambientación */}
-      <div className="absolute -top-32 -right-32 w-72 h-72 bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-[#25D366]/15 rounded-full blur-[100px] pointer-events-none" />
+    <>
+      <div className="relative bg-zinc-950/80 border border-white/10 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl overflow-hidden">
+        {/* Glow de acento */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 blur-[100px] pointer-events-none rounded-full" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/10 blur-[100px] pointer-events-none rounded-full" />
 
-      {/* Notificación sutil de borrador restaurado */}
-      {hasRestoredDraft && (
-        <div className="p-3 rounded-xl bg-zinc-900/90 border border-white/10 flex items-center justify-between text-xs text-zinc-300">
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            Restauramos tu cotización en curso.
-          </span>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="text-zinc-400 hover:text-white underline text-xs font-medium cursor-pointer"
-          >
-            Empezar de cero
-          </button>
-        </div>
-      )}
-
-      {/* Encabezado */}
-      <div className="text-center sm:text-left space-y-1">
-        <h2 className="text-2xl sm:text-3xl font-heading font-black text-white uppercase tracking-tight">
-          Cotiza tu Evento al Instante
-        </h2>
-        <p className="text-xs sm:text-sm text-zinc-400">
-          Completa los datos de tu festejo para verificar disponibilidad y obtener tu propuesta formal.
-        </p>
-      </div>
-
-      {/* BLOQUE 1: DATOS PRINCIPALES DEL EVENTO (GRID 2 COLUMNAS) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Nombre Completo */}
-        <div className="space-y-1.5">
-          <Label htmlFor="nombre" className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-            <User className="w-3.5 h-3.5 text-primary" />
-            Tu Nombre Completo *
-          </Label>
-          <Input
-            id="nombre"
-            placeholder="Ej. Roberto Sánchez"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            required
-            className="h-12 bg-zinc-900/90 border-white/15 text-white placeholder:text-zinc-500 rounded-xl focus:border-primary text-sm font-medium"
-          />
-        </div>
-
-        {/* WhatsApp */}
-        <div className="space-y-1.5">
-          <Label htmlFor="telefono" className="text-xs font-bold text-zinc-300 flex items-center justify-between">
-            <span className="flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5 text-[#25D366]" />
-              Número de WhatsApp *
-            </span>
-            {telefono.replace(/\D/g, "").length >= 10 && (
-              <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-semibold">
-                <CheckCircle2 className="w-3 h-3" /> 10 dígitos listos
-              </span>
-            )}
-          </Label>
-          <Input
-            id="telefono"
-            type="tel"
-            placeholder="Ej. 722 123 4567"
-            value={telefono}
-            onChange={(e) => setTelefono(e.target.value)}
-            required
-            className="h-12 bg-zinc-900/90 border-white/15 text-white placeholder:text-zinc-500 rounded-xl focus:border-[#25D366] text-sm font-medium"
-          />
-        </div>
-
-        {/* Fecha tentativa */}
-        <div className="space-y-1.5">
-          <Label htmlFor="fecha" className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-primary" />
-            Fecha Tentativa *
-          </Label>
-          <Input
-            id="fecha"
-            type="date"
-            min={new Date().toISOString().split("T")[0]}
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-            required
-            className="h-12 bg-zinc-900/90 border-white/15 text-white rounded-xl focus:border-primary text-sm font-medium [color-scheme:dark]"
-          />
-          {fecha && (
-            <p className="text-[11px] text-primary/90 font-medium">
-              📅 {formatFechaEspanol(fecha)}
-            </p>
-          )}
-        </div>
-
-        {/* Tipo de Evento */}
-        <div className="space-y-1.5">
-          <Label htmlFor="tipoEvento" className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            Tipo de Evento *
-          </Label>
-          <select
-            id="tipoEvento"
-            value={tipoEvento}
-            onChange={(e) => setTipoEvento(e.target.value)}
-            className="w-full h-12 bg-zinc-900/90 border border-white/15 text-white rounded-xl px-3 text-sm font-medium focus:border-primary focus:outline-none cursor-pointer"
-          >
-            {EVENT_TYPES.map((t) => (
-              <option key={t.value} value={t.value} className="bg-zinc-900 text-white">
-                {t.label}
-              </option>
-            ))}
-          </select>
-          {tipoEvento === "Otro" && (
-            <Input
-              placeholder="Especifica el motivo de tu festejo..."
-              value={tipoEventoOtro}
-              onChange={(e) => setTipoEventoOtro(e.target.value)}
-              className="h-10 mt-1.5 bg-zinc-900/90 border-white/15 text-white placeholder:text-zinc-500 rounded-xl text-xs"
-            />
-          )}
-        </div>
-
-        {/* Estado */}
-        <div className="space-y-1.5">
-          <Label htmlFor="estado" className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-primary" />
-            Estado *
-          </Label>
-          <select
-            id="estado"
-            value={estado}
-            onChange={(e) => handleEstadoChange(e.target.value)}
-            className="w-full h-12 bg-zinc-900/90 border border-white/15 text-white rounded-xl px-3 text-sm font-medium focus:border-primary focus:outline-none cursor-pointer"
-          >
-            {Object.keys(ESTADOS_MUNICIPIOS).map((edo) => (
-              <option key={edo} value={edo} className="bg-zinc-900 text-white">
-                {edo}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Municipio */}
-        <div className="space-y-1.5">
-          <Label htmlFor="municipio" className="text-xs font-bold text-zinc-300 flex items-center justify-between">
-            <span className="flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-primary" />
-              Municipio o Ciudad *
-            </span>
-            {loadingViaticos && (
-              <span className="text-[11px] text-zinc-400 flex items-center gap-1">
-                <Loader2 className="w-3 h-3 animate-spin" /> Verificando zona...
-              </span>
-            )}
-          </Label>
-          <select
-            id="municipio"
-            value={municipio}
-            onChange={(e) => setMunicipio(e.target.value)}
-            className="w-full h-12 bg-zinc-900/90 border border-white/15 text-white rounded-xl px-3 text-sm font-medium focus:border-primary focus:outline-none cursor-pointer"
-          >
-            {municipiosDisponibles.map((muni) => (
-              <option key={muni} value={muni} className="bg-zinc-900 text-white">
-                {muni}
-              </option>
-            ))}
-          </select>
-          {isMunicipioManual && (
-            <Input
-              placeholder="Escribe el nombre de tu municipio o ciudad..."
-              value={municipioManual}
-              onChange={(e) => setMunicipioManual(e.target.value)}
-              className="h-10 mt-1.5 bg-zinc-900/90 border-white/15 text-white placeholder:text-zinc-500 rounded-xl text-xs"
-            />
-          )}
-        </div>
-      </div>
-
-      {/* BLOQUE 2: SELECTOR DE AFORO (INVITADOS) — UMBRAL CRÍTICO A LAS 100 PERSONAS */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-3.5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <Label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-primary" />
-              Número aproximado de invitados *
-            </Label>
-            <p className="text-[11px] text-zinc-400">
-              Desliza o presiona un botón rápido para configurar el aforo de tu festejo.
-            </p>
-          </div>
-          <div
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black self-start sm:self-auto ${
-              isLargeProduction
-                ? "bg-purple-500/15 border border-purple-500/30 text-purple-300"
-                : "bg-primary/15 border border-primary/30 text-primary"
-            }`}
-          >
-            <span>{numInvitados} personas</span>
-            {isLargeProduction ? (
-              <span className="text-[10px] font-semibold text-purple-400">(Producción Especial)</span>
-            ) : (
-              <span className="text-[10px] font-semibold text-emerald-400">(Paquete Essential)</span>
-            )}
-          </div>
-        </div>
-
-        {/* Botones de Selección Rápida */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-          {QUICK_GUEST_OPTIONS.map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => setInvitados(opt.toString())}
-              className={`py-2 px-1 rounded-xl border text-center transition-all cursor-pointer ${
-                numInvitados === opt
-                  ? opt <= 100
-                    ? "bg-primary border-primary text-black font-black shadow-md shadow-primary/20"
-                    : "bg-purple-600 border-purple-500 text-white font-black shadow-md shadow-purple-600/20"
-                  : "bg-zinc-900/80 border-white/10 text-zinc-300 hover:text-white hover:border-white/20 text-xs font-bold"
-              }`}
-            >
-              {opt} pax
-            </button>
-          ))}
-        </div>
-
-        {/* Slider continuo */}
-        <div className="pt-1">
-          <input
-            type="range"
-            min="20"
-            max="500"
-            step="5"
-            value={numInvitados}
-            onChange={(e) => setInvitados(e.target.value)}
-            className="w-full accent-primary h-2 bg-zinc-800 rounded-lg cursor-pointer"
-          />
-          <div className="flex justify-between text-[10px] text-zinc-400 font-mono mt-1">
-            <span>20 pax (Íntimo)</span>
-            <span className="text-primary font-bold">100 pax (Límite Essential)</span>
-            <span className="text-purple-400 font-bold">+100 pax (Producción Especial)</span>
-            <span>500 pax</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          BIFURCACIÓN COMERCIAL POR AFORO (UMBRAL: 100 PERSONAS)
-          ───────────────────────────────────────────────────────────── */}
-
-      {/* CASO 1: AFORO <= 100 (PAQUETE ESSENTIAL - COTIZACIÓN DIRECTA) */}
-      {!isLargeProduction && (
-        <div className="space-y-4 animate-in fade-in-0 duration-300">
-          {/* Card Paquete Essential */}
-          <div className="p-5 rounded-2xl bg-zinc-900/80 border border-primary/40 shadow-xl shadow-primary/10 relative overflow-hidden space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-1">
-                  <CheckCircle2 className="w-3 h-3" /> Cotización Directa Inmediata
+        <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
+          
+          {/* SECCIÓN 1: DATOS DE CONTACTO */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-[0.2em]">
+              <User className="w-4 h-4" /> 1. Datos de Contacto
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="nombre" className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  Nombre Completo *
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="nombre"
+                    type="text"
+                    required
+                    placeholder="Ej. Mariana González"
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    className="bg-black/40 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-11 focus:border-primary focus:ring-primary/20"
+                  />
                 </div>
-                <h3 className="text-lg font-black text-white">Paquete Essential</h3>
-                <p className="text-xs text-zinc-300">
-                  Audio profesional de alta fidelidad para eventos íntimos / bodas boutique (hasta 100 personas).
-                </p>
               </div>
 
-              <div className="text-left sm:text-right">
-                <span className="text-[10px] text-zinc-400 block font-bold uppercase">Base 2 Horas</span>
-                <span className="text-xl font-black text-primary">$8,500 MXN</span>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="telefono" className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                    WhatsApp (10 dígitos) *
+                  </Label>
+                  {isPhoneValid && (
+                    <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Válido
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono text-xs flex items-center gap-1 pointer-events-none">
+                    <Phone className="w-3.5 h-3.5 text-primary" /> +52
+                  </div>
+                  <Input
+                    id="telefono"
+                    type="tel"
+                    required
+                    maxLength={10}
+                    placeholder="7221234567"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    className="bg-black/40 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-11 pl-16 font-mono text-sm focus:border-primary focus:ring-primary/20"
+                  />
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Inclusiones Essential */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-300">
-              <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Banda completa en vivo (4 músicos + voz estelar)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Audio profesional para eventos íntimos / boutique</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Iluminación escénica básica para la banda</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Staff técnico e ingeniero de audio en sala</span>
-              </div>
+          {/* SECCIÓN 2: DETALLES DEL EVENTO */}
+          <div className="space-y-4 pt-4 border-t border-white/10">
+            <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-[0.2em]">
+              <Calendar className="w-4 h-4" /> 2. Detalles del Evento
             </div>
 
-            {/* Selector de Horas de Show */}
-            <div className="border-t border-white/10 pt-3 space-y-2">
-              <Label className="text-xs font-bold text-zinc-300 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-primary" />
-                  Duración de Show Banda en Vivo:
-                </span>
-                <span className="text-xs text-primary font-bold">{horasShow} Horas de Música</span>
+            {/* Motivo del Evento */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                Motivo de la Celebración *
               </Label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleHorasShowChange(2)}
-                  className={`py-2.5 px-2 rounded-xl border text-center transition-all cursor-pointer ${
-                    horasShow === 2
-                      ? "bg-primary border-primary text-black font-black shadow-md"
-                      : "bg-zinc-900 border-white/10 text-zinc-300 hover:border-white/20"
-                  }`}
-                >
-                  <div className="text-xs font-bold">2 Horas (Base)</div>
-                  <div className="text-[10px] opacity-80">$8,500 MXN</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleHorasShowChange(3)}
-                  className={`py-2.5 px-2 rounded-xl border text-center transition-all cursor-pointer ${
-                    horasShow === 3
-                      ? "bg-primary border-primary text-black font-black shadow-md"
-                      : "bg-zinc-900 border-white/10 text-zinc-300 hover:border-white/20"
-                  }`}
-                >
-                  <div className="text-xs font-bold">3 Horas (+1h)</div>
-                  <div className="text-[10px] opacity-80">$13,500 MXN</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleHorasShowChange(4)}
-                  className={`py-2.5 px-2 rounded-xl border text-center transition-all cursor-pointer ${
-                    horasShow === 4
-                      ? "bg-primary border-primary text-black font-black shadow-md"
-                      : "bg-zinc-900 border-white/10 text-zinc-300 hover:border-white/20"
-                  }`}
-                >
-                  <div className="text-xs font-bold">4 Horas (+2h)</div>
-                  <div className="text-[10px] opacity-80">$18,500 MXN</div>
-                </button>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {EVENT_TYPES.map((ev) => {
+                  const isSelected = tipoEvento === ev.value
+                  return (
+                    <button
+                      key={ev.value}
+                      type="button"
+                      onClick={() => setTipoEvento(ev.value)}
+                      className={`h-11 px-3 rounded-xl border text-xs font-bold flex items-center justify-center transition-all ${
+                        isSelected
+                          ? "bg-primary text-black border-primary shadow-lg shadow-primary/20 font-black"
+                          : "bg-black/30 border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/20"
+                      }`}
+                    >
+                      {ev.label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
-            {/* Horario Sugerido */}
-            <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
-              <div>
-                <span className="text-[10px] text-zinc-400 block mb-1">Hora de inicio:</span>
+            {/* Fecha y Horario */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="fecha" className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  Fecha Tentativa *
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="fecha"
+                    type="date"
+                    required
+                    min={minDate}
+                    value={fecha}
+                    onChange={(e) => setFecha(e.target.value)}
+                    className="bg-black/40 border-white/15 text-white rounded-xl h-11 focus:border-primary focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="horaInicio" className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  Horario de Inicio Tentativo
+                </Label>
                 <select
+                  id="horaInicio"
                   value={horaInicio}
-                  onChange={(e) => handleHoraInicioChange(e.target.value)}
-                  className="w-full h-10 bg-zinc-900 border border-white/15 text-white rounded-lg px-2 text-xs focus:border-primary focus:outline-none cursor-pointer"
+                  onChange={(e) => setHoraInicio(e.target.value)}
+                  className="w-full bg-black/40 border border-white/15 text-white text-xs rounded-xl h-11 px-3 focus:border-primary focus:outline-none"
                 >
                   {TIME_OPTIONS.map((t) => (
-                    <option key={t} value={t} className="bg-zinc-900 text-white">
+                    <option key={`start-${t}`} value={t} className="bg-zinc-900 text-white">
                       {t}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <span className="text-[10px] text-zinc-400 block mb-1">Hora de término aproximada:</span>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  Horas de Show en Vivo
+                </Label>
+                <div className="grid grid-cols-4 gap-1.5 h-11">
+                  {[2, 3, 4, 5].map((h) => {
+                    const isSelected = horasShow === h
+                    return (
+                      <button
+                        key={`horas-${h}`}
+                        type="button"
+                        onClick={() => setHorasShow(h)}
+                        className={`rounded-xl border text-xs font-bold flex items-center justify-center transition-all ${
+                          isSelected
+                            ? "bg-white text-black border-white font-black"
+                            : "bg-black/30 border-white/10 text-gray-300 hover:bg-white/5"
+                        }`}
+                      >
+                        {h} hrs
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN 3: UBICACIÓN Y AFORO */}
+          <div className="space-y-4 pt-4 border-t border-white/10">
+            <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-[0.2em]">
+              <MapPin className="w-4 h-4" /> 3. Ubicación y Aforo
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="estado" className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  Estado *
+                </Label>
                 <select
-                  value={horaFin}
-                  onChange={(e) => setHoraFin(e.target.value)}
-                  className="w-full h-10 bg-zinc-900 border border-white/15 text-white rounded-lg px-2 text-xs focus:border-primary focus:outline-none cursor-pointer"
+                  id="estado"
+                  value={estado}
+                  onChange={(e) => {
+                    setEstado(e.target.value)
+                    const muns = ESTADOS_MUNICIPIOS[e.target.value]
+                    if (muns && muns.length > 0) setMunicipio(muns[0])
+                  }}
+                  className="w-full bg-black/40 border border-white/15 text-white text-xs rounded-xl h-11 px-3 focus:border-primary focus:outline-none"
                 >
-                  {TIME_OPTIONS.map((t) => (
-                    <option key={t} value={t} className="bg-zinc-900 text-white">
-                      {t}
+                  {Object.keys(ESTADOS_MUNICIPIOS).map((est) => (
+                    <option key={est} value={est} className="bg-zinc-900 text-white">
+                      {est}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="municipio" className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  Municipio / Zona *
+                </Label>
+                <select
+                  id="municipio"
+                  value={municipio}
+                  onChange={(e) => setMunicipio(e.target.value)}
+                  className="w-full bg-black/40 border border-white/15 text-white text-xs rounded-xl h-11 px-3 focus:border-primary focus:outline-none"
+                >
+                  {municipiosDisponibles.map((m) => (
+                    <option key={m} value={m} className="bg-zinc-900 text-white">
+                      {m}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
-          </div>
 
-          {/* Desglose de Inversión Transparente */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-zinc-900/90 border border-white/10 space-y-2.5">
-            <h4 className="text-xs font-black uppercase tracking-wider text-zinc-400 border-b border-white/10 pb-2">
-              Desglose Estimado de Inversión
-            </h4>
-
-            <div className="flex items-center justify-between text-xs text-zinc-300">
-              <span className="flex items-center gap-1.5">
-                <Music className="w-3.5 h-3.5 text-primary" />
-                Show Banda en Vivo (Paquete Essential - {horasShow}h)
-              </span>
-              <span className="font-bold text-white">{MXN(showBasePrice)} MXN</span>
-            </div>
-
-            <div className="flex items-center justify-between text-xs text-zinc-300">
-              <span className="flex items-center gap-1.5">
-                <Car className="w-3.5 h-3.5 text-emerald-400" />
-                Logística y Viáticos ({municipio}, {estado})
-              </span>
-              <span className="font-bold text-white">
-                {loadingViaticos ? (
-                  <span className="text-zinc-500 font-normal">Calculando...</span>
-                ) : viaticos?.amount && viaticos.amount > 0 ? (
-                  `+${MXN(viaticos.amount)} MXN`
-                ) : (
-                  <span className="text-emerald-400 font-semibold">$0 MXN (Zona Local)</span>
-                )}
-              </span>
-            </div>
-
-            {isOutsideZone && (
-              <p className="text-[10px] text-amber-300/80 pl-5">
-                * Destino fuera de zona local: Incluye gastos de casetas ida y vuelta y combustible para transporte de equipo.
-              </p>
-            )}
-
-            {/* Total Destacado */}
-            <div className="pt-3 border-t border-white/10 flex items-center justify-between">
-              <div>
-                <span className="text-xs uppercase tracking-wider font-black text-zinc-300 block">
-                  Total Estimado
-                </span>
-                <span className="text-[10px] text-zinc-400">
-                  Sin costos ocultos ni intermediarios
-                </span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-heading font-black text-primary">
-                {MXN(totalEstimado)} <span className="text-xs font-sans text-zinc-400">MXN</span>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Principal Caso 1: Recibir Cotización por WhatsApp */}
-          <Button
-            type="submit"
-            size="lg"
-            disabled={isSubmitting}
-            className="w-full h-16 bg-[#25D366] hover:bg-[#20ba59] text-white font-black text-base sm:text-lg rounded-2xl shadow-xl shadow-[#25D366]/30 gap-3 cursor-pointer transition-all hover:scale-[1.01]"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-6 h-6 animate-spin" />
-                <span>Generando tu cotización formal...</span>
-              </>
-            ) : (
-              <>
-                <WhatsAppIcon className="w-6 h-6 fill-white shrink-0" />
-                <span>Recibir Cotización por WhatsApp</span>
-              </>
-            )}
-          </Button>
-        </div>
-      )}
-
-      {/* CASO 2: AFORO > 100 (PRODUCCIÓN ESPECIAL - SIN PRECIOS EN PANTALLA) */}
-      {isLargeProduction && (
-        <div className="space-y-4 animate-in fade-in-0 duration-300">
-          <div className="p-6 rounded-2xl bg-purple-950/30 border border-purple-500/40 shadow-xl shadow-purple-500/10 space-y-4 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/40 text-purple-300 flex items-center justify-center shrink-0">
-                <Sliders className="w-6 h-6" />
-              </div>
-              <div className="space-y-1.5 flex-1">
-                <span className="text-[10px] font-black uppercase tracking-wider text-purple-400 block">
-                  Evento de Gran Aforo (+100 Invitados)
-                </span>
-                <h3 className="text-lg sm:text-xl font-heading font-black text-white">
-                  Diseño de Producción Técnica Personalizada
-                </h3>
-                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-medium">
-                  Tu evento supera los 100 invitados y requiere diseño técnico y de producción
-                  personalizado (templete, pantalla LED, iluminación y cobertura de audio según el
-                  recinto).
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-zinc-900/80 border border-white/10 text-xs text-zinc-300 space-y-1">
-              <p className="font-semibold text-white">¿Por qué no mostramos un precio genérico?</p>
-              <p className="text-[11px] text-zinc-400">
-                En eventos de esta magnitud, las dimensiones del escenario, tiros de sonido y potencia
-                eléctrica varían drásticamente entre un salón, hacienda o jardín. Un productor de
-                Vendetta revisará contigo los planos y logística para darte la solución exacta sin sobrecostos.
-              </p>
-            </div>
-          </div>
-
-          {/* CTA Principal Caso 2: Agendar llamada técnica por WhatsApp */}
-          <Button
-            type="submit"
-            size="lg"
-            disabled={isSubmitting}
-            className="w-full h-16 bg-purple-600 hover:bg-purple-500 text-white font-black text-base sm:text-lg rounded-2xl shadow-xl shadow-purple-600/30 gap-3 cursor-pointer transition-all hover:scale-[1.01]"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-6 h-6 animate-spin" />
-                <span>Registrando solicitud de producción...</span>
-              </>
-            ) : (
-              <>
-                <PhoneCall className="w-6 h-6 shrink-0" />
-                <span>Agendar Llamada Técnica por WhatsApp</span>
-              </>
-            )}
-          </Button>
-        </div>
-      )}
-
-      {/* BLOQUE OPCIONAL: LUGAR ESPECÍFICO Y NOTAS (COLAPSABLE) */}
-      <div className="border-t border-white/10 pt-3">
-        <button
-          type="button"
-          onClick={() => setShowOptionalFields(!showOptionalFields)}
-          className="text-xs text-zinc-400 hover:text-white flex items-center justify-between w-full py-1.5 cursor-pointer font-medium"
-        >
-          <span className="flex items-center gap-1.5">
-            <Building2 className="w-3.5 h-3.5 text-primary" />
-            {showOptionalFields
-              ? "Ocultar detalles adicionales del recinto"
-              : "¿Ya tienes el nombre del salón o hacienda? Agregar detalles opcionales"}
-          </span>
-          {showOptionalFields ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-
-        {showOptionalFields && (
-          <div className="mt-3 p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-3 animate-in fade-in-0 duration-200">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <span className="text-[11px] text-zinc-400 block">Nombre del recinto:</span>
+            {municipio === "Otro municipio / cotización manual" && (
+              <div className="space-y-2">
+                <Label htmlFor="municipioManual" className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  Especifica tu Municipio o Ciudad *
+                </Label>
                 <Input
-                  placeholder="Ej. Hacienda San Martín / Salón Castalia"
-                  value={lugarEvento}
-                  onChange={(e) => setLugarEvento(e.target.value)}
-                  className="h-10 bg-zinc-900 border-white/15 text-white placeholder:text-zinc-500 rounded-xl text-xs"
+                  id="municipioManual"
+                  type="text"
+                  required
+                  placeholder="Ej. Cuernavaca, Morelos"
+                  value={municipioManual}
+                  onChange={(e) => setMunicipioManual(e.target.value)}
+                  className="bg-black/40 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-11 focus:border-primary focus:ring-primary/20"
                 />
               </div>
+            )}
 
-              <div className="space-y-1">
-                <span className="text-[11px] text-zinc-400 block">Enlace de Google Maps (si aplica):</span>
-                <Input
-                  placeholder="https://maps.app.goo.gl/..."
-                  value={mapsLink}
-                  onChange={(e) => setMapsLink(e.target.value)}
-                  className="h-10 bg-zinc-900 border-white/15 text-white placeholder:text-zinc-500 rounded-xl text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-[11px] text-zinc-400 block">Notas o peticiones especiales:</span>
-              <textarea
-                placeholder="¿Canciones que no pueden faltar o peticiones especiales? Cuéntanos aquí..."
-                value={notas}
-                onChange={(e) => setNotas(e.target.value)}
-                rows={2}
-                className="w-full p-2.5 bg-zinc-900 border border-white/15 text-white placeholder:text-zinc-500 rounded-xl text-xs focus:border-primary focus:outline-none resize-none"
+            <div className="space-y-2">
+              <Label htmlFor="lugarEvento" className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                Nombre del Recinto o Salón <span className="text-gray-500 font-normal">(Opcional)</span>
+              </Label>
+              <Input
+                id="lugarEvento"
+                type="text"
+                placeholder="Ej. Hacienda San Martín, Jardín Los Pinos, Domicilio particular..."
+                value={lugarEvento}
+                onChange={(e) => setLugarEvento(e.target.value)}
+                className="bg-black/40 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-11 focus:border-primary focus:ring-primary/20"
               />
             </div>
+
+            {/* Selector de Aforo */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center justify-between">
+                <span>Aforo Estimado de Invitados *</span>
+                <span className="text-primary font-bold">{invitados} invitados aprox.</span>
+              </Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {GUEST_RANGES.map((r) => {
+                  const isSelected = invitados === r.value
+                  return (
+                    <button
+                      key={r.label}
+                      type="button"
+                      onClick={() => setInvitados(r.value)}
+                      className={`p-3.5 rounded-2xl border text-left transition-all ${
+                        isSelected
+                          ? "bg-primary/10 border-primary shadow-md shadow-primary/10"
+                          : "bg-black/30 border-white/10 hover:bg-white/5 hover:border-white/20"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`text-sm font-black ${isSelected ? "text-primary" : "text-white"}`}>
+                          {r.label}
+                        </span>
+                        {isSelected && <Check className="w-4 h-4 text-primary" />}
+                      </div>
+                      <p className="text-[11px] text-gray-400 font-medium">{r.desc}</p>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* SECCIÓN 4: FORMATO MUSICAL DE INTERÉS */}
+          <div className="space-y-4 pt-4 border-t border-white/10">
+            <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-[0.2em]">
+              <Music2 className="w-4 h-4" /> 4. Formato de Interés
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {PACKAGE_FORMATS.map((pkg) => {
+                const isSelected = paquete === pkg.id
+                return (
+                  <button
+                    key={pkg.id}
+                    type="button"
+                    onClick={() => setPaquete(pkg.id)}
+                    className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden ${
+                      isSelected
+                        ? "bg-primary/15 border-primary shadow-lg shadow-primary/10 ring-1 ring-primary"
+                        : "bg-black/30 border-white/10 hover:bg-white/5 hover:border-white/20"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className={`text-base font-black ${isSelected ? "text-primary" : "text-white"}`}>
+                        {pkg.name}
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
+                        {pkg.badge}
+                      </span>
+                    </div>
+                    <div className="text-xs font-bold text-gray-300 mb-1">{pkg.headline}</div>
+                    <p className="text-[11px] text-gray-400 leading-relaxed">{pkg.description}</p>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* SECCIÓN 5: REQUERIMIENTOS ESPECIALES */}
+          <div className="space-y-2 pt-4 border-t border-white/10">
+            <Label htmlFor="notas" className="text-xs font-bold uppercase tracking-wider text-gray-300">
+              Comentarios o Requerimientos Especiales <span className="text-gray-500 font-normal">(Opcional)</span>
+            </Label>
+            <Textarea
+              id="notas"
+              rows={3}
+              placeholder="Platícanos si tienes alguna temática, canción especial para el vals/entrada, o detalle técnico del recinto..."
+              value={notas}
+              onChange={(e) => setNotas(e.target.value)}
+              className="bg-black/40 border-white/15 text-white placeholder:text-gray-500 rounded-xl resize-none text-xs leading-relaxed focus:border-primary focus:ring-primary/20"
+            />
+          </div>
+
+          {/* BOTÓN DE ACCIÓN PRINCIPAL */}
+          <div className="pt-2">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-14 rounded-2xl bg-primary text-black font-black uppercase tracking-widest text-sm hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-60"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Procesando Solicitud...
+                </>
+              ) : (
+                <>
+                  Solicitar Propuesta Personalizada
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </Button>
+
+            <p className="text-center text-[11px] text-gray-500 mt-3 font-medium">
+              🔒 Disponibilidad sujeta a confirmación técnica. Recibirás tu propuesta oficial directamente en tu WhatsApp.
+            </p>
+          </div>
+        </form>
       </div>
 
-      {/* Pie de formulario con botón de reinicio discreto */}
-      <div className="flex items-center justify-between text-xs text-zinc-400 pt-1">
-        <span className="text-[11px]">Vendetta Live Music · Exclusividad de fecha</span>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="hover:text-zinc-300 flex items-center gap-1 cursor-pointer text-xs"
-        >
-          <RotateCcw className="w-3 h-3" /> Reiniciar formulario
-        </button>
-      </div>
-    </form>
+      {/* MODAL DE CONFIRMACIÓN ELEGANTE */}
+      <Dialog open={!!submittedData} onOpenChange={() => setSubmittedData(null)}>
+        <DialogContent className="bg-zinc-950 border border-white/15 text-white max-w-lg rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
+          <DialogHeader className="text-center sm:text-center space-y-3">
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-2">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            
+            <div className="inline-flex items-center gap-2 mx-auto px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-mono text-primary font-black">
+              <span>Folio: {submittedData?.shortId}</span>
+              <button
+                type="button"
+                onClick={handleCopyFolio}
+                className="hover:text-white transition-colors"
+                title="Copiar Folio"
+              >
+                {copiedFolio ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+
+            <DialogTitle className="text-2xl sm:text-3xl font-heading font-black uppercase tracking-tight text-white">
+              ¡Solicitud Recibida!
+            </DialogTitle>
+
+            <DialogDescription className="text-gray-300 text-sm leading-relaxed max-w-sm mx-auto">
+              Un productor de Vendetta revisará la disponibilidad de tu fecha y preparará tu propuesta técnica personalizada. Te contactaremos vía WhatsApp.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Resumen del evento */}
+          <div className="my-6 p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2.5 text-xs">
+            <div className="flex justify-between items-center text-gray-400">
+              <span>Cliente:</span>
+              <span className="text-white font-bold">{submittedData?.nombre}</span>
+            </div>
+            <div className="flex justify-between items-center text-gray-400">
+              <span>Evento:</span>
+              <span className="text-white font-bold">{submittedData?.motivo}</span>
+            </div>
+            <div className="flex justify-between items-center text-gray-400">
+              <span>Fecha:</span>
+              <span className="text-white font-bold">{submittedData?.fecha}</span>
+            </div>
+            <div className="flex justify-between items-center text-gray-400">
+              <span>Ubicación:</span>
+              <span className="text-white font-bold">{submittedData?.municipio}</span>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Button
+              type="button"
+              onClick={() => setSubmittedData(null)}
+              className="w-full h-11 rounded-xl bg-white text-black font-black uppercase text-xs tracking-wider hover:bg-gray-200 transition-all"
+            >
+              Entendido
+            </Button>
+
+            {adminWhatsapp && (
+              <Button
+                asChild
+                variant="outline"
+                className="w-full h-11 rounded-xl border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 font-bold text-xs gap-2"
+              >
+                <a
+                  href={`https://wa.me/${adminWhatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(
+                    `Hola Vendetta 👋 Acabo de enviar mi solicitud con Folio ${submittedData?.shortId} para mi ${submittedData?.motivo}.`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <WhatsAppIcon className="w-4 h-4 fill-emerald-400" />
+                  Escribir a Producción Directamente
+                </a>
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

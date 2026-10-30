@@ -1247,3 +1247,135 @@ export async function discardLeadAction({
     return { success: false, error: error?.message || "Error al descartar el prospecto." }
   }
 }
+
+export async function approveAndSendProposalAction(params: {
+  bookingId: string
+  baseAmount: number
+  viaticosAmount?: number
+  discountAmount?: number
+  depositAmount?: number
+  packageName?: string
+}) {
+  try {
+    const trimmedId = params.bookingId?.trim()
+    if (!trimmedId) return { success: false, error: "ID de solicitud no proporcionado." }
+
+    const base = Number(params.baseAmount) || 0
+    const viaticos = Number(params.viaticosAmount) || 0
+    const discount = Number(params.discountAmount) || 0
+    const total = base + viaticos - discount
+
+    if (total <= 0 || base <= 0) {
+      return { 
+        success: false, 
+        error: "Debes definir un precio base mayor a 0 para aprobar y enviar la propuesta oficial." 
+      }
+    }
+
+    const booking = await db.bookingRequest.findFirst({
+      where: {
+        OR: [
+          { id: trimmedId },
+          { shortId: trimmedId.toUpperCase() }
+        ]
+      },
+      include: {
+        client: true
+      }
+    })
+
+    if (!booking) {
+      return { success: false, error: "Solicitud de cotización no encontrada." }
+    }
+
+    const deposit = params.depositAmount && params.depositAmount > 0
+      ? params.depositAmount
+      : Math.round(total * 0.3)
+
+    const updatedPackage = params.packageName?.trim() || booking.packageName || "Show Vendetta"
+
+    // 1. Actualizar el BookingRequest
+    await db.bookingRequest.update({
+      where: { id: booking.id },
+      data: {
+        baseAmount: base,
+        viaticosAmount: viaticos,
+        discountAmount: discount,
+        depositAmount: deposit,
+        packageName: updatedPackage,
+        status: "propuesta_enviada"
+      }
+    })
+
+    // 2. Si tiene ContactInquiry asociado, sincronizar estatus
+    if (booking.sourceInquiryId) {
+      await db.contactInquiry.update({
+        where: { id: booking.sourceInquiryId },
+        data: { status: "propuesta_enviada" }
+      }).catch(e => console.warn("Could not update inquiry status:", e))
+    }
+
+    // 3. Enviar WhatsApp oficial al cliente con el enlace personalizado https://vendetta.mx/status/{folio}
+    const cleanPhone = (booking.clientPhone || booking.client?.whatsapp || "").replace(/\D/g, "")
+    if (!cleanPhone || cleanPhone.length < 10) {
+      return {
+        success: true,
+        warning: "Propuesta aprobada pero el cliente no tiene un teléfono de WhatsApp válido de 10 dígitos para enviar la notificación automática."
+      }
+    }
+
+    const fechaFormateada = booking.requestedDate ? formatDateMX(booking.requestedDate, "dd 'de' MMMM 'de' yyyy") : "tu fecha elegida"
+    const proposalLink = `https://vendetta.mx/status/${booking.shortId}`
+
+    const clientMsg = `Hola ${booking.clientName.trim()}, somos *Vendetta Live Music* 🎸.
+
+Es un gusto saludarte. Hemos revisado la logística de tu evento para el *${fechaFormateada}* y tu propuesta oficial ya está lista y aprobada:
+
+👉 ${proposalLink}
+
+En este enlace podrás consultar el desglose de producción, detalles técnicos y apartar tu fecha con disponibilidad garantizada.
+
+Quedamos a tus órdenes para afinar cualquier detalle. ¡Rock on! 🤘
+
+—
+*Vendetta Live Music* | _vendetta.mx_`
+
+    const { sendWhatsApp } = await import("@/lib/notifications/whatsapp")
+    const { messageId, error: waError } = await sendWhatsApp(
+      cleanPhone, 
+      clientMsg, 
+      `Propuesta Aprobada [${booking.shortId}] - ${booking.clientName}`
+    )
+
+    // 4. Registro en el historial de Notificaciones
+    await db.notification.create({
+      data: {
+        bookingRequestId: booking.id,
+        type: "client_quote",
+        channel: "whatsapp",
+        recipient: cleanPhone,
+        status: messageId ? "sent" : "failed",
+        message: clientMsg,
+        template: "client_quote",
+        messageId: messageId || undefined,
+        errorDetails: waError || null,
+        category: "quote_approved"
+      }
+    }).catch(e => console.warn("Could not log notification:", e))
+
+    revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${booking.id}`)
+    revalidatePath(`/status/${booking.shortId}`)
+
+    return { 
+      success: true, 
+      message: messageId 
+        ? `Propuesta aprobada y enviada a ${booking.clientName} por WhatsApp.` 
+        : `Propuesta guardada con estado 'Propuesta Enviada', pero Evolution API reportó: ${waError || "Sin confirmación de entrega"}.`
+    }
+  } catch (error: any) {
+    console.error("Error in approveAndSendProposalAction:", error)
+    return { success: false, error: error?.message || "Error al aprobar y enviar la propuesta." }
+  }
+}
+

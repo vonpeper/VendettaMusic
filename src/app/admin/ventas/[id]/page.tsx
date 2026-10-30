@@ -12,6 +12,7 @@ import { BookingStatusSwitcher } from "@/components/admin/BookingStatusSwitcher"
 import { LiquidarButton } from "@/components/admin/LiquidarButton"
 import { ConfirmarAnticipoButton } from "@/components/admin/ConfirmarAnticipoButton"
 import { ContractStatusSwitcher } from "@/components/admin/ContractStatusSwitcher"
+import { ApproveProposalModal } from "@/components/admin/ApproveProposalModal"
 import { 
   ArrowLeft, 
   Calendar, 
@@ -409,14 +410,27 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             <p className="text-muted-foreground mt-1">Registrado el {formatDateMX(booking.createdAt, "PPPP")}</p>
           </div>
           
-          {(booking.status === "agendado" || booking.status === "confirmed" || booking.status === "pendiente" || booking.status === "completado") && (
-            <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <ApproveProposalModal
+              bookingId={booking.id}
+              shortId={booking.shortId || ""}
+              clientName={finalClientName}
+              clientPhone={booking.clientPhone}
+              currentStatus={booking.status}
+              initialPackage={booking.packageName || "Show Vendetta - Experience"}
+              initialBase={Number(booking.baseAmount) || 0}
+              initialViaticos={Number(booking.viaticosAmount) || 0}
+              initialDiscount={Number(booking.discountAmount) || 0}
+              packagesList={packages.map(p => ({ id: p.id, name: p.name }))}
+            />
+
+            {(booking.status === "agendado" || booking.status === "confirmed" || booking.status === "pendiente" || booking.status === "completado") && (
               <ContractStatusSwitcher 
                 bookingId={booking.id} 
                 status={booking.event?.contracts?.[0]?.status || "pending"} 
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -744,6 +758,27 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   </div>
                 </div>
                 <div className="pt-2 space-y-3">
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 space-y-2">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-amber-400">
+                      Propuesta Comercial Vendetta
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-snug">
+                      Define los importes pactados y despacha el enlace oficial por WhatsApp.
+                    </p>
+                    <ApproveProposalModal
+                      bookingId={booking.id}
+                      shortId={booking.shortId || ""}
+                      clientName={finalClientName}
+                      clientPhone={booking.clientPhone}
+                      currentStatus={booking.status}
+                      initialPackage={booking.packageName || "Show Vendetta - Experience"}
+                      initialBase={Number(booking.baseAmount) || 0}
+                      initialViaticos={Number(booking.viaticosAmount) || 0}
+                      initialDiscount={Number(booking.discountAmount) || 0}
+                      packagesList={packages.map(p => ({ id: p.id, name: p.name }))}
+                    />
+                  </div>
+
                   <ClientWhatsappActions 
                     bookingId={booking.id} 
                     clientPhone={booking.clientPhone} 

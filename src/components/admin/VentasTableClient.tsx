@@ -219,6 +219,8 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
 
   const STATUS_LABELS: Record<string, string> = {
     all: "Todos",
+    pendiente_aprobacion: "Pendiente de Aprobación",
+    propuesta_enviada: "Propuesta Enviada",
     requiere_llamada: "Requiere Llamada",
     contactado: "Contactado",
     llamada_agendada: "Llamada Agendada",
@@ -236,7 +238,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
       const s = b.status?.toLowerCase() || ""
       let matchTab = true
       if (tabFilter === "activos") {
-        matchTab = ["requiere_llamada", "contactado", "llamada_agendada", "pendiente", "pending", "cotizado", "new"].includes(s)
+        matchTab = ["pendiente_aprobacion", "propuesta_enviada", "requiere_llamada", "contactado", "llamada_agendada", "pendiente", "pending", "cotizado", "new"].includes(s)
       } else if (tabFilter === "confirmados") {
         matchTab = ["agendado", "completado"].includes(s)
       } else if (tabFilter === "expirados_cancelados") {
@@ -444,6 +446,8 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
   const activeLeads = localItems.filter(b => {
     const s = b.status?.toLowerCase() || ""
     return (
+      s === "pendiente_aprobacion" ||
+      s === "propuesta_enviada" ||
       s === "requiere_llamada" ||
       s === "contactado" ||
       s === "llamada_agendada" ||
@@ -452,9 +456,14 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
       s === "new"
     )
   }).sort((a, b) => {
-    const isReqA = a.status === "requiere_llamada" ? 1 : 0
-    const isReqB = b.status === "requiere_llamada" ? 1 : 0
-    if (isReqA !== isReqB) return isReqB - isReqA
+    const priority = (st: string) => {
+      if (st === "pendiente_aprobacion") return 3
+      if (st === "requiere_llamada") return 2
+      if (st === "propuesta_enviada") return 1
+      return 0
+    }
+    const prioDiff = priority(b.status) - priority(a.status)
+    if (prioDiff !== 0) return prioDiff
     const dateA = a.createdAt ? new Date((a as any).createdAt).getTime() : 0
     const dateB = b.createdAt ? new Date((b as any).createdAt).getTime() : 0
     return dateB - dateA
@@ -516,7 +525,17 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                   <div>
                     {/* Top Row: Type Badge + ShortId */}
                     <div className="flex items-center justify-between gap-2 mb-3">
-                      {isSpecial ? (
+                      {lead.status === "pendiente_aprobacion" ? (
+                        <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/30 text-[10px] font-black uppercase tracking-wider gap-1.5 hover:bg-amber-500/20">
+                          <Clock className="w-3 h-3 text-amber-400" />
+                          Pendiente Aprobación
+                        </Badge>
+                      ) : lead.status === "propuesta_enviada" ? (
+                        <Badge className="bg-cyan-500/15 text-cyan-400 border-cyan-500/30 text-[10px] font-black uppercase tracking-wider gap-1.5 hover:bg-cyan-500/20">
+                          <CheckCircle2 className="w-3 h-3 text-cyan-400" />
+                          Propuesta Enviada
+                        </Badge>
+                      ) : isSpecial ? (
                         <Badge className="bg-purple-500/15 text-purple-400 border-purple-500/30 text-[10px] font-black uppercase tracking-wider gap-1.5 hover:bg-purple-500/20">
                           <PhoneCall className="w-3 h-3 text-purple-400" />
                           Producción Especial &gt;100 pax
@@ -714,7 +733,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
         >
           <span>Activos</span>
           <span className="text-[10px] opacity-80 font-mono">
-            ({localItems.filter(b => ["requiere_llamada", "contactado", "llamada_agendada", "pendiente", "pending", "cotizado", "new"].includes(b.status?.toLowerCase())).length})
+            ({localItems.filter(b => ["pendiente_aprobacion", "propuesta_enviada", "requiere_llamada", "contactado", "llamada_agendada", "pendiente", "pending", "cotizado", "new"].includes(b.status?.toLowerCase())).length})
           </span>
         </button>
 
@@ -1308,6 +1327,8 @@ function StatusSwitcher({ status, id, onStatusChange, isUpdating, reserva }: {
   reserva?: any
 }) {
   const configs: any = {
+    pendiente_aprobacion: { color: "text-amber-400 border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20", label: "Pendiente Aprobación" },
+    propuesta_enviada:    { color: "text-cyan-400 border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20", label: "Propuesta Enviada" },
     requiere_llamada: { color: "text-purple-400 border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20", label: "Requiere Llamada" },
     contactado:       { color: "text-cyan-400 border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20", label: "Contactado" },
     llamada_agendada: { color: "text-indigo-400 border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20", label: "Llamada Agendada" },
