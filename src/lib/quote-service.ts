@@ -22,7 +22,7 @@ export interface CreateQuoteInput {
   setupTime?: string | null
   guestCount?: number
   dressCode?: string | null
-  status?: "pendiente" | "agendado" | "completado" | "cancelado"
+  status?: "pendiente" | "pendiente_aprobacion" | "propuesta_enviada" | "agendado" | "completado" | "cancelado"
   musicianNotes?: string | null
   audioEngineer?: string | null
 

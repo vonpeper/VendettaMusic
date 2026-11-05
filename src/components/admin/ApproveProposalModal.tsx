@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,9 +14,16 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog"
-import { Sparkles, Send, Loader2, CheckCircle2, AlertCircle, DollarSign, Package } from "lucide-react"
+import { Send, Loader2, CheckCircle2 } from "lucide-react"
 import { approveAndSendProposalAction } from "@/actions/ventas"
 import { toast } from "sonner"
+
+export interface PackageSummaryOption {
+  id: string
+  name: string
+  baseCostPerHour?: number
+  minDuration?: number
+}
 
 interface ApproveProposalModalProps {
   bookingId: string
@@ -28,7 +35,8 @@ interface ApproveProposalModalProps {
   initialBase?: number
   initialViaticos?: number
   initialDiscount?: number
-  packagesList?: Array<{ id: string; name: string }>
+  initialLineItemsTotal?: number
+  packagesList?: PackageSummaryOption[]
 }
 
 const MXN = (v: number) =>
@@ -48,22 +56,60 @@ export function ApproveProposalModal({
   initialBase = 0,
   initialViaticos = 0,
   initialDiscount = 0,
+  initialLineItemsTotal = 0,
   packagesList = []
 }: ApproveProposalModalProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // Encontrar costo predeterminado de paquete si initialBase es 0
+  const findDefaultPriceForPackage = (pkgName: string) => {
+    const pkg = packagesList.find(
+      p => p.name.toLowerCase() === pkgName.toLowerCase() ||
+           p.name.toLowerCase().includes(pkgName.toLowerCase()) ||
+           pkgName.toLowerCase().includes(p.name.toLowerCase())
+    )
+    if (pkg && pkg.baseCostPerHour) {
+      return pkg.baseCostPerHour * (pkg.minDuration || 2)
+    }
+    return 0
+  }
+
+  const effectiveInitialBase = initialBase > 0 
+    ? initialBase 
+    : findDefaultPriceForPackage(initialPackage)
+
   const [packageName, setPackageName] = useState(initialPackage)
-  const [baseAmount, setBaseAmount] = useState<number>(initialBase)
+  const [baseAmount, setBaseAmount] = useState<number>(effectiveInitialBase)
   const [viaticosAmount, setViaticosAmount] = useState<number>(initialViaticos)
   const [discountAmount, setDiscountAmount] = useState<number>(initialDiscount)
 
   const router = useRouter()
 
-  const subtotal = Math.max(0, baseAmount + viaticosAmount - discountAmount)
+  // Sincronización reactiva garantizada: cada vez que el modal se abre o cambian las propiedades
+  useEffect(() => {
+    if (open) {
+      setPackageName(initialPackage)
+      const baseToUse = initialBase > 0 ? initialBase : findDefaultPriceForPackage(initialPackage)
+      setBaseAmount(baseToUse)
+      setViaticosAmount(initialViaticos)
+      setDiscountAmount(initialDiscount)
+    }
+  }, [open, initialPackage, initialBase, initialViaticos, initialDiscount])
+
+  const subtotal = Math.max(0, baseAmount + viaticosAmount + (initialLineItemsTotal || 0) - discountAmount)
   const suggestedDeposit = Math.round(subtotal * 0.3)
 
   const isPendingApproval = currentStatus === "pendiente_aprobacion"
   const isApproved = currentStatus === "propuesta_enviada"
+
+  const handlePackageChange = (newName: string) => {
+    setPackageName(newName)
+    const pkgPrice = findDefaultPriceForPackage(newName)
+    if (pkgPrice > 0 && (baseAmount === 0 || baseAmount === effectiveInitialBase)) {
+      setBaseAmount(pkgPrice)
+    }
+  }
 
   const handleApprove = async () => {
     if (baseAmount <= 0) {
@@ -152,12 +198,38 @@ export function ApproveProposalModal({
             <div className="relative">
               <Input
                 type="text"
+                list="packages-suggestions"
                 value={packageName}
-                onChange={(e) => setPackageName(e.target.value)}
+                onChange={(e) => handlePackageChange(e.target.value)}
                 placeholder="Show Vendetta - Experience"
                 className="bg-black/40 border-white/15 text-white h-10 rounded-xl text-xs"
               />
+              <datalist id="packages-suggestions">
+                {packagesList.map((pkg) => (
+                  <option key={pkg.id} value={pkg.name}>
+                    {pkg.baseCostPerHour ? `${pkg.name} (${MXN(pkg.baseCostPerHour * (pkg.minDuration || 2))})` : pkg.name}
+                  </option>
+                ))}
+              </datalist>
             </div>
+            {packagesList.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {packagesList.map((pkg) => (
+                  <button
+                    key={pkg.id}
+                    type="button"
+                    onClick={() => handlePackageChange(pkg.name)}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
+                      packageName.toLowerCase().includes(pkg.name.toLowerCase())
+                        ? "bg-primary text-black border-primary"
+                        : "bg-white/5 text-gray-400 border-white/10 hover:border-white/30 hover:text-white"
+                    }`}
+                  >
+                    {pkg.name.replace(/Show Vendetta - /i, "")}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Importes */}
@@ -212,16 +284,38 @@ export function ApproveProposalModal({
           {/* Resumen Financiero Dinámico */}
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs">
             <div className="flex justify-between items-center text-gray-400">
-              <span>Total Acordado:</span>
+              <span>Precio Show Base:</span>
+              <span className="text-white font-mono">{MXN(baseAmount)}</span>
+            </div>
+            {viaticosAmount > 0 && (
+              <div className="flex justify-between items-center text-gray-400">
+                <span>Viáticos de Traslado:</span>
+                <span className="text-white font-mono">{MXN(viaticosAmount)}</span>
+              </div>
+            )}
+            {initialLineItemsTotal > 0 && (
+              <div className="flex justify-between items-center text-gray-400">
+                <span>Conceptos Adicionales (DJ / Extras):</span>
+                <span className="text-cyan-400 font-mono font-bold">{MXN(initialLineItemsTotal)}</span>
+              </div>
+            )}
+            {discountAmount > 0 && (
+              <div className="flex justify-between items-center text-emerald-400">
+                <span>Cortesía / Descuento:</span>
+                <span className="font-mono font-bold">-{MXN(discountAmount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center text-gray-200 pt-2 border-t border-white/10">
+              <span className="font-bold">Total Acordado de Propuesta:</span>
               <span className="text-white text-base font-black font-mono">{MXN(subtotal)}</span>
             </div>
             <div className="flex justify-between items-center text-gray-400">
-              <span>Anticipo Solicitado (30%):</span>
+              <span>Anticipo de Apartado (30%):</span>
               <span className="text-primary font-bold font-mono">{MXN(suggestedDeposit)}</span>
             </div>
             <div className="flex justify-between items-center text-gray-400 pt-2 border-t border-white/10 text-[11px]">
               <span>Enlace que se enviará:</span>
-              <span className="text-cyan-400 font-mono underline">https://vendetta.mx/status/{shortId}</span>
+              <span className="text-cyan-400 font-mono underline truncate max-w-[220px]">https://vendetta.mx/status/{shortId}</span>
             </div>
           </div>
         </div>

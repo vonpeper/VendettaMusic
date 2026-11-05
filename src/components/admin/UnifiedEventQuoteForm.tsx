@@ -88,10 +88,12 @@ const DRESS_CODES = [
 ]
 
 const STATUS_OPTIONS = [
-  { value: "pendiente",  label: "⏳ Cotización / Pendiente" },
-  { value: "agendado",   label: "📅 Confirmado / Agendado" },
-  { value: "completado", label: "✅ Evento Realizado" },
-  { value: "cancelado",  label: "❌ Cancelado" },
+  { value: "pendiente_aprobacion", label: "⏳ Pendiente de Aprobación" },
+  { value: "propuesta_enviada",    label: "📨 Propuesta Enviada" },
+  { value: "pendiente",            label: "📋 Cotización / Por Revisar" },
+  { value: "agendado",             label: "📅 Confirmado / Agendado" },
+  { value: "completado",           label: "✅ Evento Realizado" },
+  { value: "cancelado",            label: "❌ Cancelado" },
 ]
 
 export interface PackageOption {
@@ -408,12 +410,13 @@ export function UnifiedEventQuoteForm({
   }, [selectedPackage, isOutsideZone, showDuration])
 
   const [basePrice, setBasePrice] = useState<number | null>(() => {
-    if (initialData?.basePrice !== undefined && initialData?.basePrice !== null) return Number(initialData.basePrice)
-    if (initialData?.amount !== undefined && initialData?.amount !== null) return Number(initialData.amount)
-    if (initialData?.baseAmount !== undefined && initialData?.baseAmount !== null) return Number(initialData.baseAmount)
+    if (initialData?.basePrice !== undefined && initialData?.basePrice !== null && Number(initialData.basePrice) > 0) return Number(initialData.basePrice)
+    if (initialData?.amount !== undefined && initialData?.amount !== null && Number(initialData.amount) > 0) return Number(initialData.amount)
+    if (initialData?.baseAmount !== undefined && initialData?.baseAmount !== null && Number(initialData.baseAmount) > 0) return Number(initialData.baseAmount)
     
-    // Auto-cálculo predeterminado si no viene precio explícito
+    // Auto-cálculo predeterminado si no viene precio explícito (> 0)
     const targetPkg = (initialData?.packageId ? packages.find(p => p.id === initialData.packageId) : null)
+      || (initialData?.packageName ? packages.find(p => p.name.toLowerCase() === initialData.packageName.toLowerCase()) : null)
       || packages.find(p => p.name.toLowerCase().includes("essential"))
       || packages[0]
     if (targetPkg) {

@@ -20,7 +20,14 @@ export const saveUnifiedEventQuoteSchema = z.object({
   setupTime: z.string().nullable().optional(),
   guestCount: z.number().int().min(0).default(0),
   dressCode: z.string().nullable().optional(),
-  status: z.enum(["pendiente", "agendado", "completado", "cancelado"]).default("pendiente"),
+  status: z.enum([
+    "pendiente",
+    "pendiente_aprobacion",
+    "propuesta_enviada",
+    "agendado",
+    "completado",
+    "cancelado"
+  ]).default("pendiente"),
   musicianNotes: z.string().nullable().optional(),
   audioEngineer: z.string().nullable().optional(),
 

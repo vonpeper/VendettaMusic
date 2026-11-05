@@ -255,6 +255,40 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     finalClientName = bookingName || profileName || "Sin nombre";
   }
 
+  // Conceptos adicionales y desglose financiero unificado
+  const lineItems = (booking.lineItems || []).map((it: any) => ({
+    id: it.id,
+    description: it.description,
+    quantity: it.quantity,
+    unitCost: it.unitCost,
+    lineTotal: Number(it.lineTotal || (it.quantity * it.unitCost) || 0)
+  }));
+  const lineItemsTotal = lineItems.reduce((acc: number, it: any) => acc + it.lineTotal, 0);
+
+  // Encontrar paquete asignado para sugerencias automáticas de precios
+  const targetPkg = packages.find(p => 
+    p.id === booking.packageId || 
+    (booking.packageName && p.name.toLowerCase() === booking.packageName.toLowerCase()) ||
+    (booking.packageName && p.name.toLowerCase().includes(booking.packageName.toLowerCase())) ||
+    (booking.packageName && booking.packageName.toLowerCase().includes(p.name.toLowerCase()))
+  );
+  const defaultPkgBase = targetPkg ? (targetPkg.baseCostPerHour * (targetPkg.minDuration || 2)) : 0;
+
+  const resolvedBase = Number(booking.baseAmount) > 0 
+    ? Number(booking.baseAmount) 
+    : (Number(booking.event?.amount) > 0 ? Number(booking.event?.amount) : defaultPkgBase);
+
+  const resolvedViaticos = Number(booking.viaticosAmount) || 0;
+  const resolvedDiscount = Number(booking.discountAmount) || 0;
+  const resolvedDeposit = Number(booking.depositAmount) || 0;
+
+  const packagesMappedForModal = packages.map(p => ({
+    id: p.id,
+    name: p.name,
+    baseCostPerHour: p.baseCostPerHour,
+    minDuration: p.minDuration
+  }));
+
   return (
     <div className="p-8 bg-background min-h-screen">
       <div className="max-w-5xl mx-auto">
@@ -297,12 +331,12 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 city: booking.city || booking.client?.city || "",
                 packageId: booking.event.packageId || booking.packageId,
                 packageName: booking.packageName,
-                basePrice: booking.baseAmount,
-                baseAmount: booking.baseAmount,
-                viaticosAmount: booking.viaticosAmount,
-                discountAmount: booking.discountAmount,
-                deposit: booking.event.deposit ?? booking.depositAmount,
-                depositAmount: booking.event.deposit ?? booking.depositAmount,
+                basePrice: resolvedBase,
+                baseAmount: resolvedBase,
+                viaticosAmount: resolvedViaticos,
+                discountAmount: resolvedDiscount,
+                deposit: booking.event.deposit ?? resolvedDeposit,
+                depositAmount: booking.event.deposit ?? resolvedDeposit,
                 invoice: booking.event.invoice ?? booking.invoice ?? false,
                 venueName: booking.event.location?.name || booking.venueType || booking.address || "",
                 venueAddress: booking.event.location?.address || booking.address || "",
@@ -320,8 +354,9 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 musicianNotes: booking.event.musicianNotes || booking.musicianNotes,
                 arrivalTime: booking.event.arrivalTime || booking.arrivalTime,
                 setupTime: booking.event.setupTime || booking.setupTime,
-                lineItems: (booking as any).lineItems || [],
+                lineItems: lineItems,
                 bookingRequest: booking,
+                status: booking.event.status || booking.status || "agendado",
               } : {
                 id: booking.id,
                 targetId: booking.id,
@@ -336,11 +371,11 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 packageId: booking.packageId,
                 date: booking.requestedDate,
                 eventDate: booking.requestedDate,
-                basePrice: booking.baseAmount,
-                baseAmount: booking.baseAmount,
-                amount: booking.baseAmount,
-                deposit: booking.depositAmount,
-                depositAmount: booking.depositAmount,
+                basePrice: resolvedBase,
+                baseAmount: resolvedBase,
+                amount: resolvedBase,
+                deposit: resolvedDeposit,
+                depositAmount: resolvedDeposit,
                 paymentMethod: booking.paymentMethod,
                 ceremonyType: booking.ceremonyType || booking.venueType || "otro",
                 venueName: booking.venueType || booking.address || "",
@@ -353,16 +388,16 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 performanceEnd: booking.endTime,
                 startTime: booking.startTime,
                 endTime: booking.endTime,
-                status: booking.status === "pendiente" ? "pendiente" : "agendado",
+                status: booking.status || "pendiente_aprobacion",
                 invoice: booking.invoice || false,
                 customName: booking.customName || (booking.clientName ? `Evento de ${booking.clientName}` : "Evento Vendetta"),
                 arrivalTime: booking.arrivalTime,
                 setupTime: booking.setupTime,
                 dressCode: booking.dressCode,
                 musicianNotes: booking.musicianNotes,
-                viaticosAmount: booking.viaticosAmount,
-                discountAmount: booking.discountAmount,
-                lineItems: (booking as any).lineItems || [],
+                viaticosAmount: resolvedViaticos,
+                discountAmount: resolvedDiscount,
+                lineItems: lineItems,
               }}
               clients={clientsMapped}
               locations={locations}
@@ -412,16 +447,18 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           
           <div className="flex flex-wrap items-center gap-3">
             <ApproveProposalModal
+              key={`header-approve-${booking.id}-${resolvedBase}-${resolvedViaticos}-${resolvedDiscount}-${lineItemsTotal}`}
               bookingId={booking.id}
               shortId={booking.shortId || ""}
               clientName={finalClientName}
               clientPhone={booking.clientPhone}
               currentStatus={booking.status}
-              initialPackage={booking.packageName || "Show Vendetta - Experience"}
-              initialBase={Number(booking.baseAmount) || 0}
-              initialViaticos={Number(booking.viaticosAmount) || 0}
-              initialDiscount={Number(booking.discountAmount) || 0}
-              packagesList={packages.map(p => ({ id: p.id, name: p.name }))}
+              initialPackage={booking.packageName || targetPkg?.name || "Show Vendetta - Experience"}
+              initialBase={resolvedBase}
+              initialViaticos={resolvedViaticos}
+              initialDiscount={resolvedDiscount}
+              initialLineItemsTotal={lineItemsTotal}
+              packagesList={packagesMappedForModal}
             />
 
             {(booking.status === "agendado" || booking.status === "confirmed" || booking.status === "pendiente" || booking.status === "completado") && (
@@ -580,9 +617,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                   </Card>
                 )}
 
-            {/* Desglose Financiero */}
             {(() => {
-              const base = Number(booking.baseAmount || 0);
+              const base = Number(booking.baseAmount) > 0 ? Number(booking.baseAmount) : (Number(booking.event?.amount) || 0);
               const viaticos = Number(booking.viaticosAmount || 0);
               const discount = Number(booking.discountAmount || 0);
               const lineItems = (booking.lineItems || []).map((it: any) => ({
@@ -766,16 +802,18 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                       Define los importes pactados y despacha el enlace oficial por WhatsApp.
                     </p>
                     <ApproveProposalModal
+                      key={`sidebar-approve-${booking.id}-${resolvedBase}-${resolvedViaticos}-${resolvedDiscount}-${lineItemsTotal}`}
                       bookingId={booking.id}
                       shortId={booking.shortId || ""}
                       clientName={finalClientName}
                       clientPhone={booking.clientPhone}
                       currentStatus={booking.status}
-                      initialPackage={booking.packageName || "Show Vendetta - Experience"}
-                      initialBase={Number(booking.baseAmount) || 0}
-                      initialViaticos={Number(booking.viaticosAmount) || 0}
-                      initialDiscount={Number(booking.discountAmount) || 0}
-                      packagesList={packages.map(p => ({ id: p.id, name: p.name }))}
+                      initialPackage={booking.packageName || targetPkg?.name || "Show Vendetta - Experience"}
+                      initialBase={resolvedBase}
+                      initialViaticos={resolvedViaticos}
+                      initialDiscount={resolvedDiscount}
+                      initialLineItemsTotal={lineItemsTotal}
+                      packagesList={packagesMappedForModal}
                     />
                   </div>
 

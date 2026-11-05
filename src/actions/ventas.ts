@@ -1263,14 +1263,6 @@ export async function approveAndSendProposalAction(params: {
     const base = Number(params.baseAmount) || 0
     const viaticos = Number(params.viaticosAmount) || 0
     const discount = Number(params.discountAmount) || 0
-    const total = base + viaticos - discount
-
-    if (total <= 0 || base <= 0) {
-      return { 
-        success: false, 
-        error: "Debes definir un precio base mayor a 0 para aprobar y enviar la propuesta oficial." 
-      }
-    }
 
     const booking = await db.bookingRequest.findFirst({
       where: {
@@ -1280,12 +1272,27 @@ export async function approveAndSendProposalAction(params: {
         ]
       },
       include: {
-        client: true
+        client: true,
+        lineItems: true,
+        event: true,
       }
     })
 
     if (!booking) {
       return { success: false, error: "Solicitud de cotización no encontrada." }
+    }
+
+    const lineItemsTotal = (booking.lineItems || []).reduce(
+      (acc, it) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0),
+      0
+    )
+    const total = Math.max(0, base + viaticos + lineItemsTotal - discount)
+
+    if (total <= 0 || base <= 0) {
+      return { 
+        success: false, 
+        error: "Debes definir un precio base mayor a 0 para aprobar y enviar la propuesta oficial." 
+      }
     }
 
     const deposit = params.depositAmount && params.depositAmount > 0
@@ -1307,7 +1314,21 @@ export async function approveAndSendProposalAction(params: {
       }
     })
 
-    // 2. Si tiene ContactInquiry asociado, sincronizar estatus
+    // 2. Si tiene Event vinculado, sincronizar montos y saldo
+    const targetEventId = booking.eventId || booking.event?.id
+    if (targetEventId) {
+      await db.event.update({
+        where: { id: targetEventId },
+        data: {
+          amount: total,
+          deposit: deposit,
+          balance: Math.max(0, total - deposit),
+          totalWithTax: total,
+        }
+      }).catch(e => console.warn("Could not sync event amounts on approve:", e))
+    }
+
+    // 3. Si tiene ContactInquiry asociado, sincronizar estatus
     if (booking.sourceInquiryId) {
       await db.contactInquiry.update({
         where: { id: booking.sourceInquiryId },
@@ -1315,7 +1336,7 @@ export async function approveAndSendProposalAction(params: {
       }).catch(e => console.warn("Could not update inquiry status:", e))
     }
 
-    // 3. Enviar WhatsApp oficial al cliente con el enlace personalizado https://vendetta.mx/status/{folio}
+    // 4. Enviar WhatsApp oficial al cliente con el enlace personalizado https://vendetta.mx/status/{folio}
     const cleanPhone = (booking.clientPhone || booking.client?.whatsapp || "").replace(/\D/g, "")
     if (!cleanPhone || cleanPhone.length < 10) {
       return {
@@ -1347,7 +1368,7 @@ Quedamos a tus órdenes para afinar cualquier detalle. ¡Rock on! 🤘
       `Propuesta Aprobada [${booking.shortId}] - ${booking.clientName}`
     )
 
-    // 4. Registro en el historial de Notificaciones
+    // 5. Registro en el historial de Notificaciones
     await db.notification.create({
       data: {
         bookingRequestId: booking.id,
@@ -1365,7 +1386,14 @@ Quedamos a tus órdenes para afinar cualquier detalle. ¡Rock on! 🤘
 
     revalidatePath("/admin/ventas")
     revalidatePath(`/admin/ventas/${booking.id}`)
-    revalidatePath(`/status/${booking.shortId}`)
+    if (booking.shortId) {
+      revalidatePath(`/admin/ventas/${booking.shortId}`)
+      revalidatePath(`/propuesta/${booking.shortId}`)
+      revalidatePath(`/status/${booking.shortId}`)
+    }
+    revalidatePath("/admin/ventas/[id]", "page")
+    revalidatePath("/admin/eventos")
+    revalidatePath("/admin")
 
     return { 
       success: true, 
