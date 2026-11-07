@@ -51,7 +51,6 @@ export function AutographWall() {
     <section 
       id="clientes" 
       className="py-28 md:py-36 relative overflow-hidden bg-[#07080D]"
-      style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
     >
       {/* Top and Bottom gradient blend masks */}
       <div className="section-blend-top bg-gradient-to-b from-[#07080D] to-transparent" />
@@ -67,13 +66,13 @@ export function AutographWall() {
       <div className="container mx-auto px-4 relative z-10 max-w-7xl">
         {/* Header Section: Clearly marked "CLIENTES SALÓN DE LA FAMA" */}
         <div className="text-center mb-14 md:mb-16">
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 text-emerald-400 text-[11px] font-mono font-bold uppercase tracking-[0.3em] mb-5 shadow-sm">
-            <Award className="w-4 h-4 text-emerald-400" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 text-emerald-400 text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider mb-5 shadow-sm max-w-full flex-wrap justify-center">
+            <Award className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>SALÓN DE LA FAMA • CLIENTES DESTACADOS</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#22c55e]" />
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#22c55e] shrink-0" />
           </div>
 
-          <h2 className="text-4xl sm:text-5xl md:text-7xl font-sans font-black text-white uppercase tracking-tight leading-none mb-5">
+          <h2 className="text-3xl sm:text-5xl md:text-7xl font-sans font-black text-white uppercase tracking-tight leading-tight md:leading-none mb-5 break-words max-w-full">
             CLIENTES <span className="text-gradient-encore italic">SALÓN DE LA FAMA</span>
           </h2>
 

@@ -83,7 +83,6 @@ export function TestimonialsScroll({ reviews = [] }: TestimonialsScrollProps) {
     <section 
       id="testimonios" 
       className="py-28 md:py-36 bg-[#0B0B14] relative overflow-hidden"
-      style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
     >
       {/* Top and Bottom Gradient Blends */}
       <div className="section-blend-top bg-gradient-to-b from-[#0E0E1A] to-transparent" />
@@ -100,12 +99,12 @@ export function TestimonialsScroll({ reviews = [] }: TestimonialsScrollProps) {
         {/* Section Header with Navigation Controls */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#6F0D2B]/20 text-[#FF5A5F] font-bold text-xs uppercase tracking-widest mb-4">
-              <Star className="w-3.5 h-3.5 fill-[#FF5A5F]" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#6F0D2B]/20 text-[#FF5A5F] font-bold text-xs uppercase tracking-wider mb-4 max-w-full flex-wrap">
+              <Star className="w-3.5 h-3.5 fill-[#FF5A5F] shrink-0" />
               <span>TESTIMONIALES REALES • 5.0 ESTRELLAS</span>
             </div>
 
-            <h2 className="text-4xl sm:text-5xl md:text-7xl font-sans font-black text-white uppercase tracking-tight leading-none mb-4">
+            <h2 className="text-3xl sm:text-5xl md:text-7xl font-sans font-black text-white uppercase tracking-tight leading-tight md:leading-none mb-4 break-words max-w-full">
               LO QUE DICEN <br />
               <span className="text-gradient-encore italic">NUESTROS CLIENTES</span>
             </h2>

@@ -124,7 +124,6 @@ export function PaquetesSection({ dbPackages }: PaquetesSectionProps) {
     <section 
       id="paquetes" 
       className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#15152B]/90 to-[#42112D]"
-      style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
     >
       {/* Concert ambient lights and grid */}
       <div className="absolute inset-0 pointer-events-none">
@@ -148,10 +147,10 @@ export function PaquetesSection({ dbPackages }: PaquetesSectionProps) {
             />
           </div>
 
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#FF5A5F]/10 text-[#FF5A5F] font-semibold text-xs uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#FF5A5F]/10 text-[#FF5A5F] font-semibold text-xs uppercase tracking-wider mb-6 max-w-full flex-wrap justify-center">
             <Sparkles className="w-3.5 h-3.5" /> Nuestros Paquetes
           </div>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-sans font-black tracking-tight uppercase mb-4 text-[#F2F0EB]">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-sans font-black tracking-tight uppercase leading-tight mb-4 text-[#F2F0EB] break-words max-w-full">
             Elige tu <span className="text-gradient-encore">Show en Vivo</span>
           </h2>
           <p className="text-[#F2F0EB]/70 max-w-xl mx-auto text-base md:text-lg font-normal">

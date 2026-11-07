@@ -4,11 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-}
 
 @layer utilities {
   @keyframes shimmer-text {
@@ -114,6 +109,15 @@
   }
   .custom-scrollbar-white::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Utility for hiding scrollbar in touch-friendly carousels */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   .custom-scrollbar-slate::-webkit-scrollbar {
@@ -672,15 +676,22 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+  }
   body {
     @apply text-foreground;
     background: var(--gradient-midnight-stage);
     background-attachment: fixed;
     color: var(--color-blanco-nube);
-  }
-  html {
-    @apply font-sans;
-    scroll-behavior: smooth;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
   ::placeholder {
     color: oklch(0.72 0 0);

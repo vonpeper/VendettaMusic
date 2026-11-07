@@ -173,17 +173,17 @@ export default async function HomePage() {
         <div className="container relative z-20 px-4 md:px-8 lg:px-16 mx-auto flex items-center w-full">
           <div className="w-full lg:max-w-[480px] xl:max-w-[540px] 2xl:max-w-[600px] text-left flex flex-col items-start pt-6 lg:pt-0">
             {/* Amplifier Pilot Light & Season Pill */}
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 backdrop-blur-md text-[10px] font-semibold uppercase tracking-[0.25em] text-[#F2F0EB] mb-4 animate-hero-line-1">
-              <span className="w-2.5 h-2.5 rounded-full amp-jewel-ruby" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 backdrop-blur-md text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-[#F2F0EB] mb-4 animate-hero-line-1 max-w-full flex-wrap">
+              <span className="w-2.5 h-2.5 rounded-full amp-jewel-ruby shrink-0" />
               <span>LIVE POP & ROCK CONCERT • 2026</span>
             </div>
             
-            <h1 className="font-sans font-black uppercase text-left tracking-tight leading-[0.92] text-[clamp(2.3rem,5vw,4.2rem)] mb-6 select-none drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+            <h1 className="font-sans font-black uppercase text-left tracking-tight leading-[0.95] text-[clamp(1.75rem,7vw,4.2rem)] mb-6 select-none drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)] max-w-full break-words">
               {/* Texto semántico accesible para motores de búsqueda */}
               <span className="sr-only">
                 Vendetta Live Music | Show de Pop & Rock en Vivo y Happenings para Eventos Corporativos, Cumpleaños, Festivales y Fiestas Privadas en Metepec, Toluca, Valle de Bravo, CDMX, Cuernavaca y Querétaro
               </span>
-              <span className="block animate-hero-line-1 whitespace-nowrap">
+              <span className="block animate-hero-line-1 sm:whitespace-nowrap">
                 <span className="text-[#F2F0EB]">EL </span>
                 <span className="text-gradient-encore">SOUNDTRACK</span>
               </span>
@@ -272,7 +272,6 @@ export default async function HomePage() {
       {/* -- TRIBUTO MENTIRAS HERO ------------------------------------------ */}
       <section 
         className="relative py-32 overflow-hidden bg-gradient-to-b from-[#0E0E1A] via-[#2D0F22]/90 to-[#0B0B14]"
-        style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
       >
         {/* Máscara de mezcla de gradiente para transición suave */}
         <div className="section-blend-top bg-gradient-to-b from-[#0E0E1A] to-transparent" />
@@ -299,11 +298,11 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="lg:w-1/2 text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FF5A5F]/30 bg-[#6F0D2B]/20 text-[#FF5A5F] font-bold uppercase tracking-[0.3em] text-xs mb-4">
-              <span className="w-2.5 h-2.5 rounded-full amp-jewel-amber" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FF5A5F]/30 bg-[#6F0D2B]/20 text-[#FF5A5F] font-bold uppercase tracking-wider text-xs mb-4 max-w-full flex-wrap">
+              <span className="w-2.5 h-2.5 rounded-full amp-jewel-amber shrink-0" />
               <span>HOMENAJE OFICIAL • 80s POP</span>
             </div>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-heading font-black text-white uppercase tracking-tight leading-tight md:leading-none mb-6">
+            <h2 className="text-3xl sm:text-5xl md:text-6xl font-heading font-black text-white uppercase tracking-tight leading-tight md:leading-none mb-6 break-words max-w-full">
               Tributo <br />
               <span className="text-gradient-encore italic pr-4">Mentiras</span>
             </h2>
@@ -326,7 +325,6 @@ export default async function HomePage() {
       <section 
         id="servicios" 
         className="py-28 bg-[#0B0B14] relative overflow-hidden"
-        style={{ contentVisibility: "auto", containIntrinsicSize: "1px 600px" }}
       >
         {/* Aurora stage effects */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -340,11 +338,11 @@ export default async function HomePage() {
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#FF5A5F]/30 bg-[#6F0D2B]/20 text-[#FF5A5F] font-bold text-xs uppercase tracking-[0.2em] mb-6 shadow-lg shadow-[#6F0D2B]/20">
-              <span className="w-2.5 h-2.5 rounded-full amp-jewel-ruby" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#FF5A5F]/30 bg-[#6F0D2B]/20 text-[#FF5A5F] font-bold text-xs uppercase tracking-wider mb-6 shadow-lg shadow-[#6F0D2B]/20 max-w-full flex-wrap justify-center">
+              <span className="w-2.5 h-2.5 rounded-full amp-jewel-ruby shrink-0" />
               <span>ESTÁNDAR VENDETTA • BENTO SHOWCASE</span>
             </div>
-            <h2 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl tracking-tighter mb-4 leading-tight md:leading-none uppercase text-white">
+            <h2 className="font-heading font-black text-3xl sm:text-5xl md:text-7xl tracking-tighter mb-4 leading-tight md:leading-none uppercase text-white break-words max-w-full">
               Show de Épocas <br /> <span className="text-gradient-encore italic">Pop & Rock</span>
             </h2>
             <p className="text-[#F2F0EB]/70 max-w-lg mx-auto font-normal text-base">
@@ -672,15 +670,7 @@ export default async function HomePage() {
       <AutographWall />
 
       {/* -- GALERÍA DE FOTOS ----------------------------------------------- */}
-      <section 
-        id="galeria" 
-        className="py-24 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#120F24] to-[#0B0B14]"
-        style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
-      >
-        <div className="section-blend-top bg-gradient-to-b from-[#07080D] to-transparent" />
-        <PhotoGallery images={mediaMap.galeria} />
-        <div className="section-blend-bottom bg-gradient-to-t from-[#0B0B14] to-transparent" />
-      </section>
+      <PhotoGallery images={mediaMap.galeria} />
 
       {/* -- TESTIMONIOS EN SCROLL HORIZONTAL ------------------------------- */}
       <TestimonialsScroll reviews={liveDbReviews} />
@@ -688,7 +678,6 @@ export default async function HomePage() {
       {/* -- CTA FINAL ------------------------------------------------------ */}
       <section 
         className="py-36 relative overflow-hidden bg-gradient-to-b from-[#0B0B14] via-[#42112D]/80 to-[#07080D]"
-        style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
       >
         {/* Máscara de mezcla de gradiente para transición suave */}
         <div className="section-blend-top bg-gradient-to-b from-[#0B0B14] to-transparent" />
@@ -710,7 +699,7 @@ export default async function HomePage() {
         </div>
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <h2 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl uppercase tracking-tighter mb-8 text-white leading-tight md:leading-none">
+          <h2 className="font-heading font-black text-3xl sm:text-5xl md:text-7xl uppercase tracking-tighter mb-8 text-white leading-tight md:leading-none break-words max-w-full">
             Haz que tu evento <br />
             sea <span className="text-gradient-encore italic">Leyenda</span>
           </h2>

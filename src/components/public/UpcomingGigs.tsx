@@ -24,7 +24,6 @@ export async function UpcomingGigs() {
     <section 
       id="fechas" 
       className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#15152B]/70 to-[#07080D]"
-      style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
     >
       {/* Máscara de mezcla de gradiente para transición suave */}
       <div className="section-blend-top bg-gradient-to-b from-[#07080D] to-transparent" />
@@ -38,10 +37,10 @@ export async function UpcomingGigs() {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#FF5A5F]/10 text-[#FF5A5F] font-semibold text-xs uppercase tracking-widest mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#FF5A5F]/10 text-[#FF5A5F] font-semibold text-xs uppercase tracking-wider mb-4 max-w-full flex-wrap">
              ⚡ Agenda en Vivo 2026
           </div>
-          <h2 className="text-4xl sm:text-5xl md:text-7xl font-sans font-black text-[#F2F0EB] uppercase tracking-tight leading-tight md:leading-none">
+          <h2 className="text-3xl sm:text-5xl md:text-7xl font-sans font-black text-[#F2F0EB] uppercase tracking-tight leading-tight md:leading-none mb-4 break-words max-w-full">
             Gira & <span className="text-gradient-encore">Presentaciones</span>
           </h2>
         </div>

@@ -32,12 +32,12 @@ export function VendettaExperience() {
         {/* Section Top Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-white/15 bg-white/5 backdrop-blur-md text-[10px] font-semibold uppercase tracking-[0.3em] mb-4 text-[#F2F0EB]">
-              <div className="w-2.5 h-2.5 rounded-full amp-jewel-ruby" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 backdrop-blur-md text-[10px] font-semibold uppercase tracking-wider mb-4 text-[#F2F0EB] max-w-full flex-wrap">
+              <div className="w-2.5 h-2.5 rounded-full amp-jewel-ruby shrink-0" />
               <span>EXPERIENCIA & RIDER DE GIRA</span>
             </div>
 
-            <h2 className="text-4xl md:text-6xl font-sans font-black text-[#F2F0EB] uppercase tracking-tight leading-none mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-sans font-black text-[#F2F0EB] uppercase tracking-tight leading-tight mb-4 break-words max-w-full">
               POR QUÉ <span className="text-gradient-encore">VENDETTA MUSIC</span>
             </h2>
             <p className="text-[#F2F0EB]/70 text-sm md:text-base font-normal">
@@ -294,9 +294,9 @@ export function VendettaExperience() {
             </div>
 
             <div className="max-w-xl relative z-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-[10px] font-mono font-bold uppercase tracking-wider mb-4 backdrop-blur-md">
-                <Sliders className="w-3 h-3" />
-                INGENIERÍA & RIDER PROFESIONAL
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-[10px] font-mono font-bold uppercase tracking-wider mb-4 backdrop-blur-md max-w-full flex-wrap">
+                <Sliders className="w-3 h-3 shrink-0" />
+                <span>INGENIERÍA & RIDER PROFESIONAL</span>
               </div>
 
               <h3 className="text-2xl md:text-4xl font-sans font-black text-[#F2F0EB] uppercase tracking-tight leading-tight mb-3">

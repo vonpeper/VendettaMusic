@@ -141,7 +141,6 @@ export function MusiciansSection({ musicians = [] }: { musicians?: Musician[] })
       <section 
         id="nosotros" 
         className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#15152B] via-[#07080D] to-[#42112D]/80"
-        style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
       >
         {/* Máscara de mezcla de gradiente para transición suave */}
         <div className="section-blend-top bg-gradient-to-b from-[#07080D] to-transparent" />
@@ -155,10 +154,10 @@ export function MusiciansSection({ musicians = [] }: { musicians?: Musician[] })
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#FF5A5F]/10 text-[#FF5A5F] font-semibold text-xs uppercase tracking-widest mb-5">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF5A5F]/30 bg-[#FF5A5F]/10 text-[#FF5A5F] font-semibold text-xs uppercase tracking-wider mb-5 max-w-full flex-wrap">
               🎸 En Escena
             </div>
-            <h2 className="font-sans font-black text-4xl md:text-6xl text-[#F2F0EB] uppercase tracking-tight mb-4">
+            <h2 className="font-sans font-black text-3xl sm:text-4xl md:text-6xl text-[#F2F0EB] uppercase tracking-tight leading-tight mb-4 break-words max-w-full">
               Los Músicos de <span className="text-gradient-encore">Vendetta</span>
             </h2>
             <p className="text-[#F2F0EB]/70 max-w-lg mx-auto font-normal text-sm md:text-base">

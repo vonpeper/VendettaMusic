@@ -1091,7 +1091,6 @@ export function PremiumClientQuoteView({
         {/* ============================================================ */}
         <section 
           className="mb-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-xl shadow-slate-200/60 p-6 sm:p-8 relative overflow-hidden"
-          style={{ contentVisibility: "auto", containIntrinsicSize: "600px" }}
         >
           {/* Acento rojo superior */}
           <div className="h-1.5 w-full bg-red-600 absolute top-0 left-0 right-0" />
@@ -1272,7 +1271,6 @@ export function PremiumClientQuoteView({
         {/* ============================================================ */}
         <section 
           className="mb-10 rounded-3xl bg-white border-2 border-slate-200 p-6 text-center space-y-4 shadow-md"
-          style={{ contentVisibility: "auto", containIntrinsicSize: "300px" }}
         >
           <div className="text-xs font-black uppercase tracking-[0.25em] text-red-600">
             Compromiso de Calidad & Respaldo Vendetta
@@ -1302,7 +1300,6 @@ export function PremiumClientQuoteView({
         {/* ============================================================ */}
         <footer 
           className="pt-6 pb-12 border-t-2 border-slate-200 text-center space-y-3"
-          style={{ contentVisibility: "auto", containIntrinsicSize: "150px" }}
         >
           <p className="text-xs text-slate-600 font-bold">
             Vendetta Live Music • Toluca, Metepec, Valle de Bravo, CDMX y alrededores.

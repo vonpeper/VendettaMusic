@@ -44,7 +44,7 @@ function withLazyScrollMount<P extends object>(
     return (
       <div 
         ref={containerRef} 
-        style={!isVisible ? { minHeight, contentVisibility: "auto", containIntrinsicSize: `1px ${minHeight}` } : undefined}
+        style={!isVisible ? { minHeight } : undefined}
       >
         {isVisible ? <DynamicComponent {...props} /> : null}
       </div>
