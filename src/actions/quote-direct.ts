@@ -21,7 +21,7 @@ export interface SubmitPublicQuoteInput {
   notas?: string
   inquiryId?: string
   produccionAdicional?: string[]
-  viaticos?: any
+  viaticos?: unknown
   mapsLink?: string
 }
 
@@ -103,7 +103,7 @@ export async function saveQuoteDraftAction(
     })
 
     return { success: true, inquiryId: inquiry.id }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error al registrar borrador de prospecto:", err)
     return { success: false, error: "Error interno al registrar borrador." }
   }
@@ -245,9 +245,10 @@ export async function submitPublicQuoteAction(
         endTime: horaFin,
         bandHours: horasShow,
         city: municipio,
+        municipio: municipio,
         state: estado,
         address: input.lugarEvento?.trim() || municipio,
-        mapsLink: input.mapsLink?.trim() || null,
+        mapsLink: input.mapsLink?.trim() || (input.lugarEvento?.trim().includes("http") ? input.lugarEvento.trim() : null),
         baseAmount: 0,
         depositAmount: 0,
         viaticosAmount: 0,
@@ -293,7 +294,7 @@ export async function submitPublicQuoteAction(
 *Cliente:* ${nombre}
 *WhatsApp:* ${cleanPhone}
 *Fecha:* ${fechaFormateada} (${horario})
-*Lugar:* ${municipio}, ${estado}
+*Lugar:* ${municipio}, ${estado}${input.lugarEvento?.trim() ? ` (${input.lugarEvento.trim()})` : ""}${booking.mapsLink ? `\n*Maps:* ${booking.mapsLink}` : ""}
 *Aforo:* ${aforo} pax
 *Motivo:* ${tipoEvento}${input.paquete ? `\n*Formato:* ${input.paquete}` : ""}${input.notas?.trim() ? `\n*Notas:* ${input.notas.trim()}` : ""}
 👉 *Revisar y Aprobar:* https://vendetta.mx/admin/ventas/${booking.id}`

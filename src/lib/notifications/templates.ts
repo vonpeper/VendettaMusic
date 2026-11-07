@@ -17,6 +17,8 @@ export const TEMPLATE_INQUIRY_RECEIPT = `¡Hola {{fullName}}! 👋 Recibimos tu 
 
 export const TEMPLATE_CLIENT_QUOTE = `¡Hola {{fullName}}! 🎸 Tu propuesta oficial y contrato para el {{eventDate}} están listos. Revisa los detalles y firma en línea para asegurar tu fecha aquí: 👉 {{proposalLink}} (Tarifa y fecha reservadas por 48 hrs sujetas a disponibilidad).`
 
+export const TEMPLATE_QUOTE_OFFICIAL = TEMPLATE_CLIENT_QUOTE
+
 /**
  * Función auxiliar para reemplazar {{variables}}
  */

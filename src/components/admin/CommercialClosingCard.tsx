@@ -104,6 +104,7 @@ interface CommercialClosingCardProps {
   city?: string | null
   state?: string | null
   address?: string | null
+  mapsLink?: string | null
   venueType?: string | null
   guestCount?: number
   isOutsideZone?: boolean
@@ -144,6 +145,7 @@ export function CommercialClosingCard({
   city,
   state,
   address,
+  mapsLink,
   venueType,
   guestCount,
   isOutsideZone = false,
@@ -160,6 +162,22 @@ export function CommercialClosingCard({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+
+  // Enlace y referencia de Google Maps
+  const [currentMapsLink, setCurrentMapsLink] = useState<string>(
+    mapsLink || (address?.startsWith("http") ? address : "")
+  )
+
+  const effectiveMapsUrl = useMemo(() => {
+    if (currentMapsLink && currentMapsLink.trim().startsWith("http")) return currentMapsLink.trim()
+    if (mapsLink && mapsLink.trim().startsWith("http")) return mapsLink.trim()
+    if (address && address.trim().startsWith("http")) return address.trim()
+    if (city) {
+      const q = encodeURIComponent(`${address && address !== city ? `${address}, ` : ""}${city}, ${state || "México"}`)
+      return `https://www.google.com/maps/search/?api=1&query=${q}`
+    }
+    return null
+  }, [currentMapsLink, mapsLink, address, city, state])
 
   // Encontrar costo base predeterminado si es necesario
   const findDefaultPrice = (name: string) => {
@@ -327,7 +345,8 @@ export function CommercialClosingCard({
         depositAmount: effectiveDeposit,
         packageName,
         lineItems: lineItemsToSave,
-        isOutsideZone: isForaneo
+        isOutsideZone: isForaneo,
+        mapsLink: currentMapsLink?.trim() || undefined
       })
 
       if (res.success) {
@@ -428,6 +447,22 @@ export function CommercialClosingCard({
             <span className="font-bold text-foreground block truncate" title={`${city || ""}, ${state || ""}`}>
               {city || "Por confirmar"}{state ? `, ${state}` : ""}
             </span>
+            {address && address !== city && (
+              <span className="text-[10px] text-muted-foreground block truncate" title={address}>
+                {address}
+              </span>
+            )}
+            {effectiveMapsUrl && (
+              <a
+                href={effectiveMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline mt-0.5"
+                title="Abrir ubicación en Google Maps"
+              >
+                <ExternalLink className="w-3 h-3" /> 📍 Abrir en Google Maps
+              </a>
+            )}
           </div>
 
           <div className="space-y-0.5">
@@ -589,6 +624,56 @@ export function CommercialClosingCard({
               placeholder="0"
               className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B]"
             />
+          </div>
+        </div>
+
+        {/* Enlace y gestión de Google Maps para cálculo certero de viáticos */}
+        <div className="pt-2.5 border-t border-border/50 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-amber-600" /> Referencia de Ubicación & Google Maps
+            </Label>
+            {effectiveMapsUrl && (
+              <a
+                href={effectiveMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline"
+              >
+                <ExternalLink className="w-3 h-3" /> 📍 Abrir en Google Maps
+              </a>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              type="text"
+              value={currentMapsLink}
+              onChange={(e) => setCurrentMapsLink(e.target.value)}
+              placeholder="Pega aquí el enlace de Google Maps (https://maps.app.goo.gl/...)"
+              className="bg-white dark:bg-zinc-900 border-border h-9 rounded-xl text-xs font-mono focus:border-[#6F0D2B]"
+            />
+            {currentMapsLink !== (mapsLink || "") && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  const { updateBookingLocationAction } = await import("@/actions/ventas")
+                  const res = await updateBookingLocationAction({
+                    bookingId,
+                    mapsLink: currentMapsLink
+                  })
+                  if (res.success) {
+                    toast.success("Enlace de Google Maps guardado")
+                  } else {
+                    toast.error(res.error || "No se pudo guardar el enlace")
+                  }
+                }}
+                className="h-9 px-3 text-xs shrink-0 rounded-xl"
+              >
+                Guardar Link
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -371,10 +371,10 @@ export function PremiumClientQuoteView({
                   </p>
                 </div>
               </div>
-              {downloadContractUrl && (
+              {isSigned && downloadContractUrl && (
                 <Button size="sm" asChild className="bg-emerald-700 hover:bg-emerald-600 text-white shrink-0 text-xs font-black h-10 rounded-xl px-4 shadow-sm">
                   <a href={downloadContractUrl} target="_blank" rel="noopener noreferrer">
-                    <Download className="w-3.5 h-3.5 mr-1.5" /> Descargar Contrato
+                    <Download className="w-3.5 h-3.5 mr-1.5" /> 📄 Descargar Contrato en PDF
                   </a>
                 </Button>
               )}

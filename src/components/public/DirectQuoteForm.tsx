@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
 import { submitPublicQuoteAction, saveQuoteDraftAction } from "@/actions/quote-direct"
+import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import { toast } from "sonner"
 import {
   User,
@@ -52,19 +53,17 @@ const AFORO_OPCIONES = [
   { label: "Masivo (+300)", value: 400 },
 ]
 
-const POPULAR_LOCATIONS = [
-  "Metepec, Estado de México",
-  "Toluca, Estado de México",
-  "Valle de Bravo, Estado de México",
-  "Avándaro, Estado de México",
-  "Ciudad de México (CDMX)",
-  "Santa Fe, CDMX",
-  "Polanco, CDMX",
-  "San Ángel / Pedregal, CDMX",
-  "Huixquilucan / Interlomas, Edomex",
-  "Tepotzotlán, Estado de México",
-  "Cuernavaca, Morelos",
-  "Querétaro, Querétaro"
+const ESTADOS_DISPONIBLES = [
+  "Estado de México",
+  "Ciudad de México",
+  "Morelos",
+  "Querétaro",
+  "Hidalgo",
+  "Puebla",
+  "Michoacán",
+  "Guerrero",
+  "Tlaxcala",
+  "Otro"
 ]
 
 export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: DirectQuoteFormProps) {
@@ -74,7 +73,13 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
   const [fecha, setFecha] = useState(initialDate || "")
   const [horaInicio, setHoraInicio] = useState("21:00")
   const [horaFin, setHoraFin] = useState("23:00")
-  const [ubicacion, setUbicacion] = useState("")
+
+  // Ubicación normalizada
+  const [selectedEstado, setSelectedEstado] = useState<string>("Estado de México")
+  const [selectedMunicipio, setSelectedMunicipio] = useState<string>("Metepec")
+  const [customMunicipio, setCustomMunicipio] = useState<string>("")
+  const [lugarReferencia, setLugarReferencia] = useState<string>("")
+
   const [aforoLabel, setAforoLabel] = useState<string>("Salón (100-300)")
   const [aforo, setAforo] = useState<number>(200)
   const [motivo, setMotivo] = useState<string>("Boda")
@@ -96,6 +101,19 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
   const cleanPhone = telefono.replace(/\D/g, "")
   const isPhoneValid = cleanPhone.length === 10
 
+  // Es municipio personalizado si se elige 'Otro municipio...' o estado 'Otro'
+  const isCustomMuni = selectedMunicipio === "Otro municipio / cotización manual" || selectedEstado === "Otro"
+
+  const handleEstadoChange = (newEstado: string) => {
+    setSelectedEstado(newEstado)
+    if (newEstado === "Otro") {
+      setSelectedMunicipio("Otro municipio / cotización manual")
+    } else {
+      const muniList = ESTADOS_MUNICIPIOS[newEstado] || []
+      setSelectedMunicipio(muniList[0] || "Otro municipio / cotización manual")
+    }
+  }
+
   // Fecha mínima: mañana
   const minDate = useMemo(() => {
     const d = new Date()
@@ -111,12 +129,15 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
       if (draftTimer.current) clearTimeout(draftTimer.current)
       draftTimer.current = setTimeout(async () => {
         try {
+          const finalMuni = isCustomMuni
+            ? (customMunicipio.trim() || undefined)
+            : selectedMunicipio
           const res = await saveQuoteDraftAction({
             nombre: nombre.trim(),
             telefono: cleanPhone,
             fecha: fecha || undefined,
-            municipio: ubicacion.trim() || undefined,
-            estado: "Estado de México",
+            municipio: finalMuni,
+            estado: selectedEstado,
             invitados: aforo,
             tipoEvento: motivo,
             inquiryId
@@ -132,7 +153,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
     return () => {
       if (draftTimer.current) clearTimeout(draftTimer.current)
     }
-  }, [nombre, cleanPhone, isPhoneValid, fecha, ubicacion, aforo, motivo, inquiryId])
+  }, [nombre, cleanPhone, isPhoneValid, fecha, selectedEstado, selectedMunicipio, customMunicipio, isCustomMuni, aforo, motivo, inquiryId])
 
   // Manejo del envío
   const handleSubmit = async (e: React.FormEvent) => {
@@ -153,30 +174,24 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
       return
     }
 
-    if (!ubicacion.trim()) {
-      toast.error("Por favor especifica el municipio y estado de tu evento.")
+    if (isCustomMuni && !customMunicipio.trim()) {
+      toast.error("Por favor especifica tu municipio o localidad.")
       return
     }
 
     setIsSubmitting(true)
 
     try {
-      // Normalizar ubicación en municipio y estado
-      let finalMunicipio = ubicacion.trim()
-      let finalEstado = "Estado de México"
-      if (ubicacion.includes(",")) {
-        const parts = ubicacion.split(",").map(p => p.trim())
-        finalMunicipio = parts[0]
-        if (parts.length > 1 && parts[1]) {
-          finalEstado = parts[1]
-        }
-      } else if (ubicacion.toLowerCase().includes("cdmx") || ubicacion.toLowerCase().includes("ciudad de mexico")) {
-        finalEstado = "Ciudad de México"
-      } else if (ubicacion.toLowerCase().includes("queretaro")) {
-        finalEstado = "Querétaro"
-      } else if (ubicacion.toLowerCase().includes("cuernavaca") || ubicacion.toLowerCase().includes("morelos")) {
-        finalEstado = "Morelos"
-      }
+      const finalMunicipio = isCustomMuni ? customMunicipio.trim() : selectedMunicipio
+      const finalEstado = selectedEstado
+      const isUrl =
+        lugarReferencia.trim().startsWith("http://") ||
+        lugarReferencia.trim().startsWith("https://") ||
+        lugarReferencia.trim().includes("maps.app.goo.gl") ||
+        lugarReferencia.trim().includes("goo.gl/maps")
+
+      const mapsLink = isUrl ? lugarReferencia.trim() : undefined
+      const lugarEvento = lugarReferencia.trim() || undefined
 
       // Resolver paquete inicial si venía en URL
       let pkgLabel: string | undefined = undefined
@@ -197,6 +212,8 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
         invitados: aforo,
         estado: finalEstado,
         municipio: finalMunicipio,
+        lugarEvento,
+        mapsLink,
         paquete: pkgLabel,
         inquiryId
       })
@@ -208,7 +225,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
           motivo: res.motivo || motivo,
           fecha: res.fecha || fecha,
           horario: `${horaInicio} a ${horaFin}`,
-          municipio: res.municipio || finalMunicipio
+          municipio: `${finalMunicipio}, ${finalEstado}`
         })
         toast.success(`¡Solicitud enviada con éxito! Folio: ${res.shortId}`)
       } else {
@@ -328,27 +345,80 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             </div>
           </div>
 
-          {/* Fila 3: Municipio y Estado */}
-          <div className="space-y-2">
-            <Label htmlFor="ubicacion" className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-[#f59e0b]" /> Municipio y Estado *
-            </Label>
-            <div className="relative">
+          {/* Fila 3: Ubicación Normalizada (Estado, Municipio y Recinto/Maps) */}
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="estado" className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-[#f59e0b]" /> Estado *
+                </Label>
+                <select
+                  id="estado"
+                  value={selectedEstado}
+                  onChange={(e) => handleEstadoChange(e.target.value)}
+                  className="w-full bg-black/50 border border-white/15 text-white rounded-xl h-12 px-3 text-sm focus:border-[#f59e0b] focus:ring-[#f59e0b]/20 [color-scheme:dark] outline-none cursor-pointer"
+                >
+                  {ESTADOS_DISPONIBLES.map((est) => (
+                    <option key={est} value={est} className="bg-zinc-900 text-white">
+                      {est}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="municipio" className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-[#f59e0b]" /> Municipio o Alcaldía *
+                </Label>
+                <select
+                  id="municipio"
+                  value={selectedMunicipio}
+                  onChange={(e) => setSelectedMunicipio(e.target.value)}
+                  className="w-full bg-black/50 border border-white/15 text-white rounded-xl h-12 px-3 text-sm focus:border-[#f59e0b] focus:ring-[#f59e0b]/20 [color-scheme:dark] outline-none cursor-pointer"
+                >
+                  {(ESTADOS_MUNICIPIOS[selectedEstado] || ["Otro municipio / cotización manual"]).map((mun) => (
+                    <option key={mun} value={mun} className="bg-zinc-900 text-white">
+                      {mun}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Input condicional si selecciona 'Otro' o 'Otro municipio / cotización manual' */}
+            {isCustomMuni && (
+              <div className="space-y-1.5 animate-fadeIn">
+                <Label htmlFor="customMunicipio" className="text-[11px] font-bold uppercase tracking-wider text-[#f59e0b]">
+                  Especifica tu Municipio o Localidad *
+                </Label>
+                <Input
+                  id="customMunicipio"
+                  type="text"
+                  required
+                  placeholder="Ej. Cuautitlán, Huamantla, Taxco..."
+                  value={customMunicipio}
+                  onChange={(e) => setCustomMunicipio(e.target.value)}
+                  className="bg-black/50 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-12 focus:border-[#f59e0b] focus:ring-[#f59e0b]/20 text-sm"
+                />
+              </div>
+            )}
+
+            {/* Campo auxiliar opcional: Salón, Recinto o Link de Google Maps */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="lugarReferencia" className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-gray-400" /> Salón, Recinto o Link Google Maps
+                </Label>
+                <span className="text-[10px] text-gray-400 font-normal">Opcional</span>
+              </div>
               <Input
-                id="ubicacion"
+                id="lugarReferencia"
                 type="text"
-                required
-                list="popular-locations"
-                placeholder="Ej. Metepec, Valle de Bravo, CDMX..."
-                value={ubicacion}
-                onChange={(e) => setUbicacion(e.target.value)}
+                placeholder="Ej. Salón Bellavista o https://maps.app.goo.gl/..."
+                value={lugarReferencia}
+                onChange={(e) => setLugarReferencia(e.target.value)}
                 className="bg-black/50 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-12 focus:border-[#f59e0b] focus:ring-[#f59e0b]/20 text-sm"
               />
-              <datalist id="popular-locations">
-                {POPULAR_LOCATIONS.map((loc) => (
-                  <option key={loc} value={loc} />
-                ))}
-              </datalist>
             </div>
           </div>
 

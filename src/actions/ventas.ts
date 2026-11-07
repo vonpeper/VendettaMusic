@@ -1264,6 +1264,49 @@ export interface ApproveProposalInput {
   packageName?: string
   isOutsideZone?: boolean
   lineItems?: ApproveProposalLineItemInput[]
+  mapsLink?: string
+}
+
+export async function updateBookingLocationAction(params: {
+  bookingId: string
+  city?: string
+  state?: string
+  address?: string
+  mapsLink?: string
+}) {
+  try {
+    const booking = await db.bookingRequest.findUnique({
+      where: { id: params.bookingId }
+    })
+    if (!booking) return { success: false, error: "Solicitud no encontrada" }
+
+    await db.bookingRequest.update({
+      where: { id: params.bookingId },
+      data: {
+        ...(params.city !== undefined ? { city: params.city.trim(), municipio: params.city.trim() } : {}),
+        ...(params.state !== undefined ? { state: params.state.trim() } : {}),
+        ...(params.address !== undefined ? { address: params.address.trim() } : {}),
+        ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
+      }
+    })
+
+    if (booking.eventId) {
+      await db.event.update({
+        where: { id: booking.eventId },
+        data: {
+          ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
+        }
+      }).catch(e => console.warn("Could not sync event location:", e))
+    }
+
+    const { revalidatePath } = await import("next/cache")
+    revalidatePath(`/admin/ventas/${params.bookingId}`)
+    revalidatePath("/admin/ventas")
+    return { success: true }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Error al actualizar ubicación"
+    return { success: false, error: msg }
+  }
 }
 
 export async function approveAndSendProposalAction(params: ApproveProposalInput) {
@@ -1344,6 +1387,7 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
         depositAmount: deposit,
         packageName: updatedPackage,
         isOutsideZone: params.isOutsideZone ?? booking.isOutsideZone,
+        ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
         status: "propuesta_enviada"
       }
     })
@@ -1358,6 +1402,7 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
           deposit: deposit,
           balance: Math.max(0, total - deposit),
           totalWithTax: total,
+          ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
         }
       }).catch(e => console.warn("Could not sync event amounts on approve:", e))
     }

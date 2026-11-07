@@ -476,6 +476,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               city={booking.city}
               state={booking.state}
               address={booking.address}
+              mapsLink={booking.mapsLink || booking.event?.mapsLink || undefined}
               venueType={booking.venueType || booking.ceremonyType}
               guestCount={booking.guestCount || undefined}
               isOutsideZone={booking.isOutsideZone || undefined}
