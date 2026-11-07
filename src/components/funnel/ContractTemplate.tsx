@@ -27,7 +27,9 @@ export function ContractTemplate({ data, shortId }: Props) {
       {/* Membrete Estilo Rock Premium */}
       <div className="border-b-4 border-black pb-4 mb-8 flex justify-between items-end">
         <div className="flex items-center gap-4">
-          <img src="/logo.png" alt="Vendetta" className="h-16 w-auto" />
+          <div className="p-1.5 rounded-xl bg-[#07080D] flex items-center justify-center">
+            <img src="/images/LOGO VNDETTA 2026.svg" alt="Vendetta" className="h-14 w-auto" />
+          </div>
           <div>
             <h1 className="text-4xl font-black tracking-tighter m-0 uppercase leading-none">VENDETTA</h1>
             <p className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-60">Rock & Production Agency</p>

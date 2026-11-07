@@ -278,11 +278,13 @@ export function PremiumClientQuoteView({
             {/* Branding Vendetta & Título Formal */}
             <div className="space-y-2.5">
               <div className="flex items-center gap-3">
-                <img 
-                  src="/logo.png" 
-                  alt="Vendetta Live Music" 
-                  className="h-11 sm:h-12 w-auto object-contain drop-shadow-sm" 
-                />
+                <div className="p-1.5 rounded-xl bg-[#07080D] flex items-center justify-center shrink-0">
+                  <img 
+                    src="/images/LOGO VNDETTA 2026.svg" 
+                    alt="Vendetta Live Music" 
+                    className="h-10 sm:h-11 w-auto object-contain" 
+                  />
+                </div>
                 <div className="h-7 w-px bg-slate-200 hidden sm:block" />
                 <div className="hidden sm:block">
                   <span className="text-[11px] font-black uppercase tracking-[0.2em] text-red-600 block leading-tight">

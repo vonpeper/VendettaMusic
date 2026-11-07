@@ -113,7 +113,7 @@ export default async function ConfirmationPage({
         <div className="max-w-md w-full bg-card border border-green-500/30 rounded-3xl p-8 text-center shadow-2xl">
           <div className="flex justify-center mb-8">
             <img 
-              src="/images/logo-vendetta-horizontal.png" 
+              src="/images/LOGO VNDETTA 2026.svg" 
               alt="Vendetta Music" 
               className="h-20 w-auto object-contain"
             />
@@ -156,7 +156,7 @@ export default async function ConfirmationPage({
         <div className="max-w-md w-full bg-card border border-red-500/30 rounded-3xl p-8 text-center shadow-2xl">
           <div className="flex justify-center mb-8">
             <img 
-              src="/images/logo-vendetta-horizontal.png" 
+              src="/images/LOGO VNDETTA 2026.svg" 
               alt="Vendetta Music" 
               className="h-20 w-auto object-contain"
             />
@@ -184,7 +184,7 @@ export default async function ConfirmationPage({
       <div className="max-w-md w-full bg-card border border-white/10 rounded-3xl p-8 shadow-2xl">
         <div className="flex justify-center mb-8">
           <img 
-            src="/images/logo-vendetta-horizontal.png" 
+            src="/images/LOGO VNDETTA 2026.svg" 
             alt="Vendetta Music" 
             className="h-28 w-auto object-contain"
           />

@@ -33,12 +33,13 @@ export function PublicNavbar() {
         <Link href="/" className="flex items-center gap-2 group transition-transform duration-300 hover:scale-[1.02]">
           <div className="h-11 md:h-12 flex items-center relative">
             <Image 
-              src="/images/logo-vendetta-horizontal.png" 
+              src="/images/LOGO VNDETTA 2026.svg" 
               alt="Vendetta Live Music" 
-              width={199}
+              width={160}
               height={48}
               priority
-              sizes="199px"
+              unoptimized
+              sizes="160px"
               className="h-full w-auto object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
             />
           </div>
@@ -97,11 +98,12 @@ export function PublicNavbar() {
                   <SheetHeader className="text-left mb-6">
                     <div className="h-12 flex items-center self-start">
                       <Image 
-                        src="/images/logo-vendetta-horizontal.png" 
+                        src="/images/LOGO VNDETTA 2026.svg" 
                         alt="Vendetta Live Music" 
-                        width={199}
+                        width={160}
                         height={48}
-                        sizes="199px"
+                        unoptimized
+                        sizes="160px"
                         className="h-full w-auto object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]"
                       />
                     </div>

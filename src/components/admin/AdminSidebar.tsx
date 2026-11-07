@@ -243,7 +243,7 @@ export function AdminSidebar({ user, pendingInbox = 0, pendingLeads = 0 }: Admin
         </button>
         <div className="h-8 flex items-center">
           <img 
-            src="/images/logo-vendetta-horizontal.png?v=3" 
+            src="/images/LOGO VNDETTA 2026.svg" 
             alt="Vendetta Logo" 
             className="h-full w-auto object-contain"
           />
@@ -278,7 +278,7 @@ export function AdminSidebar({ user, pendingInbox = 0, pendingLeads = 0 }: Admin
           <Link href="/" className="flex items-center gap-2">
             <div className="h-12 flex items-center">
               <img 
-                src="/images/logo-vendetta-horizontal.png?v=3" 
+                src="/images/LOGO VNDETTA 2026.svg" 
                 alt="Vendetta Logo" 
                 className="h-full w-auto object-contain"
               />

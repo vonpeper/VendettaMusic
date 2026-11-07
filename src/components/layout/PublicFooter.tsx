@@ -33,11 +33,12 @@ export async function PublicFooter() {
           <div className="space-y-8">
             <Link href="/" className="inline-block group transition-transform hover:scale-105 duration-500">
               <Image 
-                src="/images/logo-vendetta-horizontal.png" 
+                src="/images/LOGO VNDETTA 2026.svg" 
                 alt="Vendetta Live Music" 
-                width={200}
+                width={180}
                 height={56}
-                sizes="200px"
+                unoptimized
+                sizes="180px"
                 className="h-14 w-auto object-contain drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]"
               />
             </Link>

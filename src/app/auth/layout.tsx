@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="container relative z-10 mx-auto px-4 py-8 flex flex-col items-center">
         <div className="mb-12">
           <img 
-            src="/images/logo-vendetta-horizontal.png" 
+            src="/images/LOGO VNDETTA 2026.svg" 
             alt="Vendetta Music" 
             className="h-32 w-auto object-contain"
           />

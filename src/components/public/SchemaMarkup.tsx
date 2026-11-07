@@ -18,7 +18,7 @@ export async function SchemaMarkup() {
   })
 
   // 1. URLs de Redes y Configuración Base
-  const logo = "https://vendetta.mx/images/branding/logo-vendetta.png"
+  const logo = "https://vendetta.mx/images/LOGO%20VNDETTA%202026.svg"
   const sameAs = [
     config?.facebookUrl || "https://www.facebook.com/vendettamusica",
     config?.instagramUrl || "https://www.instagram.com/vendettamusica",
