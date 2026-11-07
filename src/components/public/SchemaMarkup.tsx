@@ -234,7 +234,7 @@ export async function SchemaMarkup() {
         "name": "¿Qué incluye el show en vivo de Vendetta Live Music?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Nuestros shows incluyen quinteto o septeto con metales (voz femenina, voz masculina, guitarra eléctrica, bajo, batería acústica, saxofón y trompeta), sistema de audio profesional de alta gama (Electro-Voice / Line Array), iluminación robótica DMX e ingeniero de audio en sala."
+          "text": "Nuestros shows incluyen quinteto o septeto con metales (voz femenina, voz masculina, guitarra eléctrica, bajo, batería acústica, saxofón y trompeta), sistema de audio profesional de alta definición e ingeniero de audio en sala."
         }
       },
       {

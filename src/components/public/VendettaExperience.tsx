@@ -280,11 +280,11 @@ export function VendettaExperience() {
             whileHover={{ y: -4 }}
             className="md:col-span-2 lg:col-span-3 rounded-3xl p-8 md:p-10 border border-white/20 bg-black/40 backdrop-blur-xl relative overflow-hidden group shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 neon-live-cyan"
           >
-            {/* Real Concert Photo: Drums & Lighting */}
+            {/* Real Concert Photo: Drums & Stage */}
             <div className="absolute inset-0 z-0">
               <Image
                 src="/images/galeria/vendetta-bateria-iluminacion.jpg"
-                alt="Batería e Iluminación Robótica Vendetta"
+                alt="Batería y Escenario Vendetta"
                 fill
                 sizes="(max-width: 1024px) 100vw, 75vw"
                 className="object-cover opacity-25 group-hover:opacity-40 group-hover:scale-105 transition-all duration-700"
@@ -304,11 +304,11 @@ export function VendettaExperience() {
               </h3>
 
               <p className="text-[#F2F0EB]/90 text-xs md:text-sm leading-relaxed mb-6">
-                Microfonía y monitoreo in-ear de alta fidelidad, consolas digitales de última generación y diseño de iluminación robótica DMX programada para una experiencia de concierto en vivo.
+                Microfonía y monitoreo in-ear de alta fidelidad y consolas digitales de última generación para una experiencia de concierto en vivo.
               </p>
 
               <div className="flex flex-wrap gap-2">
-                {["Audio de Alta Definición", "Monitoreo In-Ear Profesional", "Iluminación Robótica DMX", "Backline de Gama Alta", "Mezcla Digital en Vivo"].map(spec => (
+                {["Audio de Alta Definición", "Monitoreo In-Ear Profesional", "Backline de Gama Alta", "Mezcla Digital en Vivo"].map(spec => (
                   <span key={spec} className="px-3 py-1 rounded-lg bg-black/50 border border-white/15 text-[11px] font-mono text-[#F2F0EB]/90 backdrop-blur-md">
                     ✓ {spec}
                   </span>
