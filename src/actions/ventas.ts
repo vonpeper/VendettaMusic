@@ -243,7 +243,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
         const hasInvoice = Boolean(brCheck.invoice)
         const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
         const totalWithTax = subtotal + ivaAmount
-        const deposit = (Number(brCheck.depositAmount || 0) > 0) ? Number(brCheck.depositAmount) : Math.round(totalWithTax * 0.3)
+        const deposit = (Number(brCheck.depositAmount || 0) > 0) ? Number(brCheck.depositAmount) : Math.round(totalWithTax * 0.5)
         const balance = Math.max(0, totalWithTax - deposit)
 
         // Crear Evento
@@ -304,7 +304,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
         const hasInvoice = Boolean(brCheck.invoice)
         const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
         const totalWithTax = subtotal + ivaAmount
-        const deposit = (Number(brCheck.depositAmount || 0) > 0) ? Number(brCheck.depositAmount) : Math.round(totalWithTax * 0.3)
+        const deposit = (Number(brCheck.depositAmount || 0) > 0) ? Number(brCheck.depositAmount) : Math.round(totalWithTax * 0.5)
         const balance = Math.max(0, totalWithTax - deposit)
 
         await db.event.update({
@@ -686,7 +686,7 @@ export async function confirmDepositPaidAction(bookingId: string) {
     const hasInvoice = Boolean(booking.invoice)
     const iva = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
     const totalCalc = subtotal + iva
-    const deposit = (booking.depositAmount && booking.depositAmount > 0) ? booking.depositAmount : Math.round(totalCalc * 0.3)
+    const deposit = (booking.depositAmount && booking.depositAmount > 0) ? booking.depositAmount : Math.round(totalCalc * 0.5)
 
     await db.bookingRequest.update({
       where: { id: bookingId },
@@ -955,8 +955,8 @@ export async function updateTotalAmountAction(
     const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
     const totalWithTax = subtotal + ivaAmount
 
-    // Anticipo oficial de Vendetta: exactamente el 30% del Total Final
-    const requiredDeposit = Math.round(totalWithTax * 0.3)
+    // Anticipo oficial de Vendetta: exactamente el 50% del Total Final
+    const requiredDeposit = Math.round(totalWithTax * 0.5)
     const currentDeposit = Number(booking.depositAmount || 0)
 
     // Recalcular anticipo dinámicamente si no ha sido liquidado
@@ -1261,6 +1261,7 @@ export interface ApproveProposalInput {
   viaticosAmount?: number
   discountAmount?: number
   depositAmount?: number
+  invoice?: boolean
   packageName?: string
   isOutsideZone?: boolean
   lineItems?: ApproveProposalLineItemInput[]
@@ -1363,7 +1364,10 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
           0
         )
 
-    const total = Math.max(0, base + viaticos + effectiveLineItemsTotal - discount)
+    const subtotal = Math.max(0, base + viaticos + effectiveLineItemsTotal - discount)
+    const hasInvoice = params.invoice !== undefined ? params.invoice : Boolean(booking.invoice)
+    const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
+    const total = subtotal + ivaAmount
 
     if (total <= 0 || base <= 0) {
       return { 
@@ -1374,7 +1378,7 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
 
     const deposit = params.depositAmount && params.depositAmount > 0
       ? params.depositAmount
-      : Math.round(total * 0.3)
+      : Math.round(total * 0.50)
 
     const updatedPackage = params.packageName?.trim() || booking.packageName || "Show Vendetta"
 
@@ -1386,6 +1390,7 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
         viaticosAmount: viaticos,
         discountAmount: discount,
         depositAmount: deposit,
+        invoice: hasInvoice,
         packageName: updatedPackage,
         isOutsideZone: params.isOutsideZone ?? booking.isOutsideZone,
         ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
@@ -1400,10 +1405,11 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
       await db.event.update({
         where: { id: targetEventId },
         data: {
-          amount: total,
+          amount: subtotal,
           deposit: deposit,
           balance: Math.max(0, total - deposit),
           totalWithTax: total,
+          invoice: hasInvoice,
           ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
           ...(params.customMusicianPay !== undefined ? { customMusicianPay: params.customMusicianPay } : {}),
         }

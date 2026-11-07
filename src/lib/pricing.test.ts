@@ -237,15 +237,15 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
     assert.equal(result.subtotal, 10600)
     assert.equal(result.totalAmount, 10600)
     assert.equal(result.balanceAmount, 10600)
-    assert.equal(result.requiredDeposit, 3180) // 30% de 10,600 = 3,180
+    assert.equal(result.requiredDeposit, 5300) // 50% de 10,600 = 5,300
   })
 
-  it("debe calcular exactamente el 30% para anticipo con calculateRequiredDeposit", async () => {
+  it("debe calcular exactamente el 50% para anticipo con calculateRequiredDeposit", async () => {
     const { calculateRequiredDeposit } = await import("./pricing")
-    assert.equal(calculateRequiredDeposit(10000), 3000)
-    assert.equal(calculateRequiredDeposit(10600), 3180)
-    assert.equal(calculateRequiredDeposit(8500), 2550)
-    assert.equal(calculateRequiredDeposit(23500), 7050)
+    assert.equal(calculateRequiredDeposit(10000), 5000)
+    assert.equal(calculateRequiredDeposit(10600), 5300)
+    assert.equal(calculateRequiredDeposit(8500), 4250)
+    assert.equal(calculateRequiredDeposit(23500), 11750)
     assert.equal(calculateRequiredDeposit(0), 0)
     assert.equal(calculateRequiredDeposit(-500), 0)
   })
@@ -255,24 +255,24 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
       basePrice: 10000,
       viaticosAmount: 0,
       discountAmount: 0,
-      depositAmount: 3480, // Pagó el 30% del total con IVA
+      depositAmount: 5800, // Pagó el 50% del total con IVA
       invoice: true
     })
 
     // Subtotal: 10,000
     // IVA (16%): 1,600
     // Total con IVA: 11,600
-    // Anticipo Requerido (30%): 3,480
-    // Saldo Pendiente: 11,600 - 3,480 = 8,120
+    // Anticipo Requerido (50%): 5,800
+    // Saldo Pendiente: 11,600 - 5,800 = 5,800
     assert.equal(withIva.subtotal, 10000)
     assert.equal(withIva.ivaAmount, 1600)
     assert.equal(withIva.totalAmount, 11600)
-    assert.equal(withIva.requiredDeposit, 3480)
-    assert.equal(withIva.balanceAmount, 8120)
+    assert.equal(withIva.requiredDeposit, 5800)
+    assert.equal(withIva.balanceAmount, 5800)
   })
 
-  it("caso reportado en pantalla: Total Evento = $8,600 -> Anticipo 30% = $2,580 y Saldo = $6,020", () => {
-    // Caso 1: Sin anticipo manual (automático 30%)
+  it("caso reportado en pantalla: Total Evento = $8,600 -> Anticipo 50% = $4,300 y Saldo = $4,300", () => {
+    // Caso 1: Sin anticipo manual (automático 50%)
     const resAuto = calculateQuoteTotals({
       basePrice: 8600,
       viaticosAmount: 0,
@@ -282,12 +282,22 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
     })
 
     assert.equal(resAuto.totalAmount, 8600)
-    assert.equal(resAuto.requiredDeposit, 2580)
-    assert.equal(resAuto.depositAmount, 2580)
-    assert.equal(resAuto.balanceAmount, 6020)
+    assert.equal(resAuto.requiredDeposit, 4300)
+    assert.equal(resAuto.depositAmount, 4300)
+    assert.equal(resAuto.balanceAmount, 4300)
 
-    // Caso 2: Si un valor desfasado como $4,500 se reemplaza por el 30% automático, balance es $6,020
-    assert.notEqual(resAuto.balanceAmount, 4100) // Asegurar que NO reste $4,500 dando $4,100
+    // Caso 2: Total $11,600 -> Anticipo (50%) = $5,800 | Saldo = $5,800 (error $6,728 erradicado)
+    const res11600 = calculateQuoteTotals({
+      basePrice: 10200,
+      viaticosAmount: 1400,
+      discountAmount: 0,
+      depositAmount: undefined,
+      invoice: false
+    })
+    assert.equal(res11600.totalAmount, 11600)
+    assert.equal(res11600.requiredDeposit, 5800)
+    assert.equal(res11600.depositAmount, 5800)
+    assert.equal(res11600.balanceAmount, 5800)
 
     // Caso 3: Anticipo manual explícito permitido si el usuario lo define
     const resManual = calculateQuoteTotals({
@@ -296,6 +306,26 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
     })
     assert.equal(resManual.depositAmount, 4000)
     assert.equal(resManual.balanceAmount, 4600)
+  })
+
+  it("debe calcular la utilidad neta de oficina excluyendo viáticos e IVA (caso $11,600 -> $2,200)", async () => {
+    const { calculateOfficeProfit } = await import("./pricing")
+
+    // Total Cliente: $11,600
+    // Viáticos Reales: -$1,400 (se descuentan íntegros, margen 0)
+    // Costos Proveedor Producción: -$0
+    // Nómina Banda (4 músicos x $2,000): -$8,000
+    // -> UTILIDAD REAL DE OFICINA = $11,600 - $1,400 - $8,000 = $2,200 MXN (19.0% sobre venta total)
+    const profit = calculateOfficeProfit({
+      subtotal: 11600,
+      viaticos: 1400,
+      productionProviderCost: 0,
+      bandPayroll: 8000
+    })
+
+    assert.equal(profit.baseGravableShow, 10200)
+    assert.equal(profit.realOfficeProfit, 2200)
+    assert.equal(profit.profitMarginPercent, 18.97) // 2200 / 11600 = 18.965... -> 18.97%
   })
 
   it("debe calcular el tabulador proporcional de pago a músicos y respetar montos personalizados", async () => {

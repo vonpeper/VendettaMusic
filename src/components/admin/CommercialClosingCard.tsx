@@ -29,7 +29,7 @@ import {
 } from "lucide-react"
 import { approveAndSendProposalAction, updateEventOperationalCostsAction, ApproveProposalLineItemInput } from "@/actions/ventas"
 import { formatDateMX } from "@/lib/utils"
-import { calculateEventHours, calculateSuggestedMusicianPay } from "@/lib/pricing"
+import { calculateEventHours, calculateSuggestedMusicianPay, calculateOfficeProfit } from "@/lib/pricing"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -120,6 +120,8 @@ interface CommercialClosingCardProps {
   packagesList?: PackageOption[]
   initialCustomMusicianPay?: number | null
   musiciansCount?: number
+  initialInvoice?: boolean
+  isContractSigned?: boolean
 }
 
 const MXN = (v: number) =>
@@ -162,7 +164,9 @@ export function CommercialClosingCard({
   initialLineItems = [],
   packagesList = [],
   initialCustomMusicianPay,
-  musiciansCount = 4
+  musiciansCount = 4,
+  initialInvoice = false,
+  isContractSigned = false
 }: CommercialClosingCardProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -286,21 +290,30 @@ export function CommercialClosingCard({
   const foraneoSurcharge = isForaneo ? Math.round(rawBaseAmount * 0.20) : 0
   const effectiveShowBase = rawBaseAmount + foraneoSurcharge
 
-  // Subtotal acordado
+  // Subtotal acordado (Base Show + Viáticos + Producción/Adicionales - Descuento)
   const totalLineItems = productionClientTotal + otherLineItemsTotal
   const subtotal = Math.max(0, effectiveShowBase + totalViaticos + totalLineItems - discountAmount)
 
-  // Anticipo reactivo (30%)
-  const autoDeposit30 = Math.round(subtotal * 0.3)
-  const hasCustomDepositInitially = initialDeposit > 0 && Math.abs(initialDeposit - autoDeposit30) > 100
+  // Facturación fiscal IVA (16%)
+  const [hasInvoice, setHasInvoice] = useState<boolean>(Boolean(initialInvoice))
+  const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16) : 0
+  const totalAmount = subtotal + ivaAmount
 
-  const [manualDeposit, setManualDeposit] = useState(hasCustomDepositInitially)
+  // Anticipo reactivo obligatorio del 50% (Default)
+  const autoDeposit50 = Math.round(totalAmount * 0.50)
+
+  // Sanidad de Datos: Descartar el valor anómalo $6,728 o valores desfasados del 30% anterior
+  const isErroneousLegacy6728 = initialDeposit === 6728 && !hasInvoice
+  const matchesAuto50 = initialDeposit > 0 && Math.abs(initialDeposit - autoDeposit50) <= 50
+  const hasCustomDepositInitially = initialDeposit > 0 && !matchesAuto50 && !isErroneousLegacy6728 && Math.abs(initialDeposit - Math.round(totalAmount * 0.3)) > 50
+
+  const [manualDeposit, setManualDeposit] = useState<boolean>(hasCustomDepositInitially)
   const [customDepositAmount, setCustomDepositAmount] = useState<number>(
-    initialDeposit > 0 ? initialDeposit : autoDeposit30
+    hasCustomDepositInitially ? initialDeposit : autoDeposit50
   )
 
-  const effectiveDeposit = manualDeposit ? customDepositAmount : autoDeposit30
-  const balancePending = Math.max(0, subtotal - effectiveDeposit)
+  const effectiveDeposit = manualDeposit ? customDepositAmount : autoDeposit50
+  const balancePending = Math.max(0, totalAmount - effectiveDeposit)
 
   // Duración pactada reactiva (fallback 2h si no está definida o son idénticas)
   const durationHours = useMemo(() => {
@@ -323,8 +336,17 @@ export function CommercialClosingCard({
   const activeMusiciansCount = musiciansCount && musiciansCount > 0 ? musiciansCount : 4
   const totalBandPayroll = effectiveMusicianPay * activeMusiciansCount
 
-  // Utilidad Real de Oficina: Total Pactado con Cliente - Costos Proveedor - Fletes/Viáticos Reales - Nómina Total Banda
-  const realOfficeProfit = subtotal - productionProviderTotal - totalViaticos - totalBandPayroll
+  // Utilidad Neta Real de Oficina (Fuera de Viáticos e IVA):
+  // BaseGravableShow = SubtotalCliente - ViáticosTotales - CostosProveedorProduccion
+  // UtilidadOficina = BaseGravableShow - NóminaTotalBanda
+  const { baseGravableShow, realOfficeProfit, profitMarginPercent } = useMemo(() => {
+    return calculateOfficeProfit({
+      subtotal,
+      viaticos: totalViaticos,
+      productionProviderCost: productionProviderTotal,
+      bandPayroll: totalBandPayroll
+    })
+  }, [subtotal, totalViaticos, productionProviderTotal, totalBandPayroll])
 
   const handleSavePayroll = async () => {
     setSavingPayroll(true)
@@ -345,6 +367,16 @@ export function CommercialClosingCard({
 
   const isPendingApproval = currentStatus === "pendiente_aprobacion"
   const isApproved = currentStatus === "propuesta_enviada"
+  const isConfirmed = useMemo(() => {
+    const s = (currentStatus || "").toLowerCase()
+    return (
+      s === "confirmed" ||
+      s === "confirmado" ||
+      s === "agendado" ||
+      s === "completado" ||
+      Boolean(isContractSigned)
+    )
+  }, [currentStatus, isContractSigned])
   const proposalUrl = `https://vendetta.mx/status/${shortId}`
 
   const handlePackageSelect = (pkg: typeof CORE_PACKAGES[number]) => {
@@ -389,6 +421,7 @@ export function CommercialClosingCard({
         viaticosAmount: totalViaticos,
         discountAmount,
         depositAmount: effectiveDeposit,
+        invoice: hasInvoice,
         packageName,
         lineItems: lineItemsToSave,
         isOutsideZone: isForaneo,
@@ -792,31 +825,61 @@ export function CommercialClosingCard({
         </div>
       </div>
 
-      {/* 6. Descuento / Cortesía */}
-      <div className="space-y-1.5">
-        <Label className="text-xs font-bold text-foreground">
-          Descuento / Ajuste de Cortesía ($)
-        </Label>
-        <Input
-          type="number"
-          min={0}
-          step={500}
-          value={discountAmount || ""}
-          onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
-          placeholder="0"
-          className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B]"
-        />
+      {/* 6. Descuento / Cortesía y Facturación Fiscal */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs font-bold text-foreground">
+            Descuento / Ajuste de Cortesía ($)
+          </Label>
+          <Input
+            type="number"
+            min={0}
+            step={500}
+            value={discountAmount || ""}
+            onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
+            placeholder="0"
+            className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B]"
+          />
+        </div>
+
+        <div className="space-y-1.5 p-3 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-border flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-bold text-foreground flex items-center gap-1.5 cursor-pointer" onClick={() => setHasInvoice(!hasInvoice)}>
+              <Receipt className="w-3.5 h-3.5 text-[#6F0D2B] dark:text-rose-400" /> Facturación Fiscal (CFDI 4.0)
+            </Label>
+            <button
+              type="button"
+              onClick={() => setHasInvoice(!hasInvoice)}
+              className="flex items-center gap-1 text-xs font-bold text-foreground cursor-pointer"
+            >
+              {hasInvoice ? (
+                <>
+                  <ToggleRight className="w-6 h-6 text-[#6F0D2B] dark:text-rose-400" />
+                  <span className="text-[#6F0D2B] dark:text-rose-400 text-xs font-bold">+16% IVA</span>
+                </>
+              ) : (
+                <>
+                  <ToggleLeft className="w-6 h-6 text-muted-foreground" />
+                  <span className="text-muted-foreground text-xs">Sin Factura</span>
+                </>
+              )}
+            </button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {hasInvoice ? `IVA agregado: ${MXN(ivaAmount)} (pasivo fiscal, excluido de utilidad)` : "Precio neto sin IVA fiscal"}
+          </p>
+        </div>
       </div>
 
-      {/* 7. Anticipo: 30% Autocalculado con Toggle para Ajuste Manual */}
+      {/* 7. Anticipo: 50% Obligatorio Autocalculado con Toggle para Ajuste Manual */}
       <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-border space-y-3">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Anticipo de Apartado (30%)
+              Anticipo Obligatorio de Apartado (50%)
             </span>
             <p className="text-[11px] text-muted-foreground">
-              {manualDeposit ? "Ajuste manual personalizado activo" : "30% autocalculado sobre total pactado"}
+              {manualDeposit ? "Ajuste manual personalizado activo" : "50% autocalculado sobre total pactado"}
             </p>
           </div>
 
@@ -826,7 +889,7 @@ export function CommercialClosingCard({
               const next = !manualDeposit
               setManualDeposit(next)
               if (!next) {
-                setCustomDepositAmount(Math.round(subtotal * 0.3))
+                setCustomDepositAmount(autoDeposit50)
               }
             }}
             className="flex items-center gap-1.5 text-xs font-bold text-foreground hover:opacity-80 transition-opacity cursor-pointer"
@@ -839,7 +902,7 @@ export function CommercialClosingCard({
             ) : (
               <>
                 <ToggleLeft className="w-6 h-6 text-muted-foreground" />
-                <span className="text-muted-foreground">Automático (30%)</span>
+                <span className="text-muted-foreground">Automático (50%)</span>
               </>
             )}
           </button>
@@ -853,7 +916,7 @@ export function CommercialClosingCard({
             <Input
               type="number"
               min={0}
-              max={subtotal}
+              max={totalAmount}
               step={500}
               value={customDepositAmount || ""}
               onChange={(e) => setCustomDepositAmount(Number(e.target.value) || 0)}
@@ -970,16 +1033,28 @@ export function CommercialClosingCard({
         {/* Desglose Financiero de 4 Columnas */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-0.5">
           <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/30 space-y-0.5">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground block">Total Cliente</span>
-            <span className="text-xs sm:text-sm font-black text-foreground font-mono">{MXN(subtotal)}</span>
+            <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+              Subtotal Cliente
+            </span>
+            <span className="text-xs sm:text-sm font-black text-foreground font-mono block">
+              {MXN(subtotal)}
+            </span>
+            {hasInvoice && (
+              <span className="text-[9px] text-muted-foreground block">
+                Total c/IVA: {MXN(totalAmount)}
+              </span>
+            )}
           </div>
 
           <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/30 space-y-0.5">
             <span className="text-[10px] uppercase font-bold text-muted-foreground block truncate" title="Costos Proveedor Producción">
               Costos Proveedor
             </span>
-            <span className="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-400 font-mono">
+            <span className="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-400 font-mono block">
               -{MXN(productionProviderTotal)}
+            </span>
+            <span className="text-[9px] text-muted-foreground block">
+              Producción técnica
             </span>
           </div>
 
@@ -987,33 +1062,40 @@ export function CommercialClosingCard({
             <span className="text-[10px] uppercase font-bold text-muted-foreground block truncate" title="Viáticos y Fletes Reales">
               Viáticos / Fletes
             </span>
-            <span className="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-400 font-mono">
+            <span className="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-400 font-mono block">
               -{MXN(totalViaticos)}
+            </span>
+            <span className="text-[9px] text-muted-foreground block">
+              Costo de paso (0% margen)
             </span>
           </div>
 
           <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/30 space-y-0.5">
             <span className="text-[10px] uppercase font-bold text-muted-foreground block truncate" title="Nómina Total de Banda">
-              Nómina Banda
+              Nómina Banda ({activeMusiciansCount})
             </span>
-            <span className="text-xs sm:text-sm font-black text-rose-700 dark:text-rose-400 font-mono">
+            <span className="text-xs sm:text-sm font-black text-rose-700 dark:text-rose-400 font-mono block">
               -{MXN(totalBandPayroll)}
+            </span>
+            <span className="text-[9px] text-muted-foreground block">
+              {activeMusiciansCount} músicos titulares
             </span>
           </div>
         </div>
 
         {/* Barra de Utilidad Real de Oficina */}
-        <div className={`p-3 rounded-lg border flex flex-wrap items-center justify-between gap-2 ${
+        <div className={`p-3.5 rounded-lg border flex flex-wrap items-center justify-between gap-3 ${
           realOfficeProfit >= 0
-            ? "bg-emerald-100/60 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700"
-            : "bg-rose-100/60 dark:bg-rose-950/40 border-rose-300 dark:border-rose-700"
+            ? "bg-emerald-100/70 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700"
+            : "bg-rose-100/70 dark:bg-rose-950/40 border-rose-300 dark:border-rose-700"
         }`}>
-          <div>
+          <div className="space-y-0.5">
             <span className="text-[10px] uppercase font-black tracking-wider text-muted-foreground block">
               Utilidad Real de Oficina (Margen Neto)
             </span>
-            <span className="text-[11px] text-muted-foreground font-mono">
-              Total ({MXN(subtotal)}) - Costos Prov. ({MXN(productionProviderTotal)}) - Viáticos ({MXN(totalViaticos)}) - Banda ({MXN(totalBandPayroll)})
+            <span className="text-[11px] text-muted-foreground font-mono block">
+              Subtotal ({MXN(subtotal)}) - Viáticos ({MXN(totalViaticos)}) - Costos Prov. ({MXN(productionProviderTotal)}) - Nómina Banda ({MXN(totalBandPayroll)})
+              {hasInvoice ? " · IVA facturado excluido de utilidad" : ""}
             </span>
           </div>
           <div className="text-right">
@@ -1023,8 +1105,8 @@ export function CommercialClosingCard({
               {MXN(realOfficeProfit)}
             </span>
             {subtotal > 0 && (
-              <span className="text-[10px] font-bold text-muted-foreground font-mono">
-                {((realOfficeProfit / subtotal) * 100).toFixed(1)}% margen neto
+              <span className="text-[11px] font-bold text-muted-foreground font-mono">
+                {profitMarginPercent.toFixed(1)}% margen sobre venta
               </span>
             )}
           </div>
@@ -1059,48 +1141,88 @@ export function CommercialClosingCard({
             <span className="font-mono font-bold">-{MXN(discountAmount)}</span>
           </div>
         )}
+        <div className="flex justify-between items-center text-foreground pt-1.5 border-t border-border/60">
+          <span>Subtotal Cliente:</span>
+          <span className="font-mono font-bold text-foreground">{MXN(subtotal)}</span>
+        </div>
+        {hasInvoice && (
+          <div className="flex justify-between items-center text-muted-foreground">
+            <span>IVA Facturado (16% CFDI 4.0):</span>
+            <span className="text-foreground font-mono font-bold">+{MXN(ivaAmount)}</span>
+          </div>
+        )}
         <div className="flex justify-between items-center text-foreground pt-2 border-t border-border text-sm font-black">
           <span>Total Pactado con Cliente:</span>
-          <span className="text-[#6F0D2B] dark:text-rose-400 font-mono text-base">{MXN(subtotal)}</span>
+          <span className="text-[#6F0D2B] dark:text-rose-400 font-mono text-base">{MXN(totalAmount)}</span>
         </div>
         <div className="flex justify-between items-center text-muted-foreground">
-          <span>Anticipo para Apartar (30%):</span>
+          <span>Anticipo para Apartar (50%):</span>
           <span className="text-foreground font-bold font-mono">{MXN(effectiveDeposit)}</span>
         </div>
         <div className="flex justify-between items-center text-muted-foreground">
           <span>Saldo a Liquidar el Día del Show:</span>
-          <span className="text-foreground font-mono">{MXN(balancePending)}</span>
+          <span className="text-foreground font-mono font-bold">{MXN(balancePending)}</span>
         </div>
       </div>
 
-      {/* 10. Botón Único Principal de Cierre y Aprobación */}
-      <Button
-        type="button"
-        onClick={handleApproveAndSend}
-        disabled={loading || effectiveShowBase <= 0}
-        className={`w-full h-12 rounded-xl font-bold uppercase text-xs sm:text-sm tracking-wider gap-2 shadow-xs cursor-pointer transition-all disabled:opacity-50 ${
-          isApproved
-            ? "bg-cyan-700 hover:bg-cyan-800 text-white"
-            : "bg-[#6F0D2B] hover:bg-[#580a22] text-white"
-        }`}
-      >
-        {loading ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Procesando y Despachando WhatsApp...
-          </>
-        ) : isApproved ? (
-          <>
-            <CheckCircle2 className="w-4 h-4" />
-            Actualizar y Reenviar Propuesta por WhatsApp
-          </>
-        ) : (
-          <>
-            <Send className="w-4 h-4" />
-            Aprobar y Enviar Propuesta por WhatsApp
-          </>
-        )}
-      </Button>
+      {/* 10. Botón de Cierre y Aprobación / Estado Confirmado */}
+      {isConfirmed ? (
+        <div className="space-y-2.5">
+          <div className="w-full h-12 rounded-xl bg-slate-100 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 flex items-center justify-center font-bold text-xs sm:text-sm text-slate-800 dark:text-zinc-200 gap-2 shadow-xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>✅ Evento Confirmado & Propuesta Aprobada</span>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleApproveAndSend}
+            disabled={loading}
+            className="w-full h-10 rounded-xl text-xs font-semibold border-border hover:bg-muted text-muted-foreground hover:text-foreground gap-2 cursor-pointer"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Reenviando por WhatsApp...
+              </>
+            ) : (
+              <>
+                <Send className="w-3.5 h-3.5" />
+                Reenviar propuesta por WhatsApp
+              </>
+            )}
+          </Button>
+        </div>
+      ) : (
+        <Button
+          type="button"
+          onClick={handleApproveAndSend}
+          disabled={loading || effectiveShowBase <= 0}
+          className={`w-full h-12 rounded-xl font-bold uppercase text-xs sm:text-sm tracking-wider gap-2 shadow-xs cursor-pointer transition-all disabled:opacity-50 ${
+            isApproved
+              ? "bg-cyan-700 hover:bg-cyan-800 text-white"
+              : "bg-[#6F0D2B] hover:bg-[#580a22] text-white"
+          }`}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Procesando y Despachando WhatsApp...
+            </>
+          ) : isApproved ? (
+            <>
+              <CheckCircle2 className="w-4 h-4" />
+              Actualizar y Reenviar Propuesta por WhatsApp
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4" />
+              Aprobar y Enviar Propuesta por WhatsApp
+            </>
+          )}
+        </Button>
+      )}
 
       <p className="text-center text-[11px] text-muted-foreground">
         Al confirmar, el estatus pasará a <strong className="text-foreground font-bold">propuesta_enviada</strong> y se despachará el mensaje oficial con el enlace a <code className="font-mono">/status/{shortId}</code>.

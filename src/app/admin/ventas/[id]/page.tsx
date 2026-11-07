@@ -12,7 +12,6 @@ import { BookingStatusSwitcher } from "@/components/admin/BookingStatusSwitcher"
 import { LiquidarButton } from "@/components/admin/LiquidarButton"
 import { ConfirmarAnticipoButton } from "@/components/admin/ConfirmarAnticipoButton"
 import { ContractStatusSwitcher } from "@/components/admin/ContractStatusSwitcher"
-import { ApproveProposalModal } from "@/components/admin/ApproveProposalModal"
 import { CommercialClosingCard } from "@/components/admin/CommercialClosingCard"
 import { 
   ArrowLeft, 
@@ -41,7 +40,6 @@ import { EditEventoButton } from "@/components/admin/EventActions"
 import { EditDepositInline } from "@/components/admin/EditDepositInline"
 import { EditTotalInline } from "@/components/admin/EditTotalInline"
 import { CancelBookingButton } from "@/components/admin/CancelBookingButton"
-import { EventCostBreakdownCard } from "@/components/admin/EventCostBreakdownCard"
 import { calculateEventCostBreakdown, calculateEventHours } from "@/lib/pricing"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
@@ -494,28 +492,9 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               initialLineItems={booking.lineItems}
               initialCustomMusicianPay={booking.customMusicianPay ?? booking.event?.customMusicianPay}
               musiciansCount={booking.event?.musicians?.length || 4}
-              />
-
-            {/* Tarjeta de Split Operativo y Nómina (Costos Vendetta con Edición y Cálculo Automático) */}
-            {(() => {
-              const hours = booking.bandHours || dynamicHours || 2
-              const isBar = (booking.packageName?.toLowerCase().includes("bar") || booking.ceremonyType?.toLowerCase().includes("bar")) ?? false
-              const baseShowPrice = Number(booking.baseAmount || 0)
-              const initialMusicianPay = (booking.customMusicianPay ?? booking.event?.customMusicianPay) ?? null
-              const initialStaffPay = (booking.customStaffPay ?? booking.event?.customStaffPay) ?? null
-
-              return (
-                <EventCostBreakdownCard
-                  key={`${booking.id}-breakdown-${initialMusicianPay}-${initialStaffPay}-${baseShowPrice}-${hours}-${isBar}`}
-                  bookingId={booking.id}
-                  hours={hours}
-                  isBar={isBar}
-                  baseShowPrice={baseShowPrice}
-                  initialMusicianPay={initialMusicianPay}
-                  initialStaffPay={initialStaffPay}
-                />
-              )
-            })()}
+              initialInvoice={Boolean(booking.invoice || booking.event?.invoice)}
+              isContractSigned={Boolean(booking.signedAt || booking.clientSignature || booking.event?.contracts?.some((c: any) => c.status === 'signed' || c.status === 'firmado' || c.signedAt))}
+            />
           </div>
 
           {/* Columna Derecha: Cliente y Acciones Administrativas */}

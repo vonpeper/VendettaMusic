@@ -42,10 +42,54 @@ export interface QuoteTotalsResult {
 }
 
 /**
- * Calcula el anticipo oficial requerido por Vendetta Music (exactamente el 30% del Total Final).
+ * Calcula el anticipo oficial requerido por Vendetta Music (exactamente el 50% del Total Final).
  */
 export function calculateRequiredDeposit(totalAmount: number): number {
-  return Math.round(Math.max(0, roundCurrency(totalAmount)) * 0.3)
+  return Math.round(Math.max(0, roundCurrency(totalAmount)) * 0.5)
+}
+
+export interface OfficeProfitInput {
+  subtotal: number
+  viaticos: number
+  productionProviderCost?: number
+  bandPayroll: number
+}
+
+export interface OfficeProfitResult {
+  baseGravableShow: number
+  realOfficeProfit: number
+  profitMarginPercent: number
+}
+
+/**
+ * Calcula la Utilidad Neta Real de Oficina excluyendo viáticos e IVA:
+ * - Viáticos y fletes son costos de paso al 100% (margen 0).
+ * - El IVA facturado es pasivo fiscal para el SAT y no forma parte del margen.
+ * - BaseGravableShow = SubtotalCliente - ViáticosTotales - CostosProveedorProduccion
+ * - UtilidadOficina = BaseGravableShow - NóminaTotalBanda
+ */
+export function calculateOfficeProfit({
+  subtotal,
+  viaticos,
+  productionProviderCost = 0,
+  bandPayroll
+}: OfficeProfitInput): OfficeProfitResult {
+  const safeSubtotal = Math.max(0, roundCurrency(subtotal))
+  const safeViaticos = Math.max(0, roundCurrency(viaticos))
+  const safeProduction = Math.max(0, roundCurrency(productionProviderCost))
+  const safePayroll = Math.max(0, roundCurrency(bandPayroll))
+
+  const baseGravableShow = safeSubtotal - safeViaticos - safeProduction
+  const realOfficeProfit = baseGravableShow - safePayroll
+  const profitMarginPercent = safeSubtotal > 0
+    ? roundCurrency((realOfficeProfit / safeSubtotal) * 100)
+    : 0
+
+  return {
+    baseGravableShow,
+    realOfficeProfit,
+    profitMarginPercent
+  }
 }
 
 /**
