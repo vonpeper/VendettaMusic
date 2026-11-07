@@ -575,22 +575,22 @@ export default async function HomePage() {
                     </h4>
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A5F] px-2.5 py-1 rounded bg-[#6F0D2B]/30 border border-[#FF5A5F]/40 backdrop-blur-md">
-                    Puntualidad Absoluta
+                    COORDINACIÓN LOGÍSTICA
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-[#F2F0EB]/80 mb-6 font-normal">
-                  Llegamos con 4 horas de anticipación. Coordinamos con tu wedding planner o staff del salón para un montaje silencioso y prueba de sonido invisible.
+                  Nos adaptamos al itinerario de tu evento. Coordinamos directamente con tu wedding planner, el recinto o contigo para un montaje profesional y prueba de sonido en el horario acordado.
                 </p>
 
                 {/* Timeline Visual en Línea */}
                 <div className="grid grid-cols-4 gap-2 pt-2">
                   <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 text-center backdrop-blur-md">
-                    <div className="text-[10px] font-mono text-[#FF5A5F] font-bold">T-4 HORAS</div>
-                    <div className="text-[11px] text-white font-bold mt-0.5">Montaje</div>
+                    <div className="text-[10px] font-mono text-[#FF5A5F] font-bold">COORDINACIÓN</div>
+                    <div className="text-[11px] text-white font-bold mt-0.5">Horario Previo</div>
                   </div>
                   <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 text-center backdrop-blur-md">
-                    <div className="text-[10px] font-mono text-amber-400 font-bold">T-2 HORAS</div>
-                    <div className="text-[11px] text-white font-bold mt-0.5">Soundcheck</div>
+                    <div className="text-[10px] font-mono text-amber-400 font-bold">SOUNDCHECK</div>
+                    <div className="text-[11px] text-white font-bold mt-0.5">Calibración</div>
                   </div>
                   <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 text-center backdrop-blur-md">
                     <div className="text-[10px] font-mono text-emerald-400 font-bold">SHOWTIME</div>
