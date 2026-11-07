@@ -18,7 +18,6 @@ import {
   ToggleRight,
   Truck,
   Speaker,
-  Lock,
   Percent,
   Calendar,
   Clock,
@@ -27,9 +26,9 @@ import {
   ShieldCheck,
   Receipt
 } from "lucide-react"
-import { approveAndSendProposalAction, updateEventOperationalCostsAction, ApproveProposalLineItemInput } from "@/actions/ventas"
+import { approveAndSendProposalAction, ApproveProposalLineItemInput } from "@/actions/ventas"
 import { formatDateMX } from "@/lib/utils"
-import { calculateEventHours, calculateSuggestedMusicianPay, calculateOfficeProfit } from "@/lib/pricing"
+import { calculateEventHours } from "@/lib/pricing"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -320,51 +319,6 @@ export function CommercialClosingCard({
     return calculateEventHours(startTime, endTime)
   }, [startTime, endTime])
 
-  // Tabulador proporcional de pago a músicos: 2h = $1,200 ($600/hr)
-  const suggestedMusicianPay = useMemo(() => {
-    return calculateSuggestedMusicianPay(durationHours, 1200)
-  }, [durationHours])
-
-  const initialCustomPay = initialCustomMusicianPay && initialCustomMusicianPay > 0 ? initialCustomMusicianPay : null
-  const [customMusicianPayActive, setCustomMusicianPayActive] = useState<boolean>(Boolean(initialCustomPay))
-  const [customMusicianPayAmount, setCustomMusicianPayAmount] = useState<number>(
-    initialCustomPay || suggestedMusicianPay
-  )
-  const [savingPayroll, setSavingPayroll] = useState<boolean>(false)
-
-  const effectiveMusicianPay = customMusicianPayActive ? customMusicianPayAmount : suggestedMusicianPay
-  const activeMusiciansCount = musiciansCount && musiciansCount > 0 ? musiciansCount : 4
-  const totalBandPayroll = effectiveMusicianPay * activeMusiciansCount
-
-  // Utilidad Neta Real de Oficina (Fuera de Viáticos e IVA):
-  // BaseGravableShow = SubtotalCliente - ViáticosTotales - CostosProveedorProduccion
-  // UtilidadOficina = BaseGravableShow - NóminaTotalBanda
-  const { baseGravableShow, realOfficeProfit, profitMarginPercent } = useMemo(() => {
-    return calculateOfficeProfit({
-      subtotal,
-      viaticos: totalViaticos,
-      productionProviderCost: productionProviderTotal,
-      bandPayroll: totalBandPayroll
-    })
-  }, [subtotal, totalViaticos, productionProviderTotal, totalBandPayroll])
-
-  const handleSavePayroll = async () => {
-    setSavingPayroll(true)
-    try {
-      const payToSave = customMusicianPayActive ? customMusicianPayAmount : null
-      const res = await updateEventOperationalCostsAction(bookingId, payToSave, null)
-      if (res.success) {
-        toast.success("Nómina de músicos guardada correctamente.")
-      } else {
-        toast.error(res.error || "No se pudo guardar la nómina.")
-      }
-    } catch {
-      toast.error("Error al guardar la nómina.")
-    } finally {
-      setSavingPayroll(false)
-    }
-  }
-
   const isPendingApproval = currentStatus === "pendiente_aprobacion"
   const isApproved = currentStatus === "propuesta_enviada"
   const isConfirmed = useMemo(() => {
@@ -426,7 +380,7 @@ export function CommercialClosingCard({
         lineItems: lineItemsToSave,
         isOutsideZone: isForaneo,
         mapsLink: currentMapsLink?.trim() || undefined,
-        customMusicianPay: customMusicianPayActive ? customMusicianPayAmount : effectiveMusicianPay
+        customMusicianPay: initialCustomMusicianPay ?? undefined
       })
 
       if (res.success) {
@@ -926,194 +880,7 @@ export function CommercialClosingCard({
         ) : null}
       </div>
 
-      {/* 8. Tarjeta de Margen Interno y Nómina (Solo Visible para Administración) */}
-      <div className="p-4 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 space-y-3.5">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-600/10 text-emerald-800 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-600/20">
-              <Lock className="w-3 h-3" /> Solo Administración
-            </span>
-            <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-400 font-mono">
-              Control de Margen y Nómina de Banda
-            </span>
-          </div>
-          <span className="text-[11px] text-muted-foreground font-mono">
-            Duración: <strong className="text-foreground">{durationHours}h</strong> ({activeMusiciansCount} músicos)
-          </span>
-        </div>
-
-        {/* Tabulador de Músicos Reactivo */}
-        <div className="p-3 rounded-lg bg-white dark:bg-zinc-900 border border-emerald-200/80 dark:border-emerald-800/30 space-y-2.5">
-          <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
-            <div className="space-y-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                Tabulador de Pago por Músico
-              </span>
-              <span className="font-semibold text-foreground">
-                {customMusicianPayActive ? "Tarifa Manual Personalizada" : `Tabulador Proporcional (${durationHours}h)`}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const nextActive = !customMusicianPayActive
-                  setCustomMusicianPayActive(nextActive)
-                  if (!nextActive) {
-                    setCustomMusicianPayAmount(suggestedMusicianPay)
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border border-border hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-              >
-                {customMusicianPayActive ? (
-                  <>
-                    <ToggleRight className="w-4 h-4 text-emerald-600" />
-                    <span>Personalizado</span>
-                  </>
-                ) : (
-                  <>
-                    <ToggleLeft className="w-4 h-4 text-muted-foreground" />
-                    <span>Proporcional ({durationHours}h)</span>
-                  </>
-                )}
-              </button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={savingPayroll}
-                onClick={handleSavePayroll}
-                className="h-7 text-[11px] font-bold px-2 rounded-lg border-emerald-600/30 text-emerald-800 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-              >
-                {savingPayroll ? <Loader2 className="w-3 h-3 animate-spin" /> : "Guardar nómina"}
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div className="space-y-1">
-              <Label className="text-[11px] font-medium text-muted-foreground">
-                Pago individual por músico ({durationHours}h show)
-              </Label>
-              {customMusicianPayActive ? (
-                <div className="relative">
-                  <span className="absolute left-3 top-2 text-xs text-muted-foreground font-mono">$</span>
-                  <Input
-                    type="number"
-                    min={0}
-                    step={100}
-                    value={customMusicianPayAmount || ""}
-                    onChange={e => setCustomMusicianPayAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="pl-7 bg-white dark:bg-zinc-900 border-border h-9 text-xs font-mono font-bold"
-                  />
-                </div>
-              ) : (
-                <div className="h-9 px-3 flex items-center bg-slate-50 dark:bg-zinc-800/60 rounded-md border border-border text-xs font-mono font-bold text-foreground">
-                  {MXN(suggestedMusicianPay)} <span className="text-[10px] text-muted-foreground ml-2 font-normal">($1,200 base 2h {suggestedMusicianPay > 1200 ? `+ $${(suggestedMusicianPay - 1200).toLocaleString("es-MX")} extra` : ""})</span>
-                </div>
-              )}
-            </div>
-
-            <div className="p-2.5 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-muted-foreground block">
-                  Nómina Total Banda ({activeMusiciansCount} músicos)
-                </span>
-                <span className="text-[11px] text-muted-foreground">
-                  {activeMusiciansCount} x {MXN(effectiveMusicianPay)}
-                </span>
-              </div>
-              <span className="text-base font-black text-rose-700 dark:text-rose-400 font-mono">
-                {MXN(totalBandPayroll)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Desglose Financiero de 4 Columnas */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-0.5">
-          <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/30 space-y-0.5">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground block">
-              Subtotal Cliente
-            </span>
-            <span className="text-xs sm:text-sm font-black text-foreground font-mono block">
-              {MXN(subtotal)}
-            </span>
-            {hasInvoice && (
-              <span className="text-[9px] text-muted-foreground block">
-                Total c/IVA: {MXN(totalAmount)}
-              </span>
-            )}
-          </div>
-
-          <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/30 space-y-0.5">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground block truncate" title="Costos Proveedor Producción">
-              Costos Proveedor
-            </span>
-            <span className="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-400 font-mono block">
-              -{MXN(productionProviderTotal)}
-            </span>
-            <span className="text-[9px] text-muted-foreground block">
-              Producción técnica
-            </span>
-          </div>
-
-          <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/30 space-y-0.5">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground block truncate" title="Viáticos y Fletes Reales">
-              Viáticos / Fletes
-            </span>
-            <span className="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-400 font-mono block">
-              -{MXN(totalViaticos)}
-            </span>
-            <span className="text-[9px] text-muted-foreground block">
-              Costo de paso (0% margen)
-            </span>
-          </div>
-
-          <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/30 space-y-0.5">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground block truncate" title="Nómina Total de Banda">
-              Nómina Banda ({activeMusiciansCount})
-            </span>
-            <span className="text-xs sm:text-sm font-black text-rose-700 dark:text-rose-400 font-mono block">
-              -{MXN(totalBandPayroll)}
-            </span>
-            <span className="text-[9px] text-muted-foreground block">
-              {activeMusiciansCount} músicos titulares
-            </span>
-          </div>
-        </div>
-
-        {/* Barra de Utilidad Real de Oficina */}
-        <div className={`p-3.5 rounded-lg border flex flex-wrap items-center justify-between gap-3 ${
-          realOfficeProfit >= 0
-            ? "bg-emerald-100/70 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700"
-            : "bg-rose-100/70 dark:bg-rose-950/40 border-rose-300 dark:border-rose-700"
-        }`}>
-          <div className="space-y-0.5">
-            <span className="text-[10px] uppercase font-black tracking-wider text-muted-foreground block">
-              Utilidad Real de Oficina (Margen Neto)
-            </span>
-            <span className="text-[11px] text-muted-foreground font-mono block">
-              Subtotal ({MXN(subtotal)}) - Viáticos ({MXN(totalViaticos)}) - Costos Prov. ({MXN(productionProviderTotal)}) - Nómina Banda ({MXN(totalBandPayroll)})
-              {hasInvoice ? " · IVA facturado excluido de utilidad" : ""}
-            </span>
-          </div>
-          <div className="text-right">
-            <span className={`text-lg sm:text-xl font-black font-mono block ${
-              realOfficeProfit >= 0 ? "text-emerald-800 dark:text-emerald-300" : "text-rose-700 dark:text-rose-400"
-            }`}>
-              {MXN(realOfficeProfit)}
-            </span>
-            {subtotal > 0 && (
-              <span className="text-[11px] font-bold text-muted-foreground font-mono">
-                {profitMarginPercent.toFixed(1)}% margen sobre venta
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 9. Resumen Financiero Ejecutivo (Lo que verá el cliente) */}
+      {/* 8. Resumen Financiero Ejecutivo (Lo que verá el cliente) */}
       <div className="p-4 rounded-xl bg-slate-50/90 dark:bg-zinc-800/50 border border-border space-y-2 text-xs">
         <div className="flex justify-between items-center text-muted-foreground">
           <span>Formato de Show:</span>

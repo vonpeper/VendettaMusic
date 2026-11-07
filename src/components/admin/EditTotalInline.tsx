@@ -53,7 +53,7 @@ export function EditTotalInline({
   const previewSubtotal = Math.max(0, numBase + numViaticos + initialLineItemsTotal - numDiscount)
   const previewIva = hasInvoice ? Math.round(previewSubtotal * 0.16 * 100) / 100 : 0
   const previewTotal = previewSubtotal + previewIva
-  const previewRequiredDeposit = Math.round(previewTotal * 0.3)
+  const previewRequiredDeposit = Math.round(previewTotal * 0.5)
   const previewBalance = Math.max(0, previewTotal - previewRequiredDeposit)
 
   function resetForm() {
@@ -198,7 +198,7 @@ export function EditTotalInline({
                   <span className="text-blue-500 font-black">{MXN(previewTotal)}</span>
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground font-medium pt-1.5 border-t border-border/20">
-                  <span>Anticipo Requerido (30%):</span>
+                  <span>Anticipo Requerido (50%):</span>
                   <span className="font-bold text-foreground">{MXN(previewRequiredDeposit)}</span>
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground font-medium">

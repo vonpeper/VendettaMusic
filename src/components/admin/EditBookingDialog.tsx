@@ -303,7 +303,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
                 value={formData.viaticosAmount} 
                 onChange={e => {
                   const viat = parseFloat(e.target.value) || 0
-                  const newDeposit = !isManualDeposit ? Math.round(((formData.baseAmount || 0) + viat) * 0.3) : formData.depositAmount
+                  const newDeposit = !isManualDeposit ? Math.round(((formData.baseAmount || 0) + viat) * 0.5) : formData.depositAmount
                   setFormData({
                     ...formData,
                     viaticosAmount: viat,
@@ -341,7 +341,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
                 value={formData.baseAmount} 
                 onChange={e => {
                   const val = parseFloat(e.target.value) || 0
-                  const newDeposit = !isManualDeposit ? Math.round((val + (formData.viaticosAmount || 0)) * 0.3) : formData.depositAmount
+                  const newDeposit = !isManualDeposit ? Math.round((val + (formData.viaticosAmount || 0)) * 0.5) : formData.depositAmount
                   setFormData({
                     ...formData, 
                     baseAmount: val,
@@ -361,7 +361,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
                 <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
                   isManualDeposit ? "bg-amber-500/20 text-amber-500" : "bg-primary/20 text-primary"
                 }`}>
-                  {isManualDeposit ? "Manual" : "30% Automático"}
+                  {isManualDeposit ? "Manual" : "50% Automático"}
                 </span>
               </Label>
               <label className="text-[11px] text-muted-foreground flex items-center gap-1.5 cursor-pointer hover:text-foreground">
@@ -373,7 +373,7 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
                     setIsManualDeposit(checked)
                     if (!checked) {
                       const total = (formData.baseAmount || 0) + (formData.viaticosAmount || 0)
-                      setFormData({ ...formData, depositAmount: Math.round(total * 0.3) })
+                      setFormData({ ...formData, depositAmount: Math.round(total * 0.5) })
                     }
                   }}
                   className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer accent-primary"

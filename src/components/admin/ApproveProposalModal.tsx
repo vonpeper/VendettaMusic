@@ -87,12 +87,12 @@ export function ApproveProposalModal({
   const [discountAmount, setDiscountAmount] = useState<number>(initialDiscount)
 
   const subtotal = Math.max(0, baseAmount + viaticosAmount + (initialLineItemsTotal || 0) - discountAmount)
-  const autoDeposit30 = Math.round(subtotal * 0.3)
-  const hasCustomDepositInitially = initialDeposit > 0 && Math.abs(initialDeposit - autoDeposit30) > 100
+  const autoDeposit50 = Math.round(subtotal * 0.5)
+  const hasCustomDepositInitially = initialDeposit > 0 && Math.abs(initialDeposit - autoDeposit50) > 100
 
   const [manualDeposit, setManualDeposit] = useState(hasCustomDepositInitially)
   const [customDepositAmount, setCustomDepositAmount] = useState<number>(
-    initialDeposit > 0 ? initialDeposit : autoDeposit30
+    initialDeposit > 0 ? initialDeposit : autoDeposit50
   )
 
   const router = useRouter()
@@ -106,7 +106,7 @@ export function ApproveProposalModal({
       setViaticosAmount(initialViaticos)
       setDiscountAmount(initialDiscount)
       const calcSub = Math.max(0, baseToUse + initialViaticos + (initialLineItemsTotal || 0) - initialDiscount)
-      const calcAuto = Math.round(calcSub * 0.3)
+      const calcAuto = Math.round(calcSub * 0.5)
       if (initialDeposit > 0 && Math.abs(initialDeposit - calcAuto) > 100) {
         setManualDeposit(true)
         setCustomDepositAmount(initialDeposit)
@@ -117,7 +117,7 @@ export function ApproveProposalModal({
     }
   }, [open, initialPackage, initialBase, initialViaticos, initialDiscount, initialDeposit, initialLineItemsTotal])
 
-  const effectiveDeposit = manualDeposit ? customDepositAmount : Math.round(subtotal * 0.3)
+  const effectiveDeposit = manualDeposit ? customDepositAmount : Math.round(subtotal * 0.5)
 
   const isPendingApproval = currentStatus === "pendiente_aprobacion"
   const isApproved = currentStatus === "propuesta_enviada"
@@ -309,7 +309,7 @@ export function ApproveProposalModal({
                 onClick={() => {
                   const next = !manualDeposit
                   setManualDeposit(next)
-                  if (!next) setCustomDepositAmount(Math.round(subtotal * 0.3))
+                  if (!next) setCustomDepositAmount(Math.round(subtotal * 0.5))
                 }}
                 className="flex items-center gap-1 text-[11px] text-amber-400 font-bold hover:underline cursor-pointer"
               >

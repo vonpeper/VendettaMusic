@@ -371,9 +371,9 @@ export async function generateContractPdf(
   ctx.y -= 35
   const anticipo = (data.depositAmount && data.depositAmount > 0) 
     ? data.depositAmount 
-    : Math.round(total * 0.3)
+    : Math.round(total * 0.5)
   const liquidacion = Math.max(0, total - anticipo)
-  const pct = total > 0 ? Math.round((anticipo / total) * 100) : 30
+  const pct = total > 0 ? Math.round((anticipo / total) * 100) : 50
 
   page.drawText(`ANTICIPO SOLICITADO (${pct}%): ${MXN(anticipo)}`, { x: margin, y: ctx.y, size: 9, font: montserratBold })
   ctx.y -= 15

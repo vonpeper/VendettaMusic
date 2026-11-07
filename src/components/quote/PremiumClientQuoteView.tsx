@@ -119,9 +119,9 @@ export function PremiumClientQuoteView({
   const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
   const totalAmount = subtotal + ivaAmount
 
-  // Anticipo requerido (30% por regla de negocio estricta, o explícito si fue personalizado)
+  // Anticipo requerido (50% por regla de negocio estricta, o explícito si fue personalizado)
   const explicitDeposit = Number(booking.depositAmount || 0)
-  const depositAmount = explicitDeposit > 0 ? explicitDeposit : Math.round(totalAmount * 0.3)
+  const depositAmount = explicitDeposit > 0 ? explicitDeposit : Math.round(totalAmount * 0.5)
   
   // Abonos completados y saldo pendiente exacto
   const completedPayments = (booking.payments || [])

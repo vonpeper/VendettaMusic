@@ -121,7 +121,7 @@ export const calculateBookingFinancials = (r: Booking) => {
   const hasInvoice = Boolean(r.event?.invoice || r.invoice)
   const iva = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
   const total = subtotal + iva
-  const requiredDeposit = Math.round(total * 0.3)
+  const requiredDeposit = Math.round(total * 0.5)
   return { subtotal, iva, total, lineItemsTotal, requiredDeposit }
 }
 
@@ -422,7 +422,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
 
   const handleConfirmDeposit = async (lead: Booking) => {
     const financials = calculateBookingFinancials(lead)
-    const requiredDeposit = Math.round(financials.total * 0.3)
+    const requiredDeposit = Math.round(financials.total * 0.5)
     const depositToConfirm = Number(lead.depositAmount || 0) > 0 ? Number(lead.depositAmount) : requiredDeposit
     const confirmMsg = `¿Confirmar anticipo de ${formatCurrency(depositToConfirm)} para ${lead.clientName}? Esto confirmará el evento y habilitará el contrato legal.`
     if (!window.confirm(confirmMsg)) return
@@ -431,7 +431,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
     try {
       const res = await confirmDepositPaidAction(lead.id)
       if (res.success) {
-        toast.success("¡Anticipo del 30% confirmado! Evento agendado con éxito.")
+        toast.success("¡Anticipo del 50% confirmado! Evento agendado con éxito.")
         router.refresh()
       } else {
         toast.error(res.error || "Error al confirmar anticipo")
@@ -510,7 +510,7 @@ export function VentasTableClient({ items, followUpTemplate }: { items: Booking[
                 lead.packageName?.includes(">100")
               
               const financials = calculateBookingFinancials(lead)
-              const requiredDeposit = Math.round(financials.total * 0.3)
+              const requiredDeposit = Math.round(financials.total * 0.5)
               const paymentStatus = getDynamicPaymentStatus(lead)
               const daysRemaining = formatDaysRemaining(lead.requestedDate)
               const cleanPhone = lead.client?.whatsapp || lead.clientPhone || ""
