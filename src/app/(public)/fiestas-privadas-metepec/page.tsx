@@ -53,56 +53,56 @@ export const metadata: Metadata = {
   },
 }
 
-const REPERTOIRE_BLOCKS = [
+const REPERTOIRE_GENRES = [
   {
-    title: "Rock en tu Idioma",
+    name: "Rock en tu Idioma",
     badge: "Clásicos en Español",
     icon: Flame,
     color: "text-[#FF5A5F]",
     bgColor: "bg-[#6F0D2B]/20",
     borderColor: "border-[#FF5A5F]/30",
-    artists: "Caifanes, Soda Stereo, Enanitos Verdes, Hombres G, Miguel Mateos, El Tri, Jaguares, Duncan Dhu",
-    description: "Las canciones que todos tus invitados cantan a coro de principio a fin, con la fuerza y autenticidad del rock latinoamericano."
+    highlights: ["Coros al unísono", "Guitarras enérgicas", "Clásicos en español"],
+    description: "Las canciones en español que unen generaciones. Guitarras vivas y coros multitudinarios que tus invitados cantan con energía de principio a fin."
   },
   {
-    title: "Pop & Rock 80's en Inglés",
-    badge: "Golden Era",
+    name: "Pop & Rock 80's y 90's",
+    badge: "Golden Era en Inglés",
     icon: Zap,
     color: "text-amber-400",
     bgColor: "bg-amber-500/10",
     borderColor: "border-amber-500/30",
-    artists: "Queen, Bon Jovi, The Police, Journey, Billy Idol, Def Leppard, Michael Jackson, Dire Straits",
-    description: "Poderosas guitarras eléctricas, solos legendarios y armonías vocales estelares que elevan la adrenalina de la pista."
+    highlights: ["Solos de guitarra", "Voces estelares", "Alta energía"],
+    description: "Los grandes éxitos de la era dorada del rock y pop en inglés. Guitarras potentes y armonías vocales para elevar la vibra del evento."
   },
   {
-    title: "Ska Festivo",
-    badge: "Explosión y Baile",
+    name: "Ska Festivo & Alternativo",
+    badge: "Ritmo y Baile",
     icon: Radio,
     color: "text-emerald-400",
     bgColor: "bg-emerald-500/10",
     borderColor: "border-emerald-500/30",
-    artists: "Los Fabulosos Cadillacs, Panteón Rococó, Inspector, Los Auténticos Decadentes, La Castañeda",
-    description: "El momento cumbre del slam y la fiesta: ritmos bailables con percusión enérgica que ponen a saltar a todos sin excepción."
+    highlights: ["Percusión vibrante", "Baile contagioso", "Pura fiesta"],
+    description: "El momento más explosivo y bailable de la fiesta: ritmos con percusión enérgica y cadencia festiva que ponen a saltar a todos."
   },
   {
-    title: "Disco & Funk Classics",
-    badge: "Groove en Vivo",
+    name: "Disco & Funk Classics",
+    badge: "Groove Bailable",
     icon: Disc,
     color: "text-purple-400",
     bgColor: "bg-purple-500/10",
     borderColor: "border-purple-500/30",
-    artists: "ABBA, Bee Gees, Earth Wind & Fire, Kool & The Gang, KC and the Sunshine Band, Gloria Gaynor",
-    description: "Líneas de bajo con funk demoledor y ritmo bailable ininterrumpido ejecutado con batería acústica real."
+    highlights: ["Línea de bajo sólida", "Batería acústica real", "Pista encendida"],
+    description: "Líneas de bajo con funk demoledor y ritmo bailable ininterrumpido, ejecutado 100% en vivo con batería acústica real sin pistas."
   },
   {
-    title: "Himnos de los 2000's",
-    badge: "Millennial Rock",
+    name: "Himnos Pop Rock 2000's",
+    badge: "Clásicos Modernos",
     icon: Music,
     color: "text-cyan-400",
     bgColor: "bg-cyan-500/10",
     borderColor: "border-cyan-500/30",
-    artists: "The Killers, Coldplay, Zoé, Maroon 5, Franz Ferdinand, Muse, Moderatto, Kinky",
-    description: "Los himnos modernos que marcaron tus años de universidad y juventud, recreados con la frescura y fidelidad de estudio."
+    highlights: ["Sonido contemporáneo", "Frescura de estudio", "Generación 2000"],
+    description: "Los himnos modernos que marcaron las mejores fiestas y recuerdos de juventud, interpretados con máxima potencia y fidelidad instrumental."
   }
 ]
 
@@ -268,53 +268,57 @@ export default function FiestasPrivadasMetepecPage() {
         </div>
       </section>
 
-      {/* -- 2. REPERTORIO CURADO: "LO QUE SÍ TOCAMOS" ---------------------- */}
+      {/* -- 2. GÉNEROS MUSICALES: "LO QUE SÍ TOCAMOS" ----------------------- */}
       <section className="py-24 bg-[#0B0B14] relative overflow-hidden border-b border-white/10">
         <div className="container mx-auto px-4 max-w-6xl relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[#FF5A5F] text-xs font-black uppercase tracking-widest mb-4">
-              <Music className="w-3.5 h-3.5" /> Repertorio Curado & Demoledor
+              <Music className="w-3.5 h-3.5" /> Géneros Musicales en Vivo
             </div>
             <h2 className="text-3xl sm:text-5xl font-heading font-black text-white uppercase tracking-tight mb-4">
-              Lo que SÍ tocamos: Solo himnos legendarios
+              Lo que SÍ tocamos: Solo géneros que encienden tu evento
             </h2>
             <p className="text-gray-300 text-base sm:text-lg leading-relaxed">
-              Curaduría musical sin relleno. Diseñamos un setlist dinámico de 2 a 3 horas que conecta de inmediato con tus amigos y familiares, manteniendo la pista encendida sin baches.
+              Música 100% en vivo, curada para conectar de inmediato con tus invitados y mantener la pista arriba sin caer en fórmulas genéricas ni canciones de relleno.
             </p>
           </div>
 
-          {/* Grid de 5 Bloques de Repertorio */}
+          {/* Grid de Géneros Musicales */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {REPERTOIRE_BLOCKS.map((block, idx) => {
-              const Icon = block.icon
+            {REPERTOIRE_GENRES.map((genre, idx) => {
+              const Icon = genre.icon
               return (
                 <div 
                   key={idx}
-                  className={`p-7 rounded-3xl bg-gradient-to-b from-white/[0.05] via-black/40 to-black/70 border ${block.borderColor} shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between`}
+                  className={`p-7 rounded-3xl bg-gradient-to-b from-white/[0.05] via-black/40 to-black/70 border ${genre.borderColor} shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-4">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${block.bgColor} ${block.color}`}>
-                        <Icon className="w-3 h-3" /> {block.badge}
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${genre.bgColor} ${genre.color}`}>
+                        <Icon className="w-3 h-3" /> {genre.badge}
                       </span>
                     </div>
 
                     <h3 className="text-xl sm:text-2xl font-heading font-black text-white uppercase tracking-tight mb-3">
-                      {block.title}
+                      {genre.name}
                     </h3>
 
                     <p className="text-xs sm:text-sm text-gray-400 mb-6 leading-relaxed">
-                      {block.description}
+                      {genre.description}
                     </p>
                   </div>
 
                   <div className="border-t border-white/10 pt-4 mt-2">
-                    <span className="text-[10px] uppercase font-mono font-bold text-gray-400 tracking-wider block mb-1.5">
-                      Artistas en el Setlist:
-                    </span>
-                    <span className="text-xs font-semibold text-white/90 leading-snug block">
-                      {block.artists}
-                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {genre.highlights.map((h, hIdx) => (
+                        <span 
+                          key={hIdx}
+                          className="px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/10 text-[10px] font-medium text-gray-300"
+                        >
+                          {h}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )
