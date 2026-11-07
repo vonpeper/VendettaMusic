@@ -23,7 +23,7 @@ const ZONA_2 = [
   "valle de bravo", "avandaro", "malinalco", "ixtapan de la sal", "tonatico",
   "ciudad de mexico", "cdmx", "df", "distrito federal", "naucalpan", "tlalnepantla", 
   "huixquilucan", "interlomas", "santa fe", "cuajimalpa", "alvaro obregon", "coyoacan", "tlalpan",
-  "tepotzotlan", "atizapan", "izcalli"
+  "tepotzotlan", "san mateo xoloc", "xoloc", "atizapan", "izcalli", "cuautitlan"
 ]
 
 // ZONA 3: Larga Distancia (Por Estado/Ciudad)

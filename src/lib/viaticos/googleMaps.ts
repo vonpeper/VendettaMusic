@@ -53,6 +53,13 @@ const KNOWN_ROUTES: KnownRoute[] = [
     durationSec: 4200, // 1h 10m
     tollCostSingle: 120 // Caseta México-Toluca
   },
+  // Zona Norte Edomex: Tepotzotlán / San Mateo Xoloc / Cuautitlán Izcalli
+  {
+    keywords: ["tepotzotlan", "san mateo xoloc", "xoloc", "cuautitlan", "cuautitlan izcalli", "tultitlan", "teoloyucan", "huehuetoca", "coyotepec"],
+    distanceKm: 90,
+    durationSec: 5400, // 1h 30m
+    tollCostSingle: 178 // La Venta-Chamapa ($109) + Chamapa-Lechería ($69)
+  },
   // Valle de Bravo / Avándaro
   {
     keywords: ["valle de bravo", "avandaro", "colorines", "donato guerra"],

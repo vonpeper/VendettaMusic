@@ -67,6 +67,17 @@ export default async function CotizarPage({ searchParams }: CotizarPageProps) {
 
   return (
     <div className="min-h-screen bg-[#070709] text-foreground pb-24">
+      {/* Native Browser Preload Hint in Head for Immediate Mobile LCP Discovery */}
+      <link
+        rel="preload"
+        as="image"
+        href="/_next/image?url=%2Fimages%2Fvendetta-web-assets%2Fvendetta-hero-mobile-ultra-4k.webp&w=1200&q=70"
+        imageSrcSet="/_next/image?url=%2Fimages%2Fvendetta-web-assets%2Fvendetta-hero-mobile-ultra-4k.webp&w=750&q=70 750w, /_next/image?url=%2Fimages%2Fvendetta-web-assets%2Fvendetta-hero-mobile-ultra-4k.webp&w=1200&q=70 1200w"
+        imageSizes="(max-width: 768px) 100vw, 1200px"
+        // @ts-ignore
+        fetchPriority="high"
+      />
+
       {/* Header del Cotizador */}
       <section className="relative pt-32 md:pt-40 pb-12 overflow-hidden border-b border-white/10 bg-gradient-to-b from-black via-zinc-950 to-[#070709]">
         {/* Glow de fondo */}

@@ -9,9 +9,14 @@ process.env.DEFAULT_ORIGIN_ADDRESS = "Metepec, Estado de México, México";
 process.env.FUEL_PRICE_MXN = "24";
 
 // Mutable configuration mock to change config in different test cases
-const mockConfig = {
+const mockConfig: {
+  googleMapsApiKey: string;
+  viaticosLocalRadius: number;
+  viaticosVehicleCount?: number;
+} = {
   googleMapsApiKey: "mock_api_key_test_12345",
   viaticosLocalRadius: 50.0,
+  viaticosVehicleCount: 2,
 };
 
 // Mock global Prisma client queries
@@ -108,16 +113,17 @@ async function runTests() {
     clearViaticosCache();
 
     // Test 1: CDMX (65 km > 50 km local radius)
-    // Fuel: (65 km * 2 * 18) / 100 * 24 = 561.6 MXN
+    // Fuel: (65 km * 2 * (100 / 7.1 * 2)) / 100 * 24 = 878.87 -> 879 MXN
     // Tolls: 120 * 2 * 2 = 480 MXN
-    // Expected total: 1042 MXN (rounded)
+    // Expected total: roundTo100(879 + 480) = 1400 MXN
     console.log("👉 Test 1: CDMX (65 km > 50 km local radius)");
     mockConfig.viaticosLocalRadius = 50.0;
+    mockConfig.viaticosVehicleCount = 2;
     const resultCDMX = await calculateViaticos("CDMX", "escape_2014");
     console.log("📍 Result:", resultCDMX);
     assert.strictEqual(resultCDMX.distanceKm, 65);
     assert.strictEqual(resultCDMX.tollCost, 480);
-    assert.strictEqual(resultCDMX.viaticosAmount, 1042);
+    assert.strictEqual(resultCDMX.viaticosAmount, 1400);
     console.log("✅ Test 1 Passed!");
 
     // Test 2: Cache check
@@ -140,22 +146,22 @@ async function runTests() {
     console.log("✅ Test 3 Passed!");
 
     // Test 4: Magdalena Contreras (53 km > 50 km local radius)
-    // Fuel: (53 km * 2 * 18) / 100 * 24 = 457.92 MXN
+    // Fuel: (53 km * 2 * (100 / 7.1 * 2)) / 100 * 24 = 716.6 -> 717 MXN
     // Tolls: 80 * 2 * 2 = 320 MXN
-    // Expected total: 778 MXN (rounded)
+    // Expected total: roundTo100(717 + 320) = 1100 MXN
     console.log("👉 Test 4: Magdalena Contreras (53 km > 50 km local radius)");
     clearViaticosCache();
     const resultMagdalena = await calculateViaticos("Magdalena Contreras", "escape_2014");
     console.log("📍 Result:", resultMagdalena);
     assert.strictEqual(resultMagdalena.distanceKm, 53);
     assert.strictEqual(resultMagdalena.tollCost, 320);
-    assert.strictEqual(resultMagdalena.viaticosAmount, 778);
+    assert.strictEqual(resultMagdalena.viaticosAmount, 1100);
     console.log("✅ Test 4 Passed!");
 
     // Test 5: Toluca with a smaller custom radius (15 km > 10 km local radius)
-    // Fuel: (15 km * 2 * 18) / 100 * 24 = 129.6 MXN
+    // Fuel: (15 km * 2 * (100 / 7.1 * 2)) / 100 * 24 = 202.8 -> 203 MXN
     // Tolls: 0 MXN
-    // Expected total: 130 MXN (rounded)
+    // Expected total: roundTo100(203) = 300 MXN
     console.log("👉 Test 5: Toluca with custom radius of 10 km");
     mockConfig.viaticosLocalRadius = 10.0;
     clearViaticosCache();
@@ -163,7 +169,7 @@ async function runTests() {
     console.log("📍 Result:", resultTolucaCustom);
     assert.strictEqual(resultTolucaCustom.distanceKm, 15);
     assert.strictEqual(resultTolucaCustom.tollCost, 0);
-    assert.strictEqual(resultTolucaCustom.viaticosAmount, 130);
+    assert.strictEqual(resultTolucaCustom.viaticosAmount, 300);
     console.log("✅ Test 5 Passed!");
 
     // Test 6: Destino a larga distancia (> 250 km, ej. Guerrero a 280 km)
@@ -196,9 +202,9 @@ async function runTests() {
     global.fetch = tempFetch;
 
     // Test 7: CDMX con 1 solo vehículo configurado
-    // Fuel: (65 km * 2 * 9) / 100 * 24 = 280.8 MXN
+    // Fuel: (65 km * 2 * (100 / 7.1 * 1)) / 100 * 24 = 439.4 -> 439 MXN
     // Tolls: 120 * 2 * 1 = 240 MXN
-    // Expected total: 521 MXN (rounded)
+    // Expected total: roundTo100(439 + 240) = 700 MXN
     console.log("👉 Test 7: CDMX con 1 solo vehículo configurado");
     mockConfig.viaticosLocalRadius = 50.0;
     (mockConfig as any).viaticosVehicleCount = 1;
@@ -226,9 +232,29 @@ async function runTests() {
     const resultOneVehicle = await calculateViaticos("CDMX", "escape_2014");
     console.log("📍 Result:", resultOneVehicle);
     assert.strictEqual(resultOneVehicle.tollCost, 240);
-    assert.strictEqual(resultOneVehicle.viaticosAmount, 521);
+    assert.strictEqual(resultOneVehicle.viaticosAmount, 700);
     console.log("✅ Test 7 Passed!");
     global.fetch = tempFetch2;
+
+    // Test 8: San Mateo Xoloc / Tepotzotlán (Ruta conocida calibrada)
+    // Distance: 90 km, Toll: 178 single
+    // Fuel con 2 vehículos a $24/L (en mock): (90 * 2 * (100 / 7.1 * 2)) / 100 * 24 = 1216.9 -> 1217 MXN
+    // Tolls con 2 vehículos: 178 * 2 * 2 = 712 MXN
+    // Total unrounded: 1217 + 712 = 1929 MXN -> roundTo100 = 2000 MXN (a $24/L)
+    console.log("👉 Test 8: San Mateo Xoloc / Tepotzotlán (Tabulador Calibrado)");
+    mockConfig.viaticosVehicleCount = 2;
+    mockConfig.viaticosLocalRadius = 25.0;
+    clearViaticosCache();
+    // Forzamos fetch a fallar para verificar la resolución por KnownRoute
+    const tempFetch3 = global.fetch;
+    (global as any).fetch = async () => ({ ok: false } as any);
+    const resultXoloc = await calculateViaticos("Av. Insurgentes 68, 54602 San Mateo Xoloc, Méx.", "escape_2014");
+    console.log("📍 Result San Mateo Xoloc:", resultXoloc);
+    assert.strictEqual(resultXoloc.distanceKm, 90);
+    assert.strictEqual(resultXoloc.tollCost, 712);
+    assert.strictEqual(resultXoloc.viaticosAmount, 2000); // 2000 con mock a $24/L
+    console.log("✅ Test 8 Passed!");
+    global.fetch = tempFetch3;
 
     console.log("🎉 All tests in googleMaps.test.ts PASSED successfully!");
   } catch (err) {

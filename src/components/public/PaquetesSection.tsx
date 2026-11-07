@@ -120,7 +120,11 @@ interface PaquetesSectionProps {
 
 export function PaquetesSection({ dbPackages }: PaquetesSectionProps) {
   return (
-    <section id="paquetes" className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#15152B]/90 to-[#42112D]">
+    <section 
+      id="paquetes" 
+      className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-[#07080D] via-[#15152B]/90 to-[#42112D]"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
+    >
       {/* Concert ambient lights and grid */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 -left-20 w-96 h-96 bg-[#7777FF]/15 rounded-full blur-[140px]" />

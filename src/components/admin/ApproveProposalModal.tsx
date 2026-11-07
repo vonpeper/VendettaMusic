@@ -14,7 +14,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog"
-import { Send, Loader2, CheckCircle2 } from "lucide-react"
+import { Send, Loader2, CheckCircle2, ToggleLeft, ToggleRight } from "lucide-react"
 import { approveAndSendProposalAction } from "@/actions/ventas"
 import { toast } from "sonner"
 
@@ -35,6 +35,7 @@ interface ApproveProposalModalProps {
   initialBase?: number
   initialViaticos?: number
   initialDiscount?: number
+  initialDeposit?: number
   initialLineItemsTotal?: number
   packagesList?: PackageSummaryOption[]
 }
@@ -56,6 +57,7 @@ export function ApproveProposalModal({
   initialBase = 0,
   initialViaticos = 0,
   initialDiscount = 0,
+  initialDeposit = 0,
   initialLineItemsTotal = 0,
   packagesList = []
 }: ApproveProposalModalProps) {
@@ -84,6 +86,15 @@ export function ApproveProposalModal({
   const [viaticosAmount, setViaticosAmount] = useState<number>(initialViaticos)
   const [discountAmount, setDiscountAmount] = useState<number>(initialDiscount)
 
+  const subtotal = Math.max(0, baseAmount + viaticosAmount + (initialLineItemsTotal || 0) - discountAmount)
+  const autoDeposit30 = Math.round(subtotal * 0.3)
+  const hasCustomDepositInitially = initialDeposit > 0 && Math.abs(initialDeposit - autoDeposit30) > 100
+
+  const [manualDeposit, setManualDeposit] = useState(hasCustomDepositInitially)
+  const [customDepositAmount, setCustomDepositAmount] = useState<number>(
+    initialDeposit > 0 ? initialDeposit : autoDeposit30
+  )
+
   const router = useRouter()
 
   // Sincronización reactiva garantizada: cada vez que el modal se abre o cambian las propiedades
@@ -94,11 +105,19 @@ export function ApproveProposalModal({
       setBaseAmount(baseToUse)
       setViaticosAmount(initialViaticos)
       setDiscountAmount(initialDiscount)
+      const calcSub = Math.max(0, baseToUse + initialViaticos + (initialLineItemsTotal || 0) - initialDiscount)
+      const calcAuto = Math.round(calcSub * 0.3)
+      if (initialDeposit > 0 && Math.abs(initialDeposit - calcAuto) > 100) {
+        setManualDeposit(true)
+        setCustomDepositAmount(initialDeposit)
+      } else {
+        setManualDeposit(false)
+        setCustomDepositAmount(calcAuto)
+      }
     }
-  }, [open, initialPackage, initialBase, initialViaticos, initialDiscount])
+  }, [open, initialPackage, initialBase, initialViaticos, initialDiscount, initialDeposit, initialLineItemsTotal])
 
-  const subtotal = Math.max(0, baseAmount + viaticosAmount + (initialLineItemsTotal || 0) - discountAmount)
-  const suggestedDeposit = Math.round(subtotal * 0.3)
+  const effectiveDeposit = manualDeposit ? customDepositAmount : Math.round(subtotal * 0.3)
 
   const isPendingApproval = currentStatus === "pendiente_aprobacion"
   const isApproved = currentStatus === "propuesta_enviada"
@@ -124,7 +143,7 @@ export function ApproveProposalModal({
         baseAmount,
         viaticosAmount,
         discountAmount,
-        depositAmount: suggestedDeposit,
+        depositAmount: effectiveDeposit,
         packageName
       })
 
@@ -147,7 +166,7 @@ export function ApproveProposalModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          className={`w-full h-11 font-black text-xs uppercase tracking-wider gap-2 rounded-xl transition-all shadow-md ${
+          className={`w-full h-11 font-black text-xs uppercase tracking-wider gap-2 rounded-xl transition-all shadow-md cursor-pointer ${
             isPendingApproval
               ? "bg-amber-500 hover:bg-amber-600 text-black shadow-amber-500/20 animate-pulse"
               : isApproved
@@ -219,7 +238,7 @@ export function ApproveProposalModal({
                     key={pkg.id}
                     type="button"
                     onClick={() => handlePackageChange(pkg.name)}
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
                       packageName.toLowerCase().includes(pkg.name.toLowerCase())
                         ? "bg-primary text-black border-primary"
                         : "bg-white/5 text-gray-400 border-white/10 hover:border-white/30 hover:text-white"
@@ -235,8 +254,8 @@ export function ApproveProposalModal({
           {/* Importes */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-300 flex items-center justify-between">
-                <span>Precio Show *</span>
+              <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-300">
+                Precio Show *
               </Label>
               <Input
                 type="number"
@@ -257,7 +276,7 @@ export function ApproveProposalModal({
               <Input
                 type="number"
                 min={0}
-                step={500}
+                step={200}
                 value={viaticosAmount || ""}
                 onChange={(e) => setViaticosAmount(Number(e.target.value) || 0)}
                 placeholder="0"
@@ -279,6 +298,51 @@ export function ApproveProposalModal({
                 className="bg-black/40 border-white/15 text-white h-10 rounded-xl text-xs font-mono"
               />
             </div>
+          </div>
+
+          {/* Anticipo y Toggle Manual */}
+          <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-gray-300">Anticipo de Apartado</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !manualDeposit
+                  setManualDeposit(next)
+                  if (!next) setCustomDepositAmount(Math.round(subtotal * 0.3))
+                }}
+                className="flex items-center gap-1 text-[11px] text-amber-400 font-bold hover:underline cursor-pointer"
+              >
+                {manualDeposit ? (
+                  <>
+                    <ToggleRight className="w-5 h-5 text-amber-400" />
+                    <span>Personalizado</span>
+                  </>
+                ) : (
+                  <>
+                    <ToggleLeft className="w-5 h-5 text-gray-500" />
+                    <span className="text-gray-400">Automático (30%)</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {manualDeposit && (
+              <div className="pt-2 border-t border-white/10">
+                <Label className="text-[10px] font-bold uppercase text-gray-400 mb-1 block">
+                  Monto Manual de Anticipo ($)
+                </Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={subtotal}
+                  step={500}
+                  value={customDepositAmount || ""}
+                  onChange={(e) => setCustomDepositAmount(Number(e.target.value) || 0)}
+                  className="bg-zinc-900 border-white/20 text-white h-9 rounded-lg text-xs font-mono"
+                />
+              </div>
+            )}
           </div>
 
           {/* Resumen Financiero Dinámico */}
@@ -310,8 +374,8 @@ export function ApproveProposalModal({
               <span className="text-white text-base font-black font-mono">{MXN(subtotal)}</span>
             </div>
             <div className="flex justify-between items-center text-gray-400">
-              <span>Anticipo de Apartado (30%):</span>
-              <span className="text-primary font-bold font-mono">{MXN(suggestedDeposit)}</span>
+              <span>Anticipo a Requerir:</span>
+              <span className="text-primary font-bold font-mono">{MXN(effectiveDeposit)}</span>
             </div>
             <div className="flex justify-between items-center text-gray-400 pt-2 border-t border-white/10 text-[11px]">
               <span>Enlace que se enviará:</span>
@@ -326,7 +390,7 @@ export function ApproveProposalModal({
             variant="ghost"
             onClick={() => setOpen(false)}
             disabled={loading}
-            className="w-full sm:w-auto h-10 text-xs rounded-xl"
+            className="w-full sm:w-auto h-10 text-xs rounded-xl cursor-pointer"
           >
             Cancelar
           </Button>
@@ -335,7 +399,7 @@ export function ApproveProposalModal({
             type="button"
             onClick={handleApprove}
             disabled={loading || baseAmount <= 0}
-            className="w-full sm:w-auto h-10 rounded-xl bg-primary text-black font-black uppercase text-xs tracking-wider hover:bg-primary/90 gap-2 disabled:opacity-50"
+            className="w-full sm:w-auto h-10 rounded-xl bg-primary text-black font-black uppercase text-xs tracking-wider hover:bg-primary/90 gap-2 disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
               <>

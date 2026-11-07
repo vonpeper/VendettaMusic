@@ -48,7 +48,11 @@ export function AutographWall() {
   }, [])
 
   return (
-    <section id="clientes" className="py-28 md:py-36 relative overflow-hidden bg-[#07080D]">
+    <section 
+      id="clientes" 
+      className="py-28 md:py-36 relative overflow-hidden bg-[#07080D]"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "1px 500px" }}
+    >
       {/* Top and Bottom gradient blend masks */}
       <div className="section-blend-top bg-gradient-to-b from-[#07080D] to-transparent" />
       <div className="section-blend-bottom bg-gradient-to-t from-[#07080D] to-transparent" />

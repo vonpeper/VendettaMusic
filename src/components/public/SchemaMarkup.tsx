@@ -72,7 +72,93 @@ export async function SchemaMarkup() {
         "image": m.img.startsWith("http") ? m.img : `https://vendetta.mx${m.img}`
       },
       "roleName": m.role
-    }))
+    })),
+    "hasOfferCatalog": {
+      "@id": "https://vendetta.mx/#offercatalog"
+    }
+  }
+
+  // 3b. Catálogo Oficial de Experiencias (OfferCatalog)
+  const offerCatalogSchema = {
+    "@context": "https://schema.org",
+    "@type": "OfferCatalog",
+    "@id": "https://vendetta.mx/#offercatalog",
+    "name": "Catálogo Oficial de Shows Vendetta Live Music",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "name": "Show Vendetta Essential",
+        "description": "Formato acústico y compacto para eventos íntimos y bodas boutique (hasta 100 pax).",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Vendetta Essential Live Show",
+          "serviceType": "Boutique Acoustic & Compact Live Show",
+          "provider": { "@id": "https://vendetta.mx/#organization" },
+          "areaServed": ["Metepec", "Toluca", "Valle de Bravo", "Ciudad de México", "Querétaro", "Cuernavaca"]
+        }
+      },
+      {
+        "@type": "Offer",
+        "name": "Show Vendetta Experience",
+        "description": "Show completo con refuerzo de audio y diseño de iluminación para salones (100 a 300 pax).",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Vendetta Experience Full Band Show",
+          "serviceType": "Full Band Pop & Rock Live Concert",
+          "provider": { "@id": "https://vendetta.mx/#organization" },
+          "areaServed": ["Metepec", "Toluca", "Valle de Bravo", "Ciudad de México", "Querétaro", "Cuernavaca"]
+        }
+      },
+      {
+        "@type": "Offer",
+        "name": "Show Vendetta Festival",
+        "description": "Producción de gran escala con templete, pantalla e ingeniería de audio (+300 pax).",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Vendetta Festival Concert Grade Show",
+          "serviceType": "Concert-Grade Festival Live Production",
+          "provider": { "@id": "https://vendetta.mx/#organization" },
+          "areaServed": ["Metepec", "Toluca", "Valle de Bravo", "Ciudad de México", "Querétaro", "Cuernavaca"]
+        }
+      }
+    ]
+  }
+
+  // 3c. Esquema de Negocio de Entretenimiento Local (EntertainmentBusiness)
+  const entertainmentBusinessSchema = {
+    "@context": "https://schema.org",
+    "@type": "EntertainmentBusiness",
+    "@id": "https://vendetta.mx/#entertainment-business",
+    "name": "Vendetta Live Music",
+    "url": "https://vendetta.mx",
+    "logo": logo,
+    "image": "https://vendetta.mx/images/vendetta-hero-og-v2.jpg?v=3",
+    "description": "Empresa y productora de espectáculos de pop & rock en vivo para eventos corporativos, bodas, aniversarios y festivales con cobertura en CDMX, Valle de Bravo, Metepec, Toluca y Querétaro.",
+    "telephone": "+52-722-288-0045",
+    "email": "rock.vendettamx@gmail.com",
+    "priceRange": "$$$",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Metepec",
+      "addressRegion": "Estado de México",
+      "addressCountry": "MX"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 19.2567,
+      "longitude": -99.6048
+    },
+    "areaServed": [
+      { "@type": "City", "name": "Ciudad de México" },
+      { "@type": "City", "name": "Valle de Bravo" },
+      { "@type": "City", "name": "Metepec" },
+      { "@type": "City", "name": "Toluca" },
+      { "@type": "City", "name": "Querétaro" },
+      { "@type": "City", "name": "Cuernavaca" }
+    ],
+    "hasOfferCatalog": {
+      "@id": "https://vendetta.mx/#offercatalog"
+    }
   }
 
   // 4. Esquema de WebSite
@@ -272,6 +358,16 @@ export async function SchemaMarkup() {
         id="musicgroup-schema"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(musicGroupSchema) }}
+      />
+      <Script
+        id="entertainment-business-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(entertainmentBusinessSchema) }}
+      />
+      <Script
+        id="offercatalog-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(offerCatalogSchema) }}
       />
       <Script
         id="website-schema"

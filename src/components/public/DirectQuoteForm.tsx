@@ -4,16 +4,13 @@ import { useState, useEffect, useMemo, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon"
 import { submitPublicQuoteAction, saveQuoteDraftAction } from "@/actions/quote-direct"
 import { toast } from "sonner"
-import { ESTADOS_MUNICIPIOS } from "@/lib/municipios"
 import {
   User,
   Phone,
   Calendar,
-  Clock,
   MapPin,
   Users,
   Sparkles,
@@ -21,9 +18,8 @@ import {
   Loader2,
   Copy,
   Check,
-  Building2,
-  Music2,
-  ArrowRight
+  ArrowRight,
+  PartyPopper
 } from "lucide-react"
 import {
   Dialog,
@@ -39,91 +35,47 @@ interface DirectQuoteFormProps {
   initialDate?: string | null
 }
 
-const EVENT_TYPES = [
-  { value: "Boda", label: "💒 Boda" },
-  { value: "XV Años", label: "👸 XV Años" },
-  { value: "Corporativo", label: "🏢 Corporativo" },
-  { value: "Cumpleaños / Aniversario", label: "🎂 Cumpleaños" },
-  { value: "Graduación", label: "🎓 Graduación" },
-  { value: "Fiesta Privada", label: "🎸 Fiesta Privada" },
-  { value: "Otro", label: "✨ Otro Motivo" },
+const MOTIVOS_FESTEJO = [
+  "Boda",
+  "XV Años",
+  "Cumpleaños",
+  "Corporativo",
+  "Graduación",
+  "Otro"
 ]
 
-const GUEST_RANGES = [
-  { label: "< 100 pax", desc: "Íntimo / Boutique", value: 80 },
-  { label: "100 - 300 pax", desc: "Salón / Gran Celebración", value: 200 },
-  { label: "+300 pax", desc: "Festival / Gran Escala", value: 400 },
+const AFORO_OPCIONES = [
+  { label: "Íntimo (<100)", value: 80 },
+  { label: "Salón (100-300)", value: 200 },
+  { label: "Masivo (+300)", value: 400 },
 ]
 
-const PACKAGE_FORMATS = [
-  {
-    id: "essential",
-    name: "Essential",
-    headline: "Boutique & Íntimo",
-    description: "Formato acústico y compacto para eventos íntimos y bodas boutique (hasta 100 pax).",
-    badge: "Hasta 100 pax"
-  },
-  {
-    id: "experience",
-    name: "Experience",
-    headline: "Full Band & Salón",
-    description: "Show completo con refuerzo de audio y diseño de iluminación para salones (100 a 300 pax).",
-    badge: "100 - 300 pax"
-  },
-  {
-    id: "festival",
-    name: "Festival",
-    headline: "Concert-Grade",
-    description: "Producción de gran escala con templete, pantalla e ingeniería de audio (+300 pax).",
-    badge: "+300 pax"
-  },
-  {
-    id: "definir",
-    name: "Por Definir",
-    headline: "Asesoría Técnica",
-    description: "No estoy seguro, deseo que el equipo me oriente según las características del recinto.",
-    badge: "Personalizado"
-  }
-]
-
-const TIME_OPTIONS = [
-  "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM",
-  "06:00 PM", "07:00 PM", "08:00 PM", "09:00 PM", "10:00 PM", "11:00 PM",
-  "12:00 AM", "01:00 AM", "02:00 AM"
+const POPULAR_LOCATIONS = [
+  "Metepec, Estado de México",
+  "Toluca, Estado de México",
+  "Valle de Bravo, Estado de México",
+  "Avándaro, Estado de México",
+  "Ciudad de México (CDMX)",
+  "Santa Fe, CDMX",
+  "Polanco, CDMX",
+  "San Ángel / Pedregal, CDMX",
+  "Huixquilucan / Interlomas, Edomex",
+  "Tepotzotlán, Estado de México",
+  "Cuernavaca, Morelos",
+  "Querétaro, Querétaro"
 ]
 
 export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: DirectQuoteFormProps) {
-  // Datos de Contacto
+  // Campos del formulario
   const [nombre, setNombre] = useState("")
   const [telefono, setTelefono] = useState("")
-
-  // Datos del Evento
-  const [tipoEvento, setTipoEvento] = useState("Boda")
   const [fecha, setFecha] = useState(initialDate || "")
-  const [horaInicio, setHoraInicio] = useState("09:00 PM")
-  const [horaFin, setHoraFin] = useState("11:00 PM")
-  const [horasShow, setHorasShow] = useState<number>(2)
+  const [ubicacion, setUbicacion] = useState("")
+  const [aforoLabel, setAforoLabel] = useState<string>("Salón (100-300)")
+  const [aforo, setAforo] = useState<number>(200)
+  const [motivo, setMotivo] = useState<string>("Boda")
 
-  // Ubicación y Aforo
-  const [estado, setEstado] = useState("Estado de México")
-  const [municipio, setMunicipio] = useState("Metepec")
-  const [municipioManual, setMunicipioManual] = useState("")
-  const [lugarEvento, setLugarEvento] = useState("")
-  const [invitados, setInvitados] = useState<number>(200)
-
-  // Formato de interés
-  const resolveInitialPkg = () => {
-    if (!initialPackage) return "experience"
-    const p = initialPackage.toLowerCase()
-    if (p.includes("essential")) return "essential"
-    if (p.includes("festival")) return "festival"
-    if (p.includes("experience")) return "experience"
-    return "experience"
-  }
-  const [paquete, setPaquete] = useState<string>(resolveInitialPkg())
-  const [notas, setNotas] = useState("")
-
-  // Estados de proceso
+  // Estado del proceso
   const [inquiryId, setInquiryId] = useState<string | undefined>(undefined)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedData, setSubmittedData] = useState<{
@@ -135,10 +87,9 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
   } | null>(null)
   const [copiedFolio, setCopiedFolio] = useState(false)
 
-  // Lista de municipios según el estado seleccionado
-  const municipiosDisponibles = useMemo(() => {
-    return ESTADOS_MUNICIPIOS[estado] || ["Toluca", "Metepec", "Otro municipio / cotización manual"]
-  }, [estado])
+  // Teléfono normalizado
+  const cleanPhone = telefono.replace(/\D/g, "")
+  const isPhoneValid = cleanPhone.length === 10
 
   // Fecha mínima: mañana
   const minDate = useMemo(() => {
@@ -147,9 +98,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
     return d.toISOString().split("T")[0]
   }, [])
 
-  // Auto-guardado de borrador cuando ingresa nombre y 10 dígitos de WhatsApp
-  const cleanPhone = telefono.replace(/\D/g, "")
-  const isPhoneValid = cleanPhone.length === 10
+  // Auto-guardado de borrador al ingresar nombre y teléfono válido (Zero friction)
   const draftTimer = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -161,10 +110,10 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             nombre: nombre.trim(),
             telefono: cleanPhone,
             fecha: fecha || undefined,
-            municipio: municipio === "Otro municipio / cotización manual" ? municipioManual : municipio,
-            estado,
-            invitados,
-            tipoEvento,
+            municipio: ubicacion.trim() || undefined,
+            estado: "Estado de México",
+            invitados: aforo,
+            tipoEvento: motivo,
             inquiryId
           })
           if (res.success && res.inquiryId) {
@@ -178,9 +127,9 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
     return () => {
       if (draftTimer.current) clearTimeout(draftTimer.current)
     }
-  }, [nombre, cleanPhone, isPhoneValid, fecha, municipio, municipioManual, estado, invitados, tipoEvento, inquiryId])
+  }, [nombre, cleanPhone, isPhoneValid, fecha, ubicacion, aforo, motivo, inquiryId])
 
-  // Manejo del Submit
+  // Manejo del envío
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -199,35 +148,49 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
       return
     }
 
-    const finalMunicipio = municipio === "Otro municipio / cotización manual" 
-      ? municipioManual.trim() 
-      : municipio
-
-    if (!finalMunicipio) {
-      toast.error("Por favor especifica el municipio o ciudad de tu evento.")
+    if (!ubicacion.trim()) {
+      toast.error("Por favor especifica el municipio y estado de tu evento.")
       return
     }
 
     setIsSubmitting(true)
 
     try {
-      const selectedPkgObj = PACKAGE_FORMATS.find(p => p.id === paquete)
-      const selectedPkgLabel = selectedPkgObj?.name || "Experience"
+      // Normalizar ubicación en municipio y estado
+      let finalMunicipio = ubicacion.trim()
+      let finalEstado = "Estado de México"
+      if (ubicacion.includes(",")) {
+        const parts = ubicacion.split(",").map(p => p.trim())
+        finalMunicipio = parts[0]
+        if (parts.length > 1 && parts[1]) {
+          finalEstado = parts[1]
+        }
+      } else if (ubicacion.toLowerCase().includes("cdmx") || ubicacion.toLowerCase().includes("ciudad de mexico")) {
+        finalEstado = "Ciudad de México"
+      } else if (ubicacion.toLowerCase().includes("queretaro")) {
+        finalEstado = "Querétaro"
+      } else if (ubicacion.toLowerCase().includes("cuernavaca") || ubicacion.toLowerCase().includes("morelos")) {
+        finalEstado = "Morelos"
+      }
+
+      // Resolver paquete inicial si venía en URL
+      let pkgLabel: string | undefined = undefined
+      if (initialPackage) {
+        const p = initialPackage.toLowerCase()
+        if (p.includes("essential")) pkgLabel = "Essential"
+        else if (p.includes("festival")) pkgLabel = "Festival"
+        else pkgLabel = "Experience"
+      }
 
       const res = await submitPublicQuoteAction({
         nombre: nombre.trim(),
         telefono: cleanPhone,
-        tipoEvento,
+        tipoEvento: motivo,
         fecha,
-        horaInicio,
-        horaFin,
-        horasShow,
-        invitados,
-        estado,
+        invitados: aforo,
+        estado: finalEstado,
         municipio: finalMunicipio,
-        lugarEvento: lugarEvento.trim() || undefined,
-        paquete: selectedPkgLabel,
-        notas: notas.trim() || undefined,
+        paquete: pkgLabel,
         inquiryId
       })
 
@@ -235,7 +198,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
         setSubmittedData({
           shortId: res.shortId,
           nombre: res.clientName || nombre.trim(),
-          motivo: res.motivo || tipoEvento,
+          motivo: res.motivo || motivo,
           fecha: res.fecha || fecha,
           municipio: res.municipio || finalMunicipio
         })
@@ -243,7 +206,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
       } else {
         toast.error(res.error || "No se pudo registrar la solicitud. Intenta nuevamente.")
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error submitting direct quote:", err)
       toast.error("Ocurrió un error inesperado al enviar la solicitud.")
     } finally {
@@ -262,350 +225,174 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
 
   return (
     <>
-      <div className="relative bg-zinc-950/80 border border-white/10 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl overflow-hidden">
-        {/* Glow de acento */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 blur-[100px] pointer-events-none rounded-full" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/10 blur-[100px] pointer-events-none rounded-full" />
+      <div className="relative bg-zinc-950/85 border border-white/10 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl overflow-hidden">
+        {/* Glow atmosférico sobrio con acento rubí y ámbar */}
+        <div className="absolute -top-12 -right-12 w-72 h-72 bg-[#e11d48]/15 blur-[90px] pointer-events-none rounded-full" />
+        <div className="absolute -bottom-12 -left-12 w-72 h-72 bg-[#f59e0b]/10 blur-[90px] pointer-events-none rounded-full" />
 
-        <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
-          
-          {/* SECCIÓN 1: DATOS DE CONTACTO */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-[0.2em]">
-              <User className="w-4 h-4" /> 1. Datos de Contacto
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="nombre" className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                  Nombre Completo *
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="nombre"
-                    type="text"
-                    required
-                    placeholder="Ej. Mariana González"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    className="bg-black/40 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-11 focus:border-primary focus:ring-primary/20"
-                  />
-                </div>
-              </div>
+        <form onSubmit={handleSubmit} className="relative z-10 space-y-6">
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="telefono" className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                    WhatsApp (10 dígitos) *
-                  </Label>
-                  {isPhoneValid && (
-                    <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Válido
-                    </span>
-                  )}
-                </div>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono text-xs flex items-center gap-1 pointer-events-none">
-                    <Phone className="w-3.5 h-3.5 text-primary" /> +52
-                  </div>
-                  <Input
-                    id="telefono"
-                    type="tel"
-                    required
-                    maxLength={10}
-                    placeholder="7221234567"
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    className="bg-black/40 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-11 pl-16 font-mono text-sm focus:border-primary focus:ring-primary/20"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* SECCIÓN 2: DETALLES DEL EVENTO */}
-          <div className="space-y-4 pt-4 border-t border-white/10">
-            <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-[0.2em]">
-              <Calendar className="w-4 h-4" /> 2. Detalles del Evento
-            </div>
-
-            {/* Motivo del Evento */}
+          {/* Fila 1: Nombre Completo y WhatsApp */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                Motivo de la Celebración *
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {EVENT_TYPES.map((ev) => {
-                  const isSelected = tipoEvento === ev.value
-                  return (
-                    <button
-                      key={ev.value}
-                      type="button"
-                      onClick={() => setTipoEvento(ev.value)}
-                      className={`h-11 px-3 rounded-xl border text-xs font-bold flex items-center justify-center transition-all ${
-                        isSelected
-                          ? "bg-primary text-black border-primary shadow-lg shadow-primary/20 font-black"
-                          : "bg-black/30 border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/20"
-                      }`}
-                    >
-                      {ev.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Fecha y Horario */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="fecha" className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                  Fecha Tentativa *
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="fecha"
-                    type="date"
-                    required
-                    min={minDate}
-                    value={fecha}
-                    onChange={(e) => setFecha(e.target.value)}
-                    className="bg-black/40 border-white/15 text-white rounded-xl h-11 focus:border-primary focus:ring-primary/20"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="horaInicio" className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                  Horario de Inicio Tentativo
-                </Label>
-                <select
-                  id="horaInicio"
-                  value={horaInicio}
-                  onChange={(e) => setHoraInicio(e.target.value)}
-                  className="w-full bg-black/40 border border-white/15 text-white text-xs rounded-xl h-11 px-3 focus:border-primary focus:outline-none"
-                >
-                  {TIME_OPTIONS.map((t) => (
-                    <option key={`start-${t}`} value={t} className="bg-zinc-900 text-white">
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                  Horas de Show en Vivo
-                </Label>
-                <div className="grid grid-cols-4 gap-1.5 h-11">
-                  {[2, 3, 4, 5].map((h) => {
-                    const isSelected = horasShow === h
-                    return (
-                      <button
-                        key={`horas-${h}`}
-                        type="button"
-                        onClick={() => setHorasShow(h)}
-                        className={`rounded-xl border text-xs font-bold flex items-center justify-center transition-all ${
-                          isSelected
-                            ? "bg-white text-black border-white font-black"
-                            : "bg-black/30 border-white/10 text-gray-300 hover:bg-white/5"
-                        }`}
-                      >
-                        {h} hrs
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* SECCIÓN 3: UBICACIÓN Y AFORO */}
-          <div className="space-y-4 pt-4 border-t border-white/10">
-            <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-[0.2em]">
-              <MapPin className="w-4 h-4" /> 3. Ubicación y Aforo
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="estado" className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                  Estado *
-                </Label>
-                <select
-                  id="estado"
-                  value={estado}
-                  onChange={(e) => {
-                    setEstado(e.target.value)
-                    const muns = ESTADOS_MUNICIPIOS[e.target.value]
-                    if (muns && muns.length > 0) setMunicipio(muns[0])
-                  }}
-                  className="w-full bg-black/40 border border-white/15 text-white text-xs rounded-xl h-11 px-3 focus:border-primary focus:outline-none"
-                >
-                  {Object.keys(ESTADOS_MUNICIPIOS).map((est) => (
-                    <option key={est} value={est} className="bg-zinc-900 text-white">
-                      {est}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="municipio" className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                  Municipio / Zona *
-                </Label>
-                <select
-                  id="municipio"
-                  value={municipio}
-                  onChange={(e) => setMunicipio(e.target.value)}
-                  className="w-full bg-black/40 border border-white/15 text-white text-xs rounded-xl h-11 px-3 focus:border-primary focus:outline-none"
-                >
-                  {municipiosDisponibles.map((m) => (
-                    <option key={m} value={m} className="bg-zinc-900 text-white">
-                      {m}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {municipio === "Otro municipio / cotización manual" && (
-              <div className="space-y-2">
-                <Label htmlFor="municipioManual" className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                  Especifica tu Municipio o Ciudad *
-                </Label>
-                <Input
-                  id="municipioManual"
-                  type="text"
-                  required
-                  placeholder="Ej. Cuernavaca, Morelos"
-                  value={municipioManual}
-                  onChange={(e) => setMunicipioManual(e.target.value)}
-                  className="bg-black/40 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-11 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="lugarEvento" className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                Nombre del Recinto o Salón <span className="text-gray-500 font-normal">(Opcional)</span>
+              <Label htmlFor="nombre" className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-[#e11d48]" /> Nombre Completo *
               </Label>
               <Input
-                id="lugarEvento"
+                id="nombre"
                 type="text"
-                placeholder="Ej. Hacienda San Martín, Jardín Los Pinos, Domicilio particular..."
-                value={lugarEvento}
-                onChange={(e) => setLugarEvento(e.target.value)}
-                className="bg-black/40 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-11 focus:border-primary focus:ring-primary/20"
+                required
+                placeholder="Ej. Mariana González"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                className="bg-black/50 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-12 focus:border-[#e11d48] focus:ring-[#e11d48]/20 text-sm"
               />
             </div>
 
-            {/* Selector de Aforo */}
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center justify-between">
-                <span>Aforo Estimado de Invitados *</span>
-                <span className="text-primary font-bold">{invitados} invitados aprox.</span>
-              </Label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {GUEST_RANGES.map((r) => {
-                  const isSelected = invitados === r.value
-                  return (
-                    <button
-                      key={r.label}
-                      type="button"
-                      onClick={() => setInvitados(r.value)}
-                      className={`p-3.5 rounded-2xl border text-left transition-all ${
-                        isSelected
-                          ? "bg-primary/10 border-primary shadow-md shadow-primary/10"
-                          : "bg-black/30 border-white/10 hover:bg-white/5 hover:border-white/20"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className={`text-sm font-black ${isSelected ? "text-primary" : "text-white"}`}>
-                          {r.label}
-                        </span>
-                        {isSelected && <Check className="w-4 h-4 text-primary" />}
-                      </div>
-                      <p className="text-[11px] text-gray-400 font-medium">{r.desc}</p>
-                    </button>
-                  )
-                })}
+              <div className="flex items-center justify-between">
+                <Label htmlFor="telefono" className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-[#e11d48]" /> WhatsApp (10 dígitos) *
+                </Label>
+                {isPhoneValid && (
+                  <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Válido
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono text-xs flex items-center gap-1 pointer-events-none">
+                  <span className="font-bold text-[#e11d48]">+52</span>
+                </div>
+                <Input
+                  id="telefono"
+                  type="tel"
+                  required
+                  maxLength={10}
+                  placeholder="7221234567"
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  className="bg-black/50 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-12 pl-14 font-mono text-sm focus:border-[#e11d48] focus:ring-[#e11d48]/20"
+                />
               </div>
             </div>
           </div>
 
-          {/* SECCIÓN 4: FORMATO MUSICAL DE INTERÉS */}
-          <div className="space-y-4 pt-4 border-t border-white/10">
-            <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-[0.2em]">
-              <Music2 className="w-4 h-4" /> 4. Formato de Interés
+          {/* Fila 2: Fecha Tentativa y Municipio/Estado */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fecha" className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#f59e0b]" /> Fecha Tentativa del Evento *
+              </Label>
+              <Input
+                id="fecha"
+                type="date"
+                required
+                min={minDate}
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className="bg-black/50 border-white/15 text-white rounded-xl h-12 focus:border-[#f59e0b] focus:ring-[#f59e0b]/20 text-sm [color-scheme:dark]"
+              />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {PACKAGE_FORMATS.map((pkg) => {
-                const isSelected = paquete === pkg.id
+            <div className="space-y-2">
+              <Label htmlFor="ubicacion" className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#f59e0b]" /> Municipio y Estado *
+              </Label>
+              <div className="relative">
+                <Input
+                  id="ubicacion"
+                  type="text"
+                  required
+                  list="popular-locations"
+                  placeholder="Ej. Metepec, Valle de Bravo, CDMX..."
+                  value={ubicacion}
+                  onChange={(e) => setUbicacion(e.target.value)}
+                  className="bg-black/50 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-12 focus:border-[#f59e0b] focus:ring-[#f59e0b]/20 text-sm"
+                />
+                <datalist id="popular-locations">
+                  {POPULAR_LOCATIONS.map((loc) => (
+                    <option key={loc} value={loc} />
+                  ))}
+                </datalist>
+              </div>
+            </div>
+          </div>
+
+          {/* Fila 3: Aforo Estimado (Pills Rápidas) */}
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-[#e11d48]" /> Aforo Estimado de Invitados *
+            </Label>
+            <div className="grid grid-cols-3 gap-2">
+              {AFORO_OPCIONES.map((op) => {
+                const isSelected = aforoLabel === op.label
                 return (
                   <button
-                    key={pkg.id}
+                    key={op.label}
                     type="button"
-                    onClick={() => setPaquete(pkg.id)}
-                    className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden ${
+                    onClick={() => {
+                      setAforoLabel(op.label)
+                      setAforo(op.value)
+                    }}
+                    className={`h-12 px-3 rounded-xl border text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-primary/15 border-primary shadow-lg shadow-primary/10 ring-1 ring-primary"
-                        : "bg-black/30 border-white/10 hover:bg-white/5 hover:border-white/20"
+                        ? "bg-gradient-to-r from-[#e11d48] to-[#be123c] text-white border-[#e11d48] shadow-lg shadow-[#e11d48]/25 ring-1 ring-[#e11d48]"
+                        : "bg-black/40 border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/20"
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className={`text-base font-black ${isSelected ? "text-primary" : "text-white"}`}>
-                        {pkg.name}
-                      </span>
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
-                        {pkg.badge}
-                      </span>
-                    </div>
-                    <div className="text-xs font-bold text-gray-300 mb-1">{pkg.headline}</div>
-                    <p className="text-[11px] text-gray-400 leading-relaxed">{pkg.description}</p>
+                    {op.label}
                   </button>
                 )
               })}
             </div>
           </div>
 
-          {/* SECCIÓN 5: REQUERIMIENTOS ESPECIALES */}
-          <div className="space-y-2 pt-4 border-t border-white/10">
-            <Label htmlFor="notas" className="text-xs font-bold uppercase tracking-wider text-gray-300">
-              Comentarios o Requerimientos Especiales <span className="text-gray-500 font-normal">(Opcional)</span>
+          {/* Fila 4: Motivo del Festejo (Pills Rápidas) */}
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+              <PartyPopper className="w-3.5 h-3.5 text-[#f59e0b]" /> Motivo del Festejo *
             </Label>
-            <Textarea
-              id="notas"
-              rows={3}
-              placeholder="Platícanos si tienes alguna temática, canción especial para el vals/entrada, o detalle técnico del recinto..."
-              value={notas}
-              onChange={(e) => setNotas(e.target.value)}
-              className="bg-black/40 border-white/15 text-white placeholder:text-gray-500 rounded-xl resize-none text-xs leading-relaxed focus:border-primary focus:ring-primary/20"
-            />
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {MOTIVOS_FESTEJO.map((item) => {
+                const isSelected = motivo === item
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setMotivo(item)}
+                    className={`h-11 px-2.5 rounded-xl border text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-gradient-to-r from-[#f59e0b] to-[#d97706] text-black border-[#f59e0b] shadow-lg shadow-[#f59e0b]/25 ring-1 ring-[#f59e0b] font-black"
+                        : "bg-black/40 border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/20"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
-          {/* BOTÓN DE ACCIÓN PRINCIPAL */}
-          <div className="pt-2">
+          {/* Botón de Acción Principal: Solicitar Disponibilidad */}
+          <div className="pt-3">
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-14 rounded-2xl bg-primary text-black font-black uppercase tracking-widest text-sm hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-60"
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#be123c] via-[#e11d48] to-[#f59e0b] text-white font-black uppercase tracking-widest text-sm hover:opacity-95 transition-all shadow-xl shadow-[#e11d48]/25 flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-60 border border-white/20"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Procesando Solicitud...
+                  Verificando Disponibilidad...
                 </>
               ) : (
                 <>
-                  Solicitar Propuesta Personalizada
+                  Solicitar Disponibilidad
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </Button>
-
-            <p className="text-center text-[11px] text-gray-500 mt-3 font-medium">
-              🔒 Disponibilidad sujeta a confirmación técnica. Recibirás tu propuesta oficial directamente en tu WhatsApp.
-            </p>
           </div>
         </form>
       </div>
@@ -617,13 +404,13 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-2">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            
-            <div className="inline-flex items-center gap-2 mx-auto px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-mono text-primary font-black">
+
+            <div className="inline-flex items-center gap-2 mx-auto px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-mono text-[#f59e0b] font-black">
               <span>Folio: {submittedData?.shortId}</span>
               <button
                 type="button"
                 onClick={handleCopyFolio}
-                className="hover:text-white transition-colors"
+                className="hover:text-white transition-colors cursor-pointer"
                 title="Copiar Folio"
               >
                 {copiedFolio ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -635,7 +422,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             </DialogTitle>
 
             <DialogDescription className="text-gray-300 text-sm leading-relaxed max-w-sm mx-auto">
-              Un productor de Vendetta revisará la disponibilidad de tu fecha y preparará tu propuesta técnica personalizada. Te contactaremos vía WhatsApp.
+              Un productor de Vendetta revisará la disponibilidad de tu fecha y preparará tu propuesta personalizada. Te contactaremos vía WhatsApp.
             </DialogDescription>
           </DialogHeader>
 
@@ -663,7 +450,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             <Button
               type="button"
               onClick={() => setSubmittedData(null)}
-              className="w-full h-11 rounded-xl bg-white text-black font-black uppercase text-xs tracking-wider hover:bg-gray-200 transition-all"
+              className="w-full h-11 rounded-xl bg-white text-black font-black uppercase text-xs tracking-wider hover:bg-gray-200 transition-all cursor-pointer"
             >
               Entendido
             </Button>
@@ -672,7 +459,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
               <Button
                 asChild
                 variant="outline"
-                className="w-full h-11 rounded-xl border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 font-bold text-xs gap-2"
+                className="w-full h-11 rounded-xl border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 font-bold text-xs gap-2 cursor-pointer"
               >
                 <a
                   href={`https://wa.me/${adminWhatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(

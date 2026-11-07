@@ -13,6 +13,7 @@ import { LiquidarButton } from "@/components/admin/LiquidarButton"
 import { ConfirmarAnticipoButton } from "@/components/admin/ConfirmarAnticipoButton"
 import { ContractStatusSwitcher } from "@/components/admin/ContractStatusSwitcher"
 import { ApproveProposalModal } from "@/components/admin/ApproveProposalModal"
+import { CommercialClosingCard } from "@/components/admin/CommercialClosingCard"
 import { 
   ArrowLeft, 
   Calendar, 
@@ -457,6 +458,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               initialBase={resolvedBase}
               initialViaticos={resolvedViaticos}
               initialDiscount={resolvedDiscount}
+              initialDeposit={booking.depositAmount || 0}
               initialLineItemsTotal={lineItemsTotal}
               packagesList={packagesMappedForModal}
             />
@@ -473,6 +475,22 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Columna Izquierda: Información Detallada */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Ficha de Cierre Comercial Ejecutiva */}
+            <CommercialClosingCard
+              key={`closing-card-${booking.id}-${resolvedBase}-${resolvedViaticos}-${resolvedDiscount}-${lineItemsTotal}`}
+              bookingId={booking.id}
+              shortId={booking.shortId || ""}
+              clientName={finalClientName}
+              clientPhone={booking.clientPhone}
+              currentStatus={booking.status}
+              initialPackage={booking.packageName || targetPkg?.name || "Show Vendetta - Experience"}
+              initialBase={resolvedBase}
+              initialViaticos={resolvedViaticos}
+              initialDiscount={resolvedDiscount}
+              initialDeposit={booking.depositAmount || 0}
+              initialLineItemsTotal={lineItemsTotal}
+              packagesList={packagesMappedForModal}
+            />
             
             {/* Detalles del Evento */}
             <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
@@ -812,6 +830,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                       initialBase={resolvedBase}
                       initialViaticos={resolvedViaticos}
                       initialDiscount={resolvedDiscount}
+                      initialDeposit={booking.depositAmount || 0}
                       initialLineItemsTotal={lineItemsTotal}
                       packagesList={packagesMappedForModal}
                     />
