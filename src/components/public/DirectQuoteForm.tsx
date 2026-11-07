@@ -19,7 +19,8 @@ import {
   Copy,
   Check,
   ArrowRight,
-  PartyPopper
+  PartyPopper,
+  Clock
 } from "lucide-react"
 import {
   Dialog,
@@ -41,6 +42,7 @@ const MOTIVOS_FESTEJO = [
   "Cumpleaños",
   "Corporativo",
   "Graduación",
+  "Fiesta Privada",
   "Otro"
 ]
 
@@ -70,6 +72,8 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
   const [nombre, setNombre] = useState("")
   const [telefono, setTelefono] = useState("")
   const [fecha, setFecha] = useState(initialDate || "")
+  const [horaInicio, setHoraInicio] = useState("21:00")
+  const [horaFin, setHoraFin] = useState("23:00")
   const [ubicacion, setUbicacion] = useState("")
   const [aforoLabel, setAforoLabel] = useState<string>("Salón (100-300)")
   const [aforo, setAforo] = useState<number>(200)
@@ -83,6 +87,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
     nombre: string
     motivo: string
     fecha: string
+    horario?: string
     municipio: string
   } | null>(null)
   const [copiedFolio, setCopiedFolio] = useState(false)
@@ -187,6 +192,8 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
         telefono: cleanPhone,
         tipoEvento: motivo,
         fecha,
+        horaInicio,
+        horaFin,
         invitados: aforo,
         estado: finalEstado,
         municipio: finalMunicipio,
@@ -200,6 +207,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
           nombre: res.clientName || nombre.trim(),
           motivo: res.motivo || motivo,
           fecha: res.fecha || fecha,
+          horario: `${horaInicio} a ${horaFin}`,
           municipio: res.municipio || finalMunicipio
         })
         toast.success(`¡Solicitud enviada con éxito! Folio: ${res.shortId}`)
@@ -278,7 +286,7 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             </div>
           </div>
 
-          {/* Fila 2: Fecha Tentativa y Municipio/Estado */}
+          {/* Fila 2: Fecha Tentativa y Horario Tentativo (Inicio / Fin) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="fecha" className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
@@ -296,30 +304,55 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ubicacion" className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#f59e0b]" /> Municipio y Estado *
+              <Label className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#f59e0b]" /> Horario Tentativo (Inicio / Fin) *
               </Label>
-              <div className="relative">
+              <div className="grid grid-cols-2 gap-2">
                 <Input
-                  id="ubicacion"
-                  type="text"
+                  id="horaInicio"
+                  type="time"
                   required
-                  list="popular-locations"
-                  placeholder="Ej. Metepec, Valle de Bravo, CDMX..."
-                  value={ubicacion}
-                  onChange={(e) => setUbicacion(e.target.value)}
-                  className="bg-black/50 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-12 focus:border-[#f59e0b] focus:ring-[#f59e0b]/20 text-sm"
+                  value={horaInicio}
+                  onChange={(e) => setHoraInicio(e.target.value)}
+                  className="bg-black/50 border-white/15 text-white rounded-xl h-12 px-3 text-xs sm:text-sm font-mono focus:border-[#f59e0b] focus:ring-[#f59e0b]/20 [color-scheme:dark]"
                 />
-                <datalist id="popular-locations">
-                  {POPULAR_LOCATIONS.map((loc) => (
-                    <option key={loc} value={loc} />
-                  ))}
-                </datalist>
+                <Input
+                  id="horaFin"
+                  type="time"
+                  required
+                  value={horaFin}
+                  onChange={(e) => setHoraFin(e.target.value)}
+                  className="bg-black/50 border-white/15 text-white rounded-xl h-12 px-3 text-xs sm:text-sm font-mono focus:border-[#f59e0b] focus:ring-[#f59e0b]/20 [color-scheme:dark]"
+                />
               </div>
             </div>
           </div>
 
-          {/* Fila 3: Aforo Estimado (Pills Rápidas) */}
+          {/* Fila 3: Municipio y Estado */}
+          <div className="space-y-2">
+            <Label htmlFor="ubicacion" className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-[#f59e0b]" /> Municipio y Estado *
+            </Label>
+            <div className="relative">
+              <Input
+                id="ubicacion"
+                type="text"
+                required
+                list="popular-locations"
+                placeholder="Ej. Metepec, Valle de Bravo, CDMX..."
+                value={ubicacion}
+                onChange={(e) => setUbicacion(e.target.value)}
+                className="bg-black/50 border-white/15 text-white placeholder:text-gray-500 rounded-xl h-12 focus:border-[#f59e0b] focus:ring-[#f59e0b]/20 text-sm"
+              />
+              <datalist id="popular-locations">
+                {POPULAR_LOCATIONS.map((loc) => (
+                  <option key={loc} value={loc} />
+                ))}
+              </datalist>
+            </div>
+          </div>
+
+          {/* Fila 4: Aforo Estimado (Pills Rápidas) */}
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5 text-[#e11d48]" /> Aforo Estimado de Invitados *
@@ -346,14 +379,17 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
                 )
               })}
             </div>
+            <p className="text-[11px] text-muted-foreground/80 leading-relaxed italic pt-1">
+              El aforo determina los requerimientos técnicos de audio. Tarifas y rider sujetos a disponibilidad de agenda y equipo técnico para tu fecha.
+            </p>
           </div>
 
-          {/* Fila 4: Motivo del Festejo (Pills Rápidas) */}
+          {/* Fila 5: Motivo del Festejo (Pills Rápidas) */}
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
               <PartyPopper className="w-3.5 h-3.5 text-[#f59e0b]" /> Motivo del Festejo *
             </Label>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2">
               {MOTIVOS_FESTEJO.map((item) => {
                 const isSelected = motivo === item
                 return (
@@ -440,6 +476,12 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
               <span>Fecha:</span>
               <span className="text-white font-bold">{submittedData?.fecha}</span>
             </div>
+            {submittedData?.horario && (
+              <div className="flex justify-between items-center text-gray-400">
+                <span>Horario:</span>
+                <span className="text-white font-mono font-bold">{submittedData.horario}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center text-gray-400">
               <span>Ubicación:</span>
               <span className="text-white font-bold">{submittedData?.municipio}</span>

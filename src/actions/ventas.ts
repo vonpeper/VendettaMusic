@@ -1248,14 +1248,25 @@ export async function discardLeadAction({
   }
 }
 
-export async function approveAndSendProposalAction(params: {
+export interface ApproveProposalLineItemInput {
+  description: string
+  quantity: number
+  unitCost: number
+  lineTotal: number
+}
+
+export interface ApproveProposalInput {
   bookingId: string
   baseAmount: number
   viaticosAmount?: number
   discountAmount?: number
   depositAmount?: number
   packageName?: string
-}) {
+  isOutsideZone?: boolean
+  lineItems?: ApproveProposalLineItemInput[]
+}
+
+export async function approveAndSendProposalAction(params: ApproveProposalInput) {
   try {
     const trimmedId = params.bookingId?.trim()
     if (!trimmedId) return { success: false, error: "ID de solicitud no proporcionado." }
@@ -1282,11 +1293,33 @@ export async function approveAndSendProposalAction(params: {
       return { success: false, error: "Solicitud de cotización no encontrada." }
     }
 
-    const lineItemsTotal = (booking.lineItems || []).reduce(
-      (acc, it) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0),
-      0
-    )
-    const total = Math.max(0, base + viaticos + lineItemsTotal - discount)
+    // 1. Sincronizar lineItems si se especificaron
+    if (params.lineItems !== undefined) {
+      await db.bookingLineItem.deleteMany({
+        where: { bookingRequestId: booking.id }
+      })
+      if (params.lineItems.length > 0) {
+        await db.bookingLineItem.createMany({
+          data: params.lineItems.map((item, idx) => ({
+            bookingRequestId: booking.id,
+            description: item.description,
+            quantity: item.quantity || 1,
+            unitCost: item.unitCost,
+            lineTotal: item.lineTotal,
+            order: idx
+          }))
+        })
+      }
+    }
+
+    const effectiveLineItemsTotal = params.lineItems !== undefined
+      ? params.lineItems.reduce((acc, it) => acc + Number(it.lineTotal || 0), 0)
+      : (booking.lineItems || []).reduce(
+          (acc, it) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0),
+          0
+        )
+
+    const total = Math.max(0, base + viaticos + effectiveLineItemsTotal - discount)
 
     if (total <= 0 || base <= 0) {
       return { 
@@ -1301,7 +1334,7 @@ export async function approveAndSendProposalAction(params: {
 
     const updatedPackage = params.packageName?.trim() || booking.packageName || "Show Vendetta"
 
-    // 1. Actualizar el BookingRequest
+    // 2. Actualizar el BookingRequest
     await db.bookingRequest.update({
       where: { id: booking.id },
       data: {
@@ -1310,11 +1343,12 @@ export async function approveAndSendProposalAction(params: {
         discountAmount: discount,
         depositAmount: deposit,
         packageName: updatedPackage,
+        isOutsideZone: params.isOutsideZone ?? booking.isOutsideZone,
         status: "propuesta_enviada"
       }
     })
 
-    // 2. Si tiene Event vinculado, sincronizar montos y saldo
+    // 3. Si tiene Event vinculado, sincronizar montos y saldo
     const targetEventId = booking.eventId || booking.event?.id
     if (targetEventId) {
       await db.event.update({
@@ -1328,7 +1362,7 @@ export async function approveAndSendProposalAction(params: {
       }).catch(e => console.warn("Could not sync event amounts on approve:", e))
     }
 
-    // 3. Si tiene ContactInquiry asociado, sincronizar estatus
+    // 4. Si tiene ContactInquiry asociado, sincronizar estatus
     if (booking.sourceInquiryId) {
       await db.contactInquiry.update({
         where: { id: booking.sourceInquiryId },
@@ -1336,7 +1370,7 @@ export async function approveAndSendProposalAction(params: {
       }).catch(e => console.warn("Could not update inquiry status:", e))
     }
 
-    // 4. Enviar WhatsApp oficial al cliente con el enlace personalizado https://vendetta.mx/status/{folio}
+    // 5. Enviar WhatsApp oficial al cliente con el enlace personalizado https://vendetta.mx/status/{folio}
     const cleanPhone = (booking.clientPhone || booking.client?.whatsapp || "").replace(/\D/g, "")
     if (!cleanPhone || cleanPhone.length < 10) {
       return {
@@ -1348,18 +1382,12 @@ export async function approveAndSendProposalAction(params: {
     const fechaFormateada = booking.requestedDate ? formatDateMX(booking.requestedDate, "dd 'de' MMMM 'de' yyyy") : "tu fecha elegida"
     const proposalLink = `https://vendetta.mx/status/${booking.shortId}`
 
-    const clientMsg = `Hola ${booking.clientName.trim()}, somos *Vendetta Live Music* 🎸.
-
-Es un gusto saludarte. Hemos revisado la logística de tu evento para el *${fechaFormateada}* y tu propuesta oficial ya está lista y aprobada:
-
-👉 ${proposalLink}
-
-En este enlace podrás consultar el desglose de producción, detalles técnicos y apartar tu fecha con disponibilidad garantizada.
-
-Quedamos a tus órdenes para afinar cualquier detalle. ¡Rock on! 🤘
-
-—
-*Vendetta Live Music* | _vendetta.mx_`
+    const { parseTemplate, TEMPLATE_CLIENT_QUOTE } = await import("@/lib/notifications/templates")
+    const clientMsg = parseTemplate(TEMPLATE_CLIENT_QUOTE, {
+      fullName: booking.clientName.trim(),
+      eventDate: fechaFormateada,
+      proposalLink: proposalLink
+    })
 
     const { sendWhatsApp } = await import("@/lib/notifications/whatsapp")
     const { messageId, error: waError } = await sendWhatsApp(

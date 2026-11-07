@@ -97,6 +97,12 @@ export function PremiumClientQuoteView({
   const isAgendado = booking.status === "agendado" || booking.status === "completado"
   const isCancelado = booking.status === "cancelado"
   const isPendiente = booking.status === "pendiente" || !booking.status
+  const isSigned = Boolean(
+    booking.clientSignature ||
+    booking.signedAt ||
+    (booking.event?.contracts?.some((c: any) => c.status === "signed"))
+  )
+  const signedAt = booking.signedAt || (booking.event?.contracts?.find((c: any) => c.status === "signed")?.signedAt)
 
   const isReview = booking.paymentStatus === "review" || booking.paymentStatus === "revisar"
   const isPaid = booking.paymentStatus === "paid"
@@ -387,6 +393,63 @@ export function PremiumClientQuoteView({
           )}
         </header>
 
+        {/* Banner Prioritario de Firma Digital de Contrato */}
+        <div className="mb-8">
+          {!isSigned ? (
+            <div className="p-6 rounded-3xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white shadow-xl shadow-red-600/20 flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative overflow-hidden">
+              <div className="space-y-1 relative z-10">
+                <span className="text-[10px] uppercase tracking-widest font-black text-amber-200 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-200" /> Apartado Inmediato de Fecha
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                  Asegura y Bloquea tu Fecha en la Gira Vendetta
+                </h3>
+                <p className="text-xs sm:text-sm text-white/90 max-w-xl">
+                  Formaliza la contratación firmando directamente en tu pantalla con plena validez legal.
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => {
+                  const el = document.getElementById("modulo-firma-contrato")
+                  if (el) el.scrollIntoView({ behavior: "smooth" })
+                }}
+                className="h-13 px-6 sm:px-8 rounded-2xl bg-white text-black hover:bg-gray-100 font-black text-xs sm:text-sm uppercase tracking-wider shrink-0 shadow-lg cursor-pointer transition-all hover:scale-[1.02] relative z-10"
+              >
+                ✍️ Firmar Contrato en Línea para Apartar Fecha
+              </Button>
+            </div>
+          ) : (
+            <div className="p-5 rounded-3xl bg-emerald-50 border-2 border-emerald-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm text-emerald-950">
+              <div className="flex items-center gap-3.5">
+                <div className="p-2.5 rounded-2xl bg-emerald-600 text-white shrink-0 shadow-sm">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <Badge className="bg-emerald-600 text-white border-0 text-[10px] font-black uppercase tracking-wider mb-1">
+                    ✅ Contrato Firmado {signedAt ? `el ${formatDateMX(signedAt, "PPP")}` : "Digitalmente"}
+                  </Badge>
+                  <p className="text-xs text-emerald-950 font-bold">
+                    Acuerdo oficial formalizado con plena validez legal y fecha bloqueada en agenda.
+                  </p>
+                </div>
+              </div>
+
+              {downloadContractUrl && (
+                <Button
+                  asChild
+                  className="bg-emerald-700 hover:bg-emerald-600 text-white font-black text-xs h-11 px-5 rounded-xl shadow-sm shrink-0 cursor-pointer"
+                >
+                  <a href={downloadContractUrl} target="_blank" rel="noopener noreferrer">
+                    <Download className="w-4 h-4 mr-1.5" /> 📄 Descargar Contrato en PDF
+                  </a>
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* ============================================================ */}
         {/* SECCIÓN 1 (SOLICITADO 1°): DATOS DEL CLIENTE & FICHA DEL EVENTO */}
@@ -821,56 +884,69 @@ export function PremiumClientQuoteView({
           </div>
 
           {/* -------------------------------------------------------- */}
-          {/* MÓDULO INTERACTIVO DE PAGO SPEI O FIRMA DIGITAL */}
+          {/* MÓDULO INTERACTIVO DE FORMALIZACIÓN Y FIRMA DE CONTRATO */}
           {/* -------------------------------------------------------- */}
-          <div className="mt-8 pt-6 border-t-2 border-slate-100">
-            {isAgendado ? (
-              /* EVENTO YA AGENDADO -> MÓDULO DE FIRMA DIGITAL DE CONTRATO */
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 mb-2">
+          <div id="modulo-firma-contrato" className="mt-8 pt-6 border-t-2 border-slate-100 space-y-8">
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-2xl bg-red-50 border-2 border-red-500/30 text-red-600">
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
                     <h4 className="text-lg font-black uppercase tracking-tight text-red-600">
-                      Firma Digital de Contrato de Prestación de Servicios
+                      {isSigned ? "Contrato de Prestación de Servicios Formalizado" : "Firma Digital de Contrato de Prestación de Servicios"}
                     </h4>
                     <p className="text-xs text-slate-600 font-medium">
-                      Formaliza tu acuerdo con plena validez legal firmando en pantalla.
+                      {isSigned 
+                        ? "Tu contrato fue firmado digitalmente y cuenta con plena validez legal."
+                        : "Formaliza tu acuerdo y bloquea tu fecha firmando directamente en tu pantalla."}
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl border-2 border-slate-200">
-                  <ContractSigner 
-                    bookingId={booking.id}
-                    clientName={booking.clientName}
-                    shortId={booking.shortId || ""}
-                    isSigned={!!booking.clientSignature || (booking.event?.contracts?.some((c: any) => c.status === "signed") ?? false)}
-                    signedAt={booking.signedAt || (booking.event?.contracts?.find((c: any) => c.status === "signed")?.signedAt)}
-                    clientSignature={booking.clientSignature}
-                    adminSignature={booking.adminSignature}
-                    contractLegalText={
-                      (booking.event?.venueType?.toLowerCase() === "bar" || booking.venueType?.toLowerCase() === "bar") 
-                        ? (globalConfig?.contractBarLegalText || undefined)
-                        : (globalConfig?.contractLegalText || undefined)
-                    }
-                    eventDate={booking.requestedDate}
-                    eventTime={booking.startTime}
-                    eventEndTime={booking.endTime}
-                    eventAmount={totalAmount}
-                    depositAmount={depositAmount}
-                    remainingAmount={remainingAmount}
-                    bandHours={booking.bandHours || booking.event?.bandHours}
-                    packageName={booking.packageName}
-                    eventAddress={fullAddress}
-                    downloadContractUrl={downloadContractUrl}
-                  />
-                </div>
+                {isSigned ? (
+                  <Badge className="bg-emerald-600 text-white border-0 text-xs font-black uppercase px-3 py-1.5 self-start sm:self-auto flex items-center gap-1.5 shadow-sm">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Contrato Firmado {signedAt ? `el ${formatDateMX(signedAt, "PPP")}` : ""}
+                  </Badge>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold self-start sm:self-auto">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" /> Firma Requerida para Apartar
+                  </div>
+                )}
               </div>
-            ) : isPendiente && !isPaid ? (
-              /* EVENTO PENDIENTE -> DATOS BANCARIOS SPEI & REPORTE DE ANTICIPO */
-              <div>
+
+              <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl border-2 border-slate-200 shadow-sm">
+                <ContractSigner 
+                  bookingId={booking.id}
+                  clientName={booking.clientName}
+                  shortId={booking.shortId || ""}
+                  isSigned={isSigned}
+                  signedAt={signedAt}
+                  clientSignature={booking.clientSignature}
+                  adminSignature={booking.adminSignature}
+                  contractLegalText={
+                    (booking.event?.venueType?.toLowerCase() === "bar" || booking.venueType?.toLowerCase() === "bar") 
+                      ? (globalConfig?.contractBarLegalText || undefined)
+                      : (globalConfig?.contractLegalText || undefined)
+                  }
+                  eventDate={booking.requestedDate}
+                  eventTime={booking.startTime}
+                  eventEndTime={booking.endTime}
+                  eventAmount={totalAmount}
+                  depositAmount={depositAmount}
+                  remainingAmount={remainingAmount}
+                  bandHours={booking.bandHours || booking.event?.bandHours}
+                  packageName={booking.packageName}
+                  eventAddress={fullAddress}
+                  downloadContractUrl={downloadContractUrl}
+                />
+              </div>
+            </div>
+
+            {/* Si no está pagado, mostramos los Datos Bancarios SPEI & Reporte de Anticipo */}
+            {!isPaid && (
+              <div className="pt-6 border-t-2 border-slate-200">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2.5 rounded-2xl bg-red-50 border-2 border-red-500/30 text-red-600">
                     <Zap className="w-5 h-5" />
@@ -880,7 +956,7 @@ export function PremiumClientQuoteView({
                       Apartar Fecha Mediante Transferencia SPEI
                     </h4>
                     <p className="text-xs text-slate-600 font-medium">
-                      Realiza tu transferencia por el monto de anticipo y reporta tu comprobante para congelar tu fecha de inmediato.
+                      Realiza tu transferencia por el monto de anticipo ({formatMXN(depositAmount)}) y reporta tu comprobante para congelar tu fecha de inmediato.
                     </p>
                   </div>
                 </div>
@@ -1003,7 +1079,7 @@ export function PremiumClientQuoteView({
                   </div>
                 </div>
               </div>
-            ) : null}
+            )}
           </div>
         </section>
 

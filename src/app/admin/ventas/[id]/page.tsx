@@ -483,12 +483,16 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               clientName={finalClientName}
               clientPhone={booking.clientPhone}
               currentStatus={booking.status}
+              guestCount={booking.guestCount || undefined}
+              isOutsideZone={booking.isOutsideZone || undefined}
+              distanceKm={booking.distanceKm || undefined}
               initialPackage={booking.packageName || targetPkg?.name || "Show Vendetta - Experience"}
               initialBase={resolvedBase}
               initialViaticos={resolvedViaticos}
               initialDiscount={resolvedDiscount}
               initialDeposit={booking.depositAmount || 0}
               initialLineItemsTotal={lineItemsTotal}
+              initialLineItems={booking.lineItems}
               packagesList={packagesMappedForModal}
             />
             

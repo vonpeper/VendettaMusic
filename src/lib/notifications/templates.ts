@@ -13,6 +13,10 @@ export const DRESS_CODE_MAP: Record<string, string> = {
   "nocturno": "🌙 Concierto Nocturno"
 }
 
+export const TEMPLATE_INQUIRY_RECEIPT = `¡Hola {{fullName}}! 👋 Recibimos tu solicitud para tu {{motive}} el {{eventDate}} en {{location}}. Estamos validando la disponibilidad de equipo y agenda técnica para tu aforo. En breve te enviamos tu propuesta formal personalizada. — Vendetta Live Music`
+
+export const TEMPLATE_CLIENT_QUOTE = `¡Hola {{fullName}}! 🎸 Tu propuesta oficial y contrato para el {{eventDate}} están listos. Revisa los detalles y firma en línea para asegurar tu fecha aquí: 👉 {{proposalLink}} (Tarifa y fecha reservadas por 48 hrs sujetas a disponibilidad).`
+
 /**
  * Función auxiliar para reemplazar {{variables}}
  */
@@ -21,16 +25,20 @@ export function parseTemplate(template: string, data: Record<string, any>): stri
   
   // Aliases y fallbacks comunes para compatibilidad entre diferentes disparadores
   const extendedData = {
-    fullName:    data.fullName || data.clientName || data.eventName || "",
-    clientName:  data.clientName || (data.fullName ? data.fullName.split(" ")[0] : "") || data.eventName || "",
-    eventName:   data.eventName || data.fullName || data.clientName || "Evento Vendetta",
-    shortId:     data.shortId || data.folio || "",
-    folio:       data.folio || data.shortId || "",
-    time:        data.time || data.startTime || data.setupTime || data.performanceStart || "Por confirmar",
-    location:    data.location || data.locationName || "Por confirmar",
-    statusLink:  data.statusLink || data.bookingLink || "",
-    bookingLink: data.bookingLink || data.statusLink || "",
-    notes:       data.notes || data.musicianNotes || "Ninguna",
+    fullName:     data.fullName || data.clientName || data.eventName || "",
+    clientName:   data.clientName || (data.fullName ? data.fullName.split(" ")[0] : "") || data.eventName || "",
+    eventName:    data.eventName || data.fullName || data.clientName || "Evento Vendetta",
+    motive:       data.motive || data.eventType || data.ceremony || "evento",
+    eventDate:    data.eventDate || data.date || "",
+    date:         data.date || data.eventDate || "",
+    location:     data.location || data.locationName || data.city || data.municipio || "Por confirmar",
+    proposalLink: data.proposalLink || data.bookingLink || data.statusLink || "",
+    bookingLink:  data.bookingLink || data.proposalLink || data.statusLink || "",
+    statusLink:   data.statusLink || data.proposalLink || data.bookingLink || "",
+    shortId:      data.shortId || data.folio || "",
+    folio:        data.folio || data.shortId || "",
+    time:         data.time || data.startTime || data.setupTime || data.performanceStart || "Por confirmar",
+    notes:        data.notes || data.musicianNotes || "Ninguna",
     ...data
   }
 
@@ -54,17 +62,7 @@ export function getTemplateForType(type: NotificationType, config: any, payload:
       return `🎸 *NUEVO PEDIDO — VENDETTA* 🎸\nID: {{folio}}\n\n👤 *Cliente:* {{fullName}}\n📅 *Fecha:* {{date}}\n⏰ *Horario:* {{time}}\n📦 *Paquete:* {{package}}\n\n✅ Verifica en: {{adminLink}}`
     
     case "CLIENT_QUOTE":
-      return config?.msgTemplateQuote || `Hola {{clientName}}, somos *Vendetta Live Music* 🎸.
-
-Es un gusto saludarte. Te compartimos el enlace para consultar la propuesta exclusiva para tu evento el próximo *{{date}}*:
-{{bookingLink}}
-
-Revisamos cada detalle para asegurar que la música sea inolvidable. Quedamos a tus órdenes para agendar una breve llamada y pulir los detalles.
-
-¡Rock on! 🤘
-
-—
-Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`
+      return config?.msgTemplateQuote || TEMPLATE_CLIENT_QUOTE
 
     case "CLIENT_FOLLOWUP":
       return config?.msgTemplateFollowUp || `Hola {{clientName}}, te escribo de *Vendetta Music* 🎸 para dar seguimiento a tu cotización. ¿Pudiste revisarla? Seguimos a tus órdenes.`

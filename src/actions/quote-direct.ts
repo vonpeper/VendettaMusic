@@ -3,6 +3,7 @@
 import { db } from "@/lib/db"
 import { sendWhatsApp } from "@/lib/notifications/whatsapp"
 import { generateUniqueShortId } from "@/lib/folios"
+import { parseTemplate, TEMPLATE_INQUIRY_RECEIPT } from "@/lib/notifications/templates"
 
 export interface SubmitPublicQuoteInput {
   nombre: string
@@ -264,7 +265,12 @@ export async function submitPublicQuoteAction(
 
     // 5. WhatsApp al Cliente (Confirmación de recepción sin precios)
     try {
-      const clientMsg = `¡Hola ${nombre}! 👋 Recibimos tu solicitud para tu ${tipoEvento} este ${fechaFormateada} en ${municipio}. Ya estamos revisando la disponibilidad y armando tu propuesta técnica. En breve te enviaremos el enlace oficial con los detalles de tu evento. — Equipo Vendetta`
+      const clientMsg = parseTemplate(TEMPLATE_INQUIRY_RECEIPT, {
+        fullName: nombre,
+        motive: tipoEvento,
+        eventDate: fechaFormateada,
+        location: municipio
+      })
       await sendWhatsApp(cleanPhone, clientMsg, `Confirmación Cotización - ${nombre}`).catch(err =>
         console.warn("Error enviando WhatsApp al cliente:", err)
       )
