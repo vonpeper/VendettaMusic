@@ -51,12 +51,18 @@ interface CotizarPageProps {
   searchParams?: Promise<{
     paquete?: string
     package?: string
+    motivo?: string
+    estado?: string
+    municipio?: string
   }>
 }
 
 export default async function CotizarPage({ searchParams }: CotizarPageProps) {
   const resolvedParams = searchParams ? await searchParams : undefined
   const initialPackage = resolvedParams?.paquete || resolvedParams?.package || null
+  const initialMotivo = resolvedParams?.motivo || null
+  const initialEstado = resolvedParams?.estado || null
+  const initialMunicipio = resolvedParams?.municipio || null
   const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } })
 
   const adminWhatsapp =
@@ -115,7 +121,13 @@ export default async function CotizarPage({ searchParams }: CotizarPageProps) {
 
       {/* Contenedor del Formulario Directo */}
       <main className="container mx-auto px-4 max-w-2xl mt-10">
-        <DirectQuoteForm adminWhatsapp={adminWhatsapp} initialPackage={initialPackage} />
+        <DirectQuoteForm
+          adminWhatsapp={adminWhatsapp}
+          initialPackage={initialPackage}
+          initialMotivo={initialMotivo}
+          initialEstado={initialEstado}
+          initialMunicipio={initialMunicipio}
+        />
       </main>
     </div>
   )

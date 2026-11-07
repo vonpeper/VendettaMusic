@@ -35,6 +35,9 @@ interface DirectQuoteFormProps {
   adminWhatsapp?: string | null
   initialPackage?: string | null
   initialDate?: string | null
+  initialMotivo?: string | null
+  initialEstado?: string | null
+  initialMunicipio?: string | null
 }
 
 const MOTIVOS_FESTEJO = [
@@ -66,7 +69,14 @@ const ESTADOS_DISPONIBLES = [
   "Otro"
 ]
 
-export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: DirectQuoteFormProps) {
+export function DirectQuoteForm({
+  adminWhatsapp,
+  initialPackage,
+  initialDate,
+  initialMotivo,
+  initialEstado,
+  initialMunicipio
+}: DirectQuoteFormProps) {
   // Campos del formulario
   const [nombre, setNombre] = useState("")
   const [telefono, setTelefono] = useState("")
@@ -75,14 +85,60 @@ export function DirectQuoteForm({ adminWhatsapp, initialPackage, initialDate }: 
   const [horaFin, setHoraFin] = useState("23:00")
 
   // Ubicación normalizada
-  const [selectedEstado, setSelectedEstado] = useState<string>("Estado de México")
-  const [selectedMunicipio, setSelectedMunicipio] = useState<string>("Metepec")
+  const [selectedEstado, setSelectedEstado] = useState<string>(() => {
+    if (initialEstado) {
+      const match = ESTADOS_DISPONIBLES.find(e => e.toLowerCase() === initialEstado.toLowerCase())
+      if (match) return match
+    }
+    return "Estado de México"
+  })
+
+  const [selectedMunicipio, setSelectedMunicipio] = useState<string>(() => {
+    if (initialMunicipio) {
+      const muniList = ESTADOS_MUNICIPIOS[initialEstado || "Estado de México"] || []
+      const match = muniList.find(m => m.toLowerCase() === initialMunicipio.toLowerCase())
+      if (match) return match
+      return initialMunicipio
+    }
+    return "Metepec"
+  })
+
   const [customMunicipio, setCustomMunicipio] = useState<string>("")
   const [lugarReferencia, setLugarReferencia] = useState<string>("")
 
   const [aforoLabel, setAforoLabel] = useState<string>("Salón (100-300)")
   const [aforo, setAforo] = useState<number>(200)
-  const [motivo, setMotivo] = useState<string>("Boda")
+
+  const [motivo, setMotivo] = useState<string>(() => {
+    if (initialMotivo) {
+      const match = MOTIVOS_FESTEJO.find(m => m.toLowerCase() === initialMotivo.toLowerCase())
+      if (match) return match
+    }
+    return "Boda"
+  })
+
+  // Sincronizar si cambian los props dinámicamente
+  useEffect(() => {
+    if (initialMotivo) {
+      const match = MOTIVOS_FESTEJO.find(m => m.toLowerCase() === initialMotivo.toLowerCase())
+      if (match) setMotivo(match)
+    }
+  }, [initialMotivo])
+
+  useEffect(() => {
+    if (initialEstado) {
+      const match = ESTADOS_DISPONIBLES.find(e => e.toLowerCase() === initialEstado.toLowerCase())
+      if (match) setSelectedEstado(match)
+    }
+  }, [initialEstado])
+
+  useEffect(() => {
+    if (initialMunicipio) {
+      const muniList = ESTADOS_MUNICIPIOS[selectedEstado] || []
+      const match = muniList.find(m => m.toLowerCase() === initialMunicipio.toLowerCase())
+      setSelectedMunicipio(match || initialMunicipio)
+    }
+  }, [initialMunicipio, selectedEstado])
 
   // Estado del proceso
   const [inquiryId, setInquiryId] = useState<string | undefined>(undefined)
