@@ -111,7 +111,7 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen w-full relative">
       {/* Native Browser Preload Hint in Head for Immediate Mobile LCP Discovery */}
       <link
         rel="preload"
@@ -128,7 +128,7 @@ export default async function HomePage() {
       <WhatsAppButton />
 
       {/* -- HERO ---------------------------------------------------------- */}
-      <section id="inicio" className="relative min-h-screen lg:h-screen flex items-center justify-start overflow-hidden bg-gradient-to-br from-[#07080D] via-[#15152B] to-[#42112D] pt-24 pb-12 lg:py-0">
+      <section id="inicio" className="relative min-h-screen lg:min-h-screen flex items-center justify-start overflow-hidden bg-gradient-to-br from-[#07080D] via-[#15152B] to-[#42112D] pt-24 pb-12 lg:py-0">
         {/* Dynamic Aurora lighting beams in background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="aurora-layer-1 -top-20 left-10 animate-aurora-drift opacity-70" />

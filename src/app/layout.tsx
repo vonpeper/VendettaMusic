@@ -146,7 +146,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden max-w-[100vw]">
+      <body className="min-h-screen bg-background text-foreground flex flex-col">
         <GoogleAnalytics measurementId={config?.googleAnalyticsMeasurementId} />
         <PwaStandaloneRedirect />
         <Toaster theme="dark" position="bottom-right" richColors />
