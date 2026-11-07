@@ -136,15 +136,15 @@ export function PaquetesSection({ dbPackages }: PaquetesSectionProps) {
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 flex flex-col items-center">
           {/* Logo Vendetta 2026 */}
-          <div className="relative mb-6 flex justify-center group">
-            <div className="absolute inset-0 bg-[#bb84eb]/20 blur-2xl rounded-full scale-125 pointer-events-none" />
+          <div className="relative mb-8 flex justify-center group">
+            <div className="absolute inset-0 bg-[#bb84eb]/30 blur-3xl rounded-full scale-150 pointer-events-none" />
             <Image
               src="/images/LOGO VNDETTA 2026.svg"
               alt="Vendetta Live Music"
-              width={240}
-              height={72}
+              width={300}
+              height={90}
               unoptimized
-              className="relative h-14 sm:h-16 md:h-20 w-auto object-contain drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] transition-transform duration-500 hover:scale-105"
+              className="relative h-16 sm:h-20 md:h-24 w-auto object-contain drop-shadow-[0_0_24px_rgba(187,132,235,0.4)] drop-shadow-[0_6px_28px_rgba(0,0,0,0.9)] transition-transform duration-500 hover:scale-105"
             />
           </div>
 

@@ -31,15 +31,15 @@ export function PublicNavbar() {
 
       <div className="container mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group transition-transform duration-300 hover:scale-[1.02]">
-          <div className="h-11 md:h-12 flex items-center relative">
+          <div className="h-13 md:h-14 flex items-center relative">
             <Image 
               src="/images/LOGO VNDETTA 2026.svg" 
               alt="Vendetta Live Music" 
-              width={160}
-              height={48}
+              width={190}
+              height={58}
               priority
               unoptimized
-              sizes="160px"
+              sizes="190px"
               className="h-full w-auto object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
             />
           </div>
@@ -96,14 +96,14 @@ export function PublicNavbar() {
               <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
                 <div className="p-6 border-b border-white/10">
                   <SheetHeader className="text-left mb-6">
-                    <div className="h-12 flex items-center self-start">
+                    <div className="h-14 flex items-center self-start">
                       <Image 
                         src="/images/LOGO VNDETTA 2026.svg" 
                         alt="Vendetta Live Music" 
-                        width={160}
-                        height={48}
+                        width={190}
+                        height={58}
                         unoptimized
-                        sizes="160px"
+                        sizes="190px"
                         className="h-full w-auto object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]"
                       />
                     </div>

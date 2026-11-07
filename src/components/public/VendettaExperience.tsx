@@ -296,7 +296,7 @@ export function VendettaExperience() {
             <div className="max-w-xl relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-[10px] font-mono font-bold uppercase tracking-wider mb-4 backdrop-blur-md">
                 <Sliders className="w-3 h-3" />
-                RIDER TÉCNICO INTERNACIONAL
+                INGENIERÍA & RIDER PROFESIONAL
               </div>
 
               <h3 className="text-2xl md:text-4xl font-sans font-black text-[#F2F0EB] uppercase tracking-tight leading-tight mb-3">
@@ -304,11 +304,11 @@ export function VendettaExperience() {
               </h3>
 
               <p className="text-[#F2F0EB]/90 text-xs md:text-sm leading-relaxed mb-6">
-                Sistema Line Array de alta definición acústica, consolas digitales con monitoreo in-ear para cada músico, iluminación robótica DMX programada al tempo de cada canción.
+                Microfonía y monitoreo in-ear de alta fidelidad, consolas digitales de última generación y diseño de iluminación robótica DMX programada para una experiencia de concierto en vivo.
               </p>
 
               <div className="flex flex-wrap gap-2">
-                {["Line Array Pro Audio", "In-Ear Shure / Sennheiser", "Robóticas DMX & Haz", "Backline Marshall / Fender", "Consola Digital M32"].map(spec => (
+                {["Audio de Alta Definición", "Monitoreo In-Ear Profesional", "Iluminación Robótica DMX", "Backline de Gama Alta", "Mezcla Digital en Vivo"].map(spec => (
                   <span key={spec} className="px-3 py-1 rounded-lg bg-black/50 border border-white/15 text-[11px] font-mono text-[#F2F0EB]/90 backdrop-blur-md">
                     ✓ {spec}
                   </span>

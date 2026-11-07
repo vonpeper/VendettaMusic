@@ -35,11 +35,11 @@ export async function PublicFooter() {
               <Image 
                 src="/images/LOGO VNDETTA 2026.svg" 
                 alt="Vendetta Live Music" 
-                width={180}
-                height={56}
+                width={220}
+                height={68}
                 unoptimized
-                sizes="180px"
-                className="h-14 w-auto object-contain drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]"
+                sizes="220px"
+                className="h-16 md:h-18 w-auto object-contain drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]"
               />
             </Link>
             <p className="text-[#F2F0EB]/70 text-sm leading-relaxed font-normal">
