@@ -114,6 +114,8 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
     // Defaults y fallbacks
     assert.equal(calculateEventHours("", ""), 2)
     assert.equal(calculateEventHours(null, null), 2)
+    assert.equal(calculateEventHours("00:00", "00:00"), 2) // Tiempos idénticos default a 2h base
+    assert.equal(calculateEventHours("21:00", "21:00"), 2)
   })
 
   it("debe calcular tarifas horarias y costos base por horas según el paquete", async () => {
@@ -294,6 +296,28 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
     })
     assert.equal(resManual.depositAmount, 4000)
     assert.equal(resManual.balanceAmount, 4600)
+  })
+
+  it("debe calcular el tabulador proporcional de pago a músicos y respetar montos personalizados", async () => {
+    const { calculateSuggestedMusicianPay } = await import("./pricing")
+
+    // Regla base: 2h = $1,200 ($600/hr)
+    assert.equal(calculateSuggestedMusicianPay(2, 1200), 1200)
+
+    // Horas adicionales proporcionales:
+    // 3h: ($1,200 / 2) * 3 = $1,800
+    assert.equal(calculateSuggestedMusicianPay(3, 1200), 1800)
+    // 4h: ($1,200 / 2) * 4 = $2,400
+    assert.equal(calculateSuggestedMusicianPay(4, 1200), 2400)
+    // 5h: ($1,200 / 2) * 5 = $3,000
+    assert.equal(calculateSuggestedMusicianPay(5, 1200), 3000)
+
+    // Base custom (ej. $1,400 para 2h -> $700/hr):
+    assert.equal(calculateSuggestedMusicianPay(3, 1400), 2100)
+
+    // Custom musician pay directo (sobreescribe la regla proporcional):
+    assert.equal(calculateSuggestedMusicianPay(3, 1200, 2200), 2200)
+    assert.equal(calculateSuggestedMusicianPay(2, 1200, 1500), 1500)
   })
 })
 

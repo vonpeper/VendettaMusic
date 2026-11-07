@@ -42,7 +42,7 @@ import { EditDepositInline } from "@/components/admin/EditDepositInline"
 import { EditTotalInline } from "@/components/admin/EditTotalInline"
 import { CancelBookingButton } from "@/components/admin/CancelBookingButton"
 import { EventCostBreakdownCard } from "@/components/admin/EventCostBreakdownCard"
-import { calculateEventCostBreakdown } from "@/lib/pricing"
+import { calculateEventCostBreakdown, calculateEventHours } from "@/lib/pricing"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 
@@ -283,6 +283,10 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
   const resolvedDiscount = Number(booking.discountAmount) || 0;
   const resolvedDeposit = Number(booking.depositAmount) || 0;
 
+  const effectiveStartTime = booking.event?.performanceStart || (booking.event as any)?.startTime || booking.startTime;
+  const effectiveEndTime = booking.event?.performanceEnd || (booking.event as any)?.endTime || booking.endTime;
+  const dynamicHours = calculateEventHours(effectiveStartTime, effectiveEndTime);
+
   const packagesMappedForModal = packages.map(p => ({
     id: p.id,
     name: p.name,
@@ -471,8 +475,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               clientEmail={booking.clientEmail || undefined}
               currentStatus={booking.status}
               eventDate={booking.requestedDate}
-              startTime={booking.startTime}
-              endTime={booking.endTime}
+              startTime={effectiveStartTime}
+              endTime={effectiveEndTime}
               city={booking.city}
               state={booking.state}
               address={booking.address}
@@ -488,11 +492,13 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               initialDeposit={booking.depositAmount || 0}
               initialLineItemsTotal={lineItemsTotal}
               initialLineItems={booking.lineItems}
+              initialCustomMusicianPay={booking.customMusicianPay ?? booking.event?.customMusicianPay}
+              musiciansCount={booking.event?.musicians?.length || 4}
               />
 
             {/* Tarjeta de Split Operativo y Nómina (Costos Vendetta con Edición y Cálculo Automático) */}
             {(() => {
-              const hours = booking.bandHours || 2
+              const hours = booking.bandHours || dynamicHours || 2
               const isBar = (booking.packageName?.toLowerCase().includes("bar") || booking.ceremonyType?.toLowerCase().includes("bar")) ?? false
               const baseShowPrice = Number(booking.baseAmount || 0)
               const initialMusicianPay = (booking.customMusicianPay ?? booking.event?.customMusicianPay) ?? null

@@ -1265,6 +1265,7 @@ export interface ApproveProposalInput {
   isOutsideZone?: boolean
   lineItems?: ApproveProposalLineItemInput[]
   mapsLink?: string
+  customMusicianPay?: number | null
 }
 
 export async function updateBookingLocationAction(params: {
@@ -1388,6 +1389,7 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
         packageName: updatedPackage,
         isOutsideZone: params.isOutsideZone ?? booking.isOutsideZone,
         ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
+        ...(params.customMusicianPay !== undefined ? { customMusicianPay: params.customMusicianPay } : {}),
         status: "propuesta_enviada"
       }
     })
@@ -1403,6 +1405,7 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
           balance: Math.max(0, total - deposit),
           totalWithTax: total,
           ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
+          ...(params.customMusicianPay !== undefined ? { customMusicianPay: params.customMusicianPay } : {}),
         }
       }).catch(e => console.warn("Could not sync event amounts on approve:", e))
     }

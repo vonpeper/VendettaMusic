@@ -203,6 +203,7 @@ export function parseTimeToMinutes(timeStr: string): number | null {
 
 /**
  * Calcula la duración en horas entre dos horarios. Si cruza medianoche, suma 24 horas.
+ * Si los horarios son iguales (ej. 00:00 y 00:00 o no definidos), devuelve 2 horas base.
  * Devuelve como mínimo 1 hora y redondea a 1 decimal.
  */
 export function calculateEventHours(startTimeStr?: string | null, endTimeStr?: string | null): number {
@@ -211,18 +212,42 @@ export function calculateEventHours(startTimeStr?: string | null, endTimeStr?: s
   const startMins = parseTimeToMinutes(startTimeStr)
   const endMins = parseTimeToMinutes(endTimeStr)
 
-  if (startMins === null || endMins === null) {
+  if (startMins === null || endMins === null || startMins === endMins) {
     return 2
   }
 
   let diffMins = endMins - startMins
-  if (diffMins <= 0) {
+  if (diffMins < 0) {
     diffMins += 24 * 60
   }
 
   const hours = diffMins / 60
   const rounded = Math.round(hours * 10) / 10
   return Math.max(1, rounded)
+}
+
+/**
+ * Tabulador oficial de pago a músicos (Vendetta Music):
+ * - Duración base = 2 horas -> $1,200 MXN base por músico (o base configurada).
+ * - Duración > 2 horas: cálculo proporcional:
+ *   suggestedMusicianPay = Math.round((baseMusicianPay / 2) * durationHours)
+ *   * 2h: ($1,200 / 2) * 2 = $1,200 por músico
+ *   * 3h: ($1,200 / 2) * 3 = $1,800 por músico
+ *   * 4h: ($1,200 / 2) * 4 = $2,400 por músico
+ *   * 5h: ($1,200 / 2) * 5 = $3,000 por músico
+ * - Si customMusicianPay está provisto (> 0), se respeta el monto manual.
+ */
+export function calculateSuggestedMusicianPay(
+  durationHours: number = 2,
+  baseMusicianPay: number = 1200,
+  customMusicianPay?: number | null
+): number {
+  if (customMusicianPay !== undefined && customMusicianPay !== null && !isNaN(customMusicianPay) && customMusicianPay > 0) {
+    return Math.round(customMusicianPay)
+  }
+  const h = Math.max(1, durationHours)
+  const base = Math.max(0, baseMusicianPay)
+  return Math.round((base / 2) * h)
 }
 
 /**
