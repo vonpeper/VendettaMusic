@@ -447,21 +447,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
-            <ApproveProposalModal
-              key={`header-approve-${booking.id}-${resolvedBase}-${resolvedViaticos}-${resolvedDiscount}-${lineItemsTotal}`}
-              bookingId={booking.id}
-              shortId={booking.shortId || ""}
-              clientName={finalClientName}
-              clientPhone={booking.clientPhone}
-              currentStatus={booking.status}
-              initialPackage={booking.packageName || targetPkg?.name || "Show Vendetta - Experience"}
-              initialBase={resolvedBase}
-              initialViaticos={resolvedViaticos}
-              initialDiscount={resolvedDiscount}
-              initialDeposit={booking.depositAmount || 0}
-              initialLineItemsTotal={lineItemsTotal}
-              packagesList={packagesMappedForModal}
-            />
+            <VenueTypeSwitcher bookingId={booking.id} currentType={booking.venueType || ''} />
 
             {(booking.status === "agendado" || booking.status === "confirmed" || booking.status === "pendiente" || booking.status === "completado") && (
               <ContractStatusSwitcher 
@@ -482,7 +468,15 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               shortId={booking.shortId || ""}
               clientName={finalClientName}
               clientPhone={booking.clientPhone}
+              clientEmail={booking.clientEmail || undefined}
               currentStatus={booking.status}
+              eventDate={booking.requestedDate}
+              startTime={booking.startTime}
+              endTime={booking.endTime}
+              city={booking.city}
+              state={booking.state}
+              address={booking.address}
+              venueType={booking.venueType || booking.ceremonyType}
               guestCount={booking.guestCount || undefined}
               isOutsideZone={booking.isOutsideZone || undefined}
               distanceKm={booking.distanceKm || undefined}
@@ -493,278 +487,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               initialDeposit={booking.depositAmount || 0}
               initialLineItemsTotal={lineItemsTotal}
               initialLineItems={booking.lineItems}
-              packagesList={packagesMappedForModal}
-            />
-            
-            {/* Detalles del Evento */}
-            <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="bg-muted/30 border-b border-border/40">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Package className="w-5 h-5 text-blue-600" /> Detalles del Evento
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Paquete Solicitado / Show</div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-lg font-black text-foreground">
-                        {booking.customName ? `${booking.customName} (${booking.packageName})` : booking.packageName}
-                      </div>
-                      <VenueTypeSwitcher bookingId={booking.id} currentType={booking.venueType || ''} />
-                    </div>
-                    {booking.ceremonyType && (
-                      <div className="text-xs text-muted-foreground font-bold mt-1 uppercase tracking-wider">
-                        Tipo: <span className="text-blue-600 font-black">{booking.ceremonyType}</span>
-                      </div>
-                    )}
-                    <div className="text-sm text-blue-600 font-bold mt-1 tracking-tight">{booking.guestCount} invitados aproximados</div>
-                  </div>
-                  <div className="pt-4 border-t border-border/40">
-                    <CardTitle className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] flex flex-wrap gap-2 items-center justify-between">
-                    <span>Fecha y Horario</span>
-                    {booking.source === 'MANUAL' && (
-                      <span className="bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded text-[9px] border border-orange-500/20">RESERVA MANUAL</span>
-                    )}
-                  </CardTitle>
-                    <div className="text-base text-foreground flex items-center gap-2 font-black mt-2">
-                      <Calendar className="w-4 h-4 text-blue-600" /> {formatDateMX(booking.requestedDate, "EEEE, d 'de' MMMM")}
-                    </div>
-                    <div className="text-sm text-muted-foreground font-mono mt-1 font-bold">
-                      {booking.startTime} hrs — {booking.endTime} hrs
-                    </div>
-                    {(booking.setupTime || booking.arrivalTime || booking.dressCode) && (
-                      <div className="mt-4 pt-3 border-t border-border/20 text-xs space-y-1.5 font-semibold text-muted-foreground">
-                        {booking.setupTime && (
-                          <div className="flex justify-between">
-                            <span>Montaje:</span>
-                            <span className="text-foreground font-bold">{booking.setupTime} hrs</span>
-                          </div>
-                        )}
-                        {booking.arrivalTime && (
-                          <div className="flex justify-between">
-                            <span>Llegada Músicos:</span>
-                            <span className="text-foreground font-bold">{booking.arrivalTime} hrs</span>
-                          </div>
-                        )}
-                        {booking.dressCode && (
-                          <div className="flex justify-between">
-                            <span>Vestimenta:</span>
-                            <span className="text-foreground font-bold uppercase tracking-wider bg-blue-600/15 text-blue-600 px-1.5 py-0.5 rounded text-[9px]">
-                              {booking.dressCode}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {booking.eventId && (
-                      <div className="text-[10px] text-muted-foreground font-mono mt-2 flex items-center gap-1.5 bg-muted/60 px-2 py-1 rounded w-fit select-all truncate max-w-full" title={booking.eventId}>
-                        <span className="font-bold opacity-60">ID EVENTO:</span> {booking.eventId}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Ubicación</div>
-                    <div className="text-base text-foreground flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-blue-600 shrink-0 mt-1" />
-                      <div>
-                        <div className="font-black">{booking.city}, {booking.state}</div>
-                        <div className="text-sm text-muted-foreground mt-1 leading-relaxed font-medium">{booking.address}</div>
-                        {booking.mapsLink && !booking.mapsLink.includes("vendetta.mx") ? (
-                          <div className="mt-2">
-                             <a 
-                               href={booking.mapsLink} 
-                               target="_blank" 
-                               className="text-[10px] text-blue-600 hover:underline flex items-center gap-1 font-black uppercase tracking-wider"
-                             >
-                               <ExternalLink className="w-3 h-3" /> Ver en Google Maps
-                             </a>
-                          </div>
-                        ) : (
-                          <div className="mt-2">
-                            <span className="text-[10px] text-amber-500 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 inline-block">
-                              Maps / Dirección pendiente por confirmar
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {booking.isOutsideZone && (
-                      <Badge variant="outline" className="mt-3 border-yellow-500/30 text-yellow-500 bg-yellow-500/10 font-black">
-                        🚗 Viáticos aplicados: {MXN(booking.viaticosAmount)}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Servicios Personalizados */}
-            {(booking.bandHours! > 0 || booking.djHours! > 0 || booking.packageName.toLowerCase().includes("arma") || booking.packageName.toLowerCase().includes("personal")) && (
-              <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden border-l-4 border-l-blue-600">
-                <CardHeader className="bg-blue-600/10 border-b border-border/40">
-                  <CardTitle className="text-lg flex items-center gap-2 font-black">
-                    <Sparkles className="w-5 h-5 text-blue-600" /> Configuración de Show
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="space-y-1">
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Música en Vivo</div>
-                      <div className="text-sm font-black flex items-center gap-2 text-foreground">
-                        <Music2 className="w-3.5 h-3.5 text-blue-600" /> {booking.bandHours} Horas
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Servicio de DJ</div>
-                      <div className="text-sm font-black flex items-center gap-2 text-foreground">
-                        <Disc className="w-3.5 h-3.5 text-blue-600" /> {booking.djHours! > 0 ? `${booking.djHours} Horas ${booking.isDjWithTvs ? '(Con Pantallas)' : '(Solo Audio)'}` : 'No solicitado'}
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Extras y Montaje</div>
-                      <div className="flex flex-wrap gap-1.5 mt-1">
-                        {booking.hasTemplete && <Badge variant="outline" className="text-[9px] font-black border-blue-600/20 bg-blue-600/10 text-blue-600">TEMPLETE</Badge>}
-                        {booking.hasPista && <Badge variant="outline" className="text-[9px] font-black border-blue-600/20 bg-blue-600/10 text-blue-600">PISTA LED</Badge>}
-                        {booking.hasRobot && <Badge variant="outline" className="text-[9px] font-black border-blue-600/20 bg-blue-600/10 text-blue-600">ROBOT LED</Badge>}
-                        {!booking.hasTemplete && !booking.hasPista && !booking.hasRobot && <span className="text-xs text-muted-foreground italic font-medium">Sin extras</span>}
-                      </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-            {(() => {
-              const base = Number(booking.baseAmount) > 0 ? Number(booking.baseAmount) : (Number(booking.event?.amount) || 0);
-              const viaticos = Number(booking.viaticosAmount || 0);
-              const discount = Number(booking.discountAmount || 0);
-              const lineItems = (booking.lineItems || []).map((it: any) => ({
-                id: it.id,
-                description: it.description,
-                quantity: it.quantity,
-                unitCost: it.unitCost,
-                lineTotal: Number(it.lineTotal || (it.quantity * it.unitCost) || 0)
-              }));
-              const lineItemsTotal = lineItems.reduce((acc: number, it: any) => acc + it.lineTotal, 0);
-              const subtotal = Math.max(0, base + viaticos + lineItemsTotal - discount);
-
-              // Si requiere factura, calculamos el IVA si no está guardado en el evento
-              const hasInvoice = booking.invoice || booking.event?.invoice || false;
-              const iva = hasInvoice ? (booking.event?.ivaAmount || Math.round(subtotal * 0.16 * 100) / 100) : 0;
-
-              const total = subtotal + iva;
-              const deposit = Number(booking.depositAmount || 0);
-              const paid = (booking.payments || []).filter((p: any) => p.status === 'completed' || p.status === 'paid').reduce((sum: number, p: any) => sum + Number(p.amount), 0);
-              const balance = total - paid;
-              
-              let badgeLabel = "PAGO PENDIENTE";
-              let badgeColor = "text-yellow-600";
-              if (paid === 0 && deposit === 0) { badgeLabel = "SIN ANTICIPO"; badgeColor = "text-gray-400"; }
-              else if (paid >= total) { badgeLabel = "LIQUIDADO"; badgeColor = "text-emerald-600"; }
-              else if (paid >= deposit) { badgeLabel = "ANTICIPO PAGADO"; badgeColor = "text-blue-600"; }
-              else if (paid > 0) { badgeLabel = "PAGO PARCIAL"; badgeColor = "text-orange-500"; }
-
-              return (
-                <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
-                  <CardHeader className="bg-muted/30 border-b border-border/40 p-4 md:p-6">
-                    <CardTitle className="text-lg flex items-center gap-2 font-black">
-                      <CreditCard className="w-5 h-5 text-blue-600" /> Información Financiera
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 md:p-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
-                      <EditTotalInline 
-                        key={`${booking.id}-total-${total}-${base}-${viaticos}-${discount}-${lineItemsTotal}`} 
-                        bookingId={booking.id} 
-                        initialBase={base} 
-                        initialViaticos={viaticos} 
-                        initialDiscount={discount}
-                        initialLineItemsTotal={lineItemsTotal}
-                        initialTotal={total} 
-                        hasInvoice={hasInvoice} 
-                      />
-                      <EditDepositInline key={`${booking.id}-${deposit}`} bookingId={booking.id} initialDeposit={deposit} />
-                      <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                        <div className="text-[9px] md:text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 truncate">Pagado</div>
-                        <div className="text-base md:text-xl font-black text-emerald-600">{MXN(paid)}</div>
-                      </div>
-                      <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-muted border border-border/50">
-                        <div className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 truncate">Pendiente</div>
-                        <div className="text-base md:text-xl font-black text-foreground">{MXN(balance)}</div>
-                      </div>
-                    </div>
-                    
-                    {/* Desglose Detallado */}
-                    <div className="mt-6 pt-4 border-t border-border/40 space-y-2 text-xs font-semibold text-muted-foreground">
-                      <div className="flex justify-between">
-                        <span>Monto Pactado:</span>
-                        <span className="text-foreground font-bold">{MXN(base)}</span>
-                      </div>
-                      {viaticos > 0 && (
-                        <div className="flex justify-between">
-                          <span>Viáticos:</span>
-                          <span className="text-foreground font-bold">{MXN(viaticos)}</span>
-                        </div>
-                      )}
-                      {lineItemsTotal > 0 && (
-                        <div className="flex justify-between">
-                          <span>Servicios Adicionales:</span>
-                          <span className="text-foreground font-bold">+{MXN(lineItemsTotal)}</span>
-                        </div>
-                      )}
-                      {discount > 0 ? (
-                        <div className="flex justify-between text-blue-600 dark:text-blue-400">
-                          <span>Descuento aplicado:</span>
-                          <span>
-                            -{MXN(discount)}
-                            {booking.originalPrice && Number(booking.originalPrice) > 0 ? ` (Precio Lista: ${MXN(Number(booking.originalPrice))})` : ""}
-                          </span>
-                        </div>
-                      ) : null}
-                      <div className="flex justify-between pt-1 border-t border-border/20">
-                        <span>Subtotal:</span>
-                        <span className="text-foreground font-bold">{MXN(subtotal)}</span>
-                      </div>
-                      {hasInvoice && (
-                        <div className="flex justify-between text-amber-600 dark:text-amber-500 font-bold">
-                          <span>IVA (16% - Factura):</span>
-                          <span>{MXN(iva)}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-sm font-black text-foreground pt-2 border-t border-border/40">
-                        <span>Total Final:</span>
-                        <span className="text-blue-600 dark:text-blue-400 font-black">{MXN(total)}</span>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div className="flex items-center gap-2">
-                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Estado Actual:</div>
-                        <div className={`text-sm font-black uppercase ${badgeColor}`}>{badgeLabel}</div>
-                      </div>
-                    </div>
-
-                    {booking.paymentRef && (
-                      <div className="mt-4 text-[10px] font-mono text-muted-foreground flex flex-wrap items-center gap-2 font-bold uppercase tracking-widest bg-muted/30 p-2 rounded">
-                        <span>Ref:</span> <span className="text-foreground break-all">{booking.paymentRef}</span>
-                      </div>
-                    )}
-                    
-                    {balance > 0 && (
-                      <div className="flex flex-col sm:flex-row gap-2 mt-6">
-                        {paid < deposit && <div className="flex-1"><ConfirmarAnticipoButton bookingId={booking.id} /></div>}
-                        <div className="flex-1"><LiquidarButton bookingId={booking.id} /></div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )
-            })()}
+              />
 
             {/* Tarjeta de Split Operativo y Nómina (Costos Vendetta con Edición y Cálculo Automático) */}
             {(() => {
@@ -791,54 +514,59 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           {/* Columna Derecha: Cliente y Acciones Administrativas */}
           <div className="space-y-8">
             {/* Tarjeta del Cliente */}
-            <Card className="bg-card border-blue-600/20 shadow-xl shadow-blue-600/5">
-              <CardHeader>
-                <CardTitle className="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em]">Datos del Solicitante</CardTitle>
+            <Card className="bg-card border-border shadow-xs rounded-2xl">
+              <CardHeader className="py-4 px-6 border-b border-border/40">
+                <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Datos del Solicitante
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 md:space-y-5 p-4 md:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-blue-600/15 border border-blue-600/30 flex items-center justify-center shadow-inner shrink-0">
-                    <User className="text-blue-600 w-5 h-5 md:w-6 md:h-6" />
+              <CardContent className="space-y-4 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                    <User className="text-primary w-6 h-6" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-lg md:text-xl font-black text-foreground tracking-tighter truncate" title={finalClientName}>{finalClientName}</div>
-                    <div className="text-[10px] md:text-xs text-muted-foreground font-bold truncate">Origen: <span className="text-blue-600 font-black uppercase tracking-widest">{booking.source || 'WEB'}</span></div>
-                  </div>
-                </div>
-                <div className="space-y-3 pt-4 border-t border-border/40">
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-blue-600 transition-colors group font-bold">
-                    <Phone className="w-4 h-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
-                    <a href={`tel:${booking.clientPhone}`}>{booking.clientPhone}</a>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-blue-600 transition-colors group font-bold">
-                    <Mail className="w-4 h-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
-                    <a href={`mailto:${booking.clientEmail}`}>{booking.clientEmail}</a>
-                  </div>
-                </div>
-                <div className="pt-2 space-y-3">
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 space-y-2">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-amber-400">
-                      Propuesta Comercial Vendetta
+                    <div className="text-lg font-black text-foreground tracking-tight truncate" title={finalClientName}>
+                      {finalClientName}
                     </div>
-                    <p className="text-xs text-muted-foreground leading-snug">
-                      Define los importes pactados y despacha el enlace oficial por WhatsApp.
-                    </p>
-                    <ApproveProposalModal
-                      key={`sidebar-approve-${booking.id}-${resolvedBase}-${resolvedViaticos}-${resolvedDiscount}-${lineItemsTotal}`}
-                      bookingId={booking.id}
-                      shortId={booking.shortId || ""}
-                      clientName={finalClientName}
-                      clientPhone={booking.clientPhone}
-                      currentStatus={booking.status}
-                      initialPackage={booking.packageName || targetPkg?.name || "Show Vendetta - Experience"}
-                      initialBase={resolvedBase}
-                      initialViaticos={resolvedViaticos}
-                      initialDiscount={resolvedDiscount}
-                      initialDeposit={booking.depositAmount || 0}
-                      initialLineItemsTotal={lineItemsTotal}
-                      packagesList={packagesMappedForModal}
-                    />
+                    <div className="text-xs text-muted-foreground font-semibold truncate">
+                      Origen: <span className="text-primary font-bold uppercase tracking-wider">{booking.source || 'WEB'}</span>
+                    </div>
                   </div>
+                </div>
+
+                <div className="space-y-2.5 pt-4 border-t border-border/40 text-sm">
+                  <div className="flex items-center gap-3 text-muted-foreground font-medium">
+                    <Phone className="w-4 h-4 text-primary shrink-0" />
+                    <a href={`tel:${booking.clientPhone}`} className="hover:text-foreground hover:underline truncate">
+                      {booking.clientPhone}
+                    </a>
+                  </div>
+                  {booking.clientEmail && (
+                    <div className="flex items-center gap-3 text-muted-foreground font-medium">
+                      <Mail className="w-4 h-4 text-primary shrink-0" />
+                      <a href={`mailto:${booking.clientEmail}`} className="hover:text-foreground hover:underline truncate">
+                        {booking.clientEmail}
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2 space-y-3">
+                  <Button
+                    variant="outline"
+                    asChild
+                    className="w-full text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 rounded-xl h-10 gap-2 font-bold text-xs"
+                  >
+                    <a 
+                      href={`https://wa.me/${booking.clientPhone.replace(/\D/g, "")}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Abrir WhatsApp Directo
+                    </a>
+                  </Button>
 
                   <ClientWhatsappActions 
                     bookingId={booking.id} 
@@ -904,19 +632,13 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
 
             {/* Gestión de Staff (Siempre visible si está agendado o pendiente) */}
             {(booking.status === "pendiente" || booking.status === "agendado") && (
-              <Card className={cn(
-                "bg-card shadow-2xl",
-                booking.status === "pendiente" ? "border-yellow-500/20 shadow-yellow-500/10" : "border-blue-600/20 shadow-blue-600/5"
-              )}>
-                <CardHeader>
-                  <CardTitle className={cn(
-                    "text-[10px] font-black uppercase tracking-widest",
-                    booking.status === "pendiente" ? "text-yellow-500" : "text-blue-600"
-                  )}>
+              <Card className="bg-card border-border shadow-xs rounded-2xl">
+                <CardHeader className="py-4 px-6 border-b border-border/40">
+                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     {booking.status === "pendiente" ? "Acciones Administrativas" : "Gestión de Staff y Logística"}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <BookingActions 
                     bookingId={booking.id} 
                     clientName={finalClientName} 
@@ -931,11 +653,13 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             )}
 
             {booking.status === "agendado" && !booking.eventId && (
-              <Card className="bg-orange-500/5 border-orange-500/20">
-                <CardHeader>
-                  <CardTitle className="text-xs font-black text-orange-500 uppercase tracking-widest">Sincronización Pendiente</CardTitle>
+              <Card className="bg-amber-500/5 border-amber-500/20 shadow-xs rounded-2xl">
+                <CardHeader className="py-4 px-6 border-b border-amber-500/20">
+                  <CardTitle className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                    Sincronización Pendiente
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-6 space-y-4">
                   <p className="text-xs text-muted-foreground font-medium">Esta reserva está confirmada pero aún no se ha generado el evento oficial en la agenda.</p>
                   <BookingActions bookingId={booking.id} clientName={finalClientName} forceSync={true} />
                 </CardContent>
@@ -943,12 +667,12 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
             )}
             
             {booking.status === "EXPIRED" && (
-              <Card className="bg-red-500/5 border-red-500/20">
-                <CardContent className="pt-6">
+              <Card className="bg-red-500/5 border-red-500/20 shadow-xs rounded-2xl">
+                <CardContent className="p-6">
                   <div className="flex items-start gap-3 text-red-500">
                     <TrendingDown className="w-5 h-5 shrink-0" />
                     <div>
-                      <div className="text-sm font-black uppercase tracking-tight">Solicitud Expirada</div>
+                      <div className="text-sm font-bold uppercase tracking-tight">Solicitud Expirada</div>
                       <p className="text-xs text-muted-foreground mt-1 font-medium">Esta oportunidad superó los 15 días sin concretarse.</p>
                     </div>
                   </div>
@@ -956,33 +680,48 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               </Card>
             )}
 
-            {booking.adminNote && (
-              <div className="p-5 bg-blue-600/10 border border-blue-600/20 rounded-2xl shadow-sm">
-                <div className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shadow-sm shadow-blue-600/50" /> Bitácora Administrativa
-                </div>
-                <p className="text-sm text-foreground/80 italic font-medium leading-relaxed">&ldquo;{booking.adminNote}&rdquo;</p>
-              </div>
-            )}
-
-            {booking.musicianNotes && (
-              <div className="p-5 bg-orange-600/10 border border-orange-600/20 rounded-2xl shadow-sm">
-                <div className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-600 shadow-sm shadow-orange-600/50" /> Notas para los Músicos
-                </div>
-                <p className="text-sm text-foreground/80 italic font-medium leading-relaxed">&ldquo;{booking.musicianNotes}&rdquo;</p>
-              </div>
+            {/* Bitácora Administrativa y Notas de Músicos Unificada */}
+            {(booking.adminNote || booking.musicianNotes) && (
+              <Card className="bg-card border-border shadow-xs rounded-2xl overflow-hidden">
+                <CardHeader className="py-3 px-5 border-b border-border/40 bg-muted/20">
+                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-primary" /> Notas y Bitácora del Evento
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-5 space-y-4">
+                  {booking.adminNote && (
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Bitácora Administrativa
+                      </div>
+                      <p className="text-xs text-foreground/80 leading-relaxed bg-muted/30 p-3 rounded-xl border border-border/30 italic">
+                        &ldquo;{booking.adminNote}&rdquo;
+                      </p>
+                    </div>
+                  )}
+                  {booking.musicianNotes && (
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Indicaciones para Músicos
+                      </div>
+                      <p className="text-xs text-foreground/80 leading-relaxed bg-amber-500/5 p-3 rounded-xl border border-amber-500/20 italic">
+                        &ldquo;{booking.musicianNotes}&rdquo;
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             )}
 
             {/* Confirmaciones de Staff */}
             {booking.event && booking.event.musicians && booking.event.musicians.length > 0 && (
-              <Card className="bg-card border-border/20 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="bg-muted/30 border-b border-border/40">
-                  <CardTitle className="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2">
-                    <Users className="w-4 h-4 text-blue-600" /> Estatus del Staff
+              <Card className="bg-card border-border shadow-xs rounded-2xl overflow-hidden">
+                <CardHeader className="py-3 px-5 bg-muted/20 border-b border-border/40">
+                  <CardTitle className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                    <Users className="w-4 h-4 text-primary" /> Estatus del Staff
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-6">
+                <CardContent className="p-5">
               {booking.event?.id && booking.event.musicians && booking.event.musicians.length > 0 && (() => {
                 const eventDate = new Date(booking.event.date)
                 const now = new Date()
@@ -1005,11 +744,11 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
 
             {/* Gestión del Registro (Editar/Eliminar) - Solo visible si hay un contrato registrado para poder borrarlo */}
             {!!(booking.event?.contracts?.length || booking.signedAt || booking.clientSignature) && (
-              <Card className="bg-card border-border/20">
-                <CardHeader>
-                  <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Gestión de Registro</CardTitle>
+              <Card className="bg-card border-border shadow-xs rounded-2xl">
+                <CardHeader className="py-4 px-6 border-b border-border/40">
+                  <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Gestión de Registro</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="p-6 space-y-3">
                   <AdminManagementTools booking={booking} />
                 </CardContent>
               </Card>

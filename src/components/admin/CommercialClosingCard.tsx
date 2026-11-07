@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import {
   Send,
   Loader2,
@@ -13,15 +14,21 @@ import {
   Copy,
   Check,
   Sparkles,
-  Receipt,
   ToggleLeft,
   ToggleRight,
   Truck,
   Speaker,
   Lock,
-  Percent
+  Percent,
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  ShieldCheck,
+  Receipt
 } from "lucide-react"
 import { approveAndSendProposalAction, ApproveProposalLineItemInput } from "@/actions/ventas"
+import { formatDateMX } from "@/lib/utils"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -89,7 +96,15 @@ interface CommercialClosingCardProps {
   shortId: string
   clientName: string
   clientPhone: string
+  clientEmail?: string
   currentStatus: string
+  eventDate?: Date | string | null
+  startTime?: string | null
+  endTime?: string | null
+  city?: string | null
+  state?: string | null
+  address?: string | null
+  venueType?: string | null
   guestCount?: number
   isOutsideZone?: boolean
   distanceKm?: number
@@ -121,7 +136,15 @@ export function CommercialClosingCard({
   shortId,
   clientName,
   clientPhone,
+  clientEmail,
   currentStatus,
+  eventDate,
+  startTime,
+  endTime,
+  city,
+  state,
+  address,
+  venueType,
   guestCount,
   isOutsideZone = false,
   distanceKm,
@@ -281,7 +304,6 @@ export function CommercialClosingCard({
 
     setLoading(true)
     try {
-      // Líneas de producción consolidadas para la propuesta oficial
       const lineItemsToSave: ApproveProposalLineItemInput[] = [
         ...PRODUCTION_CATALOG.filter(p => selectedProduction.has(p.id)).map(p => ({
           description: p.name,
@@ -322,468 +344,496 @@ export function CommercialClosingCard({
     }
   }
 
-  return (
-    <div className="relative bg-zinc-950/90 border-2 border-amber-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl backdrop-blur-xl overflow-hidden space-y-6">
-      {/* Glow de acento ejecutivo */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 blur-[100px] pointer-events-none rounded-full" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/10 blur-[100px] pointer-events-none rounded-full" />
+  const formattedDate = eventDate ? formatDateMX(eventDate, "EEEE, d 'de' MMMM, yyyy") : "Fecha por confirmar"
 
-      {/* Header de la Ficha Comercial */}
-      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-wider">
-              <Receipt className="w-3.5 h-3.5" /> Ficha de Cierre Comercial
+  return (
+    <div className="bg-white dark:bg-zinc-900 border border-border rounded-2xl shadow-xs p-5 sm:p-7 space-y-6">
+
+      {/* 1. Header Compacto del Evento (Resumen Ejecutivo) */}
+      <div className="p-4 sm:p-5 rounded-xl bg-slate-50/80 dark:bg-zinc-800/40 border border-border/70 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border/50">
+          <div className="flex items-center gap-2.5">
+            <span className="font-mono font-black text-sm tracking-wider px-2.5 py-0.5 rounded-lg bg-[#6F0D2B]/10 text-[#6F0D2B] dark:bg-[#6F0D2B]/20 dark:text-rose-400 border border-[#6F0D2B]/20">
+              {shortId}
             </span>
-            {isPendingApproval ? (
-              <span className="px-2.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 text-[10px] font-black uppercase tracking-wider border border-yellow-500/30 animate-pulse">
-                Pendiente de Aprobación
-              </span>
-            ) : isApproved ? (
-              <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-[10px] font-black uppercase tracking-wider border border-cyan-500/30 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Propuesta Enviada
-              </span>
-            ) : null}
+            <h2 className="text-base sm:text-lg font-black text-foreground tracking-tight">
+              {clientName}
+            </h2>
           </div>
-          <h2 className="text-xl sm:text-2xl font-heading font-black text-white uppercase tracking-tight mt-2">
-            Propuesta para {clientName}
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Folio: <span className="font-mono font-bold text-white">{shortId}</span> • WhatsApp: <span className="font-mono text-white">{clientPhone}</span>
-            {guestCount ? (
-              <span className="ml-2 px-2 py-0.5 rounded-md bg-white/10 text-white font-bold">
-                Aforo: {guestCount} pax
-              </span>
-            ) : null}
-          </p>
+
+          <div className="flex items-center gap-2">
+            {isPendingApproval ? (
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] font-black uppercase tracking-wider">
+                Pendiente de Aprobación
+              </Badge>
+            ) : isApproved ? (
+              <Badge variant="outline" className="bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Propuesta Enviada
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider">
+                {currentStatus}
+              </Badge>
+            )}
+
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 text-xs font-bold gap-1 rounded-lg border-border hover:bg-muted"
+            >
+              <Link href={`/status/${shortId}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="w-3.5 h-3.5 text-[#6F0D2B] dark:text-rose-400" />
+                <span>Previsualizar</span>
+              </Link>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleCopyLink}
+              className="h-8 w-8 p-0 rounded-lg border-border hover:bg-muted"
+              title="Copiar enlace de propuesta para el cliente"
+            >
+              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
+            </Button>
+          </div>
         </div>
 
-        {/* Enlace para Previsualizar la Propuesta */}
-        <div className="flex items-center gap-2">
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="h-9 rounded-xl border-white/20 bg-white/5 hover:bg-white/10 text-white text-xs gap-1.5 cursor-pointer font-bold"
-          >
-            <Link href={`/status/${shortId}`} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
-              Previsualizar Propuesta
-            </Link>
-          </Button>
+        {/* 4 Datos Clave en Grid Compacto */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="space-y-0.5">
+            <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+              <Calendar className="w-3 h-3 text-[#6F0D2B]" /> Fecha
+            </span>
+            <span className="font-bold text-foreground block truncate capitalize">
+              {formattedDate}
+            </span>
+          </div>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleCopyLink}
-            className="h-9 px-2.5 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white cursor-pointer"
-            title="Copiar Enlace de Propuesta"
-          >
-            {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-gray-300" />}
-          </Button>
+          <div className="space-y-0.5">
+            <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+              <Clock className="w-3 h-3 text-[#FF5A5F]" /> Horario
+            </span>
+            <span className="font-mono font-bold text-foreground block truncate">
+              {startTime || "21:00"} hrs — {endTime || "23:00"} hrs
+            </span>
+          </div>
+
+          <div className="space-y-0.5">
+            <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+              <MapPin className="w-3 h-3 text-amber-600" /> Ubicación
+            </span>
+            <span className="font-bold text-foreground block truncate" title={`${city || ""}, ${state || ""}`}>
+              {city || "Por confirmar"}{state ? `, ${state}` : ""}
+            </span>
+          </div>
+
+          <div className="space-y-0.5">
+            <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+              <Users className="w-3 h-3 text-[#6F0D2B]" /> Aforo & Formato
+            </span>
+            <span className="font-bold text-foreground block truncate">
+              {guestCount ? `${guestCount} pax` : "Aforo no esp."} • {venueType || "Social"}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Contenido interactivo */}
-      <div className="relative z-10 space-y-6">
-        
-        {/* 1. Selector de Paquete Sugerido (Pills) */}
-        <div className="space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" /> 1. Selector de Paquete Sugerido
-          </Label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            {CORE_PACKAGES.map((pkg) => {
-              const isSelected = packageName.toLowerCase().includes(pkg.key)
-              return (
-                <button
-                  key={pkg.key}
-                  type="button"
-                  onClick={() => handlePackageSelect(pkg)}
-                  className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-amber-500/15 border-amber-500 text-white shadow-lg shadow-amber-500/20 ring-1 ring-amber-500"
-                      : "bg-black/40 border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/20"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm font-black ${isSelected ? "text-amber-400" : "text-white"}`}>
-                      {pkg.label}
-                    </span>
-                    {isSelected && <Check className="w-4 h-4 text-amber-400" />}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground font-mono mt-1">
-                    Base: {MXN(pkg.defaultBase)}
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* 2. Regla Foránea (+20% sobre show base) y Precio Base */}
-        <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-gray-200 flex items-center gap-1.5">
-                  <Percent className="w-3.5 h-3.5 text-amber-400" /> Regla Foránea (+20% al Show Base)
-                </span>
-                {distanceKm !== undefined && (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
-                    {distanceKm} km {distanceKm > 25 ? "(>25 km detectado)" : "(Zona local)"}
+      {/* 2. Selector Rápido de Paquete */}
+      <div className="space-y-2">
+        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-[#6F0D2B] dark:text-rose-400" /> 1. Formato de Espectáculo Sugerido
+        </Label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {CORE_PACKAGES.map((pkg) => {
+            const isSelected = packageName.toLowerCase().includes(pkg.key)
+            return (
+              <button
+                key={pkg.key}
+                type="button"
+                onClick={() => handlePackageSelect(pkg)}
+                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                  isSelected
+                    ? "bg-[#6F0D2B]/5 dark:bg-[#6F0D2B]/15 border-[#6F0D2B] text-foreground shadow-xs ring-1 ring-[#6F0D2B]"
+                    : "bg-slate-50/50 dark:bg-zinc-800/30 border-border text-foreground hover:bg-slate-50 dark:hover:bg-zinc-800/60"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-sm font-black ${isSelected ? "text-[#6F0D2B] dark:text-rose-400" : "text-foreground"}`}>
+                    {pkg.label}
                   </span>
-                )}
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Aplica exclusivamente al show base. No afecta a producción técnica ni viáticos.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setIsForaneo(!isForaneo)}
-              className="flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer self-start sm:self-auto"
-            >
-              {isForaneo ? (
-                <>
-                  <ToggleRight className="w-6 h-6 text-amber-400" />
-                  <span className="text-amber-400">Foráneo (+20% Activo)</span>
-                </>
-              ) : (
-                <>
-                  <ToggleLeft className="w-6 h-6 text-gray-500" />
-                  <span className="text-gray-400">Tarifa Local</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-white/10">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                Precio Show Base ($) *
-              </Label>
-              <Input
-                type="number"
-                min={0}
-                step={500}
-                required
-                value={rawBaseAmount || ""}
-                onChange={(e) => setRawBaseAmount(Number(e.target.value) || 0)}
-                placeholder="0"
-                className="bg-black/50 border-white/15 text-white h-11 rounded-xl text-sm font-mono focus:border-amber-500"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                Show Efectivo al Cliente {isForaneo ? "(+20% Foráneo)" : ""}
-              </Label>
-              <div className="h-11 px-3 rounded-xl bg-zinc-900 border border-white/15 flex items-center justify-between font-mono text-sm">
-                <span className="text-gray-400 text-xs">
-                  {isForaneo ? `Base ${MXN(rawBaseAmount)} + 20% (${MXN(foraneoSurcharge)})` : "Base directa"}
-                </span>
-                <span className="font-bold text-amber-400">{MXN(effectiveShowBase)}</span>
-              </div>
-            </div>
-          </div>
+                  {isSelected && <Check className="w-4 h-4 text-[#6F0D2B] dark:text-rose-400" />}
+                </div>
+                <div className="text-[11px] text-muted-foreground font-mono mt-1 font-semibold">
+                  Tarifa Base: {MXN(pkg.defaultBase)}
+                </div>
+              </button>
+            )
+          })}
         </div>
+      </div>
 
-        {/* 3. Viáticos Desglosados: Viáticos Banda + Viáticos Producción / Flete */}
-        <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-200 flex items-center gap-1.5">
-                <Truck className="w-3.5 h-3.5 text-amber-400" /> Viáticos Desglosados
+      {/* 3. Regla Foránea (+20% al show base) y Precio Show */}
+      <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-border space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                <Percent className="w-3.5 h-3.5 text-[#6F0D2B] dark:text-rose-400" /> Regla Foránea (+20% al Show Base)
               </span>
-              <p className="text-[11px] text-muted-foreground">
-                Asigna viáticos de traslado de músicos y flete de equipo técnico por separado.
-              </p>
+              {distanceKm !== undefined && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-bold">
+                  {distanceKm} km {distanceKm > 25 ? "(>25 km detectado)" : "(Zona local)"}
+                </span>
+              )}
             </div>
-            <span className="text-xs font-mono font-bold text-amber-400 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              Total Viáticos: {MXN(totalViaticos)}
-            </span>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Aplica exclusivamente al show base. No afecta a producción técnica ni viáticos.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-white/10">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                Viáticos Banda ($)
-              </Label>
-              <Input
-                type="number"
-                min={0}
-                step={200}
-                value={viaticosBanda || ""}
-                onChange={(e) => setViaticosBanda(Number(e.target.value) || 0)}
-                placeholder="0"
-                className="bg-black/50 border-white/15 text-white h-11 rounded-xl text-sm font-mono focus:border-amber-500"
-              />
-            </div>
+          <button
+            type="button"
+            onClick={() => setIsForaneo(!isForaneo)}
+            className="flex items-center gap-1.5 text-xs font-bold text-foreground hover:opacity-80 transition-opacity cursor-pointer self-start sm:self-auto"
+          >
+            {isForaneo ? (
+              <>
+                <ToggleRight className="w-6 h-6 text-[#6F0D2B] dark:text-rose-400" />
+                <span className="text-[#6F0D2B] dark:text-rose-400 font-bold">Foráneo (+20% Activo)</span>
+              </>
+            ) : (
+              <>
+                <ToggleLeft className="w-6 h-6 text-muted-foreground" />
+                <span className="text-muted-foreground">Tarifa Local</span>
+              </>
+            )}
+          </button>
+        </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                Viáticos Producción / Flete Equipo ($)
-              </Label>
-              <Input
-                type="number"
-                min={0}
-                step={200}
-                value={viaticosProduccion || ""}
-                onChange={(e) => setViaticosProduccion(Number(e.target.value) || 0)}
-                placeholder="0"
-                className="bg-black/50 border-white/15 text-white h-11 rounded-xl text-sm font-mono focus:border-amber-500"
-              />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border/50">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">
+              Precio Show Base ($) *
+            </Label>
+            <Input
+              type="number"
+              min={0}
+              step={500}
+              required
+              value={rawBaseAmount || ""}
+              onChange={(e) => setRawBaseAmount(Number(e.target.value) || 0)}
+              placeholder="0"
+              className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">
+              Show Efectivo al Cliente {isForaneo ? "(+20% Foráneo)" : ""}
+            </Label>
+            <div className="h-10 px-3 rounded-xl bg-white dark:bg-zinc-900 border border-border flex items-center justify-between font-mono text-sm">
+              <span className="text-muted-foreground text-xs">
+                {isForaneo ? `Base ${MXN(rawBaseAmount)} + 20% (${MXN(foraneoSurcharge)})` : "Base directa"}
+              </span>
+              <span className="font-bold text-foreground">{MXN(effectiveShowBase)}</span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* 4. Tabulador de Producción para Aforo > 100 pax */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-black/40 border border-white/10 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-gray-200 flex items-center gap-1.5">
-                  <Speaker className="w-3.5 h-3.5 text-amber-400" /> Tabulador de Producción Técnica {guestCount ? `(Aforo: ${guestCount} pax)` : ""}
-                </span>
-                {guestCount && guestCount > 100 ? (
-                  <span className="text-[10px] font-bold text-amber-400 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30">
-                    Recomendado para &gt;100 pax
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Selecciona los elementos técnicos necesarios. Los precios ya contemplan el costo con proveedor y el margen de oficina.
-              </p>
-            </div>
-            <span className="text-xs font-mono font-bold text-cyan-400 px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20 self-start sm:self-auto">
-              Total Producción: {MXN(productionClientTotal)}
+      {/* 4. Viáticos Desglosados */}
+      <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-border space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+              <Truck className="w-3.5 h-3.5 text-[#FF5A5F]" /> Viáticos Desglosados
             </span>
+            <p className="text-[11px] text-muted-foreground">
+              Asigna viáticos de traslado de músicos y flete de equipo técnico por separado.
+            </p>
+          </div>
+          <span className="text-xs font-mono font-bold text-foreground px-2.5 py-1 rounded-lg bg-muted border border-border/60">
+            Total Viáticos: {MXN(totalViaticos)}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border/50">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">
+              Viáticos Músicos / Banda ($)
+            </Label>
+            <Input
+              type="number"
+              min={0}
+              step={200}
+              value={viaticosBanda || ""}
+              onChange={(e) => setViaticosBanda(Number(e.target.value) || 0)}
+              placeholder="0"
+              className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B]"
+            />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-white/10">
-            {PRODUCTION_CATALOG.map((item) => {
-              const isSelected = selectedProduction.has(item.id)
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => toggleProduction(item.id)}
-                  className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1.5 ${
-                    isSelected
-                      ? "bg-amber-500/15 border-amber-500 text-white shadow-md shadow-amber-500/10 ring-1 ring-amber-500"
-                      : "bg-zinc-900/60 border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/20"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className={`text-xs font-bold ${isSelected ? "text-amber-400" : "text-white"}`}>
-                      {item.name}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">
+              Viáticos Producción / Flete Equipo ($)
+            </Label>
+            <Input
+              type="number"
+              min={0}
+              step={200}
+              value={viaticosProduccion || ""}
+              onChange={(e) => setViaticosProduccion(Number(e.target.value) || 0)}
+              placeholder="0"
+              className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B]"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Rider Técnico (>100 pax) */}
+      <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-border space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                <Speaker className="w-3.5 h-3.5 text-[#6F0D2B] dark:text-rose-400" /> Rider Técnico & Producción {guestCount ? `(Aforo: ${guestCount} pax)` : ""}
+              </span>
+              {guestCount && guestCount > 100 ? (
+                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30">
+                  Recomendado para &gt;100 pax
+                </span>
+              ) : null}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Checkboxes sobrios para elementos técnicos. Precios contemplan costo con proveedor y margen de oficina.
+            </p>
+          </div>
+          <span className="text-xs font-mono font-bold text-foreground px-2.5 py-1 rounded-lg bg-muted border border-border/60 self-start sm:self-auto">
+            Total Producción: {MXN(productionClientTotal)}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-border/50">
+          {PRODUCTION_CATALOG.map((item) => {
+            const isSelected = selectedProduction.has(item.id)
+            return (
+              <div
+                key={item.id}
+                onClick={() => toggleProduction(item.id)}
+                className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1.5 ${
+                  isSelected
+                    ? "bg-[#6F0D2B]/5 dark:bg-[#6F0D2B]/15 border-[#6F0D2B] text-foreground shadow-xs ring-1 ring-[#6F0D2B]"
+                    : "bg-white dark:bg-zinc-900 border-border text-foreground hover:bg-slate-50 dark:hover:bg-zinc-800/50"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-bold ${isSelected ? "text-[#6F0D2B] dark:text-rose-400" : "text-foreground"}`}>
+                    {item.name}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-mono font-black text-foreground">
+                      {MXN(item.clientPrice)}
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-mono font-black text-white">
-                        {MXN(item.clientPrice)}
-                      </span>
-                      {isSelected ? (
-                        <CheckCircle2 className="w-4 h-4 text-amber-400" />
-                      ) : (
-                        <div className="w-4 h-4 rounded-full border border-white/30" />
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-tight">
-                    {item.description}
-                  </p>
-                  <div className="text-[10px] text-gray-400 font-mono flex items-center justify-between pt-1 border-t border-white/5">
-                    <span>Proveedor: {MXN(item.providerCost)}</span>
-                    <span className="text-emerald-400 font-bold">Oficina: +{MXN(item.officeMargin)}</span>
+                    {isSelected ? (
+                      <CheckCircle2 className="w-4 h-4 text-[#6F0D2B] dark:text-rose-400" />
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border border-border" />
+                    )}
                   </div>
                 </div>
-              )
-            })}
-          </div>
+                <p className="text-[11px] text-muted-foreground leading-tight">
+                  {item.description}
+                </p>
+                <div className="text-[10px] text-muted-foreground font-mono flex items-center justify-between pt-1 border-t border-border/40">
+                  <span>Proveedor: {MXN(item.providerCost)}</span>
+                  <span className="text-emerald-700 dark:text-emerald-400 font-bold">Oficina: +{MXN(item.officeMargin)}</span>
+                </div>
+              </div>
+            )
+          })}
         </div>
-
-        {/* 5. Descuento / Ajuste Comercial */}
-        <div className="space-y-1.5">
-          <Label className="text-xs font-bold uppercase tracking-wider text-gray-300">
-            Descuento / Ajuste de Cortesía ($)
-          </Label>
-          <Input
-            type="number"
-            min={0}
-            step={500}
-            value={discountAmount || ""}
-            onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
-            placeholder="0"
-            className="bg-black/50 border-white/15 text-white h-11 rounded-xl text-sm font-mono focus:border-amber-500"
-          />
-        </div>
-
-        {/* 6. Anticipo: 30% Autocalculado con Toggle para Ajuste Manual */}
-        <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-200">
-                Anticipo de Apartado (30%)
-              </span>
-              <p className="text-[11px] text-muted-foreground">
-                {manualDeposit ? "Ajuste manual personalizado activo" : "30% autocalculado sobre total pactado"}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                const next = !manualDeposit
-                setManualDeposit(next)
-                if (!next) {
-                  setCustomDepositAmount(Math.round(subtotal * 0.3))
-                }
-              }}
-              className="flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
-            >
-              {manualDeposit ? (
-                <>
-                  <ToggleRight className="w-6 h-6 text-amber-400" />
-                  <span>Personalizado</span>
-                </>
-              ) : (
-                <>
-                  <ToggleLeft className="w-6 h-6 text-gray-500" />
-                  <span className="text-gray-400">Automático (30%)</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {manualDeposit ? (
-            <div className="pt-2 border-t border-white/10">
-              <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-300 mb-1.5 block">
-                Monto Manual de Anticipo ($)
-              </Label>
-              <Input
-                type="number"
-                min={0}
-                max={subtotal}
-                step={500}
-                value={customDepositAmount || ""}
-                onChange={(e) => setCustomDepositAmount(Number(e.target.value) || 0)}
-                className="bg-zinc-900 border-white/20 text-white h-10 rounded-xl text-sm font-mono focus:border-amber-500"
-              />
-            </div>
-          ) : null}
-        </div>
-
-        {/* 7. TARJETA PRIVADA DE ADMINISTRACIÓN: CONTROL DE UTILIDAD DE OFICINA */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-zinc-950 to-zinc-950 border-2 border-emerald-500/40 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-500/30">
-              <Lock className="w-3 h-3" /> Solo Visible para Administración
-            </span>
-            <span className="text-[11px] font-bold text-emerald-400 font-mono">
-              Control de Margen Interno
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
-            <div className="p-3 rounded-xl bg-black/40 border border-emerald-500/20 space-y-1">
-              <span className="text-[10px] uppercase font-bold text-gray-400 block">Margen Show (Base)</span>
-              <span className="text-base font-black text-white font-mono">{MXN(effectiveShowBase)}</span>
-              <span className="text-[10px] text-gray-500 block">Facturación base espectáculo</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-black/40 border border-emerald-500/20 space-y-1">
-              <span className="text-[10px] uppercase font-bold text-gray-400 block">Margen Producción</span>
-              <span className="text-base font-black text-emerald-400 font-mono">+{MXN(productionOfficeMarginTotal)}</span>
-              <span className="text-[10px] text-gray-500 block">Comisión neta de oficina</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-black/40 border border-emerald-500/30 space-y-1">
-              <span className="text-[10px] uppercase font-bold text-emerald-300 block">Ingreso Bruto Oficina</span>
-              <span className="text-base font-black text-emerald-300 font-mono">
-                {MXN(effectiveShowBase + productionOfficeMarginTotal - discountAmount)}
-              </span>
-              <span className="text-[10px] text-emerald-400/80 block">Show + Margen Prod - Descuento</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 8. Resumen Ejecutivo de Cierre (Lo que verá el cliente) */}
-        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs">
-          <div className="flex justify-between items-center text-gray-400">
-            <span>Paquete Show:</span>
-            <span className="text-white font-bold">{packageName}</span>
-          </div>
-          <div className="flex justify-between items-center text-gray-400">
-            <span>Show Vendetta {isForaneo ? "(Incluye +20% foráneo)" : ""}:</span>
-            <span className="text-white font-mono">{MXN(effectiveShowBase)}</span>
-          </div>
-          {totalViaticos > 0 && (
-            <div className="flex justify-between items-center text-gray-400">
-              <span>Viáticos Totales (Banda + Flete):</span>
-              <span className="text-white font-mono">{MXN(totalViaticos)}</span>
-            </div>
-          )}
-          {totalLineItems > 0 && (
-            <div className="flex justify-between items-center text-gray-400">
-              <span>Producción y Adicionales:</span>
-              <span className="text-cyan-400 font-mono font-bold">{MXN(totalLineItems)}</span>
-            </div>
-          )}
-          {discountAmount > 0 && (
-            <div className="flex justify-between items-center text-emerald-400">
-              <span>Descuento aplicado:</span>
-              <span className="font-mono font-bold">-{MXN(discountAmount)}</span>
-            </div>
-          )}
-          <div className="flex justify-between items-center text-white pt-2 border-t border-white/10 text-sm font-black">
-            <span>Total Pactado con Cliente:</span>
-            <span className="text-amber-400 font-mono text-base">{MXN(subtotal)}</span>
-          </div>
-          <div className="flex justify-between items-center text-gray-300">
-            <span>Anticipo para Apartar (30%):</span>
-            <span className="text-primary font-bold font-mono">{MXN(effectiveDeposit)}</span>
-          </div>
-          <div className="flex justify-between items-center text-gray-400">
-            <span>Saldo a Liquidar el Día del Show:</span>
-            <span className="text-white font-mono">{MXN(balancePending)}</span>
-          </div>
-        </div>
-
-        {/* 9. Botón Prioritario de Aprobación y Envío */}
-        <Button
-          type="button"
-          onClick={handleApproveAndSend}
-          disabled={loading || effectiveShowBase <= 0}
-          className={`w-full h-13 rounded-2xl font-black uppercase text-xs sm:text-sm tracking-wider gap-2 shadow-xl cursor-pointer transition-all disabled:opacity-50 ${
-            isApproved
-              ? "bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-600/25"
-              : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black shadow-amber-500/25 font-black"
-          }`}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Procesando y Despachando WhatsApp...
-            </>
-          ) : isApproved ? (
-            <>
-              <CheckCircle2 className="w-5 h-5" />
-              Actualizar y Reenviar Propuesta por WhatsApp
-            </>
-          ) : (
-            <>
-              <Send className="w-5 h-5" />
-              Aprobar y Enviar Propuesta por WhatsApp
-            </>
-          )}
-        </Button>
-
-        <p className="text-center text-[11px] text-muted-foreground">
-          Al confirmar, el estatus pasará a <strong className="text-cyan-400 font-bold">propuesta_enviada</strong> y se despachará el mensaje oficial con el enlace a <code className="text-white font-mono">/status/{shortId}</code>.
-        </p>
       </div>
+
+      {/* 6. Descuento / Cortesía */}
+      <div className="space-y-1.5">
+        <Label className="text-xs font-bold text-foreground">
+          Descuento / Ajuste de Cortesía ($)
+        </Label>
+        <Input
+          type="number"
+          min={0}
+          step={500}
+          value={discountAmount || ""}
+          onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
+          placeholder="0"
+          className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B]"
+        />
+      </div>
+
+      {/* 7. Anticipo: 30% Autocalculado con Toggle para Ajuste Manual */}
+      <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-border space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+              Anticipo de Apartado (30%)
+            </span>
+            <p className="text-[11px] text-muted-foreground">
+              {manualDeposit ? "Ajuste manual personalizado activo" : "30% autocalculado sobre total pactado"}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              const next = !manualDeposit
+              setManualDeposit(next)
+              if (!next) {
+                setCustomDepositAmount(Math.round(subtotal * 0.3))
+              }
+            }}
+            className="flex items-center gap-1.5 text-xs font-bold text-foreground hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            {manualDeposit ? (
+              <>
+                <ToggleRight className="w-6 h-6 text-[#6F0D2B] dark:text-rose-400" />
+                <span className="text-[#6F0D2B] dark:text-rose-400 font-bold">Personalizado</span>
+              </>
+            ) : (
+              <>
+                <ToggleLeft className="w-6 h-6 text-muted-foreground" />
+                <span className="text-muted-foreground">Automático (30%)</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {manualDeposit ? (
+          <div className="pt-2 border-t border-border/50">
+            <Label className="text-[11px] font-bold text-foreground mb-1.5 block">
+              Monto Manual de Anticipo ($)
+            </Label>
+            <Input
+              type="number"
+              min={0}
+              max={subtotal}
+              step={500}
+              value={customDepositAmount || ""}
+              onChange={(e) => setCustomDepositAmount(Number(e.target.value) || 0)}
+              className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B]"
+            />
+          </div>
+        ) : null}
+      </div>
+
+      {/* 8. Tarjeta de Margen Interno (Solo Visible para Administración) */}
+      <div className="p-4 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-600/10 text-emerald-800 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-600/20">
+            <Lock className="w-3 h-3" /> Solo Administración
+          </span>
+          <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-400 font-mono">
+            Control de Margen Interno
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+          <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/30 space-y-0.5">
+            <span className="text-[10px] uppercase font-bold text-muted-foreground block">Margen Show (Base)</span>
+            <span className="text-sm font-black text-foreground font-mono">{MXN(effectiveShowBase)}</span>
+          </div>
+
+          <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/30 space-y-0.5">
+            <span className="text-[10px] uppercase font-bold text-muted-foreground block">Margen Producción</span>
+            <span className="text-sm font-black text-emerald-700 dark:text-emerald-400 font-mono">+{MXN(productionOfficeMarginTotal)}</span>
+          </div>
+
+          <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/30 space-y-0.5">
+            <span className="text-[10px] uppercase font-bold text-muted-foreground block">Utilidad Proyectada</span>
+            <span className="text-sm font-black text-emerald-700 dark:text-emerald-400 font-mono">
+              {MXN(effectiveShowBase + productionOfficeMarginTotal - discountAmount)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 9. Resumen Financiero Ejecutivo (Lo que verá el cliente) */}
+      <div className="p-4 rounded-xl bg-slate-50/90 dark:bg-zinc-800/50 border border-border space-y-2 text-xs">
+        <div className="flex justify-between items-center text-muted-foreground">
+          <span>Formato de Show:</span>
+          <span className="text-foreground font-bold">{packageName}</span>
+        </div>
+        <div className="flex justify-between items-center text-muted-foreground">
+          <span>Show Vendetta {isForaneo ? "(Incluye +20% foráneo)" : ""}:</span>
+          <span className="text-foreground font-mono font-bold">{MXN(effectiveShowBase)}</span>
+        </div>
+        {totalViaticos > 0 && (
+          <div className="flex justify-between items-center text-muted-foreground">
+            <span>Viáticos Totales (Banda + Flete):</span>
+            <span className="text-foreground font-mono font-bold">{MXN(totalViaticos)}</span>
+          </div>
+        )}
+        {totalLineItems > 0 && (
+          <div className="flex justify-between items-center text-muted-foreground">
+            <span>Producción y Adicionales:</span>
+            <span className="text-foreground font-mono font-bold">{MXN(totalLineItems)}</span>
+          </div>
+        )}
+        {discountAmount > 0 && (
+          <div className="flex justify-between items-center text-emerald-700 dark:text-emerald-400">
+            <span>Descuento aplicado:</span>
+            <span className="font-mono font-bold">-{MXN(discountAmount)}</span>
+          </div>
+        )}
+        <div className="flex justify-between items-center text-foreground pt-2 border-t border-border text-sm font-black">
+          <span>Total Pactado con Cliente:</span>
+          <span className="text-[#6F0D2B] dark:text-rose-400 font-mono text-base">{MXN(subtotal)}</span>
+        </div>
+        <div className="flex justify-between items-center text-muted-foreground">
+          <span>Anticipo para Apartar (30%):</span>
+          <span className="text-foreground font-bold font-mono">{MXN(effectiveDeposit)}</span>
+        </div>
+        <div className="flex justify-between items-center text-muted-foreground">
+          <span>Saldo a Liquidar el Día del Show:</span>
+          <span className="text-foreground font-mono">{MXN(balancePending)}</span>
+        </div>
+      </div>
+
+      {/* 10. Botón Único Principal de Cierre y Aprobación */}
+      <Button
+        type="button"
+        onClick={handleApproveAndSend}
+        disabled={loading || effectiveShowBase <= 0}
+        className={`w-full h-12 rounded-xl font-bold uppercase text-xs sm:text-sm tracking-wider gap-2 shadow-xs cursor-pointer transition-all disabled:opacity-50 ${
+          isApproved
+            ? "bg-cyan-700 hover:bg-cyan-800 text-white"
+            : "bg-[#6F0D2B] hover:bg-[#580a22] text-white"
+        }`}
+      >
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Procesando y Despachando WhatsApp...
+          </>
+        ) : isApproved ? (
+          <>
+            <CheckCircle2 className="w-4 h-4" />
+            Actualizar y Reenviar Propuesta por WhatsApp
+          </>
+        ) : (
+          <>
+            <Send className="w-4 h-4" />
+            Aprobar y Enviar Propuesta por WhatsApp
+          </>
+        )}
+      </Button>
+
+      <p className="text-center text-[11px] text-muted-foreground">
+        Al confirmar, el estatus pasará a <strong className="text-foreground font-bold">propuesta_enviada</strong> y se despachará el mensaje oficial con el enlace a <code className="font-mono">/status/{shortId}</code>.
+      </p>
     </div>
   )
 }
+
