@@ -121,7 +121,7 @@ export function ClientWhatsappActions({
               }`}
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-              {isSent ? "Reenviar Mensaje Oficial" : "Enviar Mensaje Oficial"}
+              {isSent ? "Reenviar WhatsApp" : "Enviar WhatsApp"}
             </Button>
           </div>
         </div>
@@ -142,7 +142,7 @@ export function ClientWhatsappActions({
               className="w-full transition-all rounded-lg h-10 gap-2 font-bold shadow-sm border-purple-600/40 text-purple-600 hover:bg-purple-600 hover:text-white" 
             >
               {loadingThanks ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-              Enviar Agradecimiento
+              Agradecimiento
             </Button>
           </div>
         )}
@@ -155,7 +155,7 @@ export function ClientWhatsappActions({
             title="Copia el texto de la plantilla para pegarlo manualmente."
           >
             <Copy className="w-4 h-4" />
-            Copiar Texto Manual
+            Copiar Texto
           </Button>
         )}
 
@@ -166,7 +166,7 @@ export function ClientWhatsappActions({
         >
           <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="w-4 h-4" />
-            Abrir Chat en WhatsApp
+            Abrir WhatsApp
           </a>
         </Button>
       </div>

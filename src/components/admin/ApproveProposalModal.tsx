@@ -177,12 +177,12 @@ export function ApproveProposalModal({
           {isApproved ? (
             <>
               <CheckCircle2 className="w-4 h-4" />
-              Reenviar Propuesta Aprobada por WhatsApp
+              Reenviar Propuesta
             </>
           ) : (
             <>
               <Send className="w-4 h-4" />
-              Aprobar y Enviar Propuesta por WhatsApp
+              Aprobar y Enviar
             </>
           )}
         </Button>
@@ -404,12 +404,12 @@ export function ApproveProposalModal({
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Aprobando y Despachando...
+                Enviando...
               </>
             ) : (
               <>
                 <Send className="w-4 h-4" />
-                Confirmar y Enviar WhatsApp
+                Confirmar y Enviar
               </>
             )}
           </Button>

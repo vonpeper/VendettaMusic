@@ -374,7 +374,7 @@ export function PremiumClientQuoteView({
               {isSigned && downloadContractUrl && (
                 <Button size="sm" asChild className="bg-emerald-700 hover:bg-emerald-600 text-white shrink-0 text-xs font-black h-10 rounded-xl px-4 shadow-sm">
                   <a href={downloadContractUrl} target="_blank" rel="noopener noreferrer">
-                    <Download className="w-3.5 h-3.5 mr-1.5" /> 📄 Descargar Contrato en PDF
+                    <Download className="w-3.5 h-3.5 mr-1.5" /> Descargar Contrato
                   </a>
                 </Button>
               )}
@@ -418,9 +418,9 @@ export function PremiumClientQuoteView({
                   const el = document.getElementById("modulo-firma-contrato")
                   if (el) el.scrollIntoView({ behavior: "smooth" })
                 }}
-                className="h-13 px-6 sm:px-8 rounded-2xl bg-white text-black hover:bg-gray-100 font-black text-xs sm:text-sm uppercase tracking-wider shrink-0 shadow-lg cursor-pointer transition-all hover:scale-[1.02] relative z-10"
+                className="h-12 px-6 sm:px-8 rounded-2xl bg-white text-black hover:bg-gray-100 font-bold text-xs sm:text-sm uppercase tracking-wider shrink-0 shadow-lg cursor-pointer transition-all hover:scale-[1.02] relative z-10"
               >
-                ✍️ Firmar Contrato en Línea para Apartar Fecha
+                ✍️ Firmar Contrato
               </Button>
             </div>
           ) : (
@@ -445,7 +445,7 @@ export function PremiumClientQuoteView({
                   className="bg-emerald-700 hover:bg-emerald-600 text-white font-black text-xs h-11 px-5 rounded-xl shadow-sm shrink-0 cursor-pointer"
                 >
                   <a href={downloadContractUrl} target="_blank" rel="noopener noreferrer">
-                    <Download className="w-4 h-4 mr-1.5" /> 📄 Descargar Contrato en PDF
+                    <Download className="w-4 h-4 mr-1.5" /> Descargar Contrato
                   </a>
                 </Button>
               )}
@@ -493,7 +493,7 @@ export function PremiumClientQuoteView({
               )}
               <Button size="sm" asChild className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl h-10 px-4 shadow-md shadow-emerald-700/30">
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="w-4 h-4 mr-1.5" /> WhatsApp Producción
+                  <MessageCircle className="w-4 h-4 mr-1.5" /> WhatsApp
                 </a>
               </Button>
             </div>
@@ -1059,7 +1059,7 @@ export function PremiumClientQuoteView({
                         <Button
                           type="submit"
                           disabled={isSubmittingDeposit}
-                          className="w-full h-11 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-md shadow-red-600/30 transition-all gap-2"
+                          className="w-full h-11 bg-red-600 hover:bg-red-500 text-white font-bold uppercase tracking-wider text-xs rounded-xl shadow-md shadow-red-600/30 transition-all gap-2"
                         >
                           {isSubmittingDeposit ? (
                             <>
@@ -1067,7 +1067,7 @@ export function PremiumClientQuoteView({
                             </>
                           ) : (
                             <>
-                              <CheckCircle2 className="w-4 h-4" /> Notificar y Apartar Fecha
+                              <CheckCircle2 className="w-4 h-4" /> Apartar Fecha
                             </>
                           )}
                         </Button>

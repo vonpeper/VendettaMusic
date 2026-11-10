@@ -38,7 +38,7 @@ export function EvolutionTestButton() {
       ) : (
         <ShieldCheck className="w-4 h-4 mr-2" />
       )}
-      Probar Conexión con la API
+      Probar Conexión
     </Button>
   )
 }

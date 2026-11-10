@@ -555,7 +555,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                       rel="noopener noreferrer"
                     >
                       <ExternalLink className="w-4 h-4" />
-                      Abrir WhatsApp Directo
+                      WhatsApp
                     </a>
                   </Button>
 
@@ -582,7 +582,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                       }).toString()}`}
                     >
                       <FilePlus2 className="w-4 h-4" />
-                      Nueva Cotización para este Cliente
+                      Nueva Cotización
                     </Link>
                   </Button>
 

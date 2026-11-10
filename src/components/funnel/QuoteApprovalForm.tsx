@@ -219,13 +219,13 @@ export function QuoteApprovalForm({
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-[0.15em] rounded-xl shadow-lg shadow-primary/20 gap-2"
+            className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-primary/20 gap-2 text-xs sm:text-sm"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                Confirmar y Enviar Aprobación
+                Apartar Fecha
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

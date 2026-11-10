@@ -112,7 +112,7 @@ export function BookingActions({
           ? <Loader2 className="w-4 h-4 animate-spin" />
           : <Check className="w-4 h-4" />
         }
-        Publicar Show en Agenda Ahora
+        Publicar Show
       </Button>
     )
   }

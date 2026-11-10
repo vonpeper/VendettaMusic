@@ -253,7 +253,7 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
                 >
                   <a href={downloadContractUrl || `/api/admin/contract/${bookingId}?t=${Date.now()}`} target="_blank" rel="noreferrer">
                     <FileText className="w-4 h-4" />
-                    Descargar Contrato PDF
+                    Descargar Contrato
                   </a>
                 </Button>
               </div>
@@ -288,10 +288,10 @@ DÉCIMA SÉPTIMA.- LOGÍSTICA EXTENDIDA Y SERVICIOS FORÁNEOS: Se considerarán 
           {!showPad ? (
             <Button 
               onClick={() => setShowPad(true)}
-              className="w-full h-14 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-[0.15em] rounded-2xl shadow-lg shadow-red-600/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2"
+              className="w-full h-14 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-wider rounded-2xl shadow-lg shadow-red-600/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2"
             >
               <FileText className="w-5 h-5" />
-              Leer y Firmar Contrato
+              Firmar Contrato
             </Button>
           ) : (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

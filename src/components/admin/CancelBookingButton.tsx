@@ -107,7 +107,7 @@ export function CancelBookingButton({
             disabled={loading}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Sí, cancelar y borrar todo
+            Sí, eliminar
           </Button>
         </DialogFooter>
       </DialogContent>

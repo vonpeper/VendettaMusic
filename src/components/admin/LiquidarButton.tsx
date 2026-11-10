@@ -35,7 +35,7 @@ export function LiquidarButton({ bookingId }: { bookingId: string }) {
       className="w-full border-green-500/30 text-green-400 hover:bg-green-600 hover:text-white font-bold rounded-xl h-10 gap-2"
     >
       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-      Liquidar Pago Total
+      Liquidar Pago
     </Button>
   )
 }

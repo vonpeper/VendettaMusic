@@ -42,7 +42,7 @@ export function GoogleSyncAllButton() {
       ) : (
         <RefreshCw className="w-5 h-5 mr-2 group-hover:rotate-180 transition-transform duration-500" />
       )}
-      Sincronizar Todos los Eventos Existentes
+      Sincronizar Eventos
     </Button>
   )
 }

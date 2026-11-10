@@ -795,7 +795,7 @@ export function CommercialClosingCard({
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5" />
-                  {totalViaticos > 0 ? "Recalcular con Maps" : "Calcular con Google Maps"}
+                  {totalViaticos > 0 ? "Recalcular" : "Calcular Ruta"}
                 </>
               )}
             </Button>
@@ -1011,7 +1011,7 @@ export function CommercialClosingCard({
               onClick={handleAddCustomItem}
               className="h-7 text-xs font-bold text-primary hover:bg-primary/10 cursor-pointer gap-1"
             >
-              <Plus className="w-3.5 h-3.5" /> Agregar el primer concepto extra
+              <Plus className="w-3.5 h-3.5" /> Agregar Concepto
             </Button>
           </div>
         ) : (
@@ -1290,12 +1290,12 @@ export function CommercialClosingCard({
               {loading ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Reenviando por WhatsApp...
+                  Reenviando...
                 </>
               ) : (
                 <>
                   <Send className="w-3.5 h-3.5" />
-                  Reenviar por WhatsApp
+                  Reenviar
                 </>
               )}
             </Button>
@@ -1327,17 +1327,17 @@ export function CommercialClosingCard({
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Procesando y Despachando WhatsApp...
+                  Enviando...
                 </>
               ) : isApproved ? (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  Actualizar y Reenviar Propuesta por WhatsApp
+                  Actualizar y Reenviar
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  Aprobar y Enviar Propuesta por WhatsApp
+                  Aprobar y Enviar
                 </>
               )}
             </Button>

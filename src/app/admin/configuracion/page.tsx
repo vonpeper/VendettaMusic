@@ -141,7 +141,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                     <p className="text-[10px] text-muted-foreground">Recibe avisos cuando un cliente confirma un evento desde el funnel.</p>
                   </div>
                   <Button type="submit" className="w-full bg-green-600 hover:bg-green-500 font-bold mt-2 text-white">
-                    Guardar Configuración WhatsApp
+                    Guardar WhatsApp
                   </Button>
                 </ConfigFormWrapper>
                 
@@ -176,7 +176,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                   <Link href="/admin/notificaciones" className="w-full">
                     <Button variant="outline" className="w-full border-primary/30 hover:bg-primary/10 text-primary group h-10 font-bold text-xs">
                       <MessageSquare className="w-4 h-4 mr-2" />
-                      Ver Historial de Mensajes Enviados
+                      Historial de Mensajes
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
@@ -220,7 +220,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                   <Link href="/admin/analytics">
                     <Button variant="outline" size="sm" className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 font-bold text-xs h-9">
                       <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
-                      Ver Métricas en Dashboard
+                      Ver Métricas
                       <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                     </Button>
                   </Link>
@@ -301,7 +301,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                   </div>
 
                   <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold mt-2 text-white text-xs h-10">
-                    Guardar Configuración Google Suite
+                    Guardar Google Suite
                   </Button>
                 </ConfigFormWrapper>
 
@@ -321,7 +321,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                   
                   <Button variant="outline" className="w-full border-blue-500/30 hover:bg-blue-500/10 text-blue-400 group h-12" disabled={!config?.googleClientId} asChild>
                     <a href="/api/auth/google?returnTo=/admin/configuracion?tab=integraciones">
-                      {config?.googleRefreshToken ? "Re-vincular / Actualizar Permisos Google" : "Vincular Cuenta de Google"}
+                      {config?.googleRefreshToken ? "Re-vincular Google" : "Vincular Google"}
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </a>
                   </Button>
@@ -387,7 +387,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                     />
                   </div>
                   <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold mt-2 text-white">
-                    Guardar Webhook Secret
+                    Guardar Secret
                   </Button>
                 </ConfigFormWrapper>
               </div>
@@ -427,7 +427,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                     </p>
                   </div>
                   <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-500 font-bold mt-2 text-white">
-                    Guardar API Key de Google Maps
+                    Guardar Maps
                   </Button>
                 </ConfigFormWrapper>
               </div>
@@ -498,7 +498,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
 
                 <div className="pt-4">
                   <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 font-bold h-12 text-white">
-                    Guardar Configuración SEO
+                    Guardar SEO
                   </Button>
                 </div>
               </ConfigFormWrapper>
@@ -552,7 +552,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                 </div>
                 <div className="md:col-span-2">
                   <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 font-bold h-12 text-white">
-                    Guardar Redes Sociales
+                    Guardar Redes
                   </Button>
                 </div>
               </ConfigFormWrapper>
@@ -673,7 +673,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
 
                 <div className="w-full">
                   <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold h-12 text-lg text-white rounded-xl transition-all">
-                    Actualizar Tarifas y Zonas
+                    Guardar Viáticos
                   </Button>
                 </div>
               </ConfigFormWrapper>
@@ -778,7 +778,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
 
                 <div className="pt-4">
                   <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500 font-bold h-12 text-white text-lg">
-                    Guardar Textos Legales
+                    Guardar Textos
                   </Button>
                 </div>
               </ConfigFormWrapper>
@@ -890,7 +890,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                   </div>
 
                   <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 font-bold h-12 text-white">
-                    Guardar Configuración de Pagos
+                    Guardar Pasarelas
                   </Button>
                 </ConfigFormWrapper>
               </div>
@@ -948,7 +948,7 @@ export default async function AdminConfiguracionPage({ searchParams }: Props) {
                     <Input id="bankBeneficiary" name="bankBeneficiary" defaultValue={config?.bankBeneficiary || ""} className="bg-card border-border/40" />
                   </div>
                   <Button type="submit" className="w-full bg-primary hover:bg-primary/90 font-bold mt-2 text-white md:col-span-2">
-                    Guardar Datos Bancarios
+                    Guardar Cuentas
                   </Button>
                 </ConfigFormWrapper>
               </div>

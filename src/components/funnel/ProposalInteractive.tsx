@@ -298,11 +298,11 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
           <Button
             asChild
             variant="outline"
-            className="border-border/40 hover:bg-foreground/5 text-xs font-black uppercase tracking-widest h-10 gap-2 rounded-xl"
+            className="border-border/40 hover:bg-foreground/5 text-xs font-bold uppercase tracking-wider h-10 gap-2 rounded-xl"
           >
             <a href={downloadQuoteUrl} target="_blank" rel="noreferrer">
               <Download className="w-4 h-4" />
-              Descargar Cotización PDF (Borrador)
+              Descargar Cotización
             </a>
           </Button>
         </div>
@@ -417,12 +417,12 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
             <Button
               type="submit"
               disabled={savingLegal}
-              className="h-11 px-6 bg-primary hover:bg-primary/95 text-primary-foreground font-black uppercase tracking-widest rounded-xl"
+              className="h-11 px-6 bg-primary hover:bg-primary/95 text-primary-foreground font-bold uppercase tracking-wider rounded-xl text-xs"
             >
               {savingLegal ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : null}
-              Guardar Datos Legales
+              Guardar Datos
             </Button>
           </div>
         </form>
@@ -443,13 +443,13 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
               <Button
                 onClick={handleAcceptProposal}
                 disabled={accepting}
-                className="h-12 px-8 bg-green-600 hover:bg-green-700 text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-green-900/20 gap-2"
+                className="h-12 px-8 bg-green-600 hover:bg-green-700 text-white font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-green-900/20 gap-2 text-xs sm:text-sm"
               >
                 {accepting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    Aceptar y Bloquear Propuesta
+                    Aceptar Propuesta
                     <ChevronRight className="w-4 h-4" />
                   </>
                 )}
@@ -475,14 +475,14 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
                 onClick={handleRequestChanges}
                 disabled={requestingChanges}
                 variant="outline"
-                className="border-primary/50 text-primary hover:bg-primary/5 text-xs font-black uppercase tracking-widest h-10 px-5 rounded-xl gap-2 w-full sm:w-auto"
+                className="border-primary/50 text-primary hover:bg-primary/5 text-xs font-bold uppercase tracking-wider h-10 px-5 rounded-xl gap-2 w-full sm:w-auto"
               >
                 {requestingChanges ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
                     <RefreshCw className="w-4 h-4" />
-                    Solicitar Ajustes / Nueva Versión
+                    Solicitar Ajustes
                   </>
                 )}
               </Button>
@@ -490,11 +490,11 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
               {/* Botón de descarga de Cotización definitiva */}
               <Button
                 asChild
-                className="bg-primary/20 text-primary hover:bg-primary/30 border border-primary/50 text-xs font-black uppercase tracking-widest h-10 px-5 rounded-xl gap-2 w-full sm:w-auto"
+                className="bg-primary/20 text-primary hover:bg-primary/30 border border-primary/50 text-xs font-bold uppercase tracking-wider h-10 px-5 rounded-xl gap-2 w-full sm:w-auto"
               >
                 <a href={downloadQuoteUrl} target="_blank" rel="noreferrer">
                   <Download className="w-4 h-4" />
-                  Descargar Cotización (Aceptada)
+                  Descargar Cotización
                 </a>
               </Button>
             </div>

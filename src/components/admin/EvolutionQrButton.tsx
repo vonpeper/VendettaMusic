@@ -40,12 +40,12 @@ export function EvolutionQrButton() {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Generando QR (Logout previo)...
+              Generando QR...
             </>
           ) : (
             <>
               <QrCode className="w-4 h-4" />
-              Vincular WhatsApp (Generar QR)
+              Vincular WhatsApp
             </>
           )}
         </Button>

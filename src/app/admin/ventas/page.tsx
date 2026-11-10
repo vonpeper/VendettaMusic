@@ -151,7 +151,7 @@ export default async function AdminVentasPage() {
           </Button>
           <Link href="/admin/ventas/manual" className="w-full sm:w-auto">
             <Button className="w-full bg-blue-600 hover:bg-blue-700 gap-2 h-11 px-6 rounded-xl font-bold shadow-lg shadow-blue-600/20 text-white">
-              <Plus className="w-5 h-5" /> Nueva Cotización Manual
+              <Plus className="w-5 h-5" /> Nueva Cotización
             </Button>
           </Link>
         </div>

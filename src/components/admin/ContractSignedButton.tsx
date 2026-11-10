@@ -38,10 +38,10 @@ export function ContractSignedButton({ bookingId, isSigned }: { bookingId: strin
     <Button 
       onClick={handleConfirm}
       disabled={loading}
-      className="bg-blue-600 hover:bg-blue-500 text-white gap-2 font-black uppercase text-[10px] tracking-widest h-11 px-6 rounded-xl shadow-lg shadow-blue-500/20"
+      className="bg-blue-600 hover:bg-blue-500 text-white gap-2 font-bold uppercase text-xs tracking-wider h-11 px-5 rounded-xl shadow-lg shadow-blue-500/20"
     >
       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileCheck className="w-4 h-4" />}
-      Confirmar Firma de Contrato
+      Confirmar Firma
     </Button>
   )
 }
