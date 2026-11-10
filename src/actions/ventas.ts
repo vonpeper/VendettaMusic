@@ -1275,6 +1275,7 @@ export interface ApproveProposalInput {
   lineItems?: ApproveProposalLineItemInput[]
   mapsLink?: string
   customMusicianPay?: number | null
+  saveOnly?: boolean
 }
 
 export async function updateBookingLocationAction(params: {
@@ -1407,7 +1408,7 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
           isOutsideZone: params.isOutsideZone ?? booking.isOutsideZone,
           ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
           ...(params.customMusicianPay !== undefined ? { customMusicianPay: params.customMusicianPay } : {}),
-          status: "propuesta_enviada"
+          ...(params.saveOnly ? {} : { status: "propuesta_enviada" })
         }
       })
 
@@ -1429,13 +1430,31 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
       }
 
       // 4. Si tiene ContactInquiry asociado, sincronizar estatus
-      if (booking.sourceInquiryId) {
+      if (!params.saveOnly && booking.sourceInquiryId) {
         await tx.contactInquiry.update({
           where: { id: booking.sourceInquiryId },
           data: { status: "propuesta_enviada" }
         }).catch(() => {})
       }
     })
+
+    if (params.saveOnly) {
+      revalidatePath("/admin/ventas")
+      revalidatePath(`/admin/ventas/${booking.id}`)
+      if (booking.shortId) {
+        revalidatePath(`/admin/ventas/${booking.shortId}`)
+        revalidatePath(`/propuesta/${booking.shortId}`)
+        revalidatePath(`/status/${booking.shortId}`)
+      }
+      revalidatePath("/admin/ventas/[id]", "page")
+      revalidatePath("/admin/eventos")
+      revalidatePath("/admin")
+
+      return {
+        success: true,
+        message: "Cotización actualizada y guardada con éxito."
+      }
+    }
 
     // 5. Enviar WhatsApp oficial al cliente con el enlace personalizado https://vendetta.mx/status/{folio}
     const cleanPhone = (booking.clientPhone || booking.client?.whatsapp || "").replace(/\D/g, "")

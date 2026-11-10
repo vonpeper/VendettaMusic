@@ -444,8 +444,8 @@ export function UnifiedEventQuoteForm({
   }, [basePrice, defaultPackagePrice, selectedPackage])
 
   const [viaticosAmount, setViaticosAmount] = useState<number | null>(() => {
-    if (initialData?.viaticosAmount !== undefined && initialData?.viaticosAmount !== null) return Number(initialData.viaticosAmount)
-    if (initialData?.bookingRequest?.viaticosAmount !== undefined && initialData?.bookingRequest?.viaticosAmount !== null) return Number(initialData.bookingRequest.viaticosAmount)
+    const rawViaticos = initialData?.viaticosAmount ?? initialData?.viaticos ?? initialData?.bookingRequest?.viaticosAmount
+    if (rawViaticos !== undefined && rawViaticos !== null) return Number(rawViaticos)
     const city = initialData?.venueCity || initialData?.city || initialData?.clientCity || initialData?.bookingRequest?.city || ""
     const state = initialData?.venueState || initialData?.state || initialData?.bookingRequest?.state || "Estado de México"
     if (city) {
@@ -482,11 +482,16 @@ export function UnifiedEventQuoteForm({
   // Flag explícito para indicar si el usuario activó anticipo manual
   const [isManualDeposit, setIsManualDeposit] = useState<boolean>(() => {
     const rawDep = initialData?.depositAmount ?? initialData?.deposit ?? initialData?.bookingRequest?.depositAmount
-    return rawDep !== undefined && rawDep !== null
+    if (rawDep === undefined || rawDep === null) return false
+    const num = Number(rawDep)
+    if (num <= 0) return false
+    const totalEst = Number(initialData?.totalAmount || initialData?.amount || initialData?.baseAmount || 0)
+    if (totalEst > 0 && Math.abs(num - Math.round(totalEst * 0.5)) <= 50) return false
+    return true
   })
   const [depositAmount, setDepositAmount] = useState<number | null>(() => {
     const rawDep = initialData?.depositAmount ?? initialData?.deposit ?? initialData?.bookingRequest?.depositAmount
-    if (rawDep !== undefined && rawDep !== null) return Number(rawDep)
+    if (rawDep !== undefined && rawDep !== null && Number(rawDep) > 0) return Number(rawDep)
     return null
   })
 
@@ -576,9 +581,9 @@ export function UnifiedEventQuoteForm({
 
   const draftKey = useMemo(() => `vendetta_event_draft_${mode}_${targetId || "new"}`, [mode, targetId])
 
-  // Restaurar borrador si el usuario refrescó la página por error de skew
+  // Restaurar borrador si el usuario refrescó la página por error de skew (solo modo create)
   useEffect(() => {
-    if (typeof window === "undefined") return
+    if (typeof window === "undefined" || mode === "edit") return
     try {
       const raw = sessionStorage.getItem(draftKey)
       if (raw) {
@@ -614,11 +619,11 @@ export function UnifiedEventQuoteForm({
         }
       }
     } catch {}
-  }, [draftKey, initialData])
+  }, [draftKey, initialData, mode])
 
-  // Guardar borrador en caliente mientras el usuario teclea
+  // Guardar borrador en caliente mientras el usuario teclea (solo modo create)
   useEffect(() => {
-    if (typeof window === "undefined" || !clientName) return
+    if (typeof window === "undefined" || mode === "edit" || !clientName) return
     const draft = {
       selectedClientId, clientName, clientPhone, clientEmail, clientCity,
       customName, isPublic, ceremonyType, eventDate, startTime, endTime, arrivalTime, setupTime,

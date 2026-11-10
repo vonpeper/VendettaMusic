@@ -335,6 +335,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 packageName: booking.packageName,
                 basePrice: resolvedBase,
                 baseAmount: resolvedBase,
+                viaticos: resolvedViaticos,
                 viaticosAmount: resolvedViaticos,
                 discountAmount: resolvedDiscount,
                 deposit: booking.event.deposit ?? resolvedDeposit,
@@ -397,6 +398,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
                 setupTime: booking.setupTime,
                 dressCode: booking.dressCode,
                 musicianNotes: booking.musicianNotes,
+                viaticos: resolvedViaticos,
                 viaticosAmount: resolvedViaticos,
                 discountAmount: resolvedDiscount,
                 lineItems: lineItems,
@@ -464,7 +466,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
           <div className="lg:col-span-2 space-y-8">
             {/* Ficha de Cierre Comercial Ejecutiva */}
             <CommercialClosingCard
-              key={`closing-card-${booking.id}-${resolvedBase}-${resolvedViaticos}-${resolvedDiscount}-${lineItemsTotal}`}
+              key={`closing-card-${booking.id}-${resolvedBase}-${resolvedViaticos}-${resolvedDiscount}-${lineItemsTotal}-${(booking.lineItems || []).length}`}
               bookingId={booking.id}
               shortId={booking.shortId || ""}
               clientName={finalClientName}
@@ -491,6 +493,7 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               initialDeposit={booking.depositAmount || 0}
               initialLineItemsTotal={lineItemsTotal}
               initialLineItems={booking.lineItems}
+              packagesList={packagesMappedForModal}
               initialCustomMusicianPay={booking.customMusicianPay ?? booking.event?.customMusicianPay}
               initialStaffPay={booking.customStaffPay ?? booking.event?.customStaffPay}
               musiciansCount={booking.event?.musicians?.length || 4}

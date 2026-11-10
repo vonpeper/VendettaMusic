@@ -24,7 +24,11 @@ import {
   MapPin,
   Users,
   ShieldCheck,
-  Receipt
+  Receipt,
+  Plus,
+  Trash2,
+  Layers,
+  Save
 } from "lucide-react"
 import { approveAndSendProposalAction, ApproveProposalLineItemInput } from "@/actions/ventas"
 import { formatDateMX } from "@/lib/utils"
@@ -126,6 +130,13 @@ interface CommercialClosingCardProps {
   musiciansCount?: number
   initialInvoice?: boolean
   isContractSigned?: boolean
+}
+
+export interface CustomClosingLineItem {
+  id: string
+  description: string
+  quantity: number
+  unitCost: number
 }
 
 const MXN = (v: number) =>
@@ -332,23 +343,70 @@ export function CommercialClosingCard({
 
   const [selectedProduction, setSelectedProduction] = useState<Set<string>>(initialProductionIds)
 
-  // Otros line items que no pertenecen al catálogo de producción
-  const otherLineItems = useMemo(() => {
-    if (!initialLineItems) return []
-    return initialLineItems.filter(li => {
-      const desc = (li.description || "").toLowerCase()
-      const isCatalog =
-        desc.includes("integral") ||
-        desc.includes("templete") ||
-        desc.includes("pista") ||
-        (desc.includes("audio") && (desc.includes("500") || desc.includes("iluminación")))
-      return !isCatalog
-    })
-  }, [initialLineItems])
+  // Conceptos adicionales personalizados interactivos con costos configurables
+  const [customLineItems, setCustomLineItems] = useState<CustomClosingLineItem[]>(() => {
+    if (!initialLineItems || initialLineItems.length === 0) return []
+    return initialLineItems
+      .filter(li => {
+        const desc = (li.description || "").toLowerCase()
+        const isCatalog =
+          desc.includes("integral") ||
+          desc.includes("templete") ||
+          desc.includes("pista") ||
+          (desc.includes("audio") && (desc.includes("500") || desc.includes("iluminación")))
+        return !isCatalog
+      })
+      .map(li => ({
+        id: li.id || `custom-${Math.random().toString(36).substring(2, 9)}`,
+        description: li.description || "",
+        quantity: typeof li.quantity === "number" && li.quantity > 0 ? li.quantity : 1,
+        unitCost: typeof li.unitCost === "number" ? li.unitCost : Number(li.lineTotal) || 0,
+      }))
+  })
 
-  const otherLineItemsTotal = useMemo(() => {
-    return otherLineItems.reduce((acc, it) => acc + (Number(it.lineTotal) || 0), 0)
-  }, [otherLineItems])
+  const customLineItemsTotal = useMemo(() => {
+    return customLineItems.reduce((acc, it) => acc + ((it.quantity || 1) * (it.unitCost || 0)), 0)
+  }, [customLineItems])
+
+  const handleAddCustomItem = () => {
+    setCustomLineItems(prev => [
+      ...prev,
+      {
+        id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        description: "",
+        quantity: 1,
+        unitCost: 0
+      }
+    ])
+  }
+
+  const handleUpdateCustomItem = (
+    id: string,
+    field: "description" | "quantity" | "unitCost",
+    val: string | number
+  ) => {
+    setCustomLineItems(prev =>
+      prev.map(item => {
+        if (item.id !== id) return item
+        if (field === "quantity") {
+          const q = Math.max(1, Math.floor(Number(val) || 1))
+          return { ...item, quantity: q }
+        }
+        if (field === "unitCost") {
+          const c = Math.max(0, Number(val) || 0)
+          return { ...item, unitCost: c }
+        }
+        if (field === "description") {
+          return { ...item, description: String(val) }
+        }
+        return item
+      })
+    )
+  }
+
+  const handleRemoveCustomItem = (id: string) => {
+    setCustomLineItems(prev => prev.filter(item => item.id !== id))
+  }
 
   const toggleProduction = (id: string) => {
     setSelectedProduction(prev => {
@@ -386,7 +444,7 @@ export function CommercialClosingCard({
   const effectiveShowBase = rawBaseAmount + foraneoSurcharge
 
   // Subtotal acordado (Base Show + Viáticos + Producción/Adicionales - Descuento)
-  const totalLineItems = productionClientTotal + otherLineItemsTotal
+  const totalLineItems = productionClientTotal + customLineItemsTotal
   const subtotal = Math.max(0, effectiveShowBase + totalViaticos + totalLineItems - discountAmount)
 
   // Facturación fiscal IVA (16%)
@@ -432,13 +490,14 @@ export function CommercialClosingCard({
     setTimeout(() => setCopiedLink(false), 2500)
   }
 
-  const handleApproveAndSend = async () => {
+  const handleApproveAndSend = async (options?: { saveOnly?: boolean }) => {
     if (effectiveShowBase <= 0) {
-      toast.error("El precio base del show debe ser mayor a $0 para aprobar la propuesta.")
+      toast.error("El precio base del show debe ser mayor a $0 para guardar la propuesta.")
       return
     }
 
     setLoading(true)
+    const isSaveOnly = Boolean(options?.saveOnly)
     try {
       const lineItemsToSave: ApproveProposalLineItemInput[] = [
         ...PRODUCTION_CATALOG.filter(p => selectedProduction.has(p.id)).map(p => ({
@@ -447,12 +506,14 @@ export function CommercialClosingCard({
           unitCost: p.clientPrice,
           lineTotal: p.clientPrice
         })),
-        ...otherLineItems.map(item => ({
-          description: item.description,
-          quantity: item.quantity || 1,
-          unitCost: item.unitCost,
-          lineTotal: item.lineTotal
-        }))
+        ...customLineItems
+          .filter(item => item.description.trim().length > 0)
+          .map(item => ({
+            description: item.description.trim(),
+            quantity: item.quantity || 1,
+            unitCost: item.unitCost || 0,
+            lineTotal: (item.quantity || 1) * (item.unitCost || 0)
+          }))
       ]
 
       const res = await approveAndSendProposalAction({
@@ -466,18 +527,21 @@ export function CommercialClosingCard({
         lineItems: lineItemsToSave,
         isOutsideZone: isForaneo,
         mapsLink: currentMapsLink?.trim() || undefined,
-        customMusicianPay: initialCustomMusicianPay ?? undefined
+        customMusicianPay: initialCustomMusicianPay ?? undefined,
+        saveOnly: isSaveOnly
       })
 
       if (res.success) {
-        toast.success(res.message || "Propuesta aprobada y enviada al cliente por WhatsApp.")
+        toast.success(
+          res.message || (isSaveOnly ? "Cotización guardada exitosamente." : "Propuesta aprobada y enviada al cliente por WhatsApp.")
+        )
         router.refresh()
       } else {
-        toast.error(res.error || "No se pudo procesar la aprobación.")
+        toast.error(res.error || "No se pudo procesar la solicitud.")
       }
     } catch (err) {
-      console.error("Error approving proposal:", err)
-      toast.error("Error de comunicación al enviar la propuesta.")
+      console.error("Error saving proposal:", err)
+      toast.error("Error de comunicación al procesar la cotización.")
     } finally {
       setLoading(false)
     }
@@ -907,6 +971,129 @@ export function CommercialClosingCard({
         </div>
       </div>
 
+      {/* 5.1 Conceptos Adicionales Personalizados */}
+      <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-border space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-[#6F0D2B] dark:text-rose-400" /> Conceptos Adicionales Personalizados
+            </span>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Horas extras, intervenciones especiales, audio extendido o servicios a la medida del cliente.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold text-foreground px-2.5 py-1 rounded-lg bg-muted border border-border/60">
+              Total Extras: {MXN(customLineItemsTotal)}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddCustomItem}
+              className="h-8 px-2.5 text-xs font-bold gap-1 rounded-lg border-primary/30 text-primary hover:bg-primary/10 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Agregar Concepto</span>
+            </Button>
+          </div>
+        </div>
+
+        {customLineItems.length === 0 ? (
+          <div className="py-4 px-3 rounded-xl border border-dashed border-border/70 text-center space-y-1.5 bg-white/40 dark:bg-zinc-900/40">
+            <p className="text-xs text-muted-foreground">
+              No hay conceptos personalizados registrados.
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleAddCustomItem}
+              className="h-7 text-xs font-bold text-primary hover:bg-primary/10 cursor-pointer gap-1"
+            >
+              <Plus className="w-3.5 h-3.5" /> Agregar el primer concepto extra
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-2.5 pt-2 border-t border-border/50">
+            {customLineItems.map((item, idx) => {
+              const lineTotal = (item.quantity || 1) * (item.unitCost || 0)
+              return (
+                <div
+                  key={item.id}
+                  className="p-3 rounded-xl border border-border bg-white dark:bg-zinc-900 shadow-2xs space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-3"
+                >
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-[10px] font-bold text-muted-foreground uppercase">
+                      Descripción del Concepto #{idx + 1}
+                    </Label>
+                    <Input
+                      type="text"
+                      value={item.description}
+                      onChange={(e) => handleUpdateCustomItem(item.id, "description", e.target.value)}
+                      placeholder="Ej. 1 Hora Extra de Banda, Saxofonista para Cóctel, etc."
+                      className="bg-slate-50/50 dark:bg-zinc-800/50 border-border h-9 rounded-lg text-xs"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 sm:w-auto">
+                    <div className="w-20 space-y-1">
+                      <Label className="text-[10px] font-bold text-muted-foreground uppercase">
+                        Cant.
+                      </Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={item.quantity}
+                        onChange={(e) => handleUpdateCustomItem(item.id, "quantity", e.target.value)}
+                        className="bg-slate-50/50 dark:bg-zinc-800/50 border-border h-9 rounded-lg text-xs font-mono text-center"
+                      />
+                    </div>
+
+                    <div className="w-28 space-y-1">
+                      <Label className="text-[10px] font-bold text-muted-foreground uppercase">
+                        Precio ($)
+                      </Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={100}
+                        value={item.unitCost || ""}
+                        onChange={(e) => handleUpdateCustomItem(item.id, "unitCost", e.target.value)}
+                        placeholder="0"
+                        className="bg-slate-50/50 dark:bg-zinc-800/50 border-border h-9 rounded-lg text-xs font-mono"
+                      />
+                    </div>
+
+                    <div className="w-24 space-y-1 text-right">
+                      <Label className="text-[10px] font-bold text-muted-foreground uppercase block">
+                        Total
+                      </Label>
+                      <div className="h-9 flex items-center justify-end font-mono font-bold text-xs text-foreground">
+                        {MXN(lineTotal)}
+                      </div>
+                    </div>
+
+                    <div className="pt-4 sm:pt-4">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveCustomItem(item.id)}
+                        className="h-9 w-9 text-muted-foreground hover:text-red-600 hover:bg-red-500/10 rounded-lg cursor-pointer"
+                        title="Eliminar concepto"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
       {/* 6. Descuento / Cortesía y Facturación Fiscal */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1.5">
@@ -1082,59 +1269,84 @@ export function CommercialClosingCard({
             <span>✅ Evento Confirmado & Propuesta Aprobada</span>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleApproveAndSend}
-            disabled={loading}
-            className="w-full h-10 rounded-xl text-xs font-semibold border-border hover:bg-muted text-muted-foreground hover:text-foreground gap-2 cursor-pointer"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Reenviando por WhatsApp...
-              </>
-            ) : (
-              <>
-                <Send className="w-3.5 h-3.5" />
-                Reenviar propuesta por WhatsApp
-              </>
-            )}
-          </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleApproveAndSend({ saveOnly: true })}
+              disabled={loading || effectiveShowBase <= 0}
+              className="h-10 rounded-xl text-xs font-bold border-border hover:bg-muted gap-2 cursor-pointer shadow-2xs"
+            >
+              {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Guardar Cambios
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleApproveAndSend({ saveOnly: false })}
+              disabled={loading}
+              className="h-10 rounded-xl text-xs font-semibold border-border hover:bg-muted text-muted-foreground hover:text-foreground gap-2 cursor-pointer"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Reenviando por WhatsApp...
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  Reenviar por WhatsApp
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       ) : (
-        <Button
-          type="button"
-          onClick={handleApproveAndSend}
-          disabled={loading || effectiveShowBase <= 0}
-          className={`w-full h-12 rounded-xl font-bold uppercase text-xs sm:text-sm tracking-wider gap-2 shadow-xs cursor-pointer transition-all disabled:opacity-50 ${
-            isApproved
-              ? "bg-cyan-700 hover:bg-cyan-800 text-white"
-              : "bg-[#6F0D2B] hover:bg-[#580a22] text-white"
-          }`}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Procesando y Despachando WhatsApp...
-            </>
-          ) : isApproved ? (
-            <>
-              <CheckCircle2 className="w-4 h-4" />
-              Actualizar y Reenviar Propuesta por WhatsApp
-            </>
-          ) : (
-            <>
-              <Send className="w-4 h-4" />
-              Aprobar y Enviar Propuesta por WhatsApp
-            </>
-          )}
-        </Button>
+        <div className="space-y-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleApproveAndSend({ saveOnly: true })}
+              disabled={loading || effectiveShowBase <= 0}
+              className="h-12 sm:col-span-1 rounded-xl font-bold text-xs uppercase tracking-wider gap-2 border-border hover:bg-muted text-foreground cursor-pointer shadow-xs"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 text-primary" />}
+              Guardar Cambios
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleApproveAndSend({ saveOnly: false })}
+              disabled={loading || effectiveShowBase <= 0}
+              className={`h-12 sm:col-span-2 rounded-xl font-bold uppercase text-xs sm:text-sm tracking-wider gap-2 shadow-xs cursor-pointer transition-all disabled:opacity-50 ${
+                isApproved
+                  ? "bg-cyan-700 hover:bg-cyan-800 text-white"
+                  : "bg-[#6F0D2B] hover:bg-[#580a22] text-white"
+              }`}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Procesando y Despachando WhatsApp...
+                </>
+              ) : isApproved ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  Actualizar y Reenviar Propuesta por WhatsApp
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Aprobar y Enviar Propuesta por WhatsApp
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       )}
 
       <p className="text-center text-[11px] text-muted-foreground">
-        Al confirmar, el estatus pasará a <strong className="text-foreground font-bold">propuesta_enviada</strong> y se despachará el mensaje oficial con el enlace a <code className="font-mono">/status/{shortId}</code>.
+        Usa <strong className="text-foreground font-bold">Guardar Cambios</strong> para actualizar la cotización internamente, o <strong className="text-foreground font-bold">Aprobar y Enviar</strong> para despachar la propuesta oficial con el folio <code className="font-mono">/status/{shortId}</code> por WhatsApp.
       </p>
     </div>
   )
