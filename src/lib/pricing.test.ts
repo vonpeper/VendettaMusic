@@ -148,32 +148,32 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
   it("debe calcular el split de costos y nómina (calculateEventCostBreakdown) para privados y bares", async () => {
     const { calculateEventCostBreakdown } = await import("./pricing")
 
-    // Privado 2 Horas ($8,500): Músicos $1,675 c/u, Staff $600, Vendetta $1,200, Dueño Total $2,875
+    // Privado 2 Horas ($8,500): Músicos $1,500 c/u, Staff $600, Vendetta $1,900, Dueño Total $3,400
     const priv2h = calculateEventCostBreakdown(2, "privado")
     assert.equal(priv2h.totalPrice, 8500)
-    assert.equal(priv2h.musicianPayEach, 1675)
-    assert.equal(priv2h.musiciansTotal, 6700)
+    assert.equal(priv2h.musicianPayEach, 1500)
+    assert.equal(priv2h.musiciansTotal, 6000)
     assert.equal(priv2h.staffPay, 600)
-    assert.equal(priv2h.audioAndOfficeProfit, 1200)
-    assert.equal(priv2h.ownerTotalTakeHome, 2875)
+    assert.equal(priv2h.audioAndOfficeProfit, 1900)
+    assert.equal(priv2h.ownerTotalTakeHome, 3400)
 
-    // Privado 3 Horas ($13,500): Músicos $2,675 c/u, Staff $900, Vendetta $1,900, Dueño Total $4,575
+    // Privado 3 Horas ($13,500): Músicos $2,250 c/u ($750/hr), Staff $900, Vendetta $3,600, Dueño Total $5,850
     const priv3h = calculateEventCostBreakdown(3, "privado")
     assert.equal(priv3h.totalPrice, 13500)
-    assert.equal(priv3h.musicianPayEach, 2675)
-    assert.equal(priv3h.musiciansTotal, 10700)
+    assert.equal(priv3h.musicianPayEach, 2250)
+    assert.equal(priv3h.musiciansTotal, 9000)
     assert.equal(priv3h.staffPay, 900)
-    assert.equal(priv3h.audioAndOfficeProfit, 1900)
-    assert.equal(priv3h.ownerTotalTakeHome, 4575)
+    assert.equal(priv3h.audioAndOfficeProfit, 3600)
+    assert.equal(priv3h.ownerTotalTakeHome, 5850)
 
-    // Privado 5 Horas ($23,500): Músicos $4,675 c/u, Staff $1,500, Vendetta $3,300, Dueño Total $7,975
+    // Privado 5 Horas ($23,500): Músicos $3,750 c/u ($750/hr), Staff $1,500, Vendetta $7,000, Dueño Total $10,750
     const priv5h = calculateEventCostBreakdown(5, "privado")
     assert.equal(priv5h.totalPrice, 23500)
-    assert.equal(priv5h.musicianPayEach, 4675)
-    assert.equal(priv5h.musiciansTotal, 18700)
+    assert.equal(priv5h.musicianPayEach, 3750)
+    assert.equal(priv5h.musiciansTotal, 15000)
     assert.equal(priv5h.staffPay, 1500)
-    assert.equal(priv5h.audioAndOfficeProfit, 3300)
-    assert.equal(priv5h.ownerTotalTakeHome, 7975)
+    assert.equal(priv5h.audioAndOfficeProfit, 7000)
+    assert.equal(priv5h.ownerTotalTakeHome, 10750)
 
     // Bar 2 Horas ($3,800): Músicos $850 c/u, Staff $400, Vendetta $0 (0 comisión), Dueño Total $850
     const bar = calculateEventCostBreakdown(2, "bar")
@@ -331,23 +331,24 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
   it("debe calcular el tabulador proporcional de pago a músicos y respetar montos personalizados", async () => {
     const { calculateSuggestedMusicianPay } = await import("./pricing")
 
-    // Regla base: 2h = $1,200 ($600/hr)
-    assert.equal(calculateSuggestedMusicianPay(2, 1200), 1200)
+    // Regla base oficial: 2h = $1,500 base por músico
+    assert.equal(calculateSuggestedMusicianPay(2), 1500)
+    assert.equal(calculateSuggestedMusicianPay(2, 1500), 1500)
 
-    // Horas adicionales proporcionales:
-    // 3h: ($1,200 / 2) * 3 = $1,800
-    assert.equal(calculateSuggestedMusicianPay(3, 1200), 1800)
-    // 4h: ($1,200 / 2) * 4 = $2,400
-    assert.equal(calculateSuggestedMusicianPay(4, 1200), 2400)
-    // 5h: ($1,200 / 2) * 5 = $3,000
-    assert.equal(calculateSuggestedMusicianPay(5, 1200), 3000)
+    // Horas adicionales proporcionales ($750/hr):
+    // 3h: ($1,500 / 2) * 3 = $2,250
+    assert.equal(calculateSuggestedMusicianPay(3), 2250)
+    // 4h: ($1,500 / 2) * 4 = $3,000
+    assert.equal(calculateSuggestedMusicianPay(4), 3000)
+    // 5h: ($1,500 / 2) * 5 = $3,750
+    assert.equal(calculateSuggestedMusicianPay(5), 3750)
 
-    // Base custom (ej. $1,400 para 2h -> $700/hr):
-    assert.equal(calculateSuggestedMusicianPay(3, 1400), 2100)
+    // Base custom (ej. $1,800 para 2h -> $900/hr):
+    assert.equal(calculateSuggestedMusicianPay(3, 1800), 2700)
 
     // Custom musician pay directo (sobreescribe la regla proporcional):
-    assert.equal(calculateSuggestedMusicianPay(3, 1200, 2200), 2200)
-    assert.equal(calculateSuggestedMusicianPay(2, 1200, 1500), 1500)
+    assert.equal(calculateSuggestedMusicianPay(3, 1500, 2200), 2200)
+    assert.equal(calculateSuggestedMusicianPay(2, 1500, 1800), 1800)
   })
 })
 

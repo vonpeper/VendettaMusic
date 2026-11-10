@@ -256,6 +256,21 @@ async function runTests() {
     console.log("✅ Test 8 Passed!");
     global.fetch = tempFetch3;
 
+    // Test 9: Google Maps URL con coordenadas en zona local (Hacienda La Puerta en Metepec)
+    console.log("👉 Test 9: Google Maps URL con coordenadas locales (Hacienda La Puerta, Metepec)");
+    mockConfig.viaticosVehicleCount = 2;
+    mockConfig.viaticosLocalRadius = 25.0;
+    clearViaticosCache();
+    const haciendaUrl = "https://www.google.com/maps/place/Hacienda+La+Puerta/@19.3647272,-99.7056305,17z/data=!3m1!4b1!4m6!3m5!1s0x85d27773236cfcb9:0xbf85bfab71916a1!8m2!3d19.3647222!4d-99.7030556!16s%2Fg%2F11ckqzf1bv";
+    const resultHacienda = await calculateViaticos(haciendaUrl, "escape_2014");
+    console.log("📍 Result Hacienda La Puerta URL:", resultHacienda);
+    assert.strictEqual(resultHacienda.viaticosAmount, 0);
+    assert.strictEqual(resultHacienda.tollCost, 0);
+    assert.strictEqual(resultHacienda.fuelCost, 0);
+    assert.strictEqual(resultHacienda.requiresManualQuote, false);
+    assert.ok(resultHacienda.distanceKm <= 25.0);
+    console.log("✅ Test 9 Passed!");
+
     console.log("🎉 All tests in googleMaps.test.ts PASSED successfully!");
   } catch (err) {
     console.error("❌ Test failed:", err);

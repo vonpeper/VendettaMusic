@@ -14,7 +14,7 @@ const ZONA_LOCAL = [
   "toluca", "toluca de lerdo", "metepec", "zinacantepec", "zinaca", "ocoyoacac", "san mateo atenco", "lerma",
   "santiago tianguistenco", "tianguistenco", "capulhuac", "xonacatlan",
   "almoloya de juarez", "temoaya", "otzolotepec", "mexicaltzingo", "calimaya",
-  "tenango del valle", "san antonio la isla", "rayon", "chapultepec",
+  "tenango del valle", "tenango", "san antonio la isla", "rayon", "chapultepec",
   "almoloya del rio", "santa cruz atizapan", "texcalyacac", "joquicingo"
 ]
 
@@ -120,3 +120,6 @@ export function calcularViatcos(city: string, state?: string, config?: ViaticosC
     description: "Destino foráneo. Un asesor calculará la logística exacta en la llamada."
   }
 }
+
+export const calcularViaticos = calcularViatcos
+

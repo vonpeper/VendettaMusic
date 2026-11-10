@@ -324,10 +324,11 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
                 value={formData.originalPrice} 
                 onChange={e => {
                   const original = parseFloat(e.target.value) || 0
+                  const discount = original > formData.baseAmount ? Math.max(0, original - formData.baseAmount) : 0
                   setFormData({
                     ...formData, 
                     originalPrice: original,
-                    discountAmount: original - formData.baseAmount
+                    discountAmount: discount
                   })
                 }}
                 className="bg-background border-blue-500/30"
@@ -342,10 +343,11 @@ export function EditBookingDialog({ booking, config }: { booking: any, config?: 
                 onChange={e => {
                   const val = parseFloat(e.target.value) || 0
                   const newDeposit = !isManualDeposit ? Math.round((val + (formData.viaticosAmount || 0)) * 0.5) : formData.depositAmount
+                  const discount = (formData.originalPrice > val && val > 0) ? Math.max(0, formData.originalPrice - val) : 0
                   setFormData({
                     ...formData, 
                     baseAmount: val,
-                    discountAmount: formData.originalPrice - val,
+                    discountAmount: discount,
                     depositAmount: newDeposit
                   })
                 }}

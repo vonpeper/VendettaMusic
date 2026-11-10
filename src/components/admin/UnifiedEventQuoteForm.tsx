@@ -411,8 +411,16 @@ export function UnifiedEventQuoteForm({
 
   const [basePrice, setBasePrice] = useState<number | null>(() => {
     if (initialData?.basePrice !== undefined && initialData?.basePrice !== null && Number(initialData.basePrice) > 0) return Number(initialData.basePrice)
-    if (initialData?.amount !== undefined && initialData?.amount !== null && Number(initialData.amount) > 0) return Number(initialData.amount)
     if (initialData?.baseAmount !== undefined && initialData?.baseAmount !== null && Number(initialData.baseAmount) > 0) return Number(initialData.baseAmount)
+    if (initialData?.bookingRequest?.baseAmount !== undefined && initialData?.bookingRequest?.baseAmount !== null && Number(initialData.bookingRequest.baseAmount) > 0) return Number(initialData.bookingRequest.baseAmount)
+    if (initialData?.amount !== undefined && initialData?.amount !== null && Number(initialData.amount) > 0) {
+      const discount = Number(initialData.discountAmount || initialData.bookingRequest?.discountAmount || 0)
+      return Number(initialData.amount) + discount
+    }
+    if (initialData?.bookingRequest?.amount !== undefined && initialData?.bookingRequest?.amount !== null && Number(initialData.bookingRequest.amount) > 0) {
+      const discount = Number(initialData.discountAmount || initialData.bookingRequest?.discountAmount || 0)
+      return Number(initialData.bookingRequest.amount) + discount
+    }
     
     // Auto-cálculo predeterminado si no viene precio explícito (> 0)
     const targetPkg = (initialData?.packageId ? packages.find(p => p.id === initialData.packageId) : null)
@@ -445,6 +453,23 @@ export function UnifiedEventQuoteForm({
     }
     return null
   })
+  const [viaticosDetails, setViaticosDetails] = useState<{
+    distanceKm?: number
+    tollCost?: number
+    fuelCost?: number
+  } | null>(() => {
+    const toll = initialData?.tollCost ?? initialData?.bookingRequest?.tollCost
+    const fuel = initialData?.fuelCost ?? initialData?.bookingRequest?.fuelCost
+    const dist = initialData?.distanceKm ?? initialData?.bookingRequest?.distanceKm
+    if (toll || fuel || dist) {
+      return {
+        distanceKm: dist ? Number(dist) : undefined,
+        tollCost: toll ? Number(toll) : undefined,
+        fuelCost: fuel ? Number(fuel) : undefined,
+      }
+    }
+    return null
+  })
   const [discountAmount, setDiscountAmount] = useState<number | null>(() => {
     if (initialData?.discountAmount !== undefined && initialData?.discountAmount !== null) return Number(initialData.discountAmount)
     if (initialData?.bookingRequest?.discountAmount !== undefined && initialData?.bookingRequest?.discountAmount !== null) return Number(initialData.bookingRequest.discountAmount)
@@ -455,8 +480,15 @@ export function UnifiedEventQuoteForm({
   )
 
   // Flag explícito para indicar si el usuario activó anticipo manual
-  const [isManualDeposit, setIsManualDeposit] = useState<boolean>(false)
-  const [depositAmount, setDepositAmount] = useState<number | null>(null)
+  const [isManualDeposit, setIsManualDeposit] = useState<boolean>(() => {
+    const rawDep = initialData?.depositAmount ?? initialData?.deposit ?? initialData?.bookingRequest?.depositAmount
+    return rawDep !== undefined && rawDep !== null
+  })
+  const [depositAmount, setDepositAmount] = useState<number | null>(() => {
+    const rawDep = initialData?.depositAmount ?? initialData?.deposit ?? initialData?.bookingRequest?.depositAmount
+    if (rawDep !== undefined && rawDep !== null) return Number(rawDep)
+    return null
+  })
 
   const [additionalItems, setAdditionalItems] = useState<AdditionalLineItem[]>(() => {
     const raw = initialData?.lineItems || initialData?.items || initialData?.bookingRequest?.lineItems
@@ -696,7 +728,7 @@ export function UnifiedEventQuoteForm({
   const [calculatingViaticos, setCalculatingViaticos] = useState(false)
 
   async function handleAutoCalculateViaticos(explicitDestination?: string) {
-    const rawDest = explicitDestination || [venueAddress, venueCity, venueState].filter(Boolean).join(", ") || venueCity || venueName || clientCity
+    const rawDest = explicitDestination || [venueAddress, venueCity, venueState].filter(Boolean).join(", ") || mapsLink || venueCity || venueName || clientCity
     const dest = typeof rawDest === "string" ? rawDest.trim() : ""
     if (!dest) {
       toast.error("Ingresa la dirección, ciudad o locación para calcular viáticos")
@@ -708,6 +740,11 @@ export function UnifiedEventQuoteForm({
       const data = await resp.json()
       if (data && typeof data.viaticosAmount === "number") {
         setViaticosAmount(data.viaticosAmount)
+        setViaticosDetails({
+          distanceKm: data.distanceKm,
+          tollCost: data.tollCost,
+          fuelCost: data.fuelCost,
+        })
 
         if (data.viaticosAmount === 0 && !data.isOutsideZone) {
           toast.success(`Ubicación en Zona Local: $0 MXN de viáticos (${data.distanceKm || 0} km)`)
@@ -715,6 +752,7 @@ export function UnifiedEventQuoteForm({
           const detailParts = []
           if (data.distanceKm) detailParts.push(`${data.distanceKm} km`)
           if (data.tollCost) detailParts.push(`casetas: $${data.tollCost.toLocaleString()}`)
+          if (data.fuelCost) detailParts.push(`gasolina: $${data.fuelCost.toLocaleString()}`)
           const detailStr = detailParts.length > 0 ? ` (${detailParts.join(", ")})` : ""
           toast.success(`Viáticos calculados: ${formatCurrencyMXN(data.viaticosAmount, false)}${detailStr}`)
         }
@@ -1669,7 +1707,16 @@ export function UnifiedEventQuoteForm({
                         viaticosAmount === 0 ? (
                           <span className="text-emerald-500 font-semibold">📍 Zona Local (Valle de Toluca / Metepec) — $0 MXN</span>
                         ) : (
-                          <span className="text-primary font-semibold">🚗 Viáticos estimados: {formatCurrencyMXN(viaticosAmount, false)}</span>
+                          <span className="text-primary font-semibold flex flex-wrap items-center gap-1.5">
+                            <span>🚗 Viáticos estimados: {formatCurrencyMXN(viaticosAmount, false)}</span>
+                            {viaticosDetails && (viaticosDetails.tollCost || viaticosDetails.fuelCost) ? (
+                              <span className="text-[11px] font-mono text-muted-foreground font-normal">
+                                ({viaticosDetails.tollCost ? `Casetas: $${viaticosDetails.tollCost.toLocaleString()}` : ""}
+                                {viaticosDetails.tollCost && viaticosDetails.fuelCost ? " | " : ""}
+                                {viaticosDetails.fuelCost ? `Gasolina: $${viaticosDetails.fuelCost.toLocaleString()}` : ""})
+                              </span>
+                            ) : null}
+                          </span>
                         )
                       ) : isOutsideZone ? (
                         <span className="text-amber-500 font-medium">⚠️ Zona Foránea detectada (+20% show y viáticos de traslado)</span>
@@ -1810,7 +1857,7 @@ export function UnifiedEventQuoteForm({
                             ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
                             : "bg-primary/20 text-primary"
                         }`}>
-                          {isManualDeposit ? "Monto Manual" : "30% Automático"}
+                          {isManualDeposit ? "Monto Manual" : "50% Automático"}
                         </span>
                       </Label>
                       <label className="text-[11px] text-muted-foreground flex items-center gap-1.5 cursor-pointer hover:text-foreground transition-colors select-none">
@@ -1845,8 +1892,8 @@ export function UnifiedEventQuoteForm({
                     />
                     <p className="text-[10px] text-muted-foreground mt-0.5">
                       {!isManualDeposit
-                        ? "Recalculado de forma automática como el 30% exacto del Total Final del Evento."
-                        : "Modo personalizado activo. Desmarca la casilla para restablecer el cálculo automático del 30%."}
+                        ? "Recalculado de forma automática como el 50% oficial del Total Final del Evento."
+                        : "Modo personalizado activo. Desmarca la casilla para restablecer el cálculo automático del 50%."}
                     </p>
                   </div>
                 </div>

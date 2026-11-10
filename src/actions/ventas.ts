@@ -7,25 +7,26 @@ import { formatDateMX } from "@/lib/utils"
 
 export async function markBookingAsCompleted(bookingId: string) {
   try {
-    await db.bookingRequest.update({
-      where: { id: bookingId },
-      data: { 
-        status: "completado",
-        paymentStatus: "paid"
-      }
-    })
-    
-    // Sincronizar con Event de forma segura
-    const br = await db.bookingRequest.findUnique({ where: { id: bookingId } })
-    if (br?.eventId) {
-      await db.event.updateMany({
-        where: { id: br.eventId },
+    await db.$transaction(async (tx) => {
+      const br = await tx.bookingRequest.update({
+        where: { id: bookingId },
         data: { 
           status: "completado",
-          balance: 0
+          paymentStatus: "paid"
         }
       })
-    }
+      
+      // Sincronizar con Event de forma atómica
+      if (br.eventId) {
+        await tx.event.updateMany({
+          where: { id: br.eventId },
+          data: { 
+            status: "completado",
+            balance: 0
+          }
+        })
+      }
+    })
 
     revalidatePath("/admin/ventas")
     revalidatePath("/admin/eventos")
@@ -415,49 +416,46 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
 
 export async function markBookingAsPaidAction(bookingId: string) {
   try {
-    const booking = await db.bookingRequest.update({
-      where: { id: bookingId },
-      data: { paymentStatus: "paid" }
-    })
-
-    if (booking.eventId) {
-      // Create payment record for the remaining balance
-      const event = await db.event.findUnique({
-        where: { id: booking.eventId },
-        include: { payments: true }
+    const booking = await db.$transaction(async (tx) => {
+      const b = await tx.bookingRequest.update({
+        where: { id: bookingId },
+        data: { paymentStatus: "paid", status: "completado" }
       })
-      
-      const total = booking.baseAmount + (booking.viaticosAmount || 0) - (booking.discountAmount || 0);
-      const paid = (event?.payments || []).filter(p => p.status === 'completed' || p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0);
-      const balance = total - paid;
-      
-      if (balance > 0) {
-        await db.payment.create({
-          data: {
-            eventId: booking.eventId,
-            bookingRequestId: booking.id,
-            amount: balance,
-            method: "TRANSFER",
-            status: "completed",
-            reference: "Liquidación Manual"
+
+      if (b.eventId) {
+        // Create payment record for the remaining balance
+        const event = await tx.event.findUnique({
+          where: { id: b.eventId },
+          include: { payments: true }
+        })
+        
+        const total = b.baseAmount + (b.viaticosAmount || 0) - (b.discountAmount || 0);
+        const paid = (event?.payments || []).filter(p => p.status === 'completed' || p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0);
+        const balance = total - paid;
+        
+        if (balance > 0) {
+          await tx.payment.create({
+            data: {
+              eventId: b.eventId,
+              bookingRequestId: b.id,
+              amount: balance,
+              method: "TRANSFER",
+              status: "completed",
+              reference: "Liquidación Manual"
+            }
+          })
+        }
+
+        await tx.event.update({
+          where: { id: b.eventId },
+          data: { 
+            balance: 0,
+            status: "completado"  // Excluye el anticipo del cálculo de "anticipos en banco" en eventualidades
           }
         })
       }
-
-      await db.event.update({
-        where: { id: booking.eventId },
-        data: { 
-          balance: 0,
-          status: "completado"  // Excluye el anticipo del cálculo de "anticipos en banco" en eventualidades
-        }
-      })
-
-      // También completar la BookingRequest
-      await db.bookingRequest.update({
-        where: { id: bookingId },
-        data: { status: "completado" }
-      })
-    }
+      return b
+    })
 
     // Alerta al Admin
     const { dispatchAdminAlert } = await import("@/lib/notifications")
@@ -680,7 +678,7 @@ export async function confirmDepositPaidAction(bookingId: string) {
       if (!updateRes.success) return updateRes
     }
 
-    // Calcular el anticipo requerido canónico (30%)
+    // Calcular el anticipo requerido canónico (50%)
     const lineItemsTotal = (booking.lineItems || []).reduce((acc: number, it: any) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
     const subtotal = Math.max(0, Number(booking.baseAmount || 0) + Number(booking.viaticosAmount || 0) + lineItemsTotal - Number(booking.discountAmount || 0))
     const hasInvoice = Boolean(booking.invoice)
@@ -688,47 +686,49 @@ export async function confirmDepositPaidAction(bookingId: string) {
     const totalCalc = subtotal + iva
     const deposit = (booking.depositAmount && booking.depositAmount > 0) ? booking.depositAmount : Math.round(totalCalc * 0.5)
 
-    await db.bookingRequest.update({
-      where: { id: bookingId },
-      data: {
-        paymentStatus: "paid",
-        depositAmount: deposit
-      }
-    })
+    await db.$transaction(async (tx) => {
+      await tx.bookingRequest.update({
+        where: { id: bookingId },
+        data: {
+          paymentStatus: "paid",
+          depositAmount: deposit
+        }
+      })
 
-    const updatedBooking = await db.bookingRequest.findUnique({ where: { id: bookingId } })
-    const eventId = updatedBooking?.eventId || booking.eventId
+      const updatedBooking = await tx.bookingRequest.findUnique({ where: { id: bookingId } })
+      const eventId = updatedBooking?.eventId || booking.eventId
 
-    if (eventId) {
-      // Crear registro de pago si no existe
-      const existingPayments = await db.payment.findMany({
-        where: { bookingRequestId: booking.id, status: { in: ["completed", "paid"] } }
-      });
-      
-      if (existingPayments.length === 0) {
-        await db.payment.create({
-          data: {
-            eventId: eventId,
-            bookingRequestId: booking.id,
-            amount: deposit,
-            method: "TRANSFER",
-            status: "completed",
-            reference: "Anticipo 30% Confirmado"
+      if (eventId) {
+        // Crear registro de pago si no existe
+        const existingPayments = await tx.payment.findMany({
+          where: { bookingRequestId: booking.id, status: { in: ["completed", "paid"] } }
+        });
+        
+        if (existingPayments.length === 0) {
+          await tx.payment.create({
+            data: {
+              eventId: eventId,
+              bookingRequestId: booking.id,
+              amount: deposit,
+              method: "TRANSFER",
+              status: "completed",
+              reference: "Anticipo 50% Confirmado"
+            }
+          })
+        }
+
+        // Al confirmar anticipo, actualizamos el balance del evento
+        const currentEvent = await tx.event.findUnique({ where: { id: eventId } })
+        const totalAmount = currentEvent?.totalWithTax || currentEvent?.amount || totalCalc
+        await tx.event.update({
+          where: { id: eventId },
+          data: { 
+            deposit: deposit,
+            balance: Math.max(0, totalAmount - deposit)
           }
         })
       }
-
-      // Al confirmar anticipo, actualizamos el balance del evento
-      const currentEvent = await db.event.findUnique({ where: { id: eventId } })
-      const totalAmount = currentEvent?.totalWithTax || currentEvent?.amount || totalCalc
-      await db.event.update({
-        where: { id: eventId },
-        data: { 
-          deposit: deposit,
-          balance: Math.max(0, totalAmount - deposit)
-        }
-      })
-    }
+    })
 
     revalidatePath("/admin/ventas")
     revalidatePath(`/admin/ventas/${bookingId}`)
@@ -786,64 +786,66 @@ export async function updateDepositAmountAction(bookingId: string, amount: numbe
     })
     if (!booking) return { success: false, error: "Reserva no encontrada" }
 
-    // 1. Actualizar BookingRequest
-    await db.bookingRequest.update({
-      where: { id: bookingId },
-      data: { 
-        depositAmount: amount,
-        paymentStatus: amount > 0 ? "paid" : "pendiente"
-      }
-    })
-
-    // 2. Si tiene evento sincronizado, actualizarlo también
-    if (booking.eventId) {
-      const discount = Number(booking.discountAmount || 0)
-      const lineItemsTotal = (booking.lineItems || []).reduce((acc: number, it: any) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
-      const subtotal = Math.max(0, Number(booking.baseAmount || 0) + Number(booking.viaticosAmount || 0) + lineItemsTotal - discount)
-      const hasInvoice = Boolean(booking.invoice || booking.event?.invoice)
-      const ivaAmount = hasInvoice ? (booking.event?.ivaAmount || Math.round(subtotal * 0.16 * 100) / 100) : 0
-      const totalWithTax = subtotal + ivaAmount
-      const balance = Math.max(0, totalWithTax - amount)
-
-      await db.event.update({
-        where: { id: booking.eventId },
-        data: {
-          deposit: amount,
-          balance: balance
+    await db.$transaction(async (tx) => {
+      // 1. Actualizar BookingRequest
+      await tx.bookingRequest.update({
+        where: { id: bookingId },
+        data: { 
+          depositAmount: amount,
+          paymentStatus: amount > 0 ? "paid" : "pendiente"
         }
       })
 
-      // 3. Sincronizar tabla de pagos (Payment)
-      const existingPayment = await db.payment.findFirst({
-        where: { bookingRequestId: bookingId }
-      })
+      // 2. Si tiene evento sincronizado, actualizarlo también
+      if (booking.eventId) {
+        const discount = Number(booking.discountAmount || 0)
+        const lineItemsTotal = (booking.lineItems || []).reduce((acc: number, it: any) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
+        const subtotal = Math.max(0, Number(booking.baseAmount || 0) + Number(booking.viaticosAmount || 0) + lineItemsTotal - discount)
+        const hasInvoice = Boolean(booking.invoice || booking.event?.invoice)
+        const ivaAmount = hasInvoice ? (booking.event?.ivaAmount || Math.round(subtotal * 0.16 * 100) / 100) : 0
+        const totalWithTax = subtotal + ivaAmount
+        const balance = Math.max(0, totalWithTax - amount)
 
-      if (existingPayment) {
-        if (amount > 0) {
-          await db.payment.update({
-            where: { id: existingPayment.id },
-            data: { amount }
-          })
-        } else {
-          // Si el anticipo se edita a 0, borramos el registro de pago
-          await db.payment.delete({
-            where: { id: existingPayment.id }
-          })
-        }
-      } else if (amount > 0) {
-        // Crear nuevo registro de pago
-        await db.payment.create({
+        await tx.event.update({
+          where: { id: booking.eventId },
           data: {
-            eventId: booking.eventId,
-            bookingRequestId: bookingId,
-            amount,
-            method: "TRANSFER",
-            status: "completed",
-            reference: "Anticipo Manual"
+            deposit: amount,
+            balance: balance
           }
         })
+
+        // 3. Sincronizar tabla de pagos (Payment)
+        const existingPayment = await tx.payment.findFirst({
+          where: { bookingRequestId: bookingId }
+        })
+
+        if (existingPayment) {
+          if (amount > 0) {
+            await tx.payment.update({
+              where: { id: existingPayment.id },
+              data: { amount }
+            })
+          } else {
+            // Si el anticipo se edita a 0, borramos el registro de pago
+            await tx.payment.delete({
+              where: { id: existingPayment.id }
+            })
+          }
+        } else if (amount > 0) {
+          // Crear nuevo registro de pago
+          await tx.payment.create({
+            data: {
+              eventId: booking.eventId,
+              bookingRequestId: bookingId,
+              amount,
+              method: "TRANSFER",
+              status: "completed",
+              reference: "Anticipo Manual"
+            }
+          })
+        }
       }
-    }
+    })
 
     revalidatePath("/admin/ventas")
     revalidatePath(`/admin/ventas/${bookingId}`)
@@ -969,41 +971,45 @@ export async function updateTotalAmountAction(
     const paidAmount = (booking.payments || []).filter(p => p.status === 'completed' || p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0)
     const balance = isPaid ? 0 : Math.max(0, totalWithTax - paidAmount)
 
-    // 1. Actualizar BookingRequest
-    await db.bookingRequest.update({
-      where: { id: bookingId },
-      data: {
-        baseAmount: finalBase,
-        viaticosAmount: finalViaticos,
-        discountAmount: finalDiscount,
-        depositAmount: finalDeposit,
-      }
-    })
-
-    // 2. Si tiene evento sincronizado, actualizarlo también
-    if (booking.eventId) {
-      await db.event.update({
-        where: { id: booking.eventId },
+    await db.$transaction(async (tx) => {
+      // 1. Actualizar BookingRequest
+      await tx.bookingRequest.update({
+        where: { id: bookingId },
         data: {
-          amount: subtotal,
-          deposit: finalDeposit,
-          ivaAmount: ivaAmount,
-          totalWithTax: totalWithTax,
-          balance: balance
+          baseAmount: finalBase,
+          viaticosAmount: finalViaticos,
+          discountAmount: finalDiscount,
+          depositAmount: finalDeposit,
         }
       })
 
-      if (booking.event?.quoteId) {
-        await db.quote.update({
-          where: { id: booking.event.quoteId },
-          data: { totalEstimated: totalWithTax }
-        }).catch(() => {})
-        await db.quoteItem.updateMany({
-          where: { quoteId: booking.event.quoteId },
-          data: { unitCost: finalBase }
-        }).catch(() => {})
-      }
+      // 2. Si tiene evento sincronizado, actualizarlo también
+      if (booking.eventId) {
+        await tx.event.update({
+          where: { id: booking.eventId },
+          data: {
+            amount: subtotal,
+            deposit: finalDeposit,
+            ivaAmount: ivaAmount,
+            totalWithTax: totalWithTax,
+            balance: balance
+          }
+        })
 
+        if (booking.event?.quoteId) {
+          await tx.quote.update({
+            where: { id: booking.event.quoteId },
+            data: { totalEstimated: totalWithTax }
+          }).catch(() => {})
+          await tx.quoteItem.updateMany({
+            where: { quoteId: booking.event.quoteId },
+            data: { unitCost: finalBase }
+          }).catch(() => {})
+        }
+      }
+    })
+
+    if (booking.eventId) {
       const { syncEventToGoogleCalendar } = await import("@/lib/google-calendar")
       syncEventToGoogleCalendar(booking.eventId).catch(e => console.error("Error syncing to Google Calendar:", e))
     }
@@ -1103,23 +1109,25 @@ export async function updateEventOperationalCostsAction(
     })
 
     if (booking) {
-      await db.bookingRequest.update({
-        where: { id: booking.id },
-        data: {
-          customMusicianPay: cleanMusicianPay,
-          customStaffPay: cleanStaffPay
-        }
-      })
-
-      if (booking.eventId) {
-        await db.event.update({
-          where: { id: booking.eventId },
+      await db.$transaction(async (tx) => {
+        await tx.bookingRequest.update({
+          where: { id: booking.id },
           data: {
             customMusicianPay: cleanMusicianPay,
             customStaffPay: cleanStaffPay
           }
         })
-      }
+
+        if (booking.eventId) {
+          await tx.event.update({
+            where: { id: booking.eventId },
+            data: {
+              customMusicianPay: cleanMusicianPay,
+              customStaffPay: cleanStaffPay
+            }
+          })
+        }
+      })
 
       revalidatePath("/admin/ventas")
       revalidatePath(`/admin/ventas/${booking.id}`)
@@ -1282,24 +1290,26 @@ export async function updateBookingLocationAction(params: {
     })
     if (!booking) return { success: false, error: "Solicitud no encontrada" }
 
-    await db.bookingRequest.update({
-      where: { id: params.bookingId },
-      data: {
-        ...(params.city !== undefined ? { city: params.city.trim(), municipio: params.city.trim() } : {}),
-        ...(params.state !== undefined ? { state: params.state.trim() } : {}),
-        ...(params.address !== undefined ? { address: params.address.trim() } : {}),
-        ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
-      }
-    })
-
-    if (booking.eventId) {
-      await db.event.update({
-        where: { id: booking.eventId },
+    await db.$transaction(async (tx) => {
+      await tx.bookingRequest.update({
+        where: { id: params.bookingId },
         data: {
+          ...(params.city !== undefined ? { city: params.city.trim(), municipio: params.city.trim() } : {}),
+          ...(params.state !== undefined ? { state: params.state.trim() } : {}),
+          ...(params.address !== undefined ? { address: params.address.trim() } : {}),
           ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
         }
-      }).catch(e => console.warn("Could not sync event location:", e))
-    }
+      })
+
+      if (booking.eventId) {
+        await tx.event.update({
+          where: { id: booking.eventId },
+          data: {
+            ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
+          }
+        })
+      }
+    })
 
     const { revalidatePath } = await import("next/cache")
     revalidatePath(`/admin/ventas/${params.bookingId}`)
@@ -1338,25 +1348,6 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
       return { success: false, error: "Solicitud de cotización no encontrada." }
     }
 
-    // 1. Sincronizar lineItems si se especificaron
-    if (params.lineItems !== undefined) {
-      await db.bookingLineItem.deleteMany({
-        where: { bookingRequestId: booking.id }
-      })
-      if (params.lineItems.length > 0) {
-        await db.bookingLineItem.createMany({
-          data: params.lineItems.map((item, idx) => ({
-            bookingRequestId: booking.id,
-            description: item.description,
-            quantity: item.quantity || 1,
-            unitCost: item.unitCost,
-            lineTotal: item.lineTotal,
-            order: idx
-          }))
-        })
-      }
-    }
-
     const effectiveLineItemsTotal = params.lineItems !== undefined
       ? params.lineItems.reduce((acc, it) => acc + Number(it.lineTotal || 0), 0)
       : (booking.lineItems || []).reduce(
@@ -1382,47 +1373,69 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
 
     const updatedPackage = params.packageName?.trim() || booking.packageName || "Show Vendetta"
 
-    // 2. Actualizar el BookingRequest
-    await db.bookingRequest.update({
-      where: { id: booking.id },
-      data: {
-        baseAmount: base,
-        viaticosAmount: viaticos,
-        discountAmount: discount,
-        depositAmount: deposit,
-        invoice: hasInvoice,
-        packageName: updatedPackage,
-        isOutsideZone: params.isOutsideZone ?? booking.isOutsideZone,
-        ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
-        ...(params.customMusicianPay !== undefined ? { customMusicianPay: params.customMusicianPay } : {}),
-        status: "propuesta_enviada"
+    // 1 a 4. Sincronización 100% atómica en db.$transaction
+    await db.$transaction(async (tx) => {
+      // 1. Sincronizar lineItems si se especificaron
+      if (params.lineItems !== undefined) {
+        await tx.bookingLineItem.deleteMany({
+          where: { bookingRequestId: booking.id }
+        })
+        if (params.lineItems.length > 0) {
+          await tx.bookingLineItem.createMany({
+            data: params.lineItems.map((item, idx) => ({
+              bookingRequestId: booking.id,
+              description: item.description,
+              quantity: item.quantity || 1,
+              unitCost: item.unitCost,
+              lineTotal: item.lineTotal,
+              order: idx
+            }))
+          })
+        }
       }
-    })
 
-    // 3. Si tiene Event vinculado, sincronizar montos y saldo
-    const targetEventId = booking.eventId || booking.event?.id
-    if (targetEventId) {
-      await db.event.update({
-        where: { id: targetEventId },
+      // 2. Actualizar el BookingRequest
+      await tx.bookingRequest.update({
+        where: { id: booking.id },
         data: {
-          amount: subtotal,
-          deposit: deposit,
-          balance: Math.max(0, total - deposit),
-          totalWithTax: total,
+          baseAmount: base,
+          viaticosAmount: viaticos,
+          discountAmount: discount,
+          depositAmount: deposit,
           invoice: hasInvoice,
+          packageName: updatedPackage,
+          isOutsideZone: params.isOutsideZone ?? booking.isOutsideZone,
           ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
           ...(params.customMusicianPay !== undefined ? { customMusicianPay: params.customMusicianPay } : {}),
+          status: "propuesta_enviada"
         }
-      }).catch(e => console.warn("Could not sync event amounts on approve:", e))
-    }
+      })
 
-    // 4. Si tiene ContactInquiry asociado, sincronizar estatus
-    if (booking.sourceInquiryId) {
-      await db.contactInquiry.update({
-        where: { id: booking.sourceInquiryId },
-        data: { status: "propuesta_enviada" }
-      }).catch(e => console.warn("Could not update inquiry status:", e))
-    }
+      // 3. Si tiene Event vinculado, sincronizar montos y saldo
+      const targetEventId = booking.eventId || booking.event?.id
+      if (targetEventId) {
+        await tx.event.update({
+          where: { id: targetEventId },
+          data: {
+            amount: subtotal,
+            deposit: deposit,
+            balance: Math.max(0, total - deposit),
+            totalWithTax: total,
+            invoice: hasInvoice,
+            ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
+            ...(params.customMusicianPay !== undefined ? { customMusicianPay: params.customMusicianPay } : {}),
+          }
+        })
+      }
+
+      // 4. Si tiene ContactInquiry asociado, sincronizar estatus
+      if (booking.sourceInquiryId) {
+        await tx.contactInquiry.update({
+          where: { id: booking.sourceInquiryId },
+          data: { status: "propuesta_enviada" }
+        }).catch(() => {})
+      }
+    })
 
     // 5. Enviar WhatsApp oficial al cliente con el enlace personalizado https://vendetta.mx/status/{folio}
     const cleanPhone = (booking.clientPhone || booking.client?.whatsapp || "").replace(/\D/g, "")
@@ -1436,10 +1449,17 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
     const fechaFormateada = booking.requestedDate ? formatDateMX(booking.requestedDate, "dd 'de' MMMM 'de' yyyy") : "tu fecha elegida"
     const proposalLink = `https://vendetta.mx/status/${booking.shortId}`
 
+    const locationStr = [booking.address, booking.city, booking.state].filter(Boolean).join(", ") || booking.city || "tu locación"
+    const durationHours = booking.bandHours || 2
+    const guestCount = booking.guestCount || 100
+
     const { parseTemplate, TEMPLATE_CLIENT_QUOTE } = await import("@/lib/notifications/templates")
     const clientMsg = parseTemplate(TEMPLATE_CLIENT_QUOTE, {
       fullName: booking.clientName.trim(),
+      location: locationStr,
       eventDate: fechaFormateada,
+      durationHours,
+      guestCount,
       proposalLink: proposalLink
     })
 

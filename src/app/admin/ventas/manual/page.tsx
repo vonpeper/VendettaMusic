@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 
 import { redirect } from "next/navigation"
 import { parseInquiryDetails } from "@/lib/inquiry-parser"
-import { isLocalCity, calcularViatcos } from "@/lib/viaticos"
+import { isLocalCity } from "@/lib/viaticos"
+import { calculateViaticos } from "@/lib/viaticos/googleMaps"
 import { calculateShowBasePrice, calculateEventHours } from "@/lib/pricing"
 
 interface ManualBookingPageProps {
@@ -190,9 +191,10 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
 
       // Resolver Viáticos automáticos si no vienen especificados
       let initialViaticos: number | undefined = parsed.viaticosAmount || undefined
-      if (initialViaticos === undefined && effectiveCity) {
-        const viatResult = calcularViatcos(effectiveCity, venueState, globalConfig || undefined)
-        initialViaticos = viatResult.amount
+      if (initialViaticos === undefined && (effectiveCity || parsed.mapsLink || venueAddress)) {
+        const query = parsed.mapsLink || [venueAddress, effectiveCity, venueState].filter(Boolean).join(", ") || effectiveCity
+        const viatResult = await calculateViaticos(query, "escape_2014")
+        initialViaticos = viatResult.viaticosAmount
       }
 
       // Sugerir 50% de anticipo estimado sobre base + viáticos
@@ -253,7 +255,11 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
       const city = client.city || paramCity || ""
       const isOutside = city ? !isLocalCity(city) : false
       const initialBase = defaultPkg ? calculateShowBasePrice(defaultPkg.baseCostPerHour * (defaultPkg.minDuration || 2), isOutside) : undefined
-      const initialViat = city ? calcularViatcos(city, undefined, globalConfig || undefined).amount : undefined
+      let initialViat: number | undefined = undefined
+      if (city) {
+        const viatResult = await calculateViaticos(city, "escape_2014")
+        initialViat = viatResult.viaticosAmount
+      }
       const initialDep = (initialBase !== undefined || initialViat !== undefined) ? Math.round(((initialBase || 0) + (initialViat || 0)) * 0.5) : undefined
 
       prefillInquiry = {
@@ -293,7 +299,11 @@ export default async function ManualBookingPage({ searchParams }: ManualBookingP
     const city = paramCity || ""
     const isOutside = city ? !isLocalCity(city) : false
     const initialBase = defaultPkg ? calculateShowBasePrice(defaultPkg.baseCostPerHour * (defaultPkg.minDuration || 2), isOutside) : undefined
-    const initialViat = city ? calcularViatcos(city, undefined, globalConfig || undefined).amount : undefined
+    let initialViat: number | undefined = undefined
+    if (city) {
+      const viatResult = await calculateViaticos(city, "escape_2014")
+      initialViat = viatResult.viaticosAmount
+    }
     const initialDep = (initialBase !== undefined || initialViat !== undefined) ? Math.round(((initialBase || 0) + (initialViat || 0)) * 0.5) : undefined
 
     prefillInquiry = {

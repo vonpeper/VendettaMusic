@@ -272,18 +272,18 @@ export function calculateEventHours(startTimeStr?: string | null, endTimeStr?: s
 
 /**
  * Tabulador oficial de pago a músicos (Vendetta Music):
- * - Duración base = 2 horas -> $1,200 MXN base por músico (o base configurada).
+ * - Duración base = 2 horas -> $1,500 MXN base por músico (o base configurada).
  * - Duración > 2 horas: cálculo proporcional:
  *   suggestedMusicianPay = Math.round((baseMusicianPay / 2) * durationHours)
- *   * 2h: ($1,200 / 2) * 2 = $1,200 por músico
- *   * 3h: ($1,200 / 2) * 3 = $1,800 por músico
- *   * 4h: ($1,200 / 2) * 4 = $2,400 por músico
- *   * 5h: ($1,200 / 2) * 5 = $3,000 por músico
+ *   * 2h: ($1,500 / 2) * 2 = $1,500 por músico
+ *   * 3h: ($1,500 / 2) * 3 = $2,250 por músico
+ *   * 4h: ($1,500 / 2) * 4 = $3,000 por músico
+ *   * 5h: ($1,500 / 2) * 5 = $3,750 por músico
  * - Si customMusicianPay está provisto (> 0), se respeta el monto manual.
  */
 export function calculateSuggestedMusicianPay(
   durationHours: number = 2,
-  baseMusicianPay: number = 1200,
+  baseMusicianPay: number = 1500,
   customMusicianPay?: number | null
 ): number {
   if (customMusicianPay !== undefined && customMusicianPay !== null && !isNaN(customMusicianPay) && customMusicianPay > 0) {
@@ -291,7 +291,7 @@ export function calculateSuggestedMusicianPay(
   }
   const h = Math.max(1, durationHours)
   const base = Math.max(0, baseMusicianPay)
-  return Math.round((base / 2) * h)
+  return Math.max(base, Math.round((base / 2) * h))
 }
 
 /**
@@ -357,10 +357,10 @@ export interface EventCostBreakdown {
  * Calcula el desglose interno de nómina y margen para Vendetta.
  * 
  * - Evento Privado (4 músicos + 1 staff + audio propio):
- *   - Músicos: $1,675 c/u base (2h) + $1,000 c/u por cada hora adicional.
+ *   - Músicos: $750/hr c/u ($1,500 c/u mínimo por llamado de 2h).
  *   - Staff Técnico: $300/hr ($600 en 2h).
- *   - Vendetta (Renta de Audio + Margen Oficina): $1,200 en 2h (+ $700 por hora extra).
- *   - Ingreso Personal Dueño (Músico + Audio/Oficina): $2,875 en 2h, $4,575 en 3h, etc.
+ *   - Vendetta (Renta de Audio + Margen Oficina): Lo restante del show ($1,900 en 2h base $8,500; +$1,700 por hora extra).
+ *   - Ingreso Personal Dueño (Músico + Audio/Oficina): $3,400 en 2h, $5,850 en 3h, etc.
  * 
  * - Evento Bar (Showcase / Vitrina a $3,800 con 4 músicos y staff):
  *   - Staff Técnico: $400 (2h @ $200/hr).
@@ -419,7 +419,7 @@ export function calculateEventCostBreakdown(
 
   // Evento Privado
   const basePrice = customTotalPrice ?? calculateShowPackageBasePrice("Essential", h)
-  const defaultMusicianPayEach = h <= 2 ? 1675 : 1675 + Math.round((h - 2) * 1000)
+  const defaultMusicianPayEach = Math.max(1500, Math.round(h * 750))
   const musicianPayEach = isCustomMusician ? Math.round(customMusicianPay!) : defaultMusicianPayEach
   const musiciansTotal = musicianPayEach * musiciansCount
   const defaultStaffPay = Math.round(h * 300)
@@ -429,7 +429,7 @@ export function calculateEventCostBreakdown(
 
   const notes = (isCustomMusician || isCustomStaff)
     ? "Desglose con nómina ajustada manualmente (cálculo de remanente y dueño automático)."
-    : "Privado: Músicos $1,675 base + $1,000/hr extra; Staff $300/hr; Renta Audio y Oficina Vendetta (Equipo propio para garantizar fidelidad y calidad de ejecución)."
+    : "Privado: Músicos $750/hr (mínimo $1,500 por 2h); Staff $300/hr; Remanente restante para Audio y Oficina Vendetta."
 
   return {
     hours: h,

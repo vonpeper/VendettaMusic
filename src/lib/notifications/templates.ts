@@ -15,9 +15,26 @@ export const DRESS_CODE_MAP: Record<string, string> = {
 
 export const TEMPLATE_INQUIRY_RECEIPT = `¡Hola {{fullName}}! 👋 Recibimos tu solicitud para tu {{motive}} el {{eventDate}} en {{location}}. Estamos validando la disponibilidad de equipo y agenda técnica para tu aforo. En breve te enviamos tu propuesta formal personalizada. — Vendetta Live Music`
 
-export const TEMPLATE_CLIENT_QUOTE = `¡Hola {{fullName}}! 🎸 Tu propuesta oficial y contrato para el {{eventDate}} están listos. Revisa los detalles y firma en línea para asegurar tu fecha aquí: 👉 {{proposalLink}} (Tarifa y fecha reservadas por 48 hrs sujetas a disponibilidad).`
+export const TEMPLATE_QUOTE_OFFICIAL = `🎸 *VENDETTA LIVE MUSIC* | Propuesta Oficial
 
-export const TEMPLATE_QUOTE_OFFICIAL = TEMPLATE_CLIENT_QUOTE
+Hola, *{{fullName}}*. Es un gusto saludarte.
+
+Preparamos tu propuesta personalizada para tu evento en *{{location}}*:
+
+📅 *Fecha:* {{eventDate}}
+⏱️ *Duración:* {{durationHours}} horas de show en vivo
+👥 *Aforo estimado:* {{guestCount}} personas
+✨ *Formato:* 100% Pop Rock en vivo (Cero pistas)
+
+Puedes consultar el desglose de tu show y confirmar tu fecha directamente en nuestro portal digital:
+👉 {{proposalLink}}
+
+_Nota: Para garantizar la exclusividad de tu fecha, los términos de esta propuesta se reservan por 48 horas._
+
+Cualquier duda o ajuste especial, estamos a tu disposición por este medio.
+*Vendetta Management*`
+
+export const TEMPLATE_CLIENT_QUOTE = TEMPLATE_QUOTE_OFFICIAL
 
 /**
  * Función auxiliar para reemplazar {{variables}}
@@ -27,20 +44,22 @@ export function parseTemplate(template: string, data: Record<string, any>): stri
   
   // Aliases y fallbacks comunes para compatibilidad entre diferentes disparadores
   const extendedData = {
-    fullName:     data.fullName || data.clientName || data.eventName || "",
-    clientName:   data.clientName || (data.fullName ? data.fullName.split(" ")[0] : "") || data.eventName || "",
-    eventName:    data.eventName || data.fullName || data.clientName || "Evento Vendetta",
-    motive:       data.motive || data.eventType || data.ceremony || "evento",
-    eventDate:    data.eventDate || data.date || "",
-    date:         data.date || data.eventDate || "",
-    location:     data.location || data.locationName || data.city || data.municipio || "Por confirmar",
-    proposalLink: data.proposalLink || data.bookingLink || data.statusLink || "",
-    bookingLink:  data.bookingLink || data.proposalLink || data.statusLink || "",
-    statusLink:   data.statusLink || data.proposalLink || data.bookingLink || "",
-    shortId:      data.shortId || data.folio || "",
-    folio:        data.folio || data.shortId || "",
-    time:         data.time || data.startTime || data.setupTime || data.performanceStart || "Por confirmar",
-    notes:        data.notes || data.musicianNotes || "Ninguna",
+    fullName:      data.fullName || data.clientName || data.eventName || "",
+    clientName:    data.clientName || (data.fullName ? data.fullName.split(" ")[0] : "") || data.eventName || "",
+    eventName:     data.eventName || data.fullName || data.clientName || "Evento Vendetta",
+    motive:        data.motive || data.eventType || data.ceremony || "evento",
+    eventDate:     data.eventDate || data.date || "",
+    date:          data.date || data.eventDate || "",
+    location:      data.location || data.locationName || data.city || data.municipio || "tu locación",
+    durationHours: data.durationHours || data.bandHours || data.hours || "2",
+    guestCount:    data.guestCount || data.aforo || "100",
+    proposalLink:  data.proposalLink || data.bookingLink || data.statusLink || "",
+    bookingLink:   data.bookingLink || data.proposalLink || data.statusLink || "",
+    statusLink:    data.statusLink || data.proposalLink || data.bookingLink || "",
+    shortId:       data.shortId || data.folio || "",
+    folio:         data.folio || data.shortId || "",
+    time:          data.time || data.startTime || data.setupTime || data.performanceStart || "Por confirmar",
+    notes:         data.notes || data.musicianNotes || "Ninguna",
     ...data
   }
 

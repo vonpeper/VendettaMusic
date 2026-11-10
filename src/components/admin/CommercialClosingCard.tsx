@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,8 +29,10 @@ import {
 import { approveAndSendProposalAction, ApproveProposalLineItemInput } from "@/actions/ventas"
 import { formatDateMX } from "@/lib/utils"
 import { calculateEventHours } from "@/lib/pricing"
+import { isLocalCity } from "@/lib/viaticos"
 import { toast } from "sonner"
 import Link from "next/link"
+import { EventCostBreakdownCard } from "@/components/admin/EventCostBreakdownCard"
 
 export interface PackageOption {
   id: string
@@ -109,6 +111,8 @@ interface CommercialClosingCardProps {
   guestCount?: number
   isOutsideZone?: boolean
   distanceKm?: number
+  initialTollCost?: number | null
+  initialFuelCost?: number | null
   initialPackage?: string
   initialBase?: number
   initialViaticos?: number
@@ -118,6 +122,7 @@ interface CommercialClosingCardProps {
   initialLineItems?: InitialLineItem[]
   packagesList?: PackageOption[]
   initialCustomMusicianPay?: number | null
+  initialStaffPay?: number | null
   musiciansCount?: number
   initialInvoice?: boolean
   isContractSigned?: boolean
@@ -154,6 +159,8 @@ export function CommercialClosingCard({
   guestCount,
   isOutsideZone = false,
   distanceKm,
+  initialTollCost = null,
+  initialFuelCost = null,
   initialPackage = "Show Vendetta - Experience",
   initialBase = 0,
   initialViaticos = 0,
@@ -163,6 +170,7 @@ export function CommercialClosingCard({
   initialLineItems = [],
   packagesList = [],
   initialCustomMusicianPay,
+  initialStaffPay = null,
   musiciansCount = 4,
   initialInvoice = false,
   isContractSigned = false
@@ -203,8 +211,9 @@ export function CommercialClosingCard({
   const [packageName, setPackageName] = useState(initialPackage)
   const [rawBaseAmount, setRawBaseAmount] = useState<number>(effectiveInitialBase)
 
-  // Regla Foránea (+20% sobre show base)
-  const initialForaneo = Boolean(isOutsideZone || (distanceKm !== undefined && distanceKm > 25))
+  // Regla Foránea (+20% sobre show base) - Si la ciudad es local (ej. Toluca/Metepec), nunca es foráneo
+  const isCityLocal = city ? isLocalCity(city, state || undefined) : false
+  const initialForaneo = !isCityLocal && Boolean(isOutsideZone || (distanceKm !== undefined && distanceKm > 25))
   const [isForaneo, setIsForaneo] = useState<boolean>(initialForaneo)
 
   // Viáticos desglosados (Banda + Flete Producción)
@@ -212,7 +221,94 @@ export function CommercialClosingCard({
   const [viaticosProduccion, setViaticosProduccion] = useState<number>(0)
   const totalViaticos = viaticosBanda + viaticosProduccion
 
-  const [discountAmount, setDiscountAmount] = useState<number>(initialDiscount)
+  // Consulta de destino para auto-cálculo de viáticos
+  const destinationQuery = useMemo(() => {
+    if (currentMapsLink && currentMapsLink.trim().startsWith("http")) return currentMapsLink.trim()
+    if (mapsLink && mapsLink.trim().startsWith("http")) return mapsLink.trim()
+    const parts = [address && address !== "Dirección no especificada" ? address : "", city, state].filter(Boolean)
+    return parts.join(", ") || city || address || ""
+  }, [currentMapsLink, mapsLink, address, city, state])
+
+  const [calculatingViaticos, setCalculatingViaticos] = useState<boolean>(false)
+  const [viaticosInfo, setViaticosInfo] = useState<{
+    distanceKm?: number
+    tollCost?: number
+    fuelCost?: number
+  } | null>(() => {
+    if (distanceKm || initialTollCost || initialFuelCost) {
+      return {
+        distanceKm: distanceKm ?? undefined,
+        tollCost: initialTollCost !== null && initialTollCost !== undefined ? initialTollCost : undefined,
+        fuelCost: initialFuelCost !== null && initialFuelCost !== undefined ? initialFuelCost : undefined,
+      }
+    }
+    return null
+  })
+
+  const isConfirmed = useMemo(() => {
+    const s = (currentStatus || "").toLowerCase()
+    return (
+      s === "confirmed" ||
+      s === "confirmado" ||
+      s === "agendado" ||
+      s === "completado" ||
+      Boolean(isContractSigned)
+    )
+  }, [currentStatus, isContractSigned])
+
+  const handleAutoCalculateViaticos = async (explicitDestination?: string) => {
+    if (isConfirmed) {
+      toast.info("El evento ya cuenta con contrato firmado o estatus confirmado. Las condiciones y viáticos pactados no se recalculan automáticamente.")
+      return
+    }
+    const dest = explicitDestination || destinationQuery
+    if (!dest || !dest.trim()) {
+      toast.error("Ingresa una dirección, municipio o link de Google Maps para calcular viáticos")
+      return
+    }
+
+    setCalculatingViaticos(true)
+    try {
+      const resp = await fetch(`/api/viaticos?destination=${encodeURIComponent(dest.trim())}`)
+      const data = await resp.json()
+
+      if (data && typeof data.viaticosAmount === "number") {
+        setViaticosBanda(data.viaticosAmount)
+        setViaticosInfo({
+          distanceKm: data.distanceKm,
+          tollCost: data.tollCost,
+          fuelCost: data.fuelCost,
+        })
+
+        if (data.isOutsideZone || (data.distanceKm && data.distanceKm > 25)) {
+          if (!isCityLocal) {
+            setIsForaneo(true)
+          } else {
+            setIsForaneo(false)
+          }
+        } else {
+          setIsForaneo(false)
+        }
+
+        if (data.viaticosAmount === 0 && !data.isOutsideZone) {
+          toast.success(`Ubicación en Zona Local: $0 MXN de viáticos (${data.distanceKm || 0} km)`)
+        } else {
+          const casetasStr = data.tollCost ? `, casetas: ${MXN(data.tollCost)}` : ""
+          toast.success(`Viáticos calculados: ${MXN(data.viaticosAmount)} (${data.distanceKm || 0} km${casetasStr})`)
+        }
+      } else if (data && data.error) {
+        toast.error(data.error)
+      }
+    } catch (err) {
+      console.error("Error auto-calculating viáticos:", err)
+      toast.error("No se pudo calcular viáticos automáticamente")
+    } finally {
+      setCalculatingViaticos(false)
+    }
+  }
+
+  // Descuento siempre sanitizado como valor positivo
+  const [discountAmount, setDiscountAmount] = useState<number>(Math.abs(initialDiscount))
 
   // Pre-cargar selección de producción a partir de initialLineItems
   const initialProductionIds = useMemo(() => {
@@ -321,16 +417,6 @@ export function CommercialClosingCard({
 
   const isPendingApproval = currentStatus === "pendiente_aprobacion"
   const isApproved = currentStatus === "propuesta_enviada"
-  const isConfirmed = useMemo(() => {
-    const s = (currentStatus || "").toLowerCase()
-    return (
-      s === "confirmed" ||
-      s === "confirmado" ||
-      s === "agendado" ||
-      s === "completado" ||
-      Boolean(isContractSigned)
-    )
-  }, [currentStatus, isContractSigned])
   const proposalUrl = `https://vendetta.mx/status/${shortId}`
 
   const handlePackageSelect = (pkg: typeof CORE_PACKAGES[number]) => {
@@ -618,7 +704,7 @@ export function CommercialClosingCard({
 
       {/* 4. Viáticos Desglosados */}
       <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-border space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="space-y-0.5">
             <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
               <Truck className="w-3.5 h-3.5 text-[#FF5A5F]" /> Viáticos Desglosados
@@ -627,10 +713,52 @@ export function CommercialClosingCard({
               Asigna viáticos de traslado de músicos y flete de equipo técnico por separado.
             </p>
           </div>
-          <span className="text-xs font-mono font-bold text-foreground px-2.5 py-1 rounded-lg bg-muted border border-border/60">
-            Total Viáticos: {MXN(totalViaticos)}
-          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => handleAutoCalculateViaticos()}
+              disabled={calculatingViaticos || !destinationQuery}
+              className="h-8 px-2.5 text-xs font-bold gap-1.5 rounded-lg border-primary/30 text-primary hover:bg-primary/10 cursor-pointer"
+              title="Calcular ruta y casetas con Google Maps"
+            >
+              {calculatingViaticos ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Calculando...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {totalViaticos > 0 ? "Recalcular con Maps" : "Calcular con Google Maps"}
+                </>
+              )}
+            </Button>
+            <span className="text-xs font-mono font-bold text-foreground px-2.5 py-1 rounded-lg bg-muted border border-border/60">
+              Total: {MXN(totalViaticos)}
+            </span>
+          </div>
         </div>
+
+        {/* Desglose de Ruta Detectada */}
+        {(viaticosInfo?.distanceKm || distanceKm) ? (
+          <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-mono">
+            <span className="bg-muted/70 px-2 py-0.5 rounded font-bold text-muted-foreground">
+              🚗 {viaticosInfo?.distanceKm || distanceKm} km
+            </span>
+            {(viaticosInfo?.tollCost !== undefined && viaticosInfo.tollCost > 0) && (
+              <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-bold">
+                Casetas: {MXN(viaticosInfo.tollCost)}
+              </span>
+            )}
+            {(viaticosInfo?.fuelCost !== undefined && viaticosInfo.fuelCost > 0) && (
+              <span className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded font-bold">
+                Gasolina: {MXN(viaticosInfo.fuelCost)}
+              </span>
+            )}
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border/50">
           <div className="space-y-1.5">
@@ -790,7 +918,7 @@ export function CommercialClosingCard({
             min={0}
             step={500}
             value={discountAmount || ""}
-            onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
+            onChange={(e) => setDiscountAmount(Math.max(0, Math.abs(Number(e.target.value) || 0)))}
             placeholder="0"
             className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B]"
           />
@@ -930,6 +1058,20 @@ export function CommercialClosingCard({
           <span>Saldo a Liquidar el Día del Show:</span>
           <span className="text-foreground font-mono font-bold">{MXN(balancePending)}</span>
         </div>
+      </div>
+
+      {/* 9. Desglose Operativo y Nómina Sugerida (Ganancias de Dueño & Oficina) */}
+      <div className="pt-2">
+        <EventCostBreakdownCard
+          bookingId={bookingId}
+          hours={durationHours}
+          isBar={(venueType?.toLowerCase().includes("bar") || packageName.toLowerCase().includes("bar")) ?? false}
+          baseShowPrice={Math.max(0, effectiveShowBase - discountAmount)}
+          listPrice={effectiveShowBase}
+          discountAmount={discountAmount}
+          initialMusicianPay={initialCustomMusicianPay}
+          initialStaffPay={initialStaffPay}
+        />
       </div>
 
       {/* 10. Botón de Cierre y Aprobación / Estado Confirmado */}

@@ -37,11 +37,8 @@ import Link from "next/link"
 import { formatDateMX, cn } from "@/lib/utils"
 import { MusicianStatusList } from "@/components/admin/MusicianStatusList"
 import { EditEventoButton } from "@/components/admin/EventActions"
-import { EditDepositInline } from "@/components/admin/EditDepositInline"
-import { EditTotalInline } from "@/components/admin/EditTotalInline"
 import { CancelBookingButton } from "@/components/admin/CancelBookingButton"
-import { EventCostBreakdownCard } from "@/components/admin/EventCostBreakdownCard"
-import { calculateEventCostBreakdown, calculateEventHours } from "@/lib/pricing"
+import { calculateEventHours } from "@/lib/pricing"
 
 const MXN = (v: number) => new Intl.NumberFormat("es-MX", { 
   style: "currency", 
@@ -279,7 +276,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
     : (Number(booking.event?.amount) > 0 ? Number(booking.event?.amount) : defaultPkgBase);
 
   const resolvedViaticos = Number(booking.viaticosAmount) || 0;
-  const resolvedDiscount = Number(booking.discountAmount) || 0;
+
+  const resolvedDiscount = Math.abs(Number(booking.discountAmount) || 0);
   const resolvedDeposit = Number(booking.depositAmount) || 0;
 
   const effectiveStartTime = booking.event?.performanceStart || (booking.event as any)?.startTime || booking.startTime;
@@ -484,6 +482,8 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               guestCount={booking.guestCount || undefined}
               isOutsideZone={booking.isOutsideZone || undefined}
               distanceKm={booking.distanceKm || undefined}
+              initialTollCost={booking.tollCost}
+              initialFuelCost={booking.fuelCost}
               initialPackage={booking.packageName || targetPkg?.name || "Show Vendetta - Experience"}
               initialBase={resolvedBase}
               initialViaticos={resolvedViaticos}
@@ -492,35 +492,11 @@ export default async function DetalleSolicitudPage({ params }: { params: Promise
               initialLineItemsTotal={lineItemsTotal}
               initialLineItems={booking.lineItems}
               initialCustomMusicianPay={booking.customMusicianPay ?? booking.event?.customMusicianPay}
+              initialStaffPay={booking.customStaffPay ?? booking.event?.customStaffPay}
               musiciansCount={booking.event?.musicians?.length || 4}
               initialInvoice={Boolean(booking.invoice || booking.event?.invoice)}
               isContractSigned={Boolean(booking.signedAt || booking.clientSignature || booking.event?.contracts?.some((c: any) => c.status === 'signed' || c.status === 'firmado' || c.signedAt))}
             />
-
-            {/* Desglose Operativo y Nómina Sugerida (Tabla Principal del Dueño) */}
-            {(() => {
-              const hours = booking.bandHours || dynamicHours || 2
-              const isBar = (booking.packageName?.toLowerCase().includes("bar") || booking.ceremonyType?.toLowerCase().includes("bar")) ?? false
-              // Base de show limpia: FUERA de viáticos y FUERA de IVA
-              const rawBase = Number(booking.baseAmount || 0) > 0 
-                ? Number(booking.baseAmount) 
-                : (resolvedBase > 0 ? resolvedBase : 0)
-              const baseShowPrice = Math.max(0, rawBase - (Number(booking.discountAmount) || 0))
-              const initialMusicianPay = (booking.customMusicianPay ?? booking.event?.customMusicianPay) ?? null
-              const initialStaffPay = (booking.customStaffPay ?? booking.event?.customStaffPay) ?? null
-
-              return (
-                <EventCostBreakdownCard
-                  key={`${booking.id}-breakdown-${initialMusicianPay}-${initialStaffPay}-${baseShowPrice}-${hours}-${isBar}`}
-                  bookingId={booking.id}
-                  hours={hours}
-                  isBar={isBar}
-                  baseShowPrice={baseShowPrice}
-                  initialMusicianPay={initialMusicianPay}
-                  initialStaffPay={initialStaffPay}
-                />
-              )
-            })()}
           </div>
 
           {/* Columna Derecha: Cliente y Acciones Administrativas */}

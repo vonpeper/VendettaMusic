@@ -38,7 +38,7 @@ export const getBookingData = cache(async (rawIdInput: string) => {
   }
 
   const includeConfig = { 
-    client: true,
+    client: { include: { user: true } },
     lineItems: { orderBy: { order: "asc" as const } },
     payments: true,
     event: {
@@ -107,28 +107,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!booking) {
     return {
-      title: "No encontrado | Vendetta Live Music"
+      title: "Propuesta Formal | Vendetta Live Music",
+      description: "Propuesta formal y términos de contratación con Vendetta Live Music."
     }
   }
 
-  const isConfirmed = booking.status === "agendado" || booking.status === "completado"
-  const dateStr = booking.requestedDate ? formatDateMX(booking.requestedDate, "d 'de' MMMM") : ""
-  
-  const title = isConfirmed 
-    ? `✍️ Firma de Contrato & Estatus (${booking.shortId || 'Show'}) | Vendetta Live Music`
-    : `🎸 Cotización & Propuesta Exclusiva (${booking.shortId || 'Show'}) | Vendetta Live Music`
-    
-  const ogTitle = isConfirmed
-    ? `✍️ Contrato Digital & Confirmación de Show (${booking.shortId || 'Show'})`
-    : `🎸 Cotización de Show: ${booking.clientName} (${booking.shortId || 'Show'})`
+  const clientName = booking.clientName?.trim() || booking.client?.user?.name?.trim() || "Cliente Exclusivo"
+  const folio = booking.shortId || booking.id
+  const eventDate = booking.requestedDate ? formatDateMX(booking.requestedDate, "d 'de' MMMM 'de' yyyy") : "tu fecha especial"
+  const venueCity = booking.city || booking.municipio || (booking.address ? booking.address.split(",")[0].trim() : "tu locación")
 
-  const description = isConfirmed
-    ? `¡Fecha confirmada para ${booking.clientName} el ${dateStr}! Entra para consultar la ficha técnica y firmar digitalmente tu contrato de prestación de servicios.`
-    : `Hola ${booking.clientName}, te compartimos la cotización exclusiva para tu evento el ${dateStr}. Revisa tu propuesta y aprueba tu fecha en línea.`
-
-  const ogImage = isConfirmed
-    ? 'https://vendetta.mx/images/opengraph-confirmacion.png?v=3'
-    : 'https://vendetta.mx/images/opengraph-cotizacion.png?v=3'
+  const title = `Propuesta Formal | Vendetta Live Music — ${clientName}`
+  const description = `Show de Pop Rock en Vivo para el ${eventDate} en ${venueCity}. Revisa tu propuesta formal y firma en línea para apartar tu fecha.`
+  const ogDescription = "Revisa tu propuesta formal y asegura tu fecha en línea con Vendetta Live Music."
+  const ogImageUrl = "https://vendetta.mx/images/og/vendetta-proposal-card.jpg"
 
   return {
     title,
@@ -137,33 +129,33 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       other: [
         {
           rel: 'image_src',
-          url: ogImage,
+          url: ogImageUrl,
         },
       ],
     },
     openGraph: {
-      title: ogTitle,
-      description,
-      url: `https://vendetta.mx/status/${booking.shortId || booking.id}`,
-      siteName: 'Vendetta Live Music',
+      title,
+      description: ogDescription,
+      url: `https://vendetta.mx/status/${folio}`,
+      siteName: "Vendetta Live Music",
       images: [
         {
-          url: ogImage,
-          secureUrl: ogImage,
+          url: ogImageUrl,
+          secureUrl: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: `Cotización de Show: ${booking.clientName} (${booking.shortId || 'Show'})`,
-          type: 'image/png',
+          alt: "Vendetta Live Music Propuesta Formal",
+          type: "image/jpeg",
         },
       ],
-      locale: 'es_MX',
-      type: 'website',
+      locale: "es_MX",
+      type: "website",
     },
     twitter: {
-      card: 'summary_large_image',
-      title: ogTitle,
-      description,
-      images: [ogImage],
+      card: "summary_large_image",
+      title,
+      description: ogDescription,
+      images: [ogImageUrl],
     },
   }
 }

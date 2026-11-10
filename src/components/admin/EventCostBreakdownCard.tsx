@@ -34,6 +34,8 @@ interface EventCostBreakdownCardProps {
   baseShowPrice: number
   initialMusicianPay?: number | null
   initialStaffPay?: number | null
+  listPrice?: number
+  discountAmount?: number
 }
 
 export function EventCostBreakdownCard({
@@ -43,6 +45,8 @@ export function EventCostBreakdownCard({
   baseShowPrice,
   initialMusicianPay = null,
   initialStaffPay = null,
+  listPrice,
+  discountAmount = 0,
 }: EventCostBreakdownCardProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -313,7 +317,7 @@ export function EventCostBreakdownCard({
                 </div>
 
                 <div className="text-[10px] text-muted-foreground pt-0.5">
-                  Sugerido: {MXN(breakdown.defaultMusicianPayEach || 1675)} c/u
+                  Sugerido: {MXN(breakdown.defaultMusicianPayEach || 1500)} c/u ($750/hr)
                 </div>
               </div>
             ) : (
@@ -420,13 +424,19 @@ export function EventCostBreakdownCard({
             </div>
 
             <div className="text-[11px] text-muted-foreground font-medium mt-1">
-              {isEditing ? (
-                <span className="text-[10px] leading-tight block">
-                  Show ({MXN(liveBreakdown.totalPrice)}) - Músicos ({MXN(liveBreakdown.musiciansTotal)}) - Staff ({MXN(liveBreakdown.staffPay)})
-                </span>
-              ) : (
-                "Utilidad neta y renta de equipo"
-              )}
+              <span className="text-[10px] leading-tight block">
+                {discountAmount && discountAmount > 0 ? (
+                  <>
+                    Show Neto ({MXN(liveBreakdown.totalPrice)}){" "}
+                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">
+                      [Base {MXN(listPrice || (liveBreakdown.totalPrice + discountAmount))} - Descuento {MXN(discountAmount)}]
+                    </span>
+                  </>
+                ) : (
+                  <>Show ({MXN(liveBreakdown.totalPrice)})</>
+                )}
+                {" "} - Músicos ({MXN(liveBreakdown.musiciansTotal)}) - Staff ({MXN(liveBreakdown.staffPay)})
+              </span>
             </div>
           </div>
         </div>

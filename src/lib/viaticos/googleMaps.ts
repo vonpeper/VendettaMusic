@@ -1,7 +1,7 @@
 // src/lib/viaticos/googleMaps.ts
 import { VEHICLE_PROFILES } from "@/lib/vehicles";
 import { db } from "@/lib/db";
-import { roundTo100, roundTo500 } from "@/lib/viaticos";
+import { roundTo100, roundTo500, isLocalCity } from "@/lib/viaticos";
 
 export { roundTo100, roundTo500 };
 
@@ -110,8 +110,40 @@ const LOCAL_KEYWORDS = [
   "tianguistenco", "chapultepec", "almoloya de juarez", "temoaya", "otzolotepec"
 ];
 
+export function extractCoordinatesFromUrl(url: string): { lat: number; lng: number } | null {
+  if (!url || typeof url !== "string") return null;
+  // Pattern 1: /@lat,lng
+  const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
+  
+  // Pattern 2: !3dlat!4dlng
+  const dataMatch = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+  if (dataMatch) return { lat: parseFloat(dataMatch[1]), lng: parseFloat(dataMatch[2]) };
+
+  // Pattern 3: q=lat,lng or ll=lat,lng or destination=lat,lng
+  const qMatch = url.match(/[?&](?:q|ll|destination)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
+
+  return null;
+}
+
+export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radio medio de la Tierra en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 function findKnownRoute(destination: string): KnownRoute | null {
-  const norm = destination.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  let decoded = destination;
+  try {
+    decoded = decodeURIComponent(destination);
+  } catch {}
+  const norm = decoded.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   
   // Si es zona local del Valle de Toluca, retornar distancia dentro del radio gratuito
   if (LOCAL_KEYWORDS.some(k => norm.includes(k))) {
@@ -169,8 +201,27 @@ export async function calculateViaticos(
   let tollCostSingle = 0;
   let routeResolved = false;
 
+  // Detección preliminar de coordenadas GPS en URLs de Google Maps
+  const coords = extractCoordinatesFromUrl(destination);
+  if (coords) {
+    const baseLat = 19.2554;
+    const baseLng = -99.6053;
+    const straightDist = haversineKm(baseLat, baseLng, coords.lat, coords.lng);
+    const drivingDist = Math.round(straightDist * 1.25 * 10) / 10;
+    
+    if (drivingDist <= viaticosLocalRadius) {
+      distanceKm = Math.max(5, drivingDist);
+      durationSec = Math.round(distanceKm * 80);
+      tollCostSingle = 0;
+      routeResolved = true;
+      console.log(`📍 Coordenadas reconocidas en zona local (${coords.lat}, ${coords.lng}) a ${drivingDist} km <= ${viaticosLocalRadius} km. Viáticos asignados a 0.`);
+    }
+  }
+
+  const apiDestination = coords ? `${coords.lat},${coords.lng}` : destination;
+
   // 2️⃣ Intentar usar Google Maps Routes API (v2) para calcular peajes reales en México si hay API key
-  if (apiKey) {
+  if (apiKey && !routeResolved) {
     try {
       const routesUrl = "https://routes.googleapis.com/directions/v2:computeRoutes";
       const routesResp = await fetch(routesUrl, {
@@ -182,7 +233,7 @@ export async function calculateViaticos(
         },
         body: JSON.stringify({
           origin: { address: defaultOrigin },
-          destination: { address: destination },
+          destination: { address: apiDestination },
           travelMode: "DRIVE",
           routingPreference: "TRAFFIC_AWARE",
           extraComputations: ["TOLLS"]
@@ -210,7 +261,7 @@ export async function calculateViaticos(
       try {
         const dmUrl = new URL("https://maps.googleapis.com/maps/api/distancematrix/json");
         dmUrl.searchParams.set("origins", defaultOrigin);
-        dmUrl.searchParams.set("destinations", destination);
+        dmUrl.searchParams.set("destinations", apiDestination);
         dmUrl.searchParams.set("mode", "driving");
         dmUrl.searchParams.set("units", "metric");
         dmUrl.searchParams.set("key", apiKey);
@@ -233,19 +284,64 @@ export async function calculateViaticos(
 
   // 4️⃣ Fallback inteligente por tabla maestra de rutas conocidas si Google Maps no resolvió
   if (!routeResolved) {
-    const known = findKnownRoute(destination);
-    if (known) {
-      distanceKm = known.distanceKm;
-      durationSec = known.durationSec;
-      tollCostSingle = known.tollCostSingle;
+    // Si viene una URL o cadena con coordenadas geográficas explícitas de Google Maps
+    const coords = extractCoordinatesFromUrl(destination);
+    if (coords) {
+      // Coordenadas base en Metepec/Toluca Centro (19.2554, -99.6053)
+      const baseLat = 19.2554;
+      const baseLng = -99.6053;
+      const straightDist = haversineKm(baseLat, baseLng, coords.lat, coords.lng);
+      // Factor de curvatura vial en carreteras mexicanas (~1.25)
+      const drivingDist = Math.round(straightDist * 1.25 * 10) / 10;
+      
+      if (drivingDist <= viaticosLocalRadius) {
+        distanceKm = Math.max(5, drivingDist);
+        durationSec = Math.round(distanceKm * 80);
+        tollCostSingle = 0;
+        routeResolved = true;
+        console.log(`📍 Coordenadas reconocidas en zona local (${coords.lat}, ${coords.lng}) a ${drivingDist} km <= ${viaticosLocalRadius} km. Viáticos asignados a 0.`);
+      } else {
+        // Coordenadas fuera de zona local: verificar si coinciden con alguna ruta conocida por aproximación
+        const known = findKnownRoute(destination);
+        if (known) {
+          distanceKm = known.distanceKm;
+          durationSec = known.durationSec;
+          tollCostSingle = known.tollCostSingle;
+          routeResolved = true;
+          console.log(`📍 Ruta resuelta por tabulador maestro calibrado para coordenadas: ${destination} (${distanceKm} km, caseta: $${tollCostSingle})`);
+        } else {
+          distanceKm = Math.max(30, drivingDist);
+          durationSec = Math.round(distanceKm * 75);
+          tollCostSingle = distanceKm > 60 ? 120 : 0;
+          routeResolved = true;
+          console.log(`📍 Distancia estimada por coordenadas geográficas: ${drivingDist} km`);
+        }
+      }
+    }
+  }
+
+  if (!routeResolved) {
+    if (isLocalCity(destination)) {
+      distanceKm = 15;
+      durationSec = 1200;
+      tollCostSingle = 0;
       routeResolved = true;
-      console.log(`📍 Ruta resuelta por tabulador maestro calibrado: ${destination} (${distanceKm} km, caseta: $${tollCostSingle})`);
+      console.log(`📍 Destino reconocido en zona local (Toluca/Metepec): ${destination}`);
     } else {
-      // Si no es una ruta conocida ni Google Maps resolvió, estimar distancia por zona
-      distanceKm = 60; // Estimación base para destinos no mapeados fuera de zona
-      durationSec = 3600;
-      tollCostSingle = 100;
-      console.warn(`⚠️ Destino no mapeado en rutas conocidas: ${destination}. Usando estimación base.`);
+      const known = findKnownRoute(destination);
+      if (known) {
+        distanceKm = known.distanceKm;
+        durationSec = known.durationSec;
+        tollCostSingle = known.tollCostSingle;
+        routeResolved = true;
+        console.log(`📍 Ruta resuelta por tabulador maestro calibrado: ${destination} (${distanceKm} km, caseta: $${tollCostSingle})`);
+      } else {
+        // Si no es una ruta conocida ni Google Maps resolvió, estimar distancia por zona
+        distanceKm = 60; // Estimación base para destinos no mapeados fuera de zona
+        durationSec = 3600;
+        tollCostSingle = 100;
+        console.warn(`⚠️ Destino no mapeado en rutas conocidas: ${destination}. Usando estimación base.`);
+      }
     }
   }
 
