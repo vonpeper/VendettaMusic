@@ -258,11 +258,11 @@ export async function notifyMusicians(eventId: string, gigDetails: any, db: any,
         body: JSON.stringify({ 
           number: jid, 
           text: message,
-          linkPreview: false,
+          linkPreview: true,
           options: {
             delay: 1200,
             presence: "composing",
-            linkPreview: false
+            linkPreview: true
           }
         })
       })

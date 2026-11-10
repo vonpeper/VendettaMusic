@@ -117,10 +117,32 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const eventDate = booking.requestedDate ? formatDateMX(booking.requestedDate, "d 'de' MMMM 'de' yyyy") : "tu fecha especial"
   const venueCity = booking.city || booking.municipio || (booking.address ? booking.address.split(",")[0].trim() : "tu locación")
 
-  const title = `Propuesta Formal | Vendetta Live Music — ${clientName}`
-  const description = `Show de Pop Rock en Vivo para el ${eventDate} en ${venueCity}. Revisa tu propuesta formal y firma en línea para apartar tu fecha.`
-  const ogDescription = "Revisa tu propuesta formal y asegura tu fecha en línea con Vendetta Live Music."
-  const ogImageUrl = "https://vendetta.mx/images/og/vendetta-proposal-card.jpg"
+  const isConfirmed = 
+    booking.status === "agendado" || 
+    booking.status === "confirmado" || 
+    booking.paymentStatus === "paid" || 
+    booking.paymentStatus === "partial" || 
+    Boolean(booking.event)
+
+  const title = isConfirmed
+    ? `Show Confirmado | Contrato Digital — ${clientName} | Vendetta Live Music`
+    : `Propuesta Oficial | Vendetta Live Music — ${clientName}`
+
+  const description = isConfirmed
+    ? `Tu fecha para el ${eventDate} en ${venueCity} está confirmada y bloqueada en nuestra agenda. Entra y firma tu contrato digital de servicios artísticos.`
+    : `Show de Pop Rock en Vivo para el ${eventDate} en ${venueCity}. Revisa tu propuesta formal personalizada y asegura tu fecha.`
+
+  const ogDescription = isConfirmed
+    ? "Tu fecha ha quedado oficialmente bloqueada en nuestra agenda. Entra y firma digitalmente tu contrato en nuestro portal."
+    : "Revisa tu propuesta formal personalizada y confirma tu fecha directamente en nuestro portal digital."
+
+  const ogImageUrl = isConfirmed
+    ? "https://vendetta.mx/images/og/vendetta-contract-card.jpg?v=20261110v5"
+    : "https://vendetta.mx/images/og/vendetta-proposal-card.jpg?v=20261110v5"
+
+  const ogAlt = isConfirmed
+    ? "Vendetta Live Music Show Confirmado y Contrato Digital"
+    : "Vendetta Live Music Propuesta Oficial de Show"
 
   return {
     title,
@@ -144,7 +166,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
           secureUrl: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: "Vendetta Live Music Propuesta Formal",
+          alt: ogAlt,
           type: "image/jpeg",
         },
       ],

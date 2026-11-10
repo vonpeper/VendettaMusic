@@ -3,13 +3,24 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  const quoteTemplate = `Hola {{clientName}}, somos *Vendetta Live Music* 🎸.
+  const quoteTemplate = `🎸 *VENDETTA LIVE MUSIC* | Propuesta Oficial
 
-Es un gusto saludarte. Te compartimos adjunta la propuesta exclusiva para tu evento el próximo *{{date}}*.
+Hola, *{{fullName}}*. Es un gusto saludarte.
 
-Revisamos cada detalle para asegurar que la música sea inolvidable. Quedamos a tus órdenes para agendar una breve llamada y pulir los detalles.
+Preparamos tu propuesta personalizada para tu evento en *{{location}}*:
 
-¡Rock on! 🤘`;
+📅 *Fecha:* {{eventDate}}
+⏱️ *Duración:* {{durationHours}} horas de show en vivo
+👥 *Aforo estimado:* {{guestCount}} personas
+✨ *Formato:* 100% Pop Rock en vivo
+
+Puedes consultar el desglose de tu show y confirmar tu fecha directamente en nuestro portal digital:
+👉 {{proposalLink}}
+
+_Nota: La fecha se cierra con el anticipo verificado y la firma de contrato para seguridad de nuestros clientes._
+
+Cualquier duda o ajuste especial, estamos a tu disposición por este medio.
+*Vendetta Management*`;
 
   const confirmedTemplate = `¡Felicidades {{clientName}}! 🎉
 
@@ -17,21 +28,40 @@ Hemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente
 
 *Folio:* {{shortId}}
 
-Puedes consultar el estatus de tu evento y descargar tu contrato firmado aquí:
+✍️ Entra y firma tu contrato en el siguiente enlace:
 {{bookingLink}}
 
-¡Gracias por confiar en *Vendetta* para este día tan especial! 🎸`;
+¡Gracias por confiar en *Vendetta* para este día tan especial! 🎸
+
+—
+Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`;
+
+  const barCloseTemplate = `¡Hola {{clientName}}! 🎉
+
+Tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.
+
+*Folio:* {{shortId}}
+
+✍️ Entra y firma tu contrato en el siguiente enlace:
+{{bookingLink}}
+
+¡Gracias por confiar en *Vendetta*! 🎸
+
+—
+Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`;
 
   await prisma.globalConfig.upsert({
     where: { id: 'vendetta_config' },
     update: { 
       msgTemplateQuote: quoteTemplate,
-      msgTemplateEventClose: confirmedTemplate
+      msgTemplateEventClose: confirmedTemplate,
+      msgTemplateBarClose: barCloseTemplate
     },
     create: { 
       id: 'vendetta_config',
       msgTemplateQuote: quoteTemplate,
-      msgTemplateEventClose: confirmedTemplate
+      msgTemplateEventClose: confirmedTemplate,
+      msgTemplateBarClose: barCloseTemplate
     }
   });
 

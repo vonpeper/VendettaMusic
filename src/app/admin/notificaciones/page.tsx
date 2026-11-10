@@ -235,18 +235,25 @@ export default async function NotificacionesPage() {
                         <span className="text-[10px] text-muted-foreground italic">Cliente</span>
                       </div>
                       <Textarea id="msgTemplateQuote" name="msgTemplateQuote" rows={10}
-                        defaultValue={config?.msgTemplateQuote || `Hola {{clientName}}, somos *Vendetta Live Music* 🎸.
+                        defaultValue={config?.msgTemplateQuote || `🎸 *VENDETTA LIVE MUSIC* | Propuesta Oficial
 
-Es un gusto saludarte. Te compartimos el enlace para consultar la propuesta exclusiva para tu evento el próximo *{{date}}*:
-{{bookingLink}}
+Hola, *{{fullName}}*. Es un gusto saludarte.
 
-Revisamos cada detalle para asegurar que la música sea inolvidable. Quedamos a tus órdenes para agendar una breve llamada y pulir los detalles.
+Preparamos tu propuesta personalizada para tu evento en *{{location}}*:
 
-¡Rock on! 🤘
+📅 *Fecha:* {{eventDate}}
+⏱️ *Duración:* {{durationHours}} horas de show en vivo
+👥 *Aforo estimado:* {{guestCount}} personas
+✨ *Formato:* 100% Pop Rock en vivo
 
-—
-Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`} 
-                        placeholder="Usa {{clientName}}, {{date}}, {{total}}..."
+Puedes consultar el desglose de tu show y confirmar tu fecha directamente en nuestro portal digital:
+👉 {{proposalLink}}
+
+_Nota: La fecha se cierra con el anticipo verificado y la firma de contrato para seguridad de nuestros clientes._
+
+Cualquier duda o ajuste especial, estamos a tu disposición por este medio.
+*Vendetta Management*`} 
+                        placeholder="Usa {{fullName}}, {{eventDate}}, {{proposalLink}}..."
                         className="bg-muted/30 border-border/40 text-foreground font-mono text-sm leading-relaxed" />
                     </div>
 
@@ -263,7 +270,7 @@ Hemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente
 
 *Folio:* {{shortId}}
 
-Puedes consultar el estatus de tu evento y descargar tu contrato firmado aquí:
+✍️ Entra y firma tu contrato en el siguiente enlace:
 {{bookingLink}}
 
 ¡Gracias por confiar en *Vendetta* para este día tan especial! 🎸
@@ -287,7 +294,7 @@ Tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.
 
 *Folio:* {{shortId}}
 
-Puedes consultar el detalle de tu evento, *firmar tu contrato digital* y descargarlo aquí:
+✍️ Entra y firma tu contrato en el siguiente enlace:
 {{bookingLink}}
 
 ¡Gracias por confiar en *Vendetta*! 🎸

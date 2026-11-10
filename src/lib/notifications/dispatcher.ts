@@ -280,9 +280,12 @@ export async function dispatchNotification({
   let media: string | undefined = undefined
   let fileName: string | undefined = undefined
 
-  if (type === "CLIENT_CONFIRMED" && bookingId) {
+  // Solo adjuntar PDF como archivo si se solicita explícitamente en el payload (payload.attachPdf === "true").
+  // Por defecto, todos los mensajes oficiales se envían como texto enriquecido con enlace para permitir que
+  // WhatsApp genere la tarjeta interactiva de OpenGraph con la identidad visual de Vendetta.
+  if (type === "CLIENT_CONFIRMED" && bookingId && payload.attachPdf === "true") {
     try {
-    console.log('[OFFICIAL WHATSAPP] Starting official WhatsApp notification flow')
+      console.log('[OFFICIAL WHATSAPP] Starting official WhatsApp notification flow')
       const { generateContractPdf } = await import("../pdf/contract-generator")
       // Re-fetcheamos para tener los datos completos para el generador
       const booking = await db.bookingRequest.findUnique({ 

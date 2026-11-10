@@ -13,7 +13,10 @@ export const DRESS_CODE_MAP: Record<string, string> = {
   "nocturno": "🌙 Concierto Nocturno"
 }
 
-export const TEMPLATE_INQUIRY_RECEIPT = `¡Hola {{fullName}}! 👋 Recibimos tu solicitud para tu {{motive}} el {{eventDate}} en {{location}}. Estamos validando la disponibilidad de equipo y agenda técnica para tu aforo. En breve te enviamos tu propuesta formal personalizada. — Vendetta Live Music`
+export const TEMPLATE_INQUIRY_RECEIPT = `¡Hola {{fullName}}! 👋 Recibimos tu solicitud para tu {{motive}} el {{eventDate}} en {{location}}. Estamos validando la disponibilidad de equipo y agenda técnica para tu aforo. En breve te enviamos tu propuesta formal personalizada.
+
+— *Vendetta Live Music*
+👉 https://vendetta.mx`
 
 export const TEMPLATE_QUOTE_OFFICIAL = `🎸 *VENDETTA LIVE MUSIC* | Propuesta Oficial
 
@@ -24,12 +27,12 @@ Preparamos tu propuesta personalizada para tu evento en *{{location}}*:
 📅 *Fecha:* {{eventDate}}
 ⏱️ *Duración:* {{durationHours}} horas de show en vivo
 👥 *Aforo estimado:* {{guestCount}} personas
-✨ *Formato:* 100% Pop Rock en vivo (Cero pistas)
+✨ *Formato:* 100% Pop Rock en vivo
 
 Puedes consultar el desglose de tu show y confirmar tu fecha directamente en nuestro portal digital:
 👉 {{proposalLink}}
 
-_Nota: Para garantizar la exclusividad de tu fecha, los términos de esta propuesta se reservan por 48 horas._
+_Nota: La fecha se cierra con el anticipo verificado y la firma de contrato para seguridad de nuestros clientes._
 
 Cualquier duda o ajuste especial, estamos a tu disposición por este medio.
 *Vendetta Management*`
@@ -86,7 +89,12 @@ export function getTemplateForType(type: NotificationType, config: any, payload:
       return config?.msgTemplateQuote || TEMPLATE_CLIENT_QUOTE
 
     case "CLIENT_FOLLOWUP":
-      return config?.msgTemplateFollowUp || `Hola {{clientName}}, te escribo de *Vendetta Music* 🎸 para dar seguimiento a tu cotización. ¿Pudiste revisarla? Seguimos a tus órdenes.`
+      return config?.msgTemplateFollowUp || `Hola {{clientName}}, te escribo de *Vendetta Music* 🎸 para dar seguimiento a tu cotización. ¿Pudiste revisarla?
+
+👉 Consulta tu propuesta formal y confirma tu fecha aquí:
+https://vendetta.mx/propuesta/{{shortId}}
+
+Seguimos a tus órdenes.`
 
     case "CLIENT_REMINDER":
       return config?.msgTemplateReminder || `¡Hola {{clientName}}! 🎸 Estamos a 7 días de tu fecha.
@@ -113,37 +121,31 @@ Puedes responder directamente a este mensaje o consultar el estatus de tu evento
       if (isBar) {
         return config?.msgTemplateBarClose || `¡Hola {{clientName}}! 🎉
 
-Tu fecha para el *{{date}}* ha quedado oficialmente confirmada y agendada con *Vendetta Live Music*.
+Tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.
 
-📋 *Folio de Reservación:* {{shortId}}
+*Folio:* {{shortId}}
 
-✍️ *FIRMA DE TU CONTRATO DIGITAL:*
-Para consultar el estatus de tu evento y **firmar tu contrato digital**, entra al siguiente enlace con tu folio:
-
-👉 https://vendetta.mx/status/{{shortId}}
-
-Al ingresar tu firma podrás descargar el contrato en formato PDF de inmediato.
+✍️ Entra y firma tu contrato en el siguiente enlace:
+https://vendetta.mx/status/{{shortId}}
 
 ¡Gracias por confiar en *Vendetta*! 🎸
+
 —
-*Vendetta Live Music* | _vendetta.mx_`
+Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`
       } else {
         return config?.msgTemplateEventClose || `¡Felicidades {{clientName}}! 🎉
 
-Hemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente bloqueada y confirmada en nuestra agenda.
+Hemos recibido tu anticipo y tu fecha para el *{{date}}* ha quedado oficialmente bloqueada en nuestra agenda.
 
-📋 *Folio de Reservación:* {{shortId}}
+*Folio:* {{shortId}}
 
-✍️ *FIRMA DE TU CONTRATO DIGITAL:*
-Para consultar los detalles de tu evento y **firmar digitalmente tu contrato**, ingresa al siguiente enlace con tu folio:
+✍️ Entra y firma tu contrato en el siguiente enlace:
+https://vendetta.mx/status/{{shortId}}
 
-👉 https://vendetta.mx/status/{{shortId}}
+¡Gracias por confiar en *Vendetta* para este día tan especial! 🎸
 
-Al ingresar tu firma podrás descargar el contrato en formato PDF de inmediato.
-
-¡Gracias por confiar en *Vendetta Live Music* para este día tan especial! 🎸🤘
 —
-*Vendetta Live Music* | _vendetta.mx_`
+Visita *vendetta.mx* y consulta nuestro aviso de privacidad en: _vendetta.mx/privacidad_`
       }
 
     case "MUSICIAN_REMINDER_3DAYS":
@@ -167,9 +169,10 @@ _(Es indispensable confirmar hoy para coordinar un suplente a tiempo si no puede
     case "CLIENT_THANKS":
       return config?.msgTemplateThanks || `¡Hola {{clientName}}! 🎉 Todavía seguimos emocionados por lo de ayer.
       
-Queríamos agradecerte por confiar en *Vendetta* para tu evento. ¡Esperamos que la hayas pasado increíble!
+Fue un honor ser parte de tu evento. Nos encantaría que nos regales una reseña aquí para que más personas conozcan la experiencia Vendetta:
+👉 https://vendetta.mx/#testimoniales
 
-¡Gracias totales! 🤘🎸`
+¡Gracias totales por confiar en Vendetta! 🤘🎸`
 
     case "MUSICIAN_GIG":
       // Forzamos la nueva plantilla si la de la DB es la antigua o no tiene saludo
@@ -203,7 +206,9 @@ Queríamos agradecerte por confiar en *Vendetta* para tu evento. ¡Esperamos que
 {{songsList}}
  
 ⚠️ Confirma de recibido respondiendo este mensaje.
-— Administración Vendetta`
+—
+*Vendetta Live Music*
+👉 https://vendetta.mx`
 
     case "EVENT_CANCELLED":
       return `⚠️ *AVISO: EVENTO CANCELADO* ⚠️
@@ -215,7 +220,9 @@ Lamentamos informarte que el evento del próximo *{{date}}* ha sido cancelado po
 
 Por favor, toma tus precauciones y libera la fecha en tu agenda. 
 
-— Administración Vendetta`
+—
+*Vendetta Live Music*
+👉 https://vendetta.mx`
 
     case "MUSICIAN_TODAY_REMINDER":
       return config?.msgTemplateTodayReminder || `🎸 *RECORDATORIO DE SHOW HOY — VENDETTA* 🎸
