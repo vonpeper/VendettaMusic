@@ -350,5 +350,35 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
     assert.equal(calculateSuggestedMusicianPay(3, 1500, 2200), 2200)
     assert.equal(calculateSuggestedMusicianPay(2, 1500, 1800), 1800)
   })
+
+  it("debe validar la regla de duración de show de la banda (mínimo 2 horas, máximo 4 horas)", async () => {
+    const { validateShowDuration, MIN_SHOW_HOURS, MAX_SHOW_HOURS } = await import("./pricing")
+
+    assert.equal(MIN_SHOW_HOURS, 2)
+    assert.equal(MAX_SHOW_HOURS, 4)
+
+    // Menor a 2 horas -> Inválido con aviso de regla
+    const under = validateShowDuration(1.5)
+    assert.equal(under.valid, false)
+    assert.match(under.error || "", /mínimo 2 horas/)
+
+    const under1 = validateShowDuration(1)
+    assert.equal(under1.valid, false)
+
+    // Entre 2 y 4 horas -> Válido
+    assert.equal(validateShowDuration(2).valid, true)
+    assert.equal(validateShowDuration(2.5).valid, true)
+    assert.equal(validateShowDuration(3).valid, true)
+    assert.equal(validateShowDuration(4).valid, true)
+
+    // Mayor a 4 horas -> Inválido con aviso de regla
+    const over = validateShowDuration(4.5)
+    assert.equal(over.valid, false)
+    assert.match(over.error || "", /máximo 4 horas/)
+
+    const over5 = validateShowDuration(5)
+    assert.equal(over5.valid, false)
+    assert.match(over5.error || "", /máximo 4 horas/)
+  })
 })
 

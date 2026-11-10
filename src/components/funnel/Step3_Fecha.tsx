@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { FunnelData }  from "./FunnelWizard"
 import { Button }      from "@/components/ui/button"
-import { Calendar, Clock, AlertCircle, MessageCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Calendar, Clock, AlertCircle, MessageCircle, Loader2, ChevronLeft, ChevronRight, Check } from "lucide-react"
 import { formatDateMX } from "@/lib/utils"
 import {
   Select,
@@ -48,6 +48,17 @@ export default function Step3_Fecha({ data, onNext, onBack }: Props) {
   )
   const [startTime, setStartTime] = useState(data.startTime ?? "21:00")
   const [endTime,   setEndTime]   = useState(data.endTime   ?? "23:00")
+
+  // Cálculo dinámico de la duración del show y regla oficial (2 a 4 horas)
+  const showDuration = (() => {
+    if (!startTime || !endTime) return 2
+    const [h1, m1] = startTime.split(":").map(Number)
+    const [h2, m2] = endTime.split(":").map(Number)
+    if (isNaN(h1) || isNaN(h2)) return 2
+    let mins = (h2 * 60 + (m2 || 0)) - (h1 * 60 + (m1 || 0))
+    if (mins <= 0) mins += 24 * 60
+    return Math.round((mins / 60) * 10) / 10
+  })()
   const [dayStatus, setDayStatus] = useState<Record<string,DayStatus>>({})
   const [error,     setError]     = useState("")
   const [showWAFallback, setShowWAFallback] = useState(false)
@@ -139,6 +150,14 @@ export default function Step3_Fecha({ data, onNext, onBack }: Props) {
     }
     if (logisticalConflict) {
         setError("Hay un conflicto de logística con otra fecha. Por favor contáctanos para coordinar."); return
+    }
+    if (showDuration < 2) {
+      setError(`Regla oficial de show: La banda no realiza presentaciones menores a 2 horas (has configurado ${showDuration}h). Por favor ajusta tu horario.`);
+      return
+    }
+    if (showDuration > 4) {
+      setError(`Regla oficial de show: La banda no tocará más de 4 horas de show en vivo (has configurado ${showDuration}h). Por favor ajusta tu horario a máximo 4 horas.`);
+      return
     }
     onNext({
       requestedDate: dateToISO(selected),
@@ -337,6 +356,34 @@ export default function Step3_Fecha({ data, onNext, onBack }: Props) {
               </Select>
             </div>
           </div>
+
+          {/* Alerta / Badge de la regla de duración de 2 a 4 horas */}
+          {showDuration < 2 ? (
+            <div className="mt-4 p-3.5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-300 text-xs flex items-start gap-2.5 animate-in fade-in duration-300">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-amber-200">Regla Oficial de Show en Vivo (Vendetta):</p>
+                <p className="mt-0.5 text-[11px] text-amber-300/90 leading-relaxed">
+                  La banda no realiza presentaciones menores a 2 horas (has seleccionado {showDuration}h). El mínimo permitido es de 2 horas continuas de música en vivo.
+                </p>
+              </div>
+            </div>
+          ) : showDuration > 4 ? (
+            <div className="mt-4 p-3.5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-300 text-xs flex items-start gap-2.5 animate-in fade-in duration-300">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-amber-200">Regla Oficial de Show en Vivo (Vendetta):</p>
+                <p className="mt-0.5 text-[11px] text-amber-300/90 leading-relaxed">
+                  La banda no tocará más de 4 horas de show en vivo (has seleccionado {showDuration}h). El límite máximo es de 4 horas por evento. Si necesitas cubrir más tiempo, podemos cotizarte DJ adicional.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-3 text-[11px] text-emerald-400 font-medium flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>{showDuration} horas de show en vivo (Cumple con la regla oficial de 2 a 4 horas).</span>
+            </div>
+          )}
         </div>
       )}
 

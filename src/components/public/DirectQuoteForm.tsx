@@ -21,7 +21,8 @@ import {
   Check,
   ArrowRight,
   PartyPopper,
-  Clock
+  Clock,
+  AlertCircle
 } from "lucide-react"
 import {
   Dialog,
@@ -83,6 +84,17 @@ export function DirectQuoteForm({
   const [fecha, setFecha] = useState(initialDate || "")
   const [horaInicio, setHoraInicio] = useState("21:00")
   const [horaFin, setHoraFin] = useState("23:00")
+
+  // Duración en horas del show en vivo y regla oficial (2 a 4 horas)
+  const duracionHoras = useMemo(() => {
+    if (!horaInicio || !horaFin) return 2
+    const [h1, m1] = horaInicio.split(":").map(Number)
+    const [h2, m2] = horaFin.split(":").map(Number)
+    if (isNaN(h1) || isNaN(h2)) return 2
+    let mins = (h2 * 60 + (m2 || 0)) - (h1 * 60 + (m1 || 0))
+    if (mins <= 0) mins += 24 * 60
+    return Math.round((mins / 60) * 10) / 10
+  }, [horaInicio, horaFin])
 
   // Ubicación normalizada
   const [selectedEstado, setSelectedEstado] = useState<string>(() => {
@@ -235,6 +247,16 @@ export function DirectQuoteForm({
       return
     }
 
+    if (duracionHoras < 2) {
+      toast.error("Regla oficial: La banda no realiza presentaciones menores a 2 horas (mínimo 2 horas de show en vivo).")
+      return
+    }
+
+    if (duracionHoras > 4) {
+      toast.error("Regla oficial: La banda no tocará más de 4 horas de show en vivo (máximo 4 horas por evento).")
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -265,6 +287,7 @@ export function DirectQuoteForm({
         fecha,
         horaInicio,
         horaFin,
+        horasShow: Math.round(duracionHoras),
         invitados: aforo,
         estado: finalEstado,
         municipio: finalMunicipio,
@@ -398,6 +421,34 @@ export function DirectQuoteForm({
                   className="bg-black/50 border-white/15 text-white rounded-xl h-12 px-3 text-xs sm:text-sm font-mono focus:border-[#f59e0b] focus:ring-[#f59e0b]/20 [color-scheme:dark]"
                 />
               </div>
+
+              {/* Aviso dinámico de la regla de duración de show */}
+              {duracionHoras < 2 ? (
+                <div className="p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-300 text-xs flex items-start gap-2.5 animate-fadeIn">
+                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold text-amber-200">Regla Oficial de Show (Vendetta):</span>
+                    <p className="mt-0.5 text-[11px] text-amber-300/90 leading-relaxed">
+                      La banda no realiza presentaciones menores a 2 horas (has seleccionado {duracionHoras}h). El mínimo permitido es de 2 horas de show en vivo.
+                    </p>
+                  </div>
+                </div>
+              ) : duracionHoras > 4 ? (
+                <div className="p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-300 text-xs flex items-start gap-2.5 animate-fadeIn">
+                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold text-amber-200">Regla Oficial de Show (Vendetta):</span>
+                    <p className="mt-0.5 text-[11px] text-amber-300/90 leading-relaxed">
+                      La banda no tocará más de 4 horas de show en vivo (has seleccionado {duracionHoras}h). El límite máximo es de 4 horas por evento. Si requieres más tiempo, podemos cubrirlo con servicio de DJ profesional.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-[11px] text-emerald-400 font-medium flex items-center gap-1.5 pt-0.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>{duracionHoras} horas de show en vivo (Cumple con la regla oficial de 2 a 4 horas).</span>
+                </div>
+              )}
             </div>
           </div>
 

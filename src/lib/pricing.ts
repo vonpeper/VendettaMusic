@@ -271,6 +271,30 @@ export function calculateEventHours(startTimeStr?: string | null, endTimeStr?: s
 }
 
 /**
+ * Reglas de Duración Oficial de Show en Vivo (Vendetta Music):
+ * - Mínimo obligatorio: 2 horas
+ * - Máximo permitido: 4 horas
+ */
+export const MIN_SHOW_HOURS = 2
+export const MAX_SHOW_HOURS = 4
+
+export const SHOW_DURATION_RULE_MSG_MIN =
+  "Regla oficial de show: La banda no realiza presentaciones menores a 2 horas (mínimo 2 horas de show en vivo)."
+
+export const SHOW_DURATION_RULE_MSG_MAX =
+  "Regla oficial de show: La banda no tocará más de 4 horas de show en vivo (máximo 4 horas por evento)."
+
+export function validateShowDuration(durationHours: number): { valid: boolean; error?: string } {
+  if (durationHours < MIN_SHOW_HOURS) {
+    return { valid: false, error: SHOW_DURATION_RULE_MSG_MIN }
+  }
+  if (durationHours > MAX_SHOW_HOURS) {
+    return { valid: false, error: SHOW_DURATION_RULE_MSG_MAX }
+  }
+  return { valid: true }
+}
+
+/**
  * Tabulador oficial de pago a músicos (Vendetta Music):
  * - Duración base = 2 horas -> $1,500 MXN base por músico (o base configurada).
  * - Duración > 2 horas: cálculo proporcional:

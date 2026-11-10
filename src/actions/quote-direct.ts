@@ -181,9 +181,37 @@ export async function submitPublicQuoteAction(
     const estado = (input.estado || "Estado de México").trim()
     const tipoEvento = (input.tipoEvento || "Evento Privado").trim()
     const aforo = Number(input.invitados) || 100
-    const horasShow = Number(input.horasShow) || 2
     const horaInicio = (input.horaInicio || "21:00").trim()
     const horaFin = (input.horaFin || "23:00").trim()
+
+    // Calcular duración y validar regla oficial de 2 a 4 horas de show en vivo
+    let duracionCalculada = 2
+    if (horaInicio && horaFin) {
+      const [h1, m1] = horaInicio.split(":").map(Number)
+      const [h2, m2] = horaFin.split(":").map(Number)
+      if (!isNaN(h1) && !isNaN(h2)) {
+        let diffMins = (h2 * 60 + (m2 || 0)) - (h1 * 60 + (m1 || 0))
+        if (diffMins <= 0) diffMins += 24 * 60
+        duracionCalculada = Math.round((diffMins / 60) * 10) / 10
+      }
+    }
+
+    const horasShow = Number(input.horasShow) || duracionCalculada || 2
+
+    if (horasShow < 2) {
+      return {
+        success: false,
+        error: "Regla oficial de show: La banda no realiza presentaciones menores a 2 horas (mínimo 2 horas de show en vivo)."
+      }
+    }
+
+    if (horasShow > 4) {
+      return {
+        success: false,
+        error: "Regla oficial de show: La banda no tocará más de 4 horas de show en vivo (máximo 4 horas por evento)."
+      }
+    }
+
     const horario = `${horaInicio} a ${horaFin}`
 
     // 2. Generar Folio Único Oficial VND-XXXX

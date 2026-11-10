@@ -67,7 +67,20 @@ export async function POST(req: NextRequest) {
       throw new Error(`Fecha inválida recibida: ${requestedDate}`)
     }
 
-
+    // Validar regla de duración oficial de la banda (mínimo 2 horas, máximo 4 horas)
+    const bandHours = Number(body.bandHours) || 2
+    if (bandHours < 2) {
+      return NextResponse.json({
+        success: false,
+        error: "Regla oficial de show: La banda no realiza presentaciones menores a 2 horas (mínimo 2 horas de show en vivo)."
+      }, { status: 400 })
+    }
+    if (bandHours > 4) {
+      return NextResponse.json({
+        success: false,
+        error: "Regla oficial de show: La banda no tocará más de 4 horas de show en vivo (máximo 4 horas por evento)."
+      }, { status: 400 })
+    }
 
     const booking = await db.bookingRequest.create({
       data: {

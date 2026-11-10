@@ -123,6 +123,15 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
   function handleNext() {
     if (!selectedPkg) { setError("Selecciona un paquete para continuar."); return }
     if (!venueType)   { setError("Selecciona el tipo de venue."); return }
+
+    if (bandHrs < 2) {
+      setError("Regla oficial: La banda no realiza presentaciones menores a 2 horas (mínimo 2 horas de show en vivo).")
+      return
+    }
+    if (bandHrs > 4) {
+      setError("Regla oficial: La banda no tocará más de 4 horas de show en vivo (máximo 4 horas por evento).")
+      return
+    }
     
     const pkg = packages.find(p => p.id === selectedPkg)!
 
@@ -309,11 +318,39 @@ export default function Step1_Paquete({ packages, extras = [], data, onNext }: P
                   <Clock className="w-4 h-4 text-primary" /> 2. Horas de Show (Banda)
                 </label>
                 <div className="flex items-center gap-3 bg-black/20 p-2 rounded-2xl border border-white/5 w-fit">
-                  <Button variant="ghost" size="icon" onClick={() => setBandHrs(Math.max(pkg?.minDuration || 2, bandHrs - 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">-</Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => {
+                      if (bandHrs <= 2) {
+                        setError("Regla oficial: La banda no realiza presentaciones menores a 2 horas (mínimo 2 horas de show en vivo).")
+                        return
+                      }
+                      setError("")
+                      setBandHrs(Math.max(2, bandHrs - 1))
+                    }} 
+                    className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20"
+                  >
+                    -
+                  </Button>
                   <span className="text-xl font-black text-white w-10 text-center">{bandHrs}h</span>
-                  <Button variant="ghost" size="icon" onClick={() => setBandHrs(Math.min(pkg?.maxDuration || 5, bandHrs + 1))} className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20">+</Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => {
+                      if (bandHrs >= 4) {
+                        setError("Regla oficial: La banda no tocará más de 4 horas de show en vivo (máximo 4 horas por evento).")
+                        return
+                      }
+                      setError("")
+                      setBandHrs(Math.min(4, bandHrs + 1))
+                    }} 
+                    className="h-8 w-8 rounded-full border border-white/10 hover:bg-primary/20"
+                  >
+                    +
+                  </Button>
                 </div>
-                <p className="text-[10px] text-zinc-400 font-bold tracking-tight">* Mínimo {pkg?.minDuration || 2} horas para contratación. Máximo {pkg?.maxDuration || 5} horas.</p>
+                <p className="text-[10px] text-zinc-400 font-bold tracking-tight">* Regla oficial: Mínimo 2 horas y máximo 4 horas de show en vivo.</p>
               </div>
 
               <div className="space-y-3">
