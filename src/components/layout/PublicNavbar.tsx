@@ -1,4 +1,5 @@
 "use client"
+import React, { useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -24,6 +25,42 @@ const NAV_LINKS = [
 ]
 
 export function PublicNavbar() {
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith("/#")) {
+      const targetId = href.replace("/#", "")
+      if (typeof window !== "undefined" && window.location.pathname === "/") {
+        e.preventDefault()
+        const scroll = () => {
+          const el = document.getElementById(targetId)
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" })
+          }
+        }
+        scroll()
+        setTimeout(scroll, 120)
+        setTimeout(scroll, 350)
+        window.history.pushState(null, "", href)
+      }
+    }
+  }
+
+  // Soporte directo cuando se navega con hash en la URL desde otra página o recarga
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const hash = window.location.hash
+    if (hash) {
+      const id = hash.replace("#", "")
+      const scroll = () => {
+        const el = document.getElementById(id)
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
+      }
+      setTimeout(scroll, 250)
+      setTimeout(scroll, 600)
+    }
+  }, [])
+
   return (
     <header className="fixed top-0 w-full z-50 border-b border-white/10 bg-[#07080D]/90 md:bg-[#07080D]/75 backdrop-blur-md shadow-[0_8px_32px_rgba(7,8,13,0.6)] transform-gpu">
       {/* Subtle glowing accent line at the top border */}
@@ -53,6 +90,7 @@ export function PublicNavbar() {
                 <Link 
                   key={link.label} 
                   href={link.href} 
+                  onClick={(e) => handleNavClick(e, link.href)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#20D5E5]/40 bg-[#20D5E5]/10 text-[#20D5E5] hover:bg-[#20D5E5]/20 hover:border-[#20D5E5]/70 hover:shadow-[0_0_14px_rgba(32,213,229,0.35)] text-xs font-semibold uppercase tracking-wider transition-all duration-300 whitespace-nowrap cursor-pointer"
                 >
                   <Disc3 className="w-3.5 h-3.5 animate-spin" />
@@ -64,6 +102,7 @@ export function PublicNavbar() {
               <Link 
                 key={link.label} 
                 href={link.href} 
+                onClick={(e) => handleNavClick(e, link.href)}
                 className="font-sans text-xs font-semibold uppercase tracking-[0.16em] text-[#F2F0EB]/80 hover:text-[#FF5A5F] hover:drop-shadow-[0_0_8px_rgba(255,90,95,0.6)] transition-all whitespace-nowrap"
               >
                 {link.label}
@@ -116,6 +155,7 @@ export function PublicNavbar() {
                         render={
                           <Link 
                             href={link.href} 
+                            onClick={(e) => handleNavClick(e, link.href)}
                             className={`flex items-center py-3.5 text-sm font-semibold uppercase tracking-[0.18em] transition-all border-b border-white/5 last:border-none ${
                               (link as any).isButton 
                                 ? "text-[#20D5E5] hover:text-[#20D5E5]/80 font-bold" 
@@ -145,7 +185,11 @@ export function PublicNavbar() {
                 <div className="p-6 mt-auto space-y-3">
                   <SheetClose 
                     render={
-                      <Link href="/#reproductor" className="block w-full" />
+                      <Link 
+                        href="/#reproductor" 
+                        onClick={(e) => handleNavClick(e, "/#reproductor")}
+                        className="block w-full" 
+                      />
                     }
                   >
                     <Button variant="outline" className="w-full py-5 border-[#20D5E5]/40 bg-[#20D5E5]/10 text-[#20D5E5] hover:bg-[#20D5E5]/20 font-semibold text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2">

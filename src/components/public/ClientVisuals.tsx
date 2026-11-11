@@ -94,7 +94,7 @@ const DynamicVendettaExperience = dynamic(
   { ssr: false }
 )
 
-export const VinylShowcase = withLazyScrollMount(DynamicVinylShowcase, "450px")
+export const VinylShowcase = DynamicVinylShowcase
 export const AutographWall = withLazyScrollMount(DynamicAutographWall, "500px")
 export const InstagramReelsSection = withLazyScrollMount(DynamicInstagramReelsSection, "450px")
 export const PhotoGallery = withLazyScrollMount(DynamicPhotoGallery, "500px")

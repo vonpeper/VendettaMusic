@@ -640,7 +640,9 @@ export default async function HomePage() {
           </div>
 
           {/* -- VINYL SHOWCASE TOCADISCOS INTERACTIVO -- */}
-          <VinylShowcase />
+          <div id="reproductor" className="w-full scroll-mt-24 md:scroll-mt-28">
+            <VinylShowcase />
+          </div>
 
         </div>
 
