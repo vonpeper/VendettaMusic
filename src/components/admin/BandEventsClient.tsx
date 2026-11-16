@@ -38,6 +38,8 @@ type BandEvent = {
   viaticos?: number
   ivaAmount: number
   totalIncome: number
+  deposit?: number
+  balance?: number
   eventType: string
   status: string
   location: string | null
@@ -126,6 +128,8 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
       viaticosAmount: e.viaticos || 0,
       ivaAmount: e.ivaAmount,
       totalIncome: e.totalIncome,
+      deposit: e.deposit || 0,
+      balance: e.balance || 0,
       eventType: e.eventType,
       status: e.status,
       location: e.location,
@@ -260,6 +264,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground text-right">Viáticos</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground text-right">IVA</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground text-right">Total</th>
+              <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground text-right">Anticipo</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Estatus</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Tipo</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Origen</th>
@@ -268,7 +273,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={11} className="px-4 py-16 text-center text-muted-foreground">
+              <tr><td colSpan={12} className="px-4 py-16 text-center text-muted-foreground">
                 No hay eventos que coincidan con los filtros aplicados.
               </td></tr>
             ) : filtered.map(ev => (
@@ -291,6 +296,13 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
                 </td>
                 <td className="px-4 py-3 text-right text-muted-foreground">{ev.ivaAmount > 0 ? MXN(ev.ivaAmount) : <span className="text-muted-foreground/50">—</span>}</td>
                 <td className="px-4 py-3 text-right font-bold text-foreground">{MXN(ev.totalIncome)}</td>
+                <td className="px-4 py-3 text-right">
+                  {(ev.deposit && ev.deposit > 0) ? (
+                    <span className="font-bold text-amber-600 dark:text-amber-400">{MXN(ev.deposit)}</span>
+                  ) : (
+                    <span className="text-muted-foreground/40">$0</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <StatusSelector 
                     eventId={ev.id} 
@@ -366,6 +378,9 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
                   <div className="text-[10px] text-muted-foreground">Base: {MXN(ev.baseIncome)}</div>
                   {(ev.viaticos && ev.viaticos > 0) ? (
                     <div className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">Viáticos: {MXN(ev.viaticos)}</div>
+                  ) : null}
+                  {(ev.deposit && ev.deposit > 0) ? (
+                    <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Anticipo: {MXN(ev.deposit)}</div>
                   ) : null}
                   {ev.ivaAmount > 0 ? (
                     <div className="text-[10px] text-muted-foreground">IVA: {MXN(ev.ivaAmount)}</div>

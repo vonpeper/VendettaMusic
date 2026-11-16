@@ -484,14 +484,15 @@ export function UnifiedEventQuoteForm({
     const rawDep = initialData?.depositAmount ?? initialData?.deposit ?? initialData?.bookingRequest?.depositAmount
     if (rawDep === undefined || rawDep === null) return false
     const num = Number(rawDep)
-    if (num <= 0) return false
+    // Si viene 0 explícito, ES manual para evitar que el efecto lo sobreescriba con 50%
+    if (num === 0) return true
     const totalEst = Number(initialData?.totalAmount || initialData?.amount || initialData?.baseAmount || 0)
     if (totalEst > 0 && Math.abs(num - Math.round(totalEst * 0.5)) <= 50) return false
     return true
   })
   const [depositAmount, setDepositAmount] = useState<number | null>(() => {
     const rawDep = initialData?.depositAmount ?? initialData?.deposit ?? initialData?.bookingRequest?.depositAmount
-    if (rawDep !== undefined && rawDep !== null && Number(rawDep) > 0) return Number(rawDep)
+    if (rawDep !== undefined && rawDep !== null && !isNaN(Number(rawDep))) return Number(rawDep)
     return null
   })
 
@@ -568,7 +569,7 @@ export function UnifiedEventQuoteForm({
       discountAmount,
       additionalItems,
       invoice,
-      depositAmount: isManualDeposit ? depositAmount : undefined
+      depositAmount: isManualDeposit ? (depositAmount ?? 0) : undefined
     })
   }, [basePrice, viaticosAmount, discountAmount, additionalItems, invoice, isManualDeposit, depositAmount])
 
@@ -1885,7 +1886,7 @@ export function UnifiedEventQuoteForm({
                       value={depositAmount}
                       onChange={(val) => {
                         setIsManualDeposit(true)
-                        setDepositAmount(val)
+                        setDepositAmount(val ?? 0)
                       }}
                       disabled={!isManualDeposit}
                       placeholder="$0.00"
@@ -1895,6 +1896,33 @@ export function UnifiedEventQuoteForm({
                           : "border-amber-500/50 focus:border-amber-500"
                       }`}
                     />
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsManualDeposit(true)
+                          setDepositAmount(0)
+                        }}
+                        className={`text-[11px] px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                          depositAmount === 0 && isManualDeposit
+                            ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold"
+                            : "text-amber-600 hover:text-amber-700 underline"
+                        }`}
+                      >
+                        $0.00 (Sin anticipo)
+                      </button>
+                      <span className="text-[11px] text-muted-foreground">•</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsManualDeposit(false)
+                          setDepositAmount(totals.requiredDeposit)
+                        }}
+                        className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
+                      >
+                        50% Sugerido ({formatCurrencyMXN(totals.requiredDeposit)})
+                      </button>
+                    </div>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
                       {!isManualDeposit
                         ? "Recalculado de forma automática como el 50% oficial del Total Final del Evento."

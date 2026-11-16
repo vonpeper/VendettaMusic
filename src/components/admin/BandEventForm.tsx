@@ -45,11 +45,13 @@ export function BandEventForm({ onClose, editing }: any) {
 
   const [base, setBase] = useState(editing?.baseIncome ?? 0)
   const [viaticos, setViaticos] = useState(editing?.viaticosAmount ?? editing?.viaticos ?? 0)
+  const [deposit, setDeposit] = useState(editing?.deposit ?? 0)
   const [requiresInvoice, setRequiresInvoice] = useState(editing?.invoice || (editing?.ivaAmount > 0))
   
   const subtotal = Math.max(0, base + viaticos)
   const ivaAmount = requiresInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
   const totalWithTax = subtotal + ivaAmount
+  const balance = Math.max(0, totalWithTax - deposit)
 
   if (!mounted) return null
 
@@ -132,7 +134,7 @@ export function BandEventForm({ onClose, editing }: any) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Estatus</Label>
-                <select id="status" name="status" defaultValue={editing?.status || "completed"}
+                <select id="status" name="status" defaultValue={editing?.status || "agendado"}
                   className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground capitalize">
                   {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -144,29 +146,43 @@ export function BandEventForm({ onClose, editing }: any) {
             <legend className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
               <Calculator className="w-3.5 h-3.5" /> Finanzas
             </legend>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="baseAmount">Honorarios Show ($)</Label>
                 <Input id="baseAmount" name="baseAmount" type="number" step="0.01"
                   value={base} onChange={e => setBase(parseFloat(e.target.value) || 0)}
-                  className="bg-background border-border/40" />
+                  className="bg-background border-border/40 font-mono" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="viaticosAmount">Viáticos Traslado ($)</Label>
                 <Input id="viaticosAmount" name="viaticosAmount" type="number" step="0.01"
                   value={viaticos} onChange={e => setViaticos(parseFloat(e.target.value) || 0)}
-                  className="bg-background border-border/40" />
+                  className="bg-background border-border/40 font-mono" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="deposit" className="flex items-center justify-between">
+                  <span>Anticipo Cobrado ($)</span>
+                </Label>
+                <Input id="deposit" name="deposit" type="number" step="0.01" min={0}
+                  value={deposit} onChange={e => setDeposit(parseFloat(e.target.value) || 0)}
+                  className="bg-background border-border/40 font-mono font-bold text-amber-600 dark:text-amber-400" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="totalIncomeDisplay">Total Cobrado (Neto)</Label>
                 <Input id="totalIncomeDisplay" type="number" step="0.01"
                   value={totalWithTax}
                   readOnly
-                  className="bg-background border-border/40 font-bold text-primary opacity-80" />
+                  className="bg-background border-border/40 font-bold text-primary opacity-80 font-mono" />
               </div>
               <input type="hidden" name="amount" value={subtotal} />
               <input type="hidden" name="totalIncome" value={totalWithTax} />
               <input type="hidden" name="ivaAmount" value={ivaAmount} />
+              <input type="hidden" name="balance" value={balance} />
+            </div>
+
+            <div className="flex justify-between items-center text-xs text-muted-foreground pt-1">
+              <span>Saldo pendiente por liquidar: <strong className="text-foreground">${balance.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong></span>
+              {deposit > 0 && <span className="text-amber-600 dark:text-amber-400 font-bold">Reserva en banco: ${deposit.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>}
             </div>
 
             <label className="flex items-center gap-3 cursor-pointer mt-4">

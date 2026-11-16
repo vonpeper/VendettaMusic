@@ -458,11 +458,13 @@ export function CommercialClosingCard({
   // Sanidad de Datos: Descartar el valor anómalo $6,728 o valores desfasados del 30% anterior
   const isErroneousLegacy6728 = initialDeposit === 6728 && !hasInvoice
   const matchesAuto50 = initialDeposit > 0 && Math.abs(initialDeposit - autoDeposit50) <= 50
-  const hasCustomDepositInitially = initialDeposit > 0 && !matchesAuto50 && !isErroneousLegacy6728 && Math.abs(initialDeposit - Math.round(totalAmount * 0.3)) > 50
+  const hasCustomDepositInitially = initialDeposit !== undefined && initialDeposit !== null && (
+    initialDeposit === 0 || (!matchesAuto50 && !isErroneousLegacy6728 && Math.abs(initialDeposit - Math.round(totalAmount * 0.3)) > 50)
+  )
 
-  const [manualDeposit, setManualDeposit] = useState<boolean>(hasCustomDepositInitially)
+  const [manualDeposit, setManualDeposit] = useState<boolean>(Boolean(hasCustomDepositInitially))
   const [customDepositAmount, setCustomDepositAmount] = useState<number>(
-    hasCustomDepositInitially ? initialDeposit : autoDeposit50
+    initialDeposit !== undefined && initialDeposit !== null && !isErroneousLegacy6728 ? initialDeposit : autoDeposit50
   )
 
   const effectiveDeposit = manualDeposit ? customDepositAmount : autoDeposit50
@@ -1140,15 +1142,17 @@ export function CommercialClosingCard({
         </div>
       </div>
 
-      {/* 7. Anticipo: 50% Obligatorio Autocalculado con Toggle para Ajuste Manual */}
+      {/* 7. Anticipo: 50% Sugerido Oficial o Ajuste Manual */}
       <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/30 border border-border space-y-3">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Anticipo Obligatorio de Apartado (50%)
+              Anticipo Pactado / Confirmado
             </span>
             <p className="text-[11px] text-muted-foreground">
-              {manualDeposit ? "Ajuste manual personalizado activo" : "50% autocalculado sobre total pactado"}
+              {manualDeposit 
+                ? (customDepositAmount === 0 ? "Sin anticipo registrado ($0.00)" : `Monto personalizado: ${MXN(customDepositAmount)}`)
+                : `50% sugerido oficial: ${MXN(autoDeposit50)}`}
             </p>
           </div>
 
@@ -1171,26 +1175,48 @@ export function CommercialClosingCard({
             ) : (
               <>
                 <ToggleLeft className="w-6 h-6 text-muted-foreground" />
-                <span className="text-muted-foreground">Automático (50%)</span>
+                <span className="text-muted-foreground">50% Sugerido</span>
               </>
             )}
           </button>
         </div>
 
         {manualDeposit ? (
-          <div className="pt-2 border-t border-border/50">
-            <Label className="text-[11px] font-bold text-foreground mb-1.5 block">
+          <div className="pt-2 border-t border-border/50 space-y-2">
+            <Label className="text-[11px] font-bold text-foreground block">
               Monto Manual de Anticipo ($)
             </Label>
-            <Input
-              type="number"
-              min={0}
-              max={totalAmount}
-              step={500}
-              value={customDepositAmount || ""}
-              onChange={(e) => setCustomDepositAmount(Number(e.target.value) || 0)}
-              className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B]"
-            />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <Input
+                type="number"
+                min={0}
+                max={totalAmount}
+                step={500}
+                value={customDepositAmount}
+                onChange={(e) => setCustomDepositAmount(Number(e.target.value) || 0)}
+                className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B] flex-1"
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCustomDepositAmount(0)}
+                  className={`h-10 text-xs px-3 rounded-xl shrink-0 ${customDepositAmount === 0 ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold border-amber-500/40" : ""}`}
+                >
+                  $0 (Sin anticipo)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCustomDepositAmount(autoDeposit50)}
+                  className="h-10 text-xs px-3 rounded-xl shrink-0"
+                >
+                  50% ({MXN(autoDeposit50)})
+                </Button>
+              </div>
+            </div>
           </div>
         ) : null}
       </div>
@@ -1238,8 +1264,10 @@ export function CommercialClosingCard({
           <span className="text-[#6F0D2B] dark:text-rose-400 font-mono text-base">{MXN(totalAmount)}</span>
         </div>
         <div className="flex justify-between items-center text-muted-foreground">
-          <span>Anticipo para Apartar (50%):</span>
-          <span className="text-foreground font-bold font-mono">{MXN(effectiveDeposit)}</span>
+          <span>Anticipo Apartado:</span>
+          <span className="text-foreground font-bold font-mono">
+            {MXN(effectiveDeposit)} {effectiveDeposit === 0 ? "(Sin anticipo)" : ""}
+          </span>
         </div>
         <div className="flex justify-between items-center text-muted-foreground">
           <span>Saldo a Liquidar el Día del Show:</span>

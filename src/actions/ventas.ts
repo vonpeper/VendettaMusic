@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { notifyMusicians, dispatchNotification, notifyEventCancellation } from "@/lib/notifications"
 import { formatDateMX } from "@/lib/utils"
+import { computeCanonicalFinancials, revalidateEventRoutes } from "@/lib/events-sync"
 
 export async function markBookingAsCompleted(bookingId: string) {
   try {
@@ -937,7 +938,8 @@ export async function updateTotalAmountAction(
   bookingId: string, 
   baseAmount: number, 
   viaticosAmount?: number,
-  discountAmount?: number
+  discountAmount?: number,
+  depositAmount?: number
 ) {
   try {
     const booking = await db.bookingRequest.findUnique({
@@ -951,36 +953,36 @@ export async function updateTotalAmountAction(
     const finalDiscount = discountAmount !== undefined ? Math.max(0, discountAmount) : Number(booking.discountAmount || 0)
     const lineItemsTotal = (booking.lineItems || []).reduce((acc: number, it: any) => acc + Number(it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
     
-    // Subtotal antes de impuestos
-    const subtotal = Math.max(0, finalBase + finalViaticos + lineItemsTotal - finalDiscount)
-
     const hasInvoice = Boolean(booking.invoice || booking.event?.invoice)
-    const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
-    const totalWithTax = subtotal + ivaAmount
 
-    // Anticipo oficial de Vendetta: exactamente el 50% del Total Final
-    const requiredDeposit = Math.round(totalWithTax * 0.5)
-    const currentDeposit = Number(booking.depositAmount || 0)
+    // Preservar estrictamente el anticipo existente a menos que se pase uno explícito
+    const explicitDeposit = (depositAmount !== undefined && depositAmount !== null && !isNaN(Number(depositAmount)))
+      ? Number(depositAmount)
+      : (booking.depositAmount !== null && booking.depositAmount !== undefined)
+      ? Number(booking.depositAmount)
+      : undefined
 
-    // Recalcular anticipo dinámicamente si no ha sido liquidado
-    const isPaid = booking.paymentStatus === "paid"
-    const finalDeposit = (isPaid && currentDeposit >= totalWithTax) 
-      ? currentDeposit 
-      : requiredDeposit
+    const financials = computeCanonicalFinancials({
+      baseAmount: finalBase,
+      viaticosAmount: finalViaticos,
+      discountAmount: finalDiscount,
+      additionalItemsTotal: lineItemsTotal,
+      invoice: hasInvoice,
+      depositAmount: explicitDeposit
+    })
 
-    // Saldo pendiente: Total Final - Anticipo Pagado (o pagos registrados)
-    const paidAmount = (booking.payments || []).filter(p => p.status === 'completed' || p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0)
-    const balance = isPaid ? 0 : Math.max(0, totalWithTax - paidAmount)
+    const isPaid = booking.paymentStatus === "paid" || booking.event?.status === "completado"
+    const balance = isPaid ? 0 : financials.balance
 
     await db.$transaction(async (tx) => {
       // 1. Actualizar BookingRequest
       await tx.bookingRequest.update({
         where: { id: bookingId },
         data: {
-          baseAmount: finalBase,
-          viaticosAmount: finalViaticos,
-          discountAmount: finalDiscount,
-          depositAmount: finalDeposit,
+          baseAmount: financials.baseAmount,
+          viaticosAmount: financials.viaticosAmount,
+          discountAmount: financials.discountAmount,
+          depositAmount: financials.deposit,
         }
       })
 
@@ -989,11 +991,11 @@ export async function updateTotalAmountAction(
         await tx.event.update({
           where: { id: booking.eventId },
           data: {
-            amount: subtotal,
-            deposit: finalDeposit,
-            ivaAmount: ivaAmount,
-            totalWithTax: totalWithTax,
-            totalIncome: totalWithTax,
+            amount: financials.subtotal,
+            deposit: financials.deposit,
+            ivaAmount: financials.ivaAmount,
+            totalWithTax: financials.totalWithTax,
+            totalIncome: financials.totalWithTax,
             balance: balance
           }
         })
@@ -1001,11 +1003,11 @@ export async function updateTotalAmountAction(
         if (booking.event?.quoteId) {
           await tx.quote.update({
             where: { id: booking.event.quoteId },
-            data: { totalEstimated: totalWithTax }
+            data: { totalEstimated: financials.totalWithTax }
           }).catch(() => {})
           await tx.quoteItem.updateMany({
             where: { quoteId: booking.event.quoteId },
-            data: { unitCost: finalBase }
+            data: { unitCost: financials.baseAmount }
           }).catch(() => {})
         }
       }
@@ -1016,16 +1018,11 @@ export async function updateTotalAmountAction(
       syncEventToGoogleCalendar(booking.eventId).catch(e => console.error("Error syncing to Google Calendar:", e))
     }
 
-    revalidatePath("/admin/ventas")
-    revalidatePath(`/admin/ventas/${bookingId}`)
-    if (booking.shortId) {
-      revalidatePath(`/admin/ventas/${booking.shortId}`)
-      revalidatePath(`/propuesta/${booking.shortId}`)
-      revalidatePath(`/status/${booking.shortId}`)
-    }
-    revalidatePath("/admin/eventos")
-    revalidatePath("/admin/eventualidades")
-    revalidatePath("/admin")
+    revalidateEventRoutes({
+      bookingId,
+      shortId: booking.shortId,
+      eventId: booking.eventId
+    })
 
     return { success: true }
   } catch (error) {
@@ -1370,8 +1367,9 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
       }
     }
 
-    const deposit = params.depositAmount && params.depositAmount > 0
-      ? params.depositAmount
+    const hasExplicitDeposit = params.depositAmount !== undefined && params.depositAmount !== null && !isNaN(Number(params.depositAmount))
+    const deposit = hasExplicitDeposit
+      ? Math.max(0, Number(params.depositAmount))
       : Math.round(total * 0.50)
 
     const updatedPackage = params.packageName?.trim() || booking.packageName || "Show Vendetta"
@@ -1440,20 +1438,14 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
       }
     })
 
-    if (params.saveOnly) {
-      revalidatePath("/admin/ventas")
-      revalidatePath(`/admin/ventas/${booking.id}`)
-      if (booking.shortId) {
-        revalidatePath(`/admin/ventas/${booking.shortId}`)
-        revalidatePath(`/propuesta/${booking.shortId}`)
-        revalidatePath(`/status/${booking.shortId}`)
-      }
-      revalidatePath("/admin/ventas/[id]", "page")
-      revalidatePath("/admin/eventos")
-      revalidatePath("/admin/eventualidades")
-      revalidatePath("/admin")
-      revalidatePath("/agenda")
+    const targetEventId = booking.eventId || booking.event?.id
+    revalidateEventRoutes({
+      bookingId: booking.id,
+      shortId: booking.shortId,
+      eventId: targetEventId,
+    })
 
+    if (params.saveOnly) {
       return {
         success: true,
         message: "Cotización actualizada y guardada con éxito."
@@ -1509,18 +1501,11 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
       }
     }).catch(e => console.warn("Could not log notification:", e))
 
-    revalidatePath("/admin/ventas")
-    revalidatePath(`/admin/ventas/${booking.id}`)
-    if (booking.shortId) {
-      revalidatePath(`/admin/ventas/${booking.shortId}`)
-      revalidatePath(`/propuesta/${booking.shortId}`)
-      revalidatePath(`/status/${booking.shortId}`)
-    }
-    revalidatePath("/admin/ventas/[id]", "page")
-    revalidatePath("/admin/eventos")
-    revalidatePath("/admin/eventualidades")
-    revalidatePath("/admin")
-    revalidatePath("/agenda")
+    revalidateEventRoutes({
+      bookingId: booking.id,
+      shortId: booking.shortId,
+      eventId: targetEventId,
+    })
 
     return { 
       success: true, 

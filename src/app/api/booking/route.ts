@@ -10,6 +10,7 @@ import crypto from "crypto"
 import { getAppUrl } from "@/lib/url"
 import { requireAdminApi as requireAdmin } from "@/lib/auth-guards"
 import { generateUniqueShortId } from "@/lib/folios"
+import { computeCanonicalFinancials, revalidateEventRoutes } from "@/lib/events-sync"
 
 // --- 🛡️ IN-MEMORY RATE LIMITER (Anti-Spam) ---
 const bookingAttempts = new Map<string, { count: number; firstAttempt: number }>()
@@ -526,10 +527,16 @@ export async function PUT(req: NextRequest) {
     if (updates.clientProvidesAudio !== undefined) dataToUpdate.clientProvidesAudio = Boolean(updates.clientProvidesAudio)
     if (updates.startTime)     dataToUpdate.startTime     = updates.startTime
     if (updates.endTime)       dataToUpdate.endTime       = updates.endTime
-    if (updates.baseAmount)    dataToUpdate.baseAmount    = parseFloat(updates.baseAmount)
-    if (updates.depositAmount) dataToUpdate.depositAmount = parseFloat(updates.depositAmount)
-    if (updates.viaticosAmount !== undefined) dataToUpdate.viaticosAmount = parseFloat(updates.viaticosAmount)
-    if (updates.adminNote)     dataToUpdate.adminNote     = updates.adminNote
+    if (updates.baseAmount !== undefined && updates.baseAmount !== null && updates.baseAmount !== "") {
+      dataToUpdate.baseAmount = parseFloat(updates.baseAmount)
+    }
+    if (updates.depositAmount !== undefined && updates.depositAmount !== null && updates.depositAmount !== "") {
+      dataToUpdate.depositAmount = parseFloat(updates.depositAmount)
+    }
+    if (updates.viaticosAmount !== undefined && updates.viaticosAmount !== null && updates.viaticosAmount !== "") {
+      dataToUpdate.viaticosAmount = parseFloat(updates.viaticosAmount)
+    }
+    if (updates.adminNote !== undefined) dataToUpdate.adminNote = updates.adminNote
     // Campos de Personalización
     if (updates.bandHours !== undefined)   dataToUpdate.bandHours   = parseInt(updates.bandHours)
     if (updates.djHours !== undefined)     dataToUpdate.djHours     = parseInt(updates.djHours)
@@ -598,12 +605,15 @@ export async function PUT(req: NextRequest) {
 
       const lineItems = await db.bookingLineItem.findMany({ where: { bookingRequestId: booking.id } })
       const lineItemsTotal = lineItems.reduce((acc, it) => acc + (it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
-      const subtotal = Math.max(0, booking.baseAmount + (booking.viaticosAmount || 0) + lineItemsTotal - (booking.discountAmount || 0))
-      const hasInvoice = Boolean(booking.invoice)
-      const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
-      const totalWithTax = subtotal + ivaAmount
-      const deposit = Number(booking.depositAmount || 0)
-      const balance = Math.max(0, totalWithTax - deposit)
+
+      const financials = computeCanonicalFinancials({
+        baseAmount: booking.baseAmount,
+        viaticosAmount: booking.viaticosAmount || 0,
+        additionalItemsTotal: lineItemsTotal,
+        discountAmount: booking.discountAmount || 0,
+        invoice: Boolean(booking.invoice),
+        depositAmount: booking.depositAmount ?? undefined,
+      })
 
       await db.event.update({
         where: { id: booking.eventId },
@@ -612,13 +622,13 @@ export async function PUT(req: NextRequest) {
           guestCount:       booking.guestCount,
           performanceStart: booking.startTime,
           performanceEnd:   booking.endTime,
-          amount:           subtotal,
-          deposit:          deposit,
-          ivaAmount:        ivaAmount,
-          totalWithTax:     totalWithTax,
-          totalIncome:      totalWithTax,
-          balance:          balance,
-          invoice:          hasInvoice,
+          amount:           financials.subtotal,
+          deposit:          financials.deposit,
+          ivaAmount:        financials.ivaAmount,
+          totalWithTax:     financials.totalWithTax,
+          totalIncome:      financials.totalWithTax,
+          balance:          financials.balance,
+          invoice:          financials.invoice,
           venueType:        booking.venueType,
           mapsLink:         booking.mapsLink,
           isPublic:         booking.isPublic,
@@ -629,17 +639,11 @@ export async function PUT(req: NextRequest) {
       })
     }
 
-    revalidatePath("/admin/ventas")
-    revalidatePath(`/admin/ventas/${booking.id}`)
-    if (booking.shortId) {
-      revalidatePath(`/admin/ventas/${booking.shortId}`)
-      revalidatePath(`/propuesta/${booking.shortId}`)
-      revalidatePath(`/status/${booking.shortId}`)
-    }
-    revalidatePath("/admin/ventas/[id]", "page")
-    revalidatePath("/admin/eventos")
-    revalidatePath("/admin/eventualidades")
-    revalidatePath("/agenda")
+    revalidateEventRoutes({
+      bookingId: booking.id,
+      shortId: booking.shortId,
+      eventId: booking.eventId,
+    })
 
     return NextResponse.json({ success: true, booking })
   } catch (error) {

@@ -5,12 +5,26 @@ import { revalidatePath } from "next/cache"
 import { notifyMusicians, notifyEventCancellation } from "@/lib/notifications"
 import { assignDefaultMusicians } from "@/lib/musicians"
 import crypto from "crypto"
+import { computeCanonicalFinancials, revalidateEventRoutes } from "@/lib/events-sync"
 
 export async function updateEventAction(id: string, _prev: unknown, formData: FormData) {
   try {
     const data = Object.fromEntries(formData.entries())
     const amount = parseFloat(data.amount as string || "0")
-    const deposit = parseFloat(data.deposit as string || "0")
+
+    const existingEvt = await db.event.findUnique({ 
+      where: { id },
+      include: { location: true, package: true, bookingRequest: true, client: { include: { user: true } } }
+    })
+    if (!existingEvt) {
+      return { success: false, message: "Evento no encontrado" }
+    }
+
+    const hasDepositInForm = data.deposit !== undefined && data.deposit !== null && data.deposit !== ""
+    const deposit = hasDepositInForm 
+      ? Math.max(0, parseFloat(data.deposit as string || "0"))
+      : Number(existingEvt.deposit || 0)
+
     const invoice = data.invoice === "on" || data.invoice === "true"
 
     let dateValue: Date | undefined = undefined
@@ -42,6 +56,8 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
     const ivaAmount = invoice ? Math.round(amount * 0.16 * 100) / 100 : 0
     const totalWithTax = amount + ivaAmount
     const totalIncome = parseFloat(data.totalIncome as string || "0") || totalWithTax
+    const isCompleted = (data.status as string) === "completado" || existingEvt.status === "completado"
+    const balance = isCompleted ? 0 : Math.max(0, totalWithTax - deposit)
 
     await db.event.update({
       where: { id },
@@ -49,7 +65,7 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
         date: dateValue,
         amount,
         deposit,
-        balance: totalWithTax - deposit,
+        balance,
         ivaAmount,
         totalIncome,
         paymentMethod: (data.paymentMethod as string) || (data.depositMethod as string) || null,
@@ -244,18 +260,11 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
       }
     }
 
-    revalidatePath("/admin/eventos")
-    revalidatePath("/admin/eventualidades")
-    revalidatePath("/admin/ventas")
-    if (existingBooking) {
-      revalidatePath(`/admin/ventas/${existingBooking.id}`)
-      if (existingBooking.shortId) {
-        revalidatePath(`/admin/ventas/${existingBooking.shortId}`)
-        revalidatePath(`/status/${existingBooking.shortId}`)
-        revalidatePath(`/propuesta/${existingBooking.shortId}`)
-      }
-    }
-    revalidatePath("/")
+    revalidateEventRoutes({
+      bookingId: existingBooking?.id,
+      shortId: existingBooking?.shortId,
+      eventId: id,
+    })
 
     // Notificación automática
     const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true")
@@ -395,6 +404,11 @@ export async function createEventAction(_prev: unknown, formData: FormData) {
       })
     }
 
+    const ivaAmount = invoiceCreate ? Math.round(amount * 0.16 * 100) / 100 : 0
+    const totalWithTax = amount + ivaAmount
+    const totalIncome = parseFloat(data.totalIncome as string || "0") || totalWithTax
+    const balance = Math.max(0, totalWithTax - deposit)
+
     const event = await db.event.create({
       data: {
         quoteId: targetClientId ? quoteId : null,
@@ -402,9 +416,10 @@ export async function createEventAction(_prev: unknown, formData: FormData) {
         date: new Date((data.date as string) + "T12:00:00"),
         amount,
         deposit,
-        balance: amount - deposit,
-        ivaAmount: invoiceCreate ? Math.round(amount * 0.16 * 100) / 100 : 0,
-        totalIncome: parseFloat(data.totalIncome as string || "0") || amount,
+        balance,
+        ivaAmount,
+        totalWithTax,
+        totalIncome,
         paymentMethod: (data.paymentMethod as string) || (data.depositMethod as string) || null,
         paymentRef: (data.paymentRef as string) || null,
         ceremonyType: (data.ceremonyType as string) || "show",
@@ -623,12 +638,10 @@ export async function createEventAction(_prev: unknown, formData: FormData) {
       }
     })
 
-    revalidatePath("/admin/eventos")
-    revalidatePath("/admin/eventualidades")
-    revalidatePath("/")
-    if (bookingRequestId) {
-      revalidatePath(`/admin/ventas/${bookingRequestId}`)
-    }
+    revalidateEventRoutes({
+      bookingId: bookingRequestId,
+      eventId: event.id,
+    })
 
     // Notificación automática
     const shouldNotify = (data.sendNotification === "on" || data.sendNotification === "true")
@@ -1254,26 +1267,26 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
       }
     })
 
-    revalidatePath("/admin/eventos")
-    revalidatePath("/admin/ventas")
-    revalidatePath("/admin/eventualidades")
-    if (result && typeof result === "object" && "bookingId" in result && result.bookingId) {
-      revalidatePath(`/admin/ventas/${result.bookingId}`)
+    const bId = (result && typeof result === "object" && "bookingId" in result) ? (result as any).bookingId : null
+    let sId: string | null = null
+    if (bId) {
       const b = await db.bookingRequest.findUnique({
-        where: { id: result.bookingId },
+        where: { id: bId },
         select: { shortId: true }
       })
-      if (b?.shortId) {
-        revalidatePath(`/admin/ventas/${b.shortId}`)
-        revalidatePath(`/status/${b.shortId}`)
-        revalidatePath(`/propuesta/${b.shortId}`)
-      }
+      sId = b?.shortId || null
     }
+    const eId = (result && typeof result === "object" && "eventId" in result) ? (result as any).eventId : null
+
+    revalidateEventRoutes({
+      bookingId: bId,
+      shortId: sId,
+      eventId: eId,
+    })
     revalidatePath("/admin/prospectos")
     revalidatePath("/admin/clientes")
-    revalidatePath("/agenda")
     revalidatePath("/fechas")
-    revalidatePath("/")
+    revalidatePath("/agenda")
 
     return { success: true, ...result }
   } catch (err: unknown) {
