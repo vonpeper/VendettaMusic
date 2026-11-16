@@ -14,32 +14,53 @@ export default async function EventualidadesPage() {
     orderBy: { date: "desc" },
     include: { 
       location: true, 
-      client: { include: { user: true } } 
+      client: { include: { user: true } },
+      bookingRequest: {
+        select: {
+          viaticosAmount: true,
+          baseAmount: true
+        }
+      }
     }
   })
 
   const months = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
 
   // Map to the common UI structure
-  const mappedNew = newEvents.map(e => ({
-    id: e.id,
-    eventDate: e.date,
-    eventMonth: months[e.date.getUTCMonth()].trim(), 
-    eventYear: e.date.getUTCFullYear(),
-    clientName: (e.customName || e.client?.user?.name || "Sin Nombre").trim(),
-    baseIncome: e.amount || 0,
-    ivaAmount: e.ivaAmount || 0,
-    totalIncome: e.totalIncome || e.amount || 0,
-    eventType: e.ceremonyType || "show",
-    status: e.status,
-    location: e.location?.name || e.mapsLink || null,
-    paymentMethod: e.paymentMethod || e.depositMethod,
-    paymentRef: e.paymentRef,
-    invoice: e.invoice,
-    notes: e.musicianNotes,
-    source: e.source || "manual",
-    isNewModel: true
-  }))
+  const mappedNew = newEvents.map(e => {
+    const viaticos = Number(e.bookingRequest?.viaticosAmount || 0)
+    const rawAmount = Number(e.amount || 0)
+    // El ingreso base neto de la presentación excluyendo viáticos
+    const baseIncome = Math.max(0, rawAmount - viaticos)
+    const ivaAmount = Number(e.ivaAmount || 0)
+    // El total real cobrado incluyendo IVA
+    const totalIncome = (e.totalWithTax && Number(e.totalWithTax) > 0)
+      ? Number(e.totalWithTax)
+      : (e.totalIncome && Number(e.totalIncome) > 0)
+      ? Number(e.totalIncome)
+      : (rawAmount + ivaAmount)
+
+    return {
+      id: e.id,
+      eventDate: e.date,
+      eventMonth: months[e.date.getUTCMonth()].trim(), 
+      eventYear: e.date.getUTCFullYear(),
+      clientName: (e.customName || e.client?.user?.name || "Sin Nombre").trim(),
+      baseIncome,
+      viaticos,
+      ivaAmount,
+      totalIncome,
+      eventType: e.ceremonyType || "show",
+      status: e.status,
+      location: e.location?.name || e.mapsLink || null,
+      paymentMethod: e.paymentMethod || e.depositMethod,
+      paymentRef: e.paymentRef,
+      invoice: e.invoice,
+      notes: e.musicianNotes,
+      source: e.source || "manual",
+      isNewModel: true
+    }
+  })
 
   const legacyEvents = await db.bandEvent.findMany({
     orderBy: [{ eventYear: "desc" }, { eventDate: "desc" }]
@@ -52,6 +73,7 @@ export default async function EventualidadesPage() {
     eventYear: e.eventYear,
     clientName: e.clientName.trim(),
     baseIncome: e.baseIncome,
+    viaticos: 0,
     ivaAmount: e.ivaAmount,
     totalIncome: e.totalIncome,
     eventType: e.eventType,

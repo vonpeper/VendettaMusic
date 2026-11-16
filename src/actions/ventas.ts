@@ -319,6 +319,7 @@ export async function updateBookingStatusAction(bookingId: string, newStatus: st
             balance: balance,
             ivaAmount: ivaAmount,
             totalWithTax: totalWithTax,
+            totalIncome: totalWithTax,
           }
         })
       }
@@ -992,6 +993,7 @@ export async function updateTotalAmountAction(
             deposit: finalDeposit,
             ivaAmount: ivaAmount,
             totalWithTax: totalWithTax,
+            totalIncome: totalWithTax,
             balance: balance
           }
         })
@@ -1448,7 +1450,9 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
       }
       revalidatePath("/admin/ventas/[id]", "page")
       revalidatePath("/admin/eventos")
+      revalidatePath("/admin/eventualidades")
       revalidatePath("/admin")
+      revalidatePath("/agenda")
 
       return {
         success: true,
@@ -1514,7 +1518,9 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
     }
     revalidatePath("/admin/ventas/[id]", "page")
     revalidatePath("/admin/eventos")
+    revalidatePath("/admin/eventualidades")
     revalidatePath("/admin")
+    revalidatePath("/agenda")
 
     return { 
       success: true, 

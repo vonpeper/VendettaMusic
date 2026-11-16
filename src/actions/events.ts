@@ -40,6 +40,8 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
     }
 
     const ivaAmount = invoice ? Math.round(amount * 0.16 * 100) / 100 : 0
+    const totalWithTax = amount + ivaAmount
+    const totalIncome = parseFloat(data.totalIncome as string || "0") || totalWithTax
 
     await db.event.update({
       where: { id },
@@ -47,9 +49,9 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
         date: dateValue,
         amount,
         deposit,
-        balance: amount - deposit,
+        balance: totalWithTax - deposit,
         ivaAmount,
-        totalIncome: parseFloat(data.totalIncome as string || "0") || amount,
+        totalIncome,
         paymentMethod: (data.paymentMethod as string) || (data.depositMethod as string) || null,
         paymentRef: (data.paymentRef as string) || null,
         status: (data.status as string) || "scheduled",
@@ -64,7 +66,7 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
         package: data.packageId ? { connect: { id: data.packageId as string } } : { disconnect: true },
         guestCount: parseInt(data.guestCount as string || "0"),
         invoice,
-        totalWithTax: amount + ivaAmount,
+        totalWithTax,
         depositMethod: (data.depositMethod as string) || null,
         musicianNotes: (data.musicianNotes as string) || null,
         customName: (data.customName as string) || null,
@@ -125,6 +127,14 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
         colonia = parts[1]
       }
 
+      const parsedViaticos = (data.viaticosAmount !== undefined && data.viaticosAmount !== "")
+        ? parseFloat(data.viaticosAmount as string || "0")
+        : (existingBooking.viaticosAmount ?? 0)
+
+      const parsedBase = (data.baseAmount !== undefined && data.baseAmount !== "")
+        ? parseFloat(data.baseAmount as string || "0")
+        : Math.max(0, amount - parsedViaticos)
+
       await db.bookingRequest.update({
         where: { eventId: id },
         data: {
@@ -132,7 +142,7 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
           requestedDate: dateValue,
           startTime: (data.performanceStart as string) || "21:00",
           endTime: (data.performanceEnd as string) || "23:00",
-          baseAmount: amount,
+          baseAmount: parsedBase,
           depositAmount: deposit,
           venueType: (data.ceremonyType as string) || "salon",
           clientName: (data.clientName as string) || (data.customName as string) || undefined,
@@ -157,12 +167,12 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
           city: updatedEvent?.location?.city || "CDMX",
           state: updatedEvent?.location?.state || "México",
           mapsLink: updatedEvent?.location?.mapsLink || (data.mapsLink as string) || null,
-          viaticosAmount: parseFloat(data.viaticosAmount as string || "0"),
-          distanceKm: parseFloat(data.distanceKm as string || "0") || null,
-          durationSec: parseInt(data.durationSec as string || "0") || null,
-          tollCost: parseFloat(data.tollCost as string || "0") || null,
-          fuelCost: parseFloat(data.fuelCost as string || "0") || null,
-          requiresManualQuote: data.requiresManualQuote === "true",
+          viaticosAmount: parsedViaticos,
+          distanceKm: data.distanceKm !== undefined ? (parseFloat(data.distanceKm as string || "0") || null) : existingBooking.distanceKm,
+          durationSec: data.durationSec !== undefined ? (parseInt(data.durationSec as string || "0") || null) : existingBooking.durationSec,
+          tollCost: data.tollCost !== undefined ? (parseFloat(data.tollCost as string || "0") || null) : existingBooking.tollCost,
+          fuelCost: data.fuelCost !== undefined ? (parseFloat(data.fuelCost as string || "0") || null) : existingBooking.fuelCost,
+          requiresManualQuote: data.requiresManualQuote !== undefined ? (data.requiresManualQuote === "true") : existingBooking.requiresManualQuote,
           arrivalTime: (data.arrivalTime as string) || null,
           setupTime: (data.setupTime as string) || null,
           dressCode: (data.dressCode as string) || null,
@@ -181,6 +191,11 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
       })
 
       if (evt) {
+        const healViaticos = parseFloat(data.viaticosAmount as string || "0")
+        const healBase = (data.baseAmount !== undefined && data.baseAmount !== "")
+          ? parseFloat(data.baseAmount as string || "0")
+          : Math.max(0, evt.amount - healViaticos)
+
         await db.bookingRequest.create({
           data: {
             shortId,
@@ -194,7 +209,8 @@ export async function updateEventAction(id: string, _prev: unknown, formData: Fo
             endTime: evt.performanceEnd || "23:00",
             packageName: evt.package?.name || "Paquete Personalizado",
             packageId: evt.packageId,
-            baseAmount: evt.amount,
+            baseAmount: healBase,
+            viaticosAmount: healViaticos,
             depositAmount: evt.deposit,
             paymentMethod: evt.paymentMethod || "transfer",
             status: evt.status,
@@ -1086,6 +1102,7 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               balance: totals.balanceAmount,
               ivaAmount: totals.ivaAmount,
               totalWithTax: totals.totalAmount,
+              totalIncome: totals.totalAmount,
               invoice: Boolean(val.invoice),
               status: val.status === "completado" ? "completado" : val.status === "cancelado" ? "cancelado" : "agendado",
               mapsLink: val.mapsLink || null
@@ -1116,7 +1133,7 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
               balance: totals.balanceAmount,
               ivaAmount: totals.ivaAmount,
               totalWithTax: totals.totalAmount,
-              totalIncome: 0,
+              totalIncome: totals.totalAmount,
               invoice: Boolean(val.invoice),
               status: val.status === "completado" ? "completado" : "agendado",
               mapsLink: val.mapsLink || null,
@@ -1239,6 +1256,7 @@ export async function saveUnifiedEventQuoteAction(rawPayload: unknown) {
 
     revalidatePath("/admin/eventos")
     revalidatePath("/admin/ventas")
+    revalidatePath("/admin/eventualidades")
     if (result && typeof result === "object" && "bookingId" in result && result.bookingId) {
       revalidatePath(`/admin/ventas/${result.bookingId}`)
       const b = await db.bookingRequest.findUnique({

@@ -44,10 +44,12 @@ export function BandEventForm({ onClose, editing }: any) {
   }, [])
 
   const [base, setBase] = useState(editing?.baseIncome ?? 0)
+  const [viaticos, setViaticos] = useState(editing?.viaticosAmount ?? editing?.viaticos ?? 0)
   const [requiresInvoice, setRequiresInvoice] = useState(editing?.invoice || (editing?.ivaAmount > 0))
   
-  const ivaAmount = requiresInvoice ? Math.round(base * 0.16 * 100) / 100 : 0
-  const totalWithTax = base + ivaAmount
+  const subtotal = Math.max(0, base + viaticos)
+  const ivaAmount = requiresInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
+  const totalWithTax = subtotal + ivaAmount
 
   if (!mounted) return null
 
@@ -142,20 +144,28 @@ export function BandEventForm({ onClose, editing }: any) {
             <legend className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
               <Calculator className="w-3.5 h-3.5" /> Finanzas
             </legend>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Subtotal / Base</Label>
-                <Input id="amount" name="amount" type="number" step="0.01"
+                <Label htmlFor="baseAmount">Honorarios Show ($)</Label>
+                <Input id="baseAmount" name="baseAmount" type="number" step="0.01"
                   value={base} onChange={e => setBase(parseFloat(e.target.value) || 0)}
                   className="bg-background border-border/40" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="totalIncome">Total Cobrado (Neto)</Label>
-                <Input id="totalIncome" name="totalIncome" type="number" step="0.01"
+                <Label htmlFor="viaticosAmount">Viáticos Traslado ($)</Label>
+                <Input id="viaticosAmount" name="viaticosAmount" type="number" step="0.01"
+                  value={viaticos} onChange={e => setViaticos(parseFloat(e.target.value) || 0)}
+                  className="bg-background border-border/40" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="totalIncomeDisplay">Total Cobrado (Neto)</Label>
+                <Input id="totalIncomeDisplay" type="number" step="0.01"
                   value={totalWithTax}
                   readOnly
                   className="bg-background border-border/40 font-bold text-primary opacity-80" />
               </div>
+              <input type="hidden" name="amount" value={subtotal} />
+              <input type="hidden" name="totalIncome" value={totalWithTax} />
               <input type="hidden" name="ivaAmount" value={ivaAmount} />
             </div>
 
@@ -173,13 +183,17 @@ export function BandEventForm({ onClose, editing }: any) {
               <span className="text-sm text-muted-foreground">Requiere Factura (se aplica IVA 16%)</span>
             </label>
 
-            {requiresInvoice && base > 0 && (
+            {requiresInvoice && subtotal > 0 && (
               <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-sm">
                 <div className="font-bold text-amber-700 text-[10px] uppercase tracking-widest mb-2">📄 Desglose con IVA</div>
-                <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="grid grid-cols-4 gap-2 text-center">
                   <div>
-                    <div className="text-[10px] text-muted-foreground uppercase">Subtotal</div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Show</div>
                     <div className="font-bold text-foreground">${base.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Viáticos</div>
+                    <div className="font-bold text-foreground">${viaticos.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
                   </div>
                   <div>
                     <div className="text-[10px] text-muted-foreground uppercase">IVA 16%</div>

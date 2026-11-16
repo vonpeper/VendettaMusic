@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { dispatchNotification, notifyMusicians } from "@/lib/notifications"
 import { assignDefaultMusicians } from "@/lib/musicians"
 import { calculateViaticos } from "@/lib/viaticos/googleMaps";
@@ -595,6 +596,15 @@ export async function PUT(req: NextRequest) {
         locationId = newLocation.id
       }
 
+      const lineItems = await db.bookingLineItem.findMany({ where: { bookingRequestId: booking.id } })
+      const lineItemsTotal = lineItems.reduce((acc, it) => acc + (it.lineTotal || (it.quantity * it.unitCost) || 0), 0)
+      const subtotal = Math.max(0, booking.baseAmount + (booking.viaticosAmount || 0) + lineItemsTotal - (booking.discountAmount || 0))
+      const hasInvoice = Boolean(booking.invoice)
+      const ivaAmount = hasInvoice ? Math.round(subtotal * 0.16 * 100) / 100 : 0
+      const totalWithTax = subtotal + ivaAmount
+      const deposit = Number(booking.depositAmount || 0)
+      const balance = Math.max(0, totalWithTax - deposit)
+
       await db.event.update({
         where: { id: booking.eventId },
         data: {
@@ -602,9 +612,13 @@ export async function PUT(req: NextRequest) {
           guestCount:       booking.guestCount,
           performanceStart: booking.startTime,
           performanceEnd:   booking.endTime,
-          amount:           Math.max(0, booking.baseAmount + (booking.viaticosAmount || 0) - (booking.discountAmount || 0)),
-          deposit:          booking.depositAmount,
-          balance:          Math.max(0, (booking.baseAmount + (booking.viaticosAmount || 0) - (booking.discountAmount || 0)) - booking.depositAmount),
+          amount:           subtotal,
+          deposit:          deposit,
+          ivaAmount:        ivaAmount,
+          totalWithTax:     totalWithTax,
+          totalIncome:      totalWithTax,
+          balance:          balance,
+          invoice:          hasInvoice,
           venueType:        booking.venueType,
           mapsLink:         booking.mapsLink,
           isPublic:         booking.isPublic,
@@ -614,6 +628,18 @@ export async function PUT(req: NextRequest) {
         }
       })
     }
+
+    revalidatePath("/admin/ventas")
+    revalidatePath(`/admin/ventas/${booking.id}`)
+    if (booking.shortId) {
+      revalidatePath(`/admin/ventas/${booking.shortId}`)
+      revalidatePath(`/propuesta/${booking.shortId}`)
+      revalidatePath(`/status/${booking.shortId}`)
+    }
+    revalidatePath("/admin/ventas/[id]", "page")
+    revalidatePath("/admin/eventos")
+    revalidatePath("/admin/eventualidades")
+    revalidatePath("/agenda")
 
     return NextResponse.json({ success: true, booking })
   } catch (error) {
@@ -741,6 +767,11 @@ export async function DELETE(req: NextRequest) {
       await db.bookingRequest.delete({ where: { id: bookingId } })
       results.push({ id, status: "deleted" })
     }
+
+    revalidatePath("/admin/ventas")
+    revalidatePath("/admin/eventos")
+    revalidatePath("/admin/eventualidades")
+    revalidatePath("/agenda")
 
     return NextResponse.json({ success: true, count: results.filter(r => r.status === "deleted").length })
   } catch (error) {

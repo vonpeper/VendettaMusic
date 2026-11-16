@@ -48,7 +48,14 @@ const KNOWN_ROUTES: KnownRoute[] = [
   },
   // CDMX / Zona Metropolitana
   {
-    keywords: ["ciudad de mexico", "cdmx", "df", "distrito federal", "santa fe", "interlomas", "cuajimalpa", "alvaro obregon", "coyoacan", "tlalpan", "miguel hidalgo", "benito juarez", "naucalpan", "tlalnepantla", "atizapan", "iztapalapa", "iztacalco", "gustavo a madero", "venustiano carranza", "azcapotzalco"],
+    keywords: [
+      "ciudad de mexico", "cdmx", "df", "distrito federal", "santa fe", "interlomas", "cuajimalpa",
+      "alvaro obregon", "coyoacan", "tlalpan", "miguel hidalgo", "benito juarez", "naucalpan",
+      "tlalnepantla", "atizapan", "iztapalapa", "iztacalco", "gustavo a madero", "venustiano carranza",
+      "azcapotzalco", "polanco", "condesa", "roma", "roma norte", "roma sur", "san angel", "pedregal",
+      "cuauhtemoc", "magdalena contreras", "huixquilucan", "bosque real", "satelite", "santa monica",
+      "zona esmeralda", "del valle", "narvarte", "napoles"
+    ],
     distanceKm: 65,
     durationSec: 4200, // 1h 10m
     tollCostSingle: 120 // Caseta México-Toluca
@@ -168,7 +175,7 @@ export async function calculateViaticos(
   vehicleKey: string
 ): Promise<ViaticosResult> {
   let apiKey = "";
-  let viaticosLocalRadius = 25.0; // Radio local sin viáticos (25 km Metepec/Toluca)
+  let viaticosLocalRadius = 50.0; // Radio local sin viáticos (50 km Metepec/Toluca por defecto)
   let viaticosVehicleCount = 2;   // Flota Vendetta: 2 vehículos (equipo/staff + músicos)
   try {
     const config = await db.globalConfig.findUnique({ where: { id: "vendetta_config" } });

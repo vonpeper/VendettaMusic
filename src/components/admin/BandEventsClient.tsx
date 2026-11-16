@@ -35,6 +35,7 @@ type BandEvent = {
   eventYear: number
   clientName: string
   baseIncome: number
+  viaticos?: number
   ivaAmount: number
   totalIncome: number
   eventType: string
@@ -97,6 +98,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
 
     const total    = confirmed.reduce((s,e) => s+e.totalIncome, 0)
     const base     = confirmed.reduce((s,e) => s+e.baseIncome, 0)
+    const viaticos = confirmed.reduce((s,e) => s+(e.viaticos || 0), 0)
     const iva      = confirmed.reduce((s,e) => s+e.ivaAmount, 0)
     const count    = confirmed.length
     const avg      = count ? total/count : 0
@@ -105,7 +107,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
     const thisMonth = confirmed.filter(e => e.eventYear===now.getFullYear() && e.eventMonth===MONTHS[now.getMonth()])
     const monthTotal = thisMonth.reduce((s,e) => s+e.totalIncome, 0)
     
-    return { total, base, iva, count, avg, monthTotal }
+    return { total, base, viaticos, iva, count, avg, monthTotal }
   }, [filtered])
 
   async function handleDelete(id: string) {
@@ -121,6 +123,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
       clientName: e.clientName,
       eventDate: new Date(e.eventDate).toISOString().split("T")[0],
       baseIncome: e.baseIncome,
+      viaticosAmount: e.viaticos || 0,
       ivaAmount: e.ivaAmount,
       totalIncome: e.totalIncome,
       eventType: e.eventType,
@@ -194,18 +197,27 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
       </Dialog>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
         {[
-          { label: "Total Acumulado",       value: MXN(kpis.total),     highlight: true },
-          { label: "Mes Actual",            value: MXN(kpis.monthTotal), highlight: false },
+          { label: "Total Acumulado",       value: MXN(kpis.total),       highlight: true },
+          { label: "Mes Actual",            value: MXN(kpis.monthTotal),  highlight: false },
           { label: "Nº de Eventos",         value: kpis.count.toString(), highlight: false },
-          { label: "Promedio / Evento",     value: MXN(kpis.avg),        highlight: false },
-          { label: "Total IVA",             value: MXN(kpis.iva),        highlight: false },
-          { label: "Total Base (sin IVA)",  value: MXN(kpis.base),       highlight: false },
+          { label: "Promedio / Evento",     value: MXN(kpis.avg),         highlight: false },
+          { label: "Base Show (sin IVA)",   value: MXN(kpis.base),        highlight: false },
+          { label: "Total Viáticos",        value: MXN(kpis.viaticos),    highlight: false, isViaticos: true },
+          { label: "Total IVA",             value: MXN(kpis.iva),         highlight: false },
         ].map(k => (
-          <div key={k.label} className={`rounded-xl border p-4 flex flex-col gap-1 ${k.highlight ? "border-green-600/40 bg-green-100" : "border-border/40 bg-card"}`}>
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{k.label}</span>
-            <span className={`text-lg font-black leading-tight ${k.highlight ? "text-green-700" : "text-foreground"}`}>{k.value}</span>
+          <div key={k.label} className={`rounded-xl border p-4 flex flex-col gap-1 ${
+            k.highlight ? "border-green-600/40 bg-green-100 dark:bg-green-950/30" : 
+            k.isViaticos ? "border-blue-500/40 bg-blue-50/50 dark:bg-blue-950/20" : 
+            "border-border/40 bg-card"
+          }`}>
+            <span className={`text-[10px] uppercase tracking-widest ${k.isViaticos ? "text-blue-600 dark:text-blue-400 font-bold" : "text-muted-foreground"}`}>{k.label}</span>
+            <span className={`text-lg font-black leading-tight ${
+              k.highlight ? "text-green-700 dark:text-green-400" : 
+              k.isViaticos ? "text-blue-700 dark:text-blue-300" : 
+              "text-foreground"
+            }`}>{k.value}</span>
           </div>
         ))}
       </div>
@@ -244,7 +256,8 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
               <th className="px-4 py-3 text-primary font-bold text-xs uppercase tracking-wider">Fecha</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Mes</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Cliente</th>
-              <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground text-right">Ingreso</th>
+              <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground text-right">Base Show</th>
+              <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground text-right">Viáticos</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground text-right">IVA</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground text-right">Total</th>
               <th className="px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Estatus</th>
@@ -255,7 +268,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={10} className="px-4 py-16 text-center text-muted-foreground">
+              <tr><td colSpan={11} className="px-4 py-16 text-center text-muted-foreground">
                 No hay eventos que coincidan con los filtros aplicados.
               </td></tr>
             ) : filtered.map(ev => (
@@ -269,6 +282,13 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
                   {ev.location && <div className="text-xs text-muted-foreground">📍 {ev.location}</div>}
                 </td>
                 <td className="px-4 py-3 text-right text-muted-foreground">{MXN(ev.baseIncome)}</td>
+                <td className="px-4 py-3 text-right">
+                  {(ev.viaticos && ev.viaticos > 0) ? (
+                    <span className="font-bold text-blue-600 dark:text-blue-400">{MXN(ev.viaticos)}</span>
+                  ) : (
+                    <span className="text-muted-foreground/40">—</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-right text-muted-foreground">{ev.ivaAmount > 0 ? MXN(ev.ivaAmount) : <span className="text-muted-foreground/50">—</span>}</td>
                 <td className="px-4 py-3 text-right font-bold text-foreground">{MXN(ev.totalIncome)}</td>
                 <td className="px-4 py-3">
@@ -280,7 +300,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
                 </td>
                 <td className="px-4 py-3 capitalize text-muted-foreground text-xs">{ev.eventType}</td>
                 <td className="px-4 py-3">
-                  <Badge variant="outline" className={`text-[10px] ${ev.source==="excel_import" ? "border-blue-500/40 text-blue-800" : "border-border/40 text-muted-foreground"}`}>
+                  <Badge variant="outline" className={`text-[10px] ${ev.source==="excel_import" ? "border-blue-500/40 text-blue-800 dark:text-blue-300" : "border-border/40 text-muted-foreground"}`}>
                     {ev.source === "excel_import" ? "Excel" : "Manual"}
                   </Badge>
                 </td>
@@ -306,6 +326,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
                   Subtotales ({filtered.length} eventos)
                 </td>
                 <td className="px-4 py-3 text-right font-bold text-muted-foreground">{MXN(kpis.base)}</td>
+                <td className="px-4 py-3 text-right font-bold text-blue-600 dark:text-blue-400">{MXN(kpis.viaticos)}</td>
                 <td className="px-4 py-3 text-right font-bold text-muted-foreground">{MXN(kpis.iva)}</td>
                 <td className="px-4 py-3 text-right font-black text-primary text-base">{MXN(kpis.total)}</td>
                 <td colSpan={4}></td>
@@ -343,12 +364,18 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
                   <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Finanzas</span>
                   <div className="text-sm font-black text-foreground">{MXN(ev.totalIncome)}</div>
                   <div className="text-[10px] text-muted-foreground">Base: {MXN(ev.baseIncome)}</div>
+                  {(ev.viaticos && ev.viaticos > 0) ? (
+                    <div className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">Viáticos: {MXN(ev.viaticos)}</div>
+                  ) : null}
+                  {ev.ivaAmount > 0 ? (
+                    <div className="text-[10px] text-muted-foreground">IVA: {MXN(ev.ivaAmount)}</div>
+                  ) : null}
                 </div>
 
                 <div className="space-y-1">
                   <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Detalles</span>
                   <div className="text-xs text-foreground capitalize">{ev.eventType}</div>
-                  <Badge variant="outline" className={`mt-1 text-[9px] ${ev.source==="excel_import" ? "border-blue-500/40 text-blue-800" : "border-border/40 text-muted-foreground"}`}>
+                  <Badge variant="outline" className={`mt-1 text-[9px] ${ev.source==="excel_import" ? "border-blue-500/40 text-blue-800 dark:text-blue-300" : "border-border/40 text-muted-foreground"}`}>
                     {ev.source === "excel_import" ? "Excel" : "Manual"}
                   </Badge>
                 </div>
@@ -382,6 +409,7 @@ export function BandEventsClient({ events = [], currentAnticipos = 0, anticiposL
             <div className="flex justify-between items-end">
               <div className="space-y-1">
                 <div className="text-xs text-muted-foreground">Base: {MXN(kpis.base)}</div>
+                {kpis.viaticos > 0 && <div className="text-xs text-blue-600 dark:text-blue-400 font-bold">Viáticos: {MXN(kpis.viaticos)}</div>}
                 <div className="text-xs text-muted-foreground">IVA: {MXN(kpis.iva)}</div>
               </div>
               <div className="text-lg font-black text-primary">{MXN(kpis.total)}</div>

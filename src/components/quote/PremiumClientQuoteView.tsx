@@ -109,8 +109,10 @@ export function PremiumClientQuoteView({
 
   // Cálculos económicos
   const hasInvoice = Boolean(booking.invoice || booking.event?.invoice)
-  const baseAmount = Number(booking.baseAmount) > 0 ? Number(booking.baseAmount) : (Number(booking.event?.amount) || 0)
   const viaticosAmount = Number(booking.viaticosAmount || 0)
+  const baseAmount = Number(booking.baseAmount) > 0 
+    ? Number(booking.baseAmount) 
+    : Math.max(0, (Number(booking.event?.amount) || 0) - viaticosAmount)
   const discountAmount = Number(booking.discountAmount || 0)
 
   // Subtotal base + viáticos + lineItems - discount
