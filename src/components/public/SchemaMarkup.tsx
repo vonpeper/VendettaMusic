@@ -134,7 +134,7 @@ export async function SchemaMarkup() {
     "logo": logo,
     "image": "https://vendetta.mx/images/vendetta-hero-og-v2.jpg?v=3",
     "description": "Empresa y productora de espectáculos de pop & rock en vivo para eventos corporativos, bodas, aniversarios y festivales con cobertura en CDMX, Valle de Bravo, Metepec, Toluca y Querétaro.",
-    "telephone": "+52-722-288-0045",
+    "telephone": "+52-722-241-7045",
     "email": "rock.vendettamx@gmail.com",
     "priceRange": "$$$",
     "address": {

@@ -69,7 +69,7 @@ export default async function CotizarPage({ searchParams }: CotizarPageProps) {
     config?.adminWhatsapp ||
     process.env.ADMIN_WHATSAPP_NUMBER ||
     process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
-    "5217222880045"
+    "527222417045"
 
   return (
     <div className="min-h-screen bg-[#070709] text-foreground pb-24">

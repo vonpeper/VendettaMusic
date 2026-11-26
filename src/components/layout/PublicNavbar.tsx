@@ -206,18 +206,6 @@ export function PublicNavbar() {
                       <Calendar className="w-4 h-4 mr-2" /> Cotizar mi Evento
                     </Button>
                   </SheetClose>
-                  {process.env.NEXT_PUBLIC_WHATSAPP_NUMBER && (
-                    <a 
-                      href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER.replace(/\D/g, "")}`} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="block w-full"
-                    >
-                      <Button variant="outline" className="w-full py-6 border-white/15 bg-white/5 text-[#F2F0EB] font-semibold text-xs uppercase tracking-widest rounded-2xl hover:bg-white/10">
-                        <Phone className="w-4 h-4 mr-2 text-[#FF5A5F]" /> WhatsApp Directo
-                      </Button>
-                    </a>
-                  )}
                   <Link href="/auth/login" className="flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/30 hover:text-[#FF5A5F] transition-colors pt-4">
                     <Lock className="w-3 h-3" /> Login Admin
                   </Link>

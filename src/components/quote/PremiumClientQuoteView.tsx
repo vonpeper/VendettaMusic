@@ -29,7 +29,8 @@ import {
   ChevronDown,
   Mic,
   Volume2,
-  Radio
+  Radio,
+  AlertCircle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -260,6 +261,10 @@ export function PremiumClientQuoteView({
   const hasPantalla = Boolean(booking.hasPantalla) || lineItems.some(i => i.description.toLowerCase().includes("pantalla"))
   const hasPista = Boolean(booking.hasPista) || lineItems.some(i => i.description.toLowerCase().includes("pista"))
   const hasRobotLed = Boolean(booking.hasRobot) || lineItems.some(i => i.description.toLowerCase().includes("robot") || i.description.toLowerCase().includes("batucada"))
+
+  const hasAudioIncluded = !booking.clientProvidesAudio || hasLargeAudio || lineItems.some(i => i.description.toLowerCase().includes("audio"))
+  const hasExtraVendors = lineItems.length > 0 || hasTemplete || hasPantalla || hasPista || hasRobotLed || Boolean(booking.isDjWithTvs)
+  const hasAudioOrExtras = hasAudioIncluded || hasExtraVendors
 
   return (
     <div className="min-h-screen bg-transparent text-slate-950 relative overflow-hidden pb-28 sm:pb-20 font-sans selection:bg-red-600 selection:text-white">
@@ -776,12 +781,22 @@ export function PremiumClientQuoteView({
 
           {/* Bloque de Totales Financieros */}
           <div className="mt-6 pt-6 border-t-2 border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="space-y-1.5 text-xs text-slate-600 font-medium">
+            <div className="space-y-1.5 text-xs text-slate-600 font-medium max-w-md">
               <div className="flex items-center gap-1.5 text-red-600 font-black">
                 <Sparkles className="w-3.5 h-3.5 text-red-600" /> Cotización vigente por 15 días naturales.
               </div>
               <div>• Disponibilidad de fecha sujeta a confirmación del anticipo correspondiente.</div>
               <div>• Sin costos sorpresa el día del evento: todo queda estipulado formalmente por contrato.</div>
+              {hasAudioOrExtras && (
+                <div className="pt-1.5">
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-[11px] leading-relaxed flex items-start gap-2 font-medium">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span>
+                      <strong className="font-bold text-amber-950">Aviso de Producción:</strong> Los costos y servicios de audio o proveedores adicionales seleccionados están sujetos a disponibilidad de nuestra producción al momento de confirmar con anticipo.
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Caja de Inversión Total */}
@@ -1265,6 +1280,20 @@ export function PremiumClientQuoteView({
               </div>
             </div>
           </div>
+
+          {hasAudioOrExtras && (
+            <div className="mt-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-amber-900 block text-xs uppercase tracking-wider mb-0.5">
+                  Disponibilidad de Producción & Proveedores
+                </span>
+                <p className="text-[11px] text-amber-900/90 leading-relaxed font-medium">
+                  Los costos y especificaciones de audio o proveedores adicionales seleccionados para este evento están sujetos a disponibilidad de nuestra producción al momento de formalizar la fecha con el anticipo correspondiente.
+                </p>
+              </div>
+            </div>
+          )}
         </section>
 
 

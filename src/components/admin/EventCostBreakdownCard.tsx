@@ -13,9 +13,14 @@ import {
   Loader2, 
   Check, 
   X,
-  Calculator,
   Sparkles,
-  Info
+  Info,
+  ShieldCheck,
+  Layers,
+  Users,
+  Mic2,
+  Speaker,
+  Briefcase
 } from "lucide-react"
 import { calculateEventCostBreakdown } from "@/lib/pricing"
 import { updateEventOperationalCostsAction } from "@/actions/ventas"
@@ -27,6 +32,15 @@ const MXN = (v: number) => new Intl.NumberFormat("es-MX", {
   maximumFractionDigits: 0 
 }).format(v)
 
+export interface ProductionAddonItem {
+  id: string
+  name: string
+  providerCost: number
+  officeMargin: number
+  clientPrice: number
+  description?: string
+}
+
 interface EventCostBreakdownCardProps {
   bookingId: string
   hours: number
@@ -36,6 +50,10 @@ interface EventCostBreakdownCardProps {
   initialStaffPay?: number | null
   listPrice?: number
   discountAmount?: number
+  musiciansCount?: number
+  productionAddons?: ProductionAddonItem[]
+  productionOfficeMargin?: number
+  isForaneo?: boolean
 }
 
 export function EventCostBreakdownCard({
@@ -47,9 +65,26 @@ export function EventCostBreakdownCard({
   initialStaffPay = null,
   listPrice,
   discountAmount = 0,
+  musiciansCount = 4,
+  productionAddons = [],
+  productionOfficeMargin,
+  isForaneo = false,
 }: EventCostBreakdownCardProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isPending, startTransition] = useTransition()
+
+  const activeMusiciansCount = Math.max(1, musiciansCount || 4)
+
+  // Extra office margin from active production add-ons
+  const computedProductionMargin = useMemo(() => {
+    if (productionOfficeMargin !== undefined && productionOfficeMargin !== null) {
+      return Math.max(0, Number(productionOfficeMargin) || 0)
+    }
+    if (productionAddons && productionAddons.length > 0) {
+      return productionAddons.reduce((sum, p) => sum + (Number(p.officeMargin) || 0), 0)
+    }
+    return 0
+  }, [productionOfficeMargin, productionAddons])
 
   // Desglose persistido actual
   const breakdown = useMemo(() => {
@@ -58,9 +93,11 @@ export function EventCostBreakdownCard({
       isBar ? "bar" : "privado", 
       baseShowPrice > 0 ? baseShowPrice : undefined,
       initialMusicianPay,
-      initialStaffPay
+      initialStaffPay,
+      computedProductionMargin,
+      activeMusiciansCount
     )
-  }, [hours, isBar, baseShowPrice, initialMusicianPay, initialStaffPay])
+  }, [hours, isBar, baseShowPrice, initialMusicianPay, initialStaffPay, computedProductionMargin, activeMusiciansCount])
 
   // Valores de los inputs durante la edición en vivo
   const [musicianEachInput, setMusicianEachInput] = useState<string>(
@@ -71,7 +108,7 @@ export function EventCostBreakdownCard({
   const [musiciansTotalInput, setMusiciansTotalInput] = useState<string>(
     ((initialMusicianPay !== null && initialMusicianPay !== undefined
       ? initialMusicianPay
-      : breakdown.musicianPayEach) * 4).toString()
+      : breakdown.musicianPayEach) * activeMusiciansCount).toString()
   )
   const [staffPayInput, setStaffPayInput] = useState<string>(
     initialStaffPay !== null && initialStaffPay !== undefined
@@ -89,7 +126,7 @@ export function EventCostBreakdownCard({
       : breakdown.staffPay
 
     setMusicianEachInput(curEach.toString())
-    setMusiciansTotalInput((curEach * 4).toString())
+    setMusiciansTotalInput((curEach * activeMusiciansCount).toString())
     setStaffPayInput(curStaff.toString())
     setIsEditing(true)
   }
@@ -104,28 +141,28 @@ export function EventCostBreakdownCard({
       : breakdown.staffPay
 
     setMusicianEachInput(curEach.toString())
-    setMusiciansTotalInput((curEach * 4).toString())
+    setMusiciansTotalInput((curEach * activeMusiciansCount).toString())
     setStaffPayInput(curStaff.toString())
     setIsEditing(false)
   }
 
-  // Manejar cambio en sueldo por músico (actualiza el total de 4)
+  // Manejar cambio en sueldo por músico (actualiza el total)
   function handleMusicianEachChange(val: string) {
     setMusicianEachInput(val)
     const num = parseFloat(val)
     if (!isNaN(num) && num >= 0) {
-      setMusiciansTotalInput(Math.round(num * 4).toString())
+      setMusiciansTotalInput(Math.round(num * activeMusiciansCount).toString())
     } else {
       setMusiciansTotalInput("")
     }
   }
 
-  // Manejar cambio en total de 4 músicos (actualiza el pago individual)
+  // Manejar cambio en total de músicos (actualiza el pago individual)
   function handleMusiciansTotalChange(val: string) {
     setMusiciansTotalInput(val)
     const num = parseFloat(val)
     if (!isNaN(num) && num >= 0) {
-      setMusicianEachInput(Math.round(num / 4).toString())
+      setMusicianEachInput(Math.round(num / activeMusiciansCount).toString())
     } else {
       setMusicianEachInput("")
     }
@@ -146,9 +183,11 @@ export function EventCostBreakdownCard({
       isBar ? "bar" : "privado",
       baseShowPrice > 0 ? baseShowPrice : undefined,
       cleanEach,
-      cleanStaff
+      cleanStaff,
+      computedProductionMargin,
+      activeMusiciansCount
     )
-  }, [isEditing, hours, isBar, baseShowPrice, musicianEachInput, staffPayInput, breakdown])
+  }, [isEditing, hours, isBar, baseShowPrice, musicianEachInput, staffPayInput, computedProductionMargin, activeMusiciansCount, breakdown])
 
   // Guardar ganancias modificadas
   async function handleSave() {
@@ -212,7 +251,7 @@ export function EventCostBreakdownCard({
         <CardTitle className="text-lg flex flex-wrap items-center justify-between gap-3 font-black">
           <div className="flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-emerald-600" />
-            <span>Desglose Operativo y Nómina Sugerida</span>
+            <span>Calculadora de Nómina y Margen de Oficina</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -246,27 +285,64 @@ export function EventCostBreakdownCard({
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="p-4 md:p-6 space-y-4">
-        {/* FILA DE 3 TARJETAS PRINCIPALES */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          
-          {/* TARJETA 1: 4 MÚSICOS */}
-          <div className={`p-3.5 rounded-xl border transition-all ${
+      <CardContent className="p-4 md:p-6 space-y-5">
+
+        {/* ═══════════════════════════════════════════════════════════════
+            NIVEL 1: BASE DISPONIBLE PARA BANDA (TARIFA LIMPIA SHOW)
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-zinc-800/40 border border-border/60 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Mic2 className="w-3.5 h-3.5 text-primary" /> Nivel 1 • Base Disponible para Banda
+              </span>
+              <Badge variant="outline" className="text-[9px] font-mono border-emerald-500/30 bg-emerald-500/10 text-emerald-600">
+                100% Libre de Passthroughs
+              </Badge>
+              {isForaneo && (
+                <Badge variant="outline" className="text-[9px] font-mono border-amber-500/30 bg-amber-500/10 text-amber-600">
+                  Show Foráneo
+                </Badge>
+              )}
+            </div>
+            <div className="text-right">
+              <span className="text-lg sm:text-xl font-mono font-black text-foreground">
+                {MXN(liveBreakdown.totalPrice)}
+              </span>
+            </div>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Tarifa pura del espectáculo musical pactada para la banda. Excluye en su totalidad viáticos (gasolina y casetas), IVA fiscal y costos de proveedores externos directos de producción.
+            {discountAmount > 0 && listPrice && (
+              <span className="font-semibold text-foreground ml-1">
+                [Precio Lista: {MXN(listPrice)} - Descuento: {MXN(discountAmount)}]
+              </span>
+            )}
+          </p>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            NIVELES 2 Y 3: NÓMINA MÚSICOS & STAFF TÉCNICO DE AUDIO
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* NIVEL 2: NÓMINA MÚSICOS */}
+          <div className={`p-4 rounded-xl border transition-all ${
             isEditing 
               ? "bg-emerald-500/5 border-emerald-500/40 ring-1 ring-emerald-500/30" 
-              : "bg-muted/50 border-border/40 hover:border-emerald-500/30 cursor-pointer group"
+              : "bg-muted/40 border-border/40 hover:border-emerald-500/30 cursor-pointer group"
           }`}
           onClick={() => { if (!isEditing) startEditing() }}
           >
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
-                <span>🎸</span> 4 Músicos ({hours}h)
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-emerald-600" /> Nivel 2 • Nómina Músicos ({activeMusiciansCount} activos)
+              </span>
               {!isEditing && (
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); startEditing() }}
-                  className="text-muted-foreground hover:text-emerald-600 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-0.5"
+                  className="text-muted-foreground hover:text-emerald-600 p-0.5"
                   title="Clic para modificar sueldo de músicos"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -275,9 +351,9 @@ export function EventCostBreakdownCard({
             </div>
 
             {isEditing ? (
-              <div className="space-y-2 mt-1">
+              <div className="space-y-3 mt-1">
                 <div>
-                  <Label htmlFor="inputEach" className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block mb-0.5">
+                  <Label htmlFor="inputEach" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1">
                     Pago por Músico (MXN)
                   </Label>
                   <div className="relative">
@@ -297,8 +373,8 @@ export function EventCostBreakdownCard({
                 </div>
 
                 <div>
-                  <Label htmlFor="inputTotal" className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block mb-0.5">
-                    Total 4 Músicos (MXN)
+                  <Label htmlFor="inputTotal" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1">
+                    Total Nómina ({activeMusiciansCount} Músicos)
                   </Label>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">$</span>
@@ -316,44 +392,51 @@ export function EventCostBreakdownCard({
                   </div>
                 </div>
 
-                <div className="text-[10px] text-muted-foreground pt-0.5">
-                  Sugerido: {MXN(breakdown.defaultMusicianPayEach || 1500)} c/u ($750/hr)
+                <div className="text-[10px] text-muted-foreground">
+                  Sugerido estándar: {MXN(breakdown.defaultMusicianPayEach || 1500)} c/u ({hours} hrs @ {isBar ? "proporcional bar" : "$750/hr"})
                 </div>
               </div>
             ) : (
-              <>
-                <div className="text-base sm:text-lg font-black text-foreground">
-                  {MXN(breakdown.musiciansTotal)}
+              <div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-xl font-mono font-black text-foreground">
+                    {MXN(liveBreakdown.musiciansTotal)}
+                  </span>
+                  <span className="text-xs font-bold text-emerald-600 font-mono">
+                    {MXN(liveBreakdown.musicianPayEach)} c/u
+                  </span>
                 </div>
-                <div className="text-[11px] text-emerald-600 font-bold mt-0.5 flex items-center justify-between">
-                  <span>{MXN(breakdown.musicianPayEach)} por músico</span>
-                  {breakdown.isCustomMusicianPay && (
+                <div className="text-[11px] text-muted-foreground mt-1 flex items-center justify-between">
+                  <span>
+                    ({MXN(liveBreakdown.musicianPayEach)} × {activeMusiciansCount} músicos • {hours} {hours === 1 ? "hora" : "horas"} de show)
+                  </span>
+                  {liveBreakdown.isCustomMusicianPay && (
                     <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">
                       Manual
                     </span>
                   )}
                 </div>
-              </>
+              </div>
             )}
           </div>
 
-          {/* TARJETA 2: STAFF TÉCNICO */}
-          <div className={`p-3.5 rounded-xl border transition-all ${
+          {/* NIVEL 3: STAFF TÉCNICO DE AUDIO */}
+          <div className={`p-4 rounded-xl border transition-all ${
             isEditing 
               ? "bg-emerald-500/5 border-emerald-500/40 ring-1 ring-emerald-500/30" 
-              : "bg-muted/50 border-border/40 hover:border-emerald-500/30 cursor-pointer group"
+              : "bg-muted/40 border-border/40 hover:border-emerald-500/30 cursor-pointer group"
           }`}
           onClick={() => { if (!isEditing) startEditing() }}
           >
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
-                <span>🎧</span> Staff Técnico de Audio
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Speaker className="w-3.5 h-3.5 text-emerald-600" /> Nivel 3 • Staff Técnico de Audio
+              </span>
               {!isEditing && (
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); startEditing() }}
-                  className="text-muted-foreground hover:text-emerald-600 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-0.5"
+                  className="text-muted-foreground hover:text-emerald-600 p-0.5"
                   title="Clic para modificar sueldo de staff"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -362,9 +445,9 @@ export function EventCostBreakdownCard({
             </div>
 
             {isEditing ? (
-              <div className="space-y-2 mt-1">
+              <div className="space-y-3 mt-1">
                 <div>
-                  <Label htmlFor="inputStaff" className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block mb-0.5">
+                  <Label htmlFor="inputStaff" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1">
                     Pago a Staff Técnico (MXN)
                   </Label>
                   <div className="relative">
@@ -384,92 +467,187 @@ export function EventCostBreakdownCard({
                 </div>
 
                 <div className="text-[10px] text-muted-foreground pt-4">
-                  Sugerido: {MXN(breakdown.defaultStaffPay || (isBar ? hours * 200 : hours * 300))} ({isBar ? "$200/hr" : "$300/hr"})
+                  Sugerido: {MXN(breakdown.defaultStaffPay || (isBar ? hours * 200 : hours * 300))} ({hours} hrs @ {isBar ? "$200/hr" : "$300/hr"})
                 </div>
               </div>
             ) : (
-              <>
-                <div className="text-base sm:text-lg font-black text-foreground">
-                  {MXN(breakdown.staffPay)}
+              <div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-xl font-mono font-black text-foreground">
+                    {MXN(liveBreakdown.staffPay)}
+                  </span>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {isBar ? "$200/hr en bar" : "$300/hr en privado"}
+                  </span>
                 </div>
-                <div className="text-[11px] text-muted-foreground font-medium mt-0.5 flex items-center justify-between">
-                  <span>{isBar ? "$200/hr en bar" : "$300/hr en privado"}</span>
-                  {breakdown.isCustomStaffPay && (
+                <div className="text-[11px] text-muted-foreground mt-1 flex items-center justify-between">
+                  <span>Operación y monitoreo de audio en vivo ({hours}h)</span>
+                  {liveBreakdown.isCustomStaffPay && (
                     <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">
                       Manual
                     </span>
                   )}
                 </div>
-              </>
+              </div>
             )}
           </div>
 
-          {/* TARJETA 3: AUDIO + OFICINA VENDETTA (CÁLCULO AUTOMÁTICO) */}
-          <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 relative flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-1">
-                  <span>🏢</span> Audio + Oficina Vendetta
-                </div>
-                <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-600/15 px-1.5 py-0.5 rounded border border-emerald-500/30">
-                  Automático
-                </span>
-              </div>
+        </div>
 
-              <div className={`text-base sm:text-lg font-black ${
+        {/* ═══════════════════════════════════════════════════════════════
+            NIVEL 4: REMANENTE SHOW + EXTRA OFICINA POR ADICIONALES
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-border/70 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-blue-600" /> Nivel 4 • Remanente Show + Margen Oficina por Adicionales
+            </span>
+            <div className="text-right">
+              <span className={`text-base sm:text-lg font-mono font-black ${
                 liveBreakdown.audioAndOfficeProfit < 0 ? "text-red-500" : "text-emerald-600"
               }`}>
                 {MXN(liveBreakdown.audioAndOfficeProfit)}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1 border-t border-border/50">
+            {/* Fórmula de Remanente Show */}
+            <div className="p-3 rounded-lg bg-background border border-border/60 space-y-1">
+              <div className="text-[10px] uppercase font-bold text-muted-foreground">
+                Remanente Show Base (Audio & Operación)
               </div>
+              <div className="font-mono font-black text-sm text-foreground">
+                {MXN(liveBreakdown.showRemainder)}
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Base ({MXN(liveBreakdown.totalPrice)}) - Músicos ({MXN(liveBreakdown.musiciansTotal)}) - Staff ({MXN(liveBreakdown.staffPay)})
+              </p>
             </div>
 
-            <div className="text-[11px] text-muted-foreground font-medium mt-1">
-              <span className="text-[10px] leading-tight block">
-                {discountAmount && discountAmount > 0 ? (
-                  <>
-                    Show Neto ({MXN(liveBreakdown.totalPrice)}){" "}
-                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">
-                      [Base {MXN(listPrice || (liveBreakdown.totalPrice + discountAmount))} - Descuento {MXN(discountAmount)}]
-                    </span>
-                  </>
-                ) : (
-                  <>Show ({MXN(liveBreakdown.totalPrice)})</>
-                )}
-                {" "} - Músicos ({MXN(liveBreakdown.musiciansTotal)}) - Staff ({MXN(liveBreakdown.staffPay)})
-              </span>
+            {/* Margen Extra por Producción */}
+            <div className="p-3 rounded-lg bg-background border border-border/60 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">
+                  Margen Extra Oficina por Adicionales
+                </span>
+                <span className="font-mono font-black text-sm text-emerald-600">
+                  +{MXN(computedProductionMargin)}
+                </span>
+              </div>
+              
+              {productionAddons && productionAddons.length > 0 ? (
+                <div className="space-y-1 pt-1 border-t border-border/40">
+                  {productionAddons.map((addon) => (
+                    <div key={addon.id} className="flex items-center justify-between text-[11px]">
+                      <span className="text-foreground font-medium truncate">
+                        • {addon.name}
+                      </span>
+                      <span className="font-mono font-bold text-emerald-600 shrink-0 ml-2">
+                        +{MXN(addon.officeMargin)}{" "}
+                        <span className="text-[9px] text-muted-foreground font-normal">
+                          (Prov. {MXN(addon.providerCost)})
+                        </span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[10px] text-muted-foreground">
+                  Sin adicionales de producción seleccionados ($0 margen extra).
+                </p>
+              )}
             </div>
           </div>
         </div>
 
-        {/* FILA INGRESO TOTAL DEL DUEÑO (CÁLCULO FINAL DE GANANCIA) */}
-        <div className={`p-3.5 rounded-xl border flex flex-wrap items-center justify-between gap-3 transition-all ${
-          isEditing 
-            ? "bg-primary/15 border-primary/40 ring-1 ring-primary/30" 
-            : "bg-primary/10 border-primary/20"
-        }`}>
-          <div className="flex items-center gap-2.5">
-            <span className="text-xl">👑</span>
-            <div>
-              <div className="text-xs font-black text-foreground uppercase tracking-wide flex items-center gap-2">
-                <span>Ingreso Total del Dueño (Músico + Audio/Oficina)</span>
-                {isEditing && (
-                  <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold">
-                    Cálculo en vivo
-                  </span>
-                )}
+        {/* ═══════════════════════════════════════════════════════════════
+            NIVEL 5: RESUMEN FINANCIERO CONSOLIDADO (DUEÑO & OFICINA)
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-primary/10 border-2 border-emerald-500/30 space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-emerald-500/20">
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-emerald-600" />
+              <div>
+                <h3 className="text-sm font-black text-foreground uppercase tracking-wide">
+                  Nivel 5 • Resumen Neto Consolidado (Oficina & Dueño)
+                </h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Separación transparente entre nómina de talentos, honorarios técnicos y ganancia total del dueño.
+                </p>
               </div>
-              <div className="text-[11px] text-muted-foreground mt-0.5">
-                {MXN(liveBreakdown.musicianPayEach)} (como músico) + {MXN(liveBreakdown.audioAndOfficeProfit)} (oficina y renta de audio)
-              </div>
+            </div>
+            {isEditing && (
+              <Badge className="text-[9px] bg-primary/20 text-primary border-primary/30 uppercase font-bold">
+                Cálculo en vivo
+              </Badge>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            {/* 1. Nómina Músicos */}
+            <div className="p-3 rounded-xl bg-background/80 border border-border/50">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                1. Nómina Músicos
+              </span>
+              <span className="font-mono text-base font-black text-foreground block mt-0.5">
+                {MXN(liveBreakdown.musiciansTotal)}
+              </span>
+              <span className="text-[10px] text-muted-foreground block">
+                {activeMusiciansCount} músicos activos
+              </span>
+            </div>
+
+            {/* 2. Staff Técnico */}
+            <div className="p-3 rounded-xl bg-background/80 border border-border/50">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                2. Staff de Audio
+              </span>
+              <span className="font-mono text-base font-black text-foreground block mt-0.5">
+                {MXN(liveBreakdown.staffPay)}
+              </span>
+              <span className="text-[10px] text-muted-foreground block">
+                Ingeniero / Montaje
+              </span>
+            </div>
+
+            {/* 3. Utilidad Oficina */}
+            <div className="p-3 rounded-xl bg-background/80 border border-border/50">
+              <span className="text-[10px] uppercase font-bold text-emerald-600 block">
+                3. Utilidad Neta Oficina
+              </span>
+              <span className={`font-mono text-base font-black block mt-0.5 ${
+                liveBreakdown.audioAndOfficeProfit < 0 ? "text-red-500" : "text-emerald-600"
+              }`}>
+                {MXN(liveBreakdown.audioAndOfficeProfit)}
+              </span>
+              <span className="text-[10px] text-muted-foreground block">
+                Audio propio + margen prod.
+              </span>
+            </div>
+
+            {/* 4. Ganancia Total Dueño */}
+            <div className="p-3 rounded-xl bg-primary/15 border border-primary/40 text-right">
+              <span className="text-[10px] uppercase font-black text-primary block">
+                👑 Ganancia Dueño
+              </span>
+              <span className="font-mono text-lg font-black text-primary block mt-0.5">
+                {MXN(liveBreakdown.ownerTotalTakeHome)}
+              </span>
+              <span className="text-[10px] font-bold text-foreground block truncate">
+                Músico + Oficina
+              </span>
             </div>
           </div>
-          <div className="text-right">
-            <span className="text-xl sm:text-2xl font-black text-primary">
-              {MXN(liveBreakdown.ownerTotalTakeHome)}
-            </span>
-            <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-              Ganancia Final del Dueño
+
+          <div className="p-3 rounded-xl bg-background/60 border border-border/40 text-[11px] text-muted-foreground leading-relaxed flex items-center justify-between gap-2">
+            <div>
+              <span className="font-bold text-foreground">Desglose de Ganancia del Dueño: </span>
+              <span>
+                {MXN(liveBreakdown.musicianPayEach)} (como Músico Titular en tarima) + {MXN(liveBreakdown.audioAndOfficeProfit)} (utilidad de oficina y equipo de audio) = <strong className="text-primary font-mono">{MXN(liveBreakdown.ownerTotalTakeHome)}</strong>
+              </span>
             </div>
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
           </div>
         </div>
 
@@ -531,10 +709,11 @@ export function EventCostBreakdownCard({
 
         {/* NOTA DESCRIPTIVA AL PIE */}
         <div className="p-3 rounded-xl bg-muted/30 border border-border/30 text-[11px] text-muted-foreground leading-relaxed flex items-start gap-2">
-          <span className="text-emerald-500 font-bold shrink-0">ℹ️</span>
+          <Info className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
           <span>{liveBreakdown.notes}</span>
         </div>
       </CardContent>
     </Card>
   )
 }
+

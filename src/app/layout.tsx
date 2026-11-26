@@ -128,7 +128,7 @@ export default async function RootLayout({
     >
       <head>
         {/* Google Tag & Analytics (GA4) - Justo después de <head> */}
-        <script async src={`https://www.googletagmanager.com/gtm.js?id=${gaId}`} />
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
         <script
           dangerouslySetInnerHTML={{
             __html: `

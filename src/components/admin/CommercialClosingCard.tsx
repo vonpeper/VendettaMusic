@@ -207,25 +207,31 @@ export function CommercialClosingCard({
   }, [currentMapsLink, mapsLink, address, city, state])
 
   // Encontrar costo base predeterminado si es necesario
-  const findDefaultPrice = (name: string) => {
+  // Encontrar costo base predeterminado si es necesario
+  const findDefaultPrice = (name: string, foraneo: boolean = false) => {
     const pkg = packagesList.find(p => p.name.toLowerCase().includes(name.toLowerCase()))
+    let base = 15500
     if (pkg && pkg.baseCostPerHour) {
-      return pkg.baseCostPerHour * (pkg.minDuration || 2)
+      base = pkg.baseCostPerHour * (pkg.minDuration || 2)
+    } else {
+      const core = CORE_PACKAGES.find(c => name.toLowerCase().includes(c.key))
+      base = core?.defaultBase || 15500
     }
-    const core = CORE_PACKAGES.find(c => name.toLowerCase().includes(c.key))
-    return core?.defaultBase || 15500
+    return foraneo ? Math.round(base * 1.20) : base
   }
-
-  const effectiveInitialBase = initialBase > 0 ? initialBase : findDefaultPrice(initialPackage)
-
-  // Estados principales de cotización
-  const [packageName, setPackageName] = useState(initialPackage)
-  const [rawBaseAmount, setRawBaseAmount] = useState<number>(effectiveInitialBase)
 
   // Regla Foránea (+20% sobre show base) - Si la ciudad es local (ej. Toluca/Metepec), nunca es foráneo
   const isCityLocal = city ? isLocalCity(city, state || undefined) : false
   const initialForaneo = !isCityLocal && Boolean(isOutsideZone || (distanceKm !== undefined && distanceKm > 25))
   const [isForaneo, setIsForaneo] = useState<boolean>(initialForaneo)
+
+  // Estados principales de cotización
+  const [packageName, setPackageName] = useState(initialPackage)
+
+  // baseShowPrice es la tarifa pura del show pactada para la banda.
+  // Si initialBase ya tiene un valor (> 0), se respeta estrictamente sin reaplicar multiplicadores foráneos compuestos.
+  const effectiveInitialBase = initialBase > 0 ? initialBase : findDefaultPrice(initialPackage, initialForaneo)
+  const [baseShowPrice, setBaseShowPrice] = useState<number>(effectiveInitialBase)
 
   // Viáticos desglosados (Banda + Flete Producción)
   const [viaticosBanda, setViaticosBanda] = useState<number>(initialViaticos > 0 ? initialViaticos : 0)
@@ -439,13 +445,9 @@ export function CommercialClosingCard({
       .reduce((sum, item) => sum + item.officeMargin, 0)
   }, [selectedProduction])
 
-  // Recargo Foráneo (+20% aplica exclusivamente al show base)
-  const foraneoSurcharge = isForaneo ? Math.round(rawBaseAmount * 0.20) : 0
-  const effectiveShowBase = rawBaseAmount + foraneoSurcharge
-
   // Subtotal acordado (Base Show + Viáticos + Producción/Adicionales - Descuento)
   const totalLineItems = productionClientTotal + customLineItemsTotal
-  const subtotal = Math.max(0, effectiveShowBase + totalViaticos + totalLineItems - discountAmount)
+  const subtotal = Math.max(0, baseShowPrice + totalViaticos + totalLineItems - discountAmount)
 
   // Facturación fiscal IVA (16%)
   const [hasInvoice, setHasInvoice] = useState<boolean>(Boolean(initialInvoice))
@@ -481,8 +483,8 @@ export function CommercialClosingCard({
 
   const handlePackageSelect = (pkg: typeof CORE_PACKAGES[number]) => {
     setPackageName(pkg.fullName)
-    const suggestedPrice = findDefaultPrice(pkg.fullName)
-    setRawBaseAmount(suggestedPrice)
+    const suggestedPrice = findDefaultPrice(pkg.fullName, isForaneo)
+    setBaseShowPrice(suggestedPrice)
   }
 
   const handleCopyLink = () => {
@@ -493,7 +495,7 @@ export function CommercialClosingCard({
   }
 
   const handleApproveAndSend = async (options?: { saveOnly?: boolean }) => {
-    if (effectiveShowBase <= 0) {
+    if (baseShowPrice <= 0) {
       toast.error("El precio base del show debe ser mayor a $0 para guardar la propuesta.")
       return
     }
@@ -520,7 +522,7 @@ export function CommercialClosingCard({
 
       const res = await approveAndSendProposalAction({
         bookingId,
-        baseAmount: effectiveShowBase,
+        baseAmount: baseShowPrice,
         viaticosAmount: totalViaticos,
         discountAmount,
         depositAmount: effectiveDeposit,
@@ -673,6 +675,7 @@ export function CommercialClosingCard({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           {CORE_PACKAGES.map((pkg) => {
             const isSelected = packageName.toLowerCase().includes(pkg.key)
+            const catalogPrice = isForaneo ? Math.round(pkg.defaultBase * 1.20) : pkg.defaultBase
             return (
               <button
                 key={pkg.key}
@@ -691,12 +694,20 @@ export function CommercialClosingCard({
                   {isSelected && <Check className="w-4 h-4 text-[#6F0D2B] dark:text-rose-400" />}
                 </div>
                 <div className="text-[11px] text-muted-foreground font-mono mt-1 font-semibold">
-                  Tarifa Base: {MXN(pkg.defaultBase)}
+                  Tarifa Catálogo: {MXN(catalogPrice)} {isForaneo ? "(+20% Foráneo)" : "(Local)"}
                 </div>
               </button>
             )
           })}
         </div>
+        {!CORE_PACKAGES.some(c => packageName.toLowerCase().includes(c.key)) && (
+          <div className="text-[11px] text-muted-foreground pt-1 flex items-center gap-1.5">
+            <Badge variant="outline" className="text-[9px] uppercase border-primary/30 text-primary font-bold">
+              Formato Personalizado
+            </Badge>
+            <span>{packageName} (Tarifa y condiciones pactadas a medida)</span>
+          </div>
+        )}
       </div>
 
       {/* 3. Regla Foránea (+20% al show base) y Precio Show */}
@@ -714,41 +725,64 @@ export function CommercialClosingCard({
               )}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Aplica exclusivamente al show base. No afecta a producción técnica ni viáticos.
+              Aplica exclusivamente a la tarifa del espectáculo musical. No afecta a producción técnica ni viáticos de traslado.
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsForaneo(!isForaneo)}
-            className="flex items-center gap-1.5 text-xs font-bold text-foreground hover:opacity-80 transition-opacity cursor-pointer self-start sm:self-auto"
-          >
-            {isForaneo ? (
-              <>
-                <ToggleRight className="w-6 h-6 text-[#6F0D2B] dark:text-rose-400" />
-                <span className="text-[#6F0D2B] dark:text-rose-400 font-bold">Foráneo (+20% Activo)</span>
-              </>
-            ) : (
-              <>
-                <ToggleLeft className="w-6 h-6 text-muted-foreground" />
-                <span className="text-muted-foreground">Tarifa Local</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsForaneo(!isForaneo)}
+              className="flex items-center gap-1.5 text-xs font-bold text-foreground hover:opacity-80 transition-opacity cursor-pointer self-start sm:self-auto"
+            >
+              {isForaneo ? (
+                <>
+                  <ToggleRight className="w-6 h-6 text-[#6F0D2B] dark:text-rose-400" />
+                  <span className="text-[#6F0D2B] dark:text-rose-400 font-bold">Foráneo (+20% Activo)</span>
+                </>
+              ) : (
+                <>
+                  <ToggleLeft className="w-6 h-6 text-muted-foreground" />
+                  <span className="text-muted-foreground">Tarifa Local</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border/50">
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">
-              Precio Show Base ($) *
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold text-foreground">
+                Precio Show Base ($) *
+              </Label>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setBaseShowPrice(prev => Math.round(prev * 1.20))}
+                  className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                  title="Calcular +20% foráneo sobre la tarifa show actual"
+                >
+                  +20%
+                </button>
+                <span className="text-muted-foreground/30 text-[10px]">|</span>
+                <button
+                  type="button"
+                  onClick={() => setBaseShowPrice(prev => Math.round(prev / 1.20))}
+                  className="text-[10px] text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
+                  title="Restablecer a tarifa base local dividiendo entre 1.20"
+                >
+                  Base Local
+                </button>
+              </div>
+            </div>
             <Input
               type="number"
               min={0}
               step={500}
               required
-              value={rawBaseAmount || ""}
-              onChange={(e) => setRawBaseAmount(Number(e.target.value) || 0)}
+              value={baseShowPrice || ""}
+              onChange={(e) => setBaseShowPrice(Number(e.target.value) || 0)}
               placeholder="0"
               className="bg-white dark:bg-zinc-900 border-border h-10 rounded-xl text-sm font-mono focus:border-[#6F0D2B]"
             />
@@ -756,13 +790,13 @@ export function CommercialClosingCard({
 
           <div className="space-y-1.5">
             <Label className="text-xs font-bold text-foreground">
-              Show Efectivo al Cliente {isForaneo ? "(+20% Foráneo)" : ""}
+              Tarifa Show Acordada al Cliente
             </Label>
             <div className="h-10 px-3 rounded-xl bg-white dark:bg-zinc-900 border border-border flex items-center justify-between font-mono text-sm">
               <span className="text-muted-foreground text-xs">
-                {isForaneo ? `Base ${MXN(rawBaseAmount)} + 20% (${MXN(foraneoSurcharge)})` : "Base directa"}
+                {isForaneo ? "Tarifa show foránea pactada" : "Tarifa show local pactada"}
               </span>
-              <span className="font-bold text-foreground">{MXN(effectiveShowBase)}</span>
+              <span className="font-bold text-foreground">{MXN(baseShowPrice)}</span>
             </div>
           </div>
         </div>
@@ -1228,8 +1262,8 @@ export function CommercialClosingCard({
           <span className="text-foreground font-bold">{packageName}</span>
         </div>
         <div className="flex justify-between items-center text-muted-foreground">
-          <span>Show Vendetta {isForaneo ? "(Incluye +20% foráneo)" : ""}:</span>
-          <span className="text-foreground font-mono font-bold">{MXN(effectiveShowBase)}</span>
+          <span>Show Vendetta {isForaneo ? "(Incluye tarifa foránea)" : ""}:</span>
+          <span className="text-foreground font-mono font-bold">{MXN(baseShowPrice)}</span>
         </div>
         {totalViaticos > 0 && (
           <div className="flex justify-between items-center text-muted-foreground">
@@ -1281,11 +1315,14 @@ export function CommercialClosingCard({
           bookingId={bookingId}
           hours={durationHours}
           isBar={(venueType?.toLowerCase().includes("bar") || packageName.toLowerCase().includes("bar")) ?? false}
-          baseShowPrice={Math.max(0, effectiveShowBase - discountAmount)}
-          listPrice={effectiveShowBase}
+          baseShowPrice={Math.max(0, baseShowPrice - discountAmount)}
+          listPrice={baseShowPrice}
           discountAmount={discountAmount}
           initialMusicianPay={initialCustomMusicianPay}
           initialStaffPay={initialStaffPay}
+          musiciansCount={musiciansCount}
+          productionAddons={PRODUCTION_CATALOG.filter(p => selectedProduction.has(p.id))}
+          isForaneo={isForaneo}
         />
       </div>
 
@@ -1302,7 +1339,7 @@ export function CommercialClosingCard({
               type="button"
               variant="outline"
               onClick={() => handleApproveAndSend({ saveOnly: true })}
-              disabled={loading || effectiveShowBase <= 0}
+              disabled={loading || baseShowPrice <= 0}
               className="h-10 rounded-xl text-xs font-bold border-border hover:bg-muted gap-2 cursor-pointer shadow-2xs"
             >
               {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
@@ -1336,7 +1373,7 @@ export function CommercialClosingCard({
               type="button"
               variant="outline"
               onClick={() => handleApproveAndSend({ saveOnly: true })}
-              disabled={loading || effectiveShowBase <= 0}
+              disabled={loading || baseShowPrice <= 0}
               className="h-12 sm:col-span-1 rounded-xl font-bold text-xs uppercase tracking-wider gap-2 border-border hover:bg-muted text-foreground cursor-pointer shadow-xs"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 text-primary" />}
@@ -1345,7 +1382,7 @@ export function CommercialClosingCard({
             <Button
               type="button"
               onClick={() => handleApproveAndSend({ saveOnly: false })}
-              disabled={loading || effectiveShowBase <= 0}
+              disabled={loading || baseShowPrice <= 0}
               className={`h-12 sm:col-span-2 rounded-xl font-bold uppercase text-xs sm:text-sm tracking-wider gap-2 shadow-xs cursor-pointer transition-all disabled:opacity-50 ${
                 isApproved
                   ? "bg-cyan-700 hover:bg-cyan-800 text-white"

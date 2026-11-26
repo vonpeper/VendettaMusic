@@ -1422,6 +1422,8 @@ export async function approveAndSendProposalAction(params: ApproveProposalInput)
             deposit: deposit,
             balance: Math.max(0, total - deposit),
             totalWithTax: total,
+            totalIncome: total,
+            ivaAmount: ivaAmount,
             invoice: hasInvoice,
             ...(params.mapsLink !== undefined ? { mapsLink: params.mapsLink.trim() || null } : {}),
             ...(params.customMusicianPay !== undefined ? { customMusicianPay: params.customMusicianPay } : {}),

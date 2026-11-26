@@ -13,7 +13,7 @@ import {
   LegalData 
 } from "@/actions/proposal"
 import { toast } from "sonner"
-import { Loader2, CheckCircle2, ChevronRight, RefreshCw, Download } from "lucide-react"
+import { Loader2, CheckCircle2, ChevronRight, RefreshCw, Download, AlertCircle } from "lucide-react"
 
 interface ProposalInteractiveProps {
   booking: any
@@ -292,6 +292,20 @@ export function ProposalInteractive({ booking, downloadQuoteUrl, downloadContrac
             </div>
           </div>
         </div>
+
+        {(hasAudio || hasPantalla || hasTemplete) && (
+          <div className="mt-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-3">
+            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold text-amber-300 block text-xs uppercase tracking-wider mb-0.5">
+                Disponibilidad de Producción & Proveedores
+              </span>
+              <p className="text-[11px] text-amber-200/90 leading-relaxed font-medium">
+                Los costos de audio y servicios de proveedores adicionales seleccionados están sujetos a disponibilidad de nuestra producción al momento de confirmar la fecha.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Botón de descarga de Cotización en borrador */}
         <div className="flex justify-start mt-6">

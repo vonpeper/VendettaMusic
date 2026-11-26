@@ -123,7 +123,7 @@ const RESIDENTIAL_ZONES = [
 
 export default function FiestasPrivadasMetepecPage() {
   const quoteUrl = "/cotizar?motivo=Cumplea%C3%B1os&estado=Estado+de+M%C3%A9xico&municipio=Metepec"
-  const waUrl = "https://wa.me/5217222880045?text=Hola,%20me%20interesa%20cotizar%20la%20banda%20Vendetta%20para%20una%20fiesta%20privada%20o%20cumpleaños%20en%20Metepec."
+  const waUrl = "https://wa.me/527222417045?text=Hola,%20me%20interesa%20cotizar%20la%20banda%20Vendetta%20para%20una%20fiesta%20privada%20o%20cumpleaños%20en%20Metepec."
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -156,7 +156,7 @@ export default function FiestasPrivadasMetepecPage() {
         "name": "Vendetta Live Music - Fiestas Privadas Metepec",
         "image": "https://vendetta.mx/images/galeria/vendetta-banda-en-vivo-evento.jpg",
         "url": "https://vendetta.mx/fiestas-privadas-metepec",
-        "telephone": "+527222880045",
+        "telephone": "+527222417045",
         "priceRange": "$$",
         "address": {
           "@type": "PostalAddress",
@@ -232,16 +232,11 @@ export default function FiestasPrivadasMetepecPage() {
               </Button>
             </Link>
 
-            <a 
-              href={waUrl}
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto"
-            >
+            <Link href="/paquetes" className="w-full sm:w-auto">
               <Button variant="outline" size="lg" className="w-full sm:w-auto h-16 px-8 rounded-2xl font-bold text-sm sm:text-base uppercase tracking-wider border-white/20 hover:bg-white/10 text-[#F2F0EB] gap-2.5 cursor-pointer backdrop-blur-md">
-                <Phone className="w-4 h-4 text-[#25D366]" /> Contactar por WhatsApp
+                Ver Formatos de Show
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* Badges de Cobertura Residencial Metepec */}
@@ -565,16 +560,11 @@ export default function FiestasPrivadasMetepecPage() {
               </Button>
             </Link>
 
-            <a 
-              href={waUrl}
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto"
-            >
+            <Link href="/paquetes" className="w-full sm:w-auto">
               <Button variant="outline" size="lg" className="w-full sm:w-auto h-16 px-8 rounded-2xl font-bold text-base uppercase tracking-wider border-white/20 hover:bg-white/10 text-[#F2F0EB] gap-2.5 cursor-pointer backdrop-blur-md">
-                <Phone className="w-4 h-4 text-[#25D366]" /> WhatsApp Inmediato
+                Ver Formatos de Show
               </Button>
-            </a>
+            </Link>
           </div>
 
           <p className="text-xs text-gray-400 mt-6 font-mono">

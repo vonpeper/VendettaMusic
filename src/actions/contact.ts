@@ -89,7 +89,7 @@ export async function submitContactInquiry(formData: FormData) {
         config?.adminWhatsapp ||
         process.env.ADMIN_WHATSAPP_NUMBER ||
         process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
-        "5217222880045"
+        "527222417045"
 
       const fechaTxt = val.fecha || (parsedDate ? parsedDate.toLocaleDateString("es-MX", { timeZone: "UTC" }) : "No especificada")
       const avisoAdmin = 

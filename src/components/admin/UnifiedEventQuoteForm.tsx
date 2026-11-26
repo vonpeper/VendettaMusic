@@ -386,7 +386,18 @@ export function UnifiedEventQuoteForm({
 
   // 4. Estado Cotización y Paquete
   const [packageId, setPackageId] = useState<string>(() => {
-    if (initialData?.packageId) return initialData.packageId
+    const rawId = initialData?.packageId || initialData?.bookingRequest?.packageId
+    if (rawId && packages.some(p => p.id === rawId)) return rawId
+
+    const rawName = (initialData?.packageName || initialData?.bookingRequest?.packageName || "").toLowerCase().trim()
+    if (rawName) {
+      const match = packages.find(p => {
+        const pName = p.name.toLowerCase()
+        return pName === rawName || pName.includes(rawName) || rawName.includes(pName)
+      })
+      if (match) return match.id
+    }
+
     const foundEssential = packages.find(p => p.name.toLowerCase().includes("essential"))
     return foundEssential ? foundEssential.id : (packages[0]?.id || "")
   })
@@ -774,7 +785,7 @@ export function UnifiedEventQuoteForm({
   }
 
   function handleGoToPricingStep() {
-    if (viaticosAmount === null && (venueCity || venueAddress || venueName || clientCity)) {
+    if (mode !== "edit" && viaticosAmount === null && (venueCity || venueAddress || venueName || clientCity)) {
       handleAutoCalculateViaticos()
     }
     // Asegurar que haya un paquete seleccionado
@@ -1001,7 +1012,7 @@ export function UnifiedEventQuoteForm({
           mapsLink: mapsLink.trim() || null,
 
           packageId: packageId || null,
-          packageName: selectedPackage?.name || null,
+          packageName: selectedPackage?.name || initialData?.packageName || initialData?.bookingRequest?.packageName || null,
           bandHours: (showDuration && showDuration > 0) ? showDuration : (selectedPackage?.minDuration || 2),
           basePrice: totals.basePrice,
           viaticosAmount: totals.viaticosAmount,

@@ -401,7 +401,7 @@ export function DirectQuoteForm({
 
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[#f59e0b]" /> Horario Tentativo (Inicio / Fin) *
+                <Clock className="w-3.5 h-3.5 text-[#f59e0b]" /> Horario del Show en Vivo (2 a 4 hrs) *
               </Label>
               <div className="grid grid-cols-2 gap-2">
                 <Input

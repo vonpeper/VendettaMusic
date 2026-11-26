@@ -63,16 +63,11 @@ export default function EventosCorporativosPage() {
                 Cotizar Evento Empresarial <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>
-            <a 
-              href="https://wa.me/5217222880045?text=Hola,%20requiero%20información%20y%20rider%20para%20un%20evento%20corporativo." 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto"
-            >
+            <Link href="/paquetes" className="w-full sm:w-auto">
               <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 rounded-xl font-bold text-sm uppercase tracking-wider border-white/20 hover:bg-white/10 text-[#F2F0EB]">
-                Contacto Directo con Productor
+                Ver Formatos & Rider
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* Badges de Cobertura */}

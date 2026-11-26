@@ -368,6 +368,8 @@ export interface EventCostBreakdown {
   musicianPayEach: number
   musiciansTotal: number
   staffPay: number
+  showRemainder: number
+  productionOfficeMargin: number
   audioAndOfficeProfit: number
   ownerTotalTakeHome: number
   notes: string
@@ -393,17 +395,21 @@ export interface EventCostBreakdown {
  *   - Ingreso Personal Dueño (como Músico): $850 en bar.
  *
  * Permite montos personalizados opcionales (customMusicianPay y customStaffPay)
- * recalculando automáticamente el remanente de Audio/Oficina y el ingreso del dueño.
+ * y margen adicional de producción (productionOfficeMargin), recalculando
+ * automáticamente el remanente de Audio/Oficina y el ingreso del dueño.
  */
 export function calculateEventCostBreakdown(
   hours: number = 2,
   eventType: "privado" | "bar" = "privado",
   customTotalPrice?: number,
   customMusicianPay?: number | null,
-  customStaffPay?: number | null
+  customStaffPay?: number | null,
+  productionOfficeMargin: number = 0,
+  musiciansCount: number = 4
 ): EventCostBreakdown {
   const h = Math.max(1, hours)
-  const musiciansCount = 4
+  const count = Math.max(1, musiciansCount || 4)
+  const safeProdMargin = Math.max(0, Number(productionOfficeMargin) || 0)
 
   const isCustomMusician = customMusicianPay !== undefined && customMusicianPay !== null && !isNaN(customMusicianPay) && customMusicianPay > 0
   const isCustomStaff = customStaffPay !== undefined && customStaffPay !== null && !isNaN(customStaffPay) && customStaffPay >= 0
@@ -412,25 +418,28 @@ export function calculateEventCostBreakdown(
     const barTotal = customTotalPrice ?? 3800
     const defaultStaffPay = Math.round(h * 200)
     const staffPay = isCustomStaff ? Math.round(customStaffPay!) : defaultStaffPay
-    const remainingForMusicians = Math.max(0, barTotal - defaultStaffPay)
-    const defaultMusicianPayEach = Math.round(remainingForMusicians / musiciansCount)
+    const remainingForMusicians = Math.max(0, barTotal - staffPay)
+    const defaultMusicianPayEach = Math.round(remainingForMusicians / count)
     const musicianPayEach = isCustomMusician ? Math.round(customMusicianPay!) : defaultMusicianPayEach
-    const musiciansTotal = musicianPayEach * musiciansCount
-    const audioAndOfficeProfit = barTotal - (musiciansTotal + staffPay)
+    const musiciansTotal = musicianPayEach * count
+    const showRemainder = barTotal - (musiciansTotal + staffPay)
+    const audioAndOfficeProfit = showRemainder + safeProdMargin
     const ownerTotalTakeHome = musicianPayEach + audioAndOfficeProfit
 
     const notes = (isCustomMusician || isCustomStaff)
       ? "Desglose con nómina ajustada manualmente (cálculo de remanente y dueño automático)."
-      : "Bar: 100% distribuido entre músicos y staff ($0 comisión de oficina Vendetta para motivar al equipo)."
+      : "Bar: 100% distribuido entre músicos y staff ($0 comisión de show Vendetta para motivar al equipo)."
 
     return {
       hours: h,
       eventType: "bar",
       totalPrice: barTotal,
-      musiciansCount,
+      musiciansCount: count,
       musicianPayEach,
       musiciansTotal,
       staffPay,
+      showRemainder,
+      productionOfficeMargin: safeProdMargin,
       audioAndOfficeProfit,
       ownerTotalTakeHome,
       notes,
@@ -445,24 +454,27 @@ export function calculateEventCostBreakdown(
   const basePrice = customTotalPrice ?? calculateShowPackageBasePrice("Essential", h)
   const defaultMusicianPayEach = Math.max(1500, Math.round(h * 750))
   const musicianPayEach = isCustomMusician ? Math.round(customMusicianPay!) : defaultMusicianPayEach
-  const musiciansTotal = musicianPayEach * musiciansCount
+  const musiciansTotal = musicianPayEach * count
   const defaultStaffPay = Math.round(h * 300)
   const staffPay = isCustomStaff ? Math.round(customStaffPay!) : defaultStaffPay
-  const audioAndOfficeProfit = basePrice - (musiciansTotal + staffPay)
+  const showRemainder = basePrice - (musiciansTotal + staffPay)
+  const audioAndOfficeProfit = showRemainder + safeProdMargin
   const ownerTotalTakeHome = musicianPayEach + audioAndOfficeProfit
 
   const notes = (isCustomMusician || isCustomStaff)
     ? "Desglose con nómina ajustada manualmente (cálculo de remanente y dueño automático)."
-    : "Privado: Músicos $750/hr (mínimo $1,500 por 2h); Staff $300/hr; Remanente restante para Audio y Oficina Vendetta."
+    : "Privado: Músicos $750/hr (mínimo $1,500 por 2h); Staff $300/hr; Remanente de show para Audio y Oficina Vendetta."
 
   return {
     hours: h,
     eventType: "privado",
     totalPrice: basePrice,
-    musiciansCount,
+    musiciansCount: count,
     musicianPayEach,
     musiciansTotal,
     staffPay,
+    showRemainder,
+    productionOfficeMargin: safeProdMargin,
     audioAndOfficeProfit,
     ownerTotalTakeHome,
     notes,

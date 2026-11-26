@@ -63,16 +63,11 @@ export default function HappeningsCumpleanosPage() {
                 Cotizar mi Cumpleaños o Fiesta <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>
-            <a 
-              href="https://wa.me/5217222880045?text=Hola,%20quiero%20cotizar%20el%20show%20de%20Vendetta%20para%20un%20cumpleaños/fiesta%20privada." 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto"
-            >
+            <Link href="/paquetes" className="w-full sm:w-auto">
               <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 rounded-xl font-bold text-sm uppercase tracking-wider border-white/20 hover:bg-white/10 text-[#F2F0EB]">
-                Preguntar por WhatsApp
+                Ver Formatos de Show
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* Badges de Cobertura */}

@@ -314,7 +314,7 @@ export async function submitPublicQuoteAction(
         config?.adminWhatsapp ||
         process.env.ADMIN_WHATSAPP_NUMBER ||
         process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
-        "5217222880045"
+        "527222417045"
 
       const adminMsg = 
 `🚨 *NUEVA SOLICITUD DE COTIZACIÓN* 🚨

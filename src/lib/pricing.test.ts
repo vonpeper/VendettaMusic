@@ -380,5 +380,52 @@ describe("Motor Centralizado de Precios (pricing.ts)", () => {
     assert.equal(over5.valid, false)
     assert.match(over5.error || "", /máximo 4 horas/)
   })
+
+  it("debe calcular el desglose financiero de 5 niveles con márgenes de producción y nómina", async () => {
+    const { calculateEventCostBreakdown } = await import("./pricing")
+
+    // Escenario 1: Show base $15,500, 2 horas, 4 músicos ($1,500 c/u), Staff $1,500, sin adicionales
+    // Nivel 1: Base Show = 15,500
+    // Nivel 2: Nómina Músicos = 4 * 1,500 = 6,000
+    // Nivel 3: Staff = 1,500
+    // Nivel 4: Remanente Show = 15,500 - 6,000 - 1,500 = 8,000. Margen producción oficina = 0.
+    // Nivel 5: Resumen = 8,000 Audio/Oficina, Dueño = 1,500 + 8,000 = 9,500
+    const breakdown1 = calculateEventCostBreakdown(2, "privado", 15500, 1500, 1500, 0, 4)
+    assert.equal(breakdown1.totalPrice, 15500)
+    assert.equal(breakdown1.musicianPayEach, 1500)
+    assert.equal(breakdown1.musiciansTotal, 6000)
+    assert.equal(breakdown1.staffPay, 1500)
+    assert.equal(breakdown1.showRemainder, 8000)
+    assert.equal(breakdown1.productionOfficeMargin, 0)
+    assert.equal(breakdown1.audioAndOfficeProfit, 8000)
+    assert.equal(breakdown1.ownerTotalTakeHome, 9500)
+
+    // Escenario 2: Con adicionales de producción: Templete (+$500) y Audio 500pax (+$1,000) = +$1,500 margen extra
+    // Remanente Show = $8,000 + Margen Extra Oficina $1,500 = $9,500
+    const breakdown2 = calculateEventCostBreakdown(2, "privado", 15500, 1500, 1500, 1500, 4)
+    assert.equal(breakdown2.totalPrice, 15500)
+    assert.equal(breakdown2.musiciansTotal, 6000)
+    assert.equal(breakdown2.staffPay, 1500)
+    assert.equal(breakdown2.showRemainder, 8000)
+    assert.equal(breakdown2.productionOfficeMargin, 1500)
+    assert.equal(breakdown2.audioAndOfficeProfit, 9500)
+    assert.equal(breakdown2.ownerTotalTakeHome, 11000)
+
+    // Escenario 3: 3 horas de show (tabulador default $2,250 c/u), 4 músicos, Staff $1,800 custom, +$2,000 margen prod integral
+    // Base Show = $22,500
+    // Nómina = 4 * 2,250 = 9,000
+    // Staff = 1,800
+    // Remanente Show = 22,500 - 9,000 - 1,800 = 11,700
+    // Margen Oficina = 2,000
+    // Resumen Neto Final = 11,700 + 2,000 = 13,700
+    const breakdown3 = calculateEventCostBreakdown(3, "privado", 22500, undefined, 1800, 2000, 4)
+    assert.equal(breakdown3.musicianPayEach, 2250)
+    assert.equal(breakdown3.musiciansTotal, 9000)
+    assert.equal(breakdown3.staffPay, 1800)
+    assert.equal(breakdown3.showRemainder, 11700)
+    assert.equal(breakdown3.productionOfficeMargin, 2000)
+    assert.equal(breakdown3.audioAndOfficeProfit, 13700)
+    assert.equal(breakdown3.ownerTotalTakeHome, 15950)
+  })
 })
 
