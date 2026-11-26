@@ -1,40 +1,26 @@
 "use client"
 
-import Script from "next/script"
+import { usePathname } from "next/navigation"
+import { useEffect } from "react"
 
 interface GoogleAnalyticsProps {
   measurementId?: string | null
 }
 
 export function GoogleAnalytics({ measurementId }: GoogleAnalyticsProps) {
-  const gaId = measurementId || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+  const pathname = usePathname()
+  const gaId = measurementId || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-455QYSRC2D"
 
-  if (!gaId || gaId.trim() === "") {
-    return null
-  }
+  useEffect(() => {
+    if (typeof window !== "undefined" && typeof (window as any).gtag === "function") {
+      ;(window as any).gtag("event", "page_view", {
+        page_path: pathname,
+        send_to: gaId,
+      })
+    }
+  }, [pathname, gaId])
 
-  return (
-    <>
-      <Script
-        strategy="afterInteractive"
-        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-      />
-      <Script
-        id="google-analytics-init"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${gaId}', {
-              page_path: window.location.pathname,
-            });
-          `,
-        }}
-      />
-    </>
-  )
+  return null
 }
 
 /**

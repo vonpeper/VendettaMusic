@@ -119,6 +119,7 @@ export default async function RootLayout({
   }).catch(() => null);
 
   const siteVerification = config?.googleSiteVerification || 'xjvpyyI3SwGAqhLJVUhNf23uPakHwn4fkJ82NMkpNpY';
+  const gaId = config?.googleAnalyticsMeasurementId || 'G-455QYSRC2D';
 
   return (
     <html
@@ -126,6 +127,18 @@ export default async function RootLayout({
       className={`${nohemi.variable} ${plusJakartaSans.variable} ${advent.variable} dark antialiased scroll-smooth`}
     >
       <head>
+        {/* Google Tag & Analytics (GA4) - Justo después de <head> */}
+        <script async src={`https://www.googletagmanager.com/gtm.js?id=${gaId}`} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${gaId}');
+            `,
+          }}
+        />
         <meta name="google-site-verification" content={siteVerification} />
         {/* Redirección instantánea a la agenda si la app se abre en modo standalone (PWA en Android / iOS) */}
         <script
